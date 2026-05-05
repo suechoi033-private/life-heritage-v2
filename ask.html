@@ -818,14 +818,14 @@
       .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
-  // 키보드 올라올 때 모달이 키보드 위에 오도록 조정
+  // 키보드 올라올 때 백드롭을 visual viewport에 맞춰 조정 (iOS 대응)
   if (window.visualViewport) {
     const onVVChange = () => {
       const vv = window.visualViewport;
-      const keyboardH = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-      document.querySelectorAll('.modal').forEach(el => {
-        el.style.maxHeight = Math.floor(vv.height * 0.92) + 'px';
-        el.style.marginBottom = keyboardH + 'px';
+      document.querySelectorAll('.modal-backdrop').forEach(el => {
+        el.style.top = vv.offsetTop + 'px';
+        el.style.height = vv.height + 'px';
+        el.style.bottom = 'auto';
       });
     };
     window.visualViewport.addEventListener('resize', onVVChange);

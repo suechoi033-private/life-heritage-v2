@@ -1104,13 +1104,15 @@
     return div.innerHTML;
   }
 
-  // 키보드 올라올 때 저장 버튼이 키보드 위에 오도록 조정
+  // 키보드 올라올 때 저장 버튼이 키보드 위에 오도록 조정 (iOS transform 방식)
   if (window.visualViewport) {
     const stepNav = document.getElementById('step-nav');
     const onVVChange = () => {
       const vv = window.visualViewport;
-      const keyboardH = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-      if (stepNav) stepNav.style.bottom = keyboardH + 'px';
+      const offsetFromBottom = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      if (stepNav) {
+        stepNav.style.transform = `translateY(-${offsetFromBottom}px)`;
+      }
     };
     window.visualViewport.addEventListener('resize', onVVChange);
     window.visualViewport.addEventListener('scroll', onVVChange);
