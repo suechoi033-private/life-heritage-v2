@@ -333,18 +333,12 @@
       display: flex;
       justify-content: space-between;
       gap: 12px;
-      padding: 16px 20px env(safe-area-inset-bottom, 28px);
-      padding-bottom: max(28px, env(safe-area-inset-bottom, 28px));
+      padding: 16px 20px max(28px, env(safe-area-inset-bottom));
       border-top: 1px solid var(--line);
-      position: fixed;
+      position: sticky;
       bottom: 0;
-      left: 0;
-      right: 0;
       background: var(--bg);
       z-index: 10;
-    }
-    .step-content-wrap {
-      padding-bottom: 100px;
     }
     .btn {
       padding: 13px 22px;
@@ -1104,32 +1098,6 @@
     return div.innerHTML;
   }
 
-  // iOS Safari: 키보드 올라올 때 저장 버튼 위로 올리기
-  const stepNav = document.getElementById('step-nav');
-  function adjustStepNav() {
-    if (!stepNav) return;
-    const vv = window.visualViewport;
-    if (vv) {
-      const keyboardH = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-      stepNav.style.bottom = keyboardH + 'px';
-    }
-  }
-
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', adjustStepNav);
-    window.visualViewport.addEventListener('scroll', adjustStepNav);
-  }
-
-  // iOS Safari 보조: input focus 시 딜레이 후 강제 재계산
-  document.addEventListener('focusin', (e) => {
-    if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') {
-      setTimeout(adjustStepNav, 400);
-      setTimeout(adjustStepNav, 800);
-    }
-  });
-  document.addEventListener('focusout', () => {
-    setTimeout(adjustStepNav, 100);
-  });
 </script>
 
 </body>

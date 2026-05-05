@@ -380,35 +380,36 @@
     @media (min-width: 640px) {
       .modal-backdrop { align-items: center; }
     }
+    /* 모바일: 전체화면. dvh = 키보드 올라오면 자동 축소 */
     .modal {
       background: var(--bg);
       border-radius: 20px 20px 0 0;
       width: 100%;
       max-width: 640px;
-      max-height: 90dvh;
+      height: 100dvh;
       display: flex;
       flex-direction: column;
     }
     .modal-body {
       overflow-y: auto;
-      padding: 0 22px;
+      padding: 0 22px 8px;
       flex: 1;
       min-height: 0;
     }
-    /* 저장 버튼 — 모달 독립 fixed 바 */
-    .float-save {
-      position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 0;
+    .modal-footer {
+      flex-shrink: 0;
       padding: 12px 22px max(28px, env(safe-area-inset-bottom));
       background: var(--bg);
       border-top: 1px solid var(--line);
-      z-index: 200;
     }
-    .float-save.hidden { display: none; }
+    /* 태블릿/데스크탑 */
     @media (min-width: 640px) {
-      .modal { border-radius: 20px; }
+      .modal-backdrop { align-items: center; }
+      .modal {
+        height: auto;
+        max-height: 90vh;
+        border-radius: 20px;
+      }
     }
     .modal-header {
       display: flex;
@@ -899,12 +900,10 @@
 
     </form>
     </div>
+    <div class="modal-footer">
+      <button type="submit" form="log-form" class="primary-cta" id="log-submit">기록 저장</button>
+    </div>
   </div>
-</div>
-
-<!-- 저장 버튼: 모달과 독립된 fixed 바 — 키보드 위에 항상 표시 -->
-<div class="float-save hidden" id="float-save-log">
-  <button type="submit" form="log-form" class="primary-cta" id="log-submit">기록 저장</button>
 </div>
 
 <!-- Invite modal (코드 만들기) -->
@@ -1650,24 +1649,13 @@ function toggleQuickCard(btn, wrapId) {
   }
   function closeModal(id) {
     $(id).classList.add('hidden');
-    // log-modal 닫힐 때 저장바도 숨김
-    if (id === 'log-modal') {
-      const bar = $('float-save-log');
-      if (bar) { bar.classList.add('hidden'); bar.style.bottom = ''; }
-    }
   }
   document.querySelectorAll('[data-close-modal]').forEach(btn => {
     btn.addEventListener('click', () => closeModal(btn.dataset.closeModal));
   });
   document.querySelectorAll('.modal-backdrop').forEach(bd => {
     bd.addEventListener('click', (e) => {
-      if (e.target === bd) {
-        bd.classList.add('hidden');
-        if (bd.id === 'log-modal') {
-          const bar = $('float-save-log');
-          if (bar) { bar.classList.add('hidden'); bar.style.bottom = ''; }
-        }
-      }
+      if (e.target === bd) bd.classList.add('hidden');
     });
   });
 
@@ -1750,7 +1738,6 @@ function toggleQuickCard(btn, wrapId) {
     state.editingLogId = logId || null;
     const modal = $('log-modal');
     modal.classList.remove('hidden');
-    $('float-save-log').classList.remove('hidden');
     $('log-modal-title').textContent = logId ? '기록 수정' : '오늘 기록 쓰기';
     $('log-form').reset();
 
@@ -1835,32 +1822,6 @@ function toggleQuickCard(btn, wrapId) {
     return div.innerHTML;
   }
 
-  // iOS Safari: 키보드 올라올 때 저장 버튼 위로 올리기
-  function adjustFloatSave(barId) {
-    const bar = $(barId);
-    if (!bar || bar.classList.contains('hidden')) return;
-    const vv = window.visualViewport;
-    if (vv) {
-      const keyboardH = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-      bar.style.bottom = keyboardH + 'px';
-    }
-  }
-
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', () => adjustFloatSave('float-save-log'));
-    window.visualViewport.addEventListener('scroll', () => adjustFloatSave('float-save-log'));
-  }
-
-  // iOS Safari 보조: input focus 시 딜레이 후 강제 재계산
-  document.addEventListener('focusin', (e) => {
-    if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') {
-      setTimeout(() => adjustFloatSave('float-save-log'), 400);
-      setTimeout(() => adjustFloatSave('float-save-log'), 800);
-    }
-  });
-  document.addEventListener('focusout', () => {
-    setTimeout(() => adjustFloatSave('float-save-log'), 100);
-  });
 </script>
 
 </body>
