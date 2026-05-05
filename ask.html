@@ -429,9 +429,7 @@
         <label><input type="radio" name="vis" value="public" checked> 모두에게 공개</label>
         <label><input type="radio" name="vis" value="private"> 나만 보기</label>
       </div>
-      <div style="padding: 12px 0 32px;">
-        <button type="button" class="modal-submit" id="answer-submit">남기기</button>
-      </div>
+      <div id="autosave-status" style="text-align:center;font-size:13px;color:var(--ink-muted);padding:12px 0 32px;">글을 쓰면 자동으로 저장돼요</div>
     </div>
   </div>
 </div>
@@ -661,7 +659,10 @@
   function openWriteModal(isEdit) {
     const modal = document.getElementById('write-modal');
     document.getElementById('write-modal-title').textContent = isEdit ? '내 답 수정' : '내 답 쓰기';
-    document.getElementById('answer-input').value = isEdit ? (state.myAnswer?.content || '') : '';
+    const existingContent = isEdit ? (state.myAnswer?.content || '') : '';
+    document.getElementById('answer-input').value = existingContent;
+    lastSavedContent = existingContent;
+    setStatus('글을 쓰면 자동으로 저장돼요', '');
     const visRadio = document.querySelector(`input[name="vis"][value="${state.myAnswer?.visibility || 'public'}"]`);
     if (visRadio) visRadio.checked = true;
     modal.classList.remove('hidden');
@@ -669,6 +670,9 @@
   }
 
   function closeWriteModal() {
+    clearTimeout(autoSaveTimer);
+    const content = document.getElementById('answer-input').value.trim();
+    if (content && content !== lastSavedContent) triggerAutoSave();
     document.getElementById('write-modal').classList.add('hidden');
   }
 
@@ -679,31 +683,58 @@
     if (e.target.id === 'write-modal') closeWriteModal();
   });
 
-  document.getElementById('answer-submit').addEventListener('click', async () => {
-    const content = document.getElementById('answer-input').value.trim();
-    if (!content) return;
-    const visibility = document.querySelector('input[name="vis"]:checked').value;
-    const submitBtn = document.getElementById('answer-submit');
-    submitBtn.disabled = true;
-    submitBtn.textContent = '남기는 중...';
+  // ── Auto-save ────────────────────────────
+  let autoSaveTimer;
+  let lastSavedContent = '';
+  let isSaving = false;
 
+  function setStatus(msg, color) {
+    const el = document.getElementById('autosave-status');
+    if (el) { el.textContent = msg; el.style.color = color || 'var(--ink-muted)'; }
+  }
+
+  async function triggerAutoSave() {
+    if (isSaving) return;
+    const content = document.getElementById('answer-input').value.trim();
+    if (!content || content === lastSavedContent) return;
+    isSaving = true;
+    setStatus('저장 중...', 'var(--ink-muted)');
+    const visibility = document.querySelector('input[name="vis"]:checked').value;
+    let err;
     if (state.myAnswer) {
-      const { error } = await supabase.from('daily_answers').update({
+      ({ error: err } = await supabase.from('daily_answers').update({
         content, visibility, updated_at: new Date().toISOString(),
-      }).eq('id', state.myAnswer.id);
-      if (error) { alert('수정 실패: ' + error.message); submitBtn.disabled = false; submitBtn.textContent = '남기기'; return; }
+      }).eq('id', state.myAnswer.id));
     } else {
-      const { error } = await supabase.from('daily_answers').insert({
+      const result = await supabase.from('daily_answers').insert({
         user_id: currentUser.id,
         question_id: todaysQ.id,
         content, visibility,
-      });
-      if (error) { alert('남기지 못했어요: ' + error.message); submitBtn.disabled = false; submitBtn.textContent = '남기기'; return; }
+      }).select().single();
+      err = result.error;
+      if (!err && result.data) {
+        state.myAnswer = { ...result.data, _likes: 0, _myLike: false, _comments: 0 };
+      }
     }
-    closeWriteModal();
-    submitBtn.disabled = false;
-    submitBtn.textContent = '남기기';
+    isSaving = false;
+    if (err) { setStatus('저장 실패 ✗', 'var(--danger)'); return; }
+    lastSavedContent = content;
+    setStatus('저장됨 ✓', 'var(--primary)');
     await loadAnswers();
+  }
+
+  document.getElementById('answer-input').addEventListener('input', () => {
+    clearTimeout(autoSaveTimer);
+    const content = document.getElementById('answer-input').value.trim();
+    if (!content) { setStatus('글을 쓰면 자동으로 저장돼요', ''); return; }
+    setStatus('...', 'var(--ink-muted)');
+    autoSaveTimer = setTimeout(triggerAutoSave, 1500);
+  });
+
+  document.getElementById('answer-input').addEventListener('blur', () => {
+    clearTimeout(autoSaveTimer);
+    const content = document.getElementById('answer-input').value.trim();
+    if (content && content !== lastSavedContent) triggerAutoSave();
   });
 
   async function deleteMyAnswer() {
@@ -815,13 +846,6 @@
       .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
-  // 키보드 올라올 때 저장 버튼이 보이도록 스크롤
-  document.getElementById('answer-input').addEventListener('focus', () => {
-    setTimeout(() => {
-      const btn = document.getElementById('answer-submit');
-      if (btn) btn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }, 400);
-  });
 </script>
 
 </body>

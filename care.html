@@ -818,7 +818,10 @@
   <div class="modal">
     <div class="modal-header" style="padding: 20px 22px 0;">
       <div class="modal-title" id="log-modal-title">오늘 기록 쓰기</div>
-      <button type="button" class="modal-close" data-close-modal="log-modal">×</button>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button type="button" id="log-cancel-btn" style="background:none;border:none;font-size:13px;color:var(--ink-muted);cursor:pointer;padding:6px 4px;font-family:inherit;">취소</button>
+        <button type="button" id="log-save-close-btn" style="background:var(--ink);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;">저장</button>
+      </div>
     </div>
     <p class="modal-sub" style="padding: 0 22px;">
       떠오르는 칸만 채우셔도 됩니다. 모두 선택 항목입니다.
@@ -886,9 +889,8 @@
         </div>
       </div>
 
-      <div style="padding: 16px 0 32px;">
-        <button type="submit" class="primary-cta" id="log-submit">기록 저장</button>
-      </div>
+      <!-- 저장은 모달 상단 [저장] 버튼 또는 폼 submit으로 처리 -->
+      <div style="padding: 8px 0 32px;"></div>
     </form>
     </div>
   </div>
@@ -1750,9 +1752,17 @@ function toggleQuickCard(btn, wrapId) {
 
   $('write-log-btn').addEventListener('click', () => openLogModal());
 
+  // 상단 [저장] 버튼 → 폼 submit 트리거
+  $('log-save-close-btn').addEventListener('click', () => {
+    $('log-form').dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+  });
+
+  // 상단 [취소] 버튼 → 저장 없이 닫기
+  $('log-cancel-btn').addEventListener('click', () => closeModal('log-modal'));
+
   $('log-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const submit = $('log-submit');
+    const submit = $('log-save-close-btn');
     submit.disabled = true;
     submit.textContent = '저장 중…';
     hideAlert();
@@ -1792,7 +1802,7 @@ function toggleQuickCard(btn, wrapId) {
       showAlert('저장 실패: ' + (e.message || e));
     } finally {
       submit.disabled = false;
-      submit.textContent = '기록 저장';
+      submit.textContent = '저장';
     }
   });
 
@@ -1810,15 +1820,6 @@ function toggleQuickCard(btn, wrapId) {
     return div.innerHTML;
   }
 
-  // 키보드 올라올 때 저장 버튼이 보이도록 스크롤
-  document.addEventListener('focusin', (e) => {
-    if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') {
-      setTimeout(() => {
-        const btn = document.getElementById('log-submit');
-        if (btn) btn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }, 400);
-    }
-  });
 
 </script>
 
