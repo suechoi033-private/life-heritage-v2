@@ -279,12 +279,18 @@
       flex: 1;
       min-height: 0;
     }
-    .modal-footer {
-      padding: 12px 22px 28px;
+    /* 저장 버튼 — 모달 독립 fixed 바 */
+    .float-save {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 12px 22px max(28px, env(safe-area-inset-bottom));
       background: var(--bg);
       border-top: 1px solid var(--line);
-      flex-shrink: 0;
+      z-index: 200;
     }
+    .float-save.hidden { display: none; }
     @media (min-width: 640px) {
       .modal { border-radius: 20px; }
     }
@@ -429,7 +435,7 @@
       <div class="modal-title" id="write-modal-title">내 답 쓰기</div>
       <button type="button" class="modal-close" data-close-modal>×</button>
     </div>
-    <div class="modal-body">
+    <div class="modal-body" style="padding-bottom: 16px;">
       <div class="modal-question" id="modal-question-text">—</div>
       <textarea id="answer-input" placeholder="짧게 한 문장이라도 괜찮아요." maxlength="2000"></textarea>
       <div class="visibility-row">
@@ -437,10 +443,12 @@
         <label><input type="radio" name="vis" value="private"> 나만 보기</label>
       </div>
     </div>
-    <div class="modal-footer">
-      <button type="button" class="modal-submit" id="answer-submit">남기기</button>
-    </div>
   </div>
+</div>
+
+<!-- 저장 버튼: 모달과 독립된 fixed 바 — 키보드 위에 항상 표시 -->
+<div class="float-save hidden" id="float-save">
+  <button type="button" class="modal-submit" id="answer-submit">남기기</button>
 </div>
 
 <footer class="auth-footer">
@@ -672,14 +680,21 @@
     const visRadio = document.querySelector(`input[name="vis"][value="${state.myAnswer?.visibility || 'public'}"]`);
     if (visRadio) visRadio.checked = true;
     modal.classList.remove('hidden');
+    document.getElementById('float-save').classList.remove('hidden');
     setTimeout(() => document.getElementById('answer-input').focus(), 100);
   }
 
+  function closeWriteModal() {
+    document.getElementById('write-modal').classList.add('hidden');
+    document.getElementById('float-save').classList.add('hidden');
+    document.getElementById('float-save').style.bottom = '';
+  }
+
   document.querySelectorAll('[data-close-modal]').forEach(btn => {
-    btn.addEventListener('click', () => document.getElementById('write-modal').classList.add('hidden'));
+    btn.addEventListener('click', closeWriteModal);
   });
   document.getElementById('write-modal').addEventListener('click', (e) => {
-    if (e.target.id === 'write-modal') document.getElementById('write-modal').classList.add('hidden');
+    if (e.target.id === 'write-modal') closeWriteModal();
   });
 
   document.getElementById('answer-submit').addEventListener('click', async () => {
@@ -703,7 +718,7 @@
       });
       if (error) { alert('남기지 못했어요: ' + error.message); submitBtn.disabled = false; submitBtn.textContent = '남기기'; return; }
     }
-    document.getElementById('write-modal').classList.add('hidden');
+    closeWriteModal();
     submitBtn.disabled = false;
     submitBtn.textContent = '남기기';
     await loadAnswers();
@@ -818,15 +833,15 @@
       .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
-  // 키보드 올라올 때 백드롭을 visual viewport에 맞춰 조정 (iOS 대응)
+  // 키보드 올라올 때 저장 버튼을 키보드 바로 위로 올림 (iOS/Android 공통)
   if (window.visualViewport) {
     const onVVChange = () => {
       const vv = window.visualViewport;
-      document.querySelectorAll('.modal-backdrop').forEach(el => {
-        el.style.top = vv.offsetTop + 'px';
-        el.style.height = vv.height + 'px';
-        el.style.bottom = 'auto';
-      });
+      const keyboardH = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      const bar = document.getElementById('float-save');
+      if (bar && !bar.classList.contains('hidden')) {
+        bar.style.bottom = keyboardH + 'px';
+      }
     };
     window.visualViewport.addEventListener('resize', onVVChange);
     window.visualViewport.addEventListener('scroll', onVVChange);

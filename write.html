@@ -1104,18 +1104,25 @@
     return div.innerHTML;
   }
 
-  // 키보드 올라올 때 저장 버튼이 키보드 위에 오도록 조정 (iOS transform 방식)
+  // 키보드 올라올 때 저장 버튼을 키보드 바로 위로 올림 (iOS/Android 공통)
   if (window.visualViewport) {
     const stepNav = document.getElementById('step-nav');
     const onVVChange = () => {
       const vv = window.visualViewport;
-      const offsetFromBottom = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-      if (stepNav) {
-        stepNav.style.transform = `translateY(-${offsetFromBottom}px)`;
-      }
+      const keyboardH = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      if (stepNav) stepNav.style.bottom = keyboardH + 'px';
     };
     window.visualViewport.addEventListener('resize', onVVChange);
     window.visualViewport.addEventListener('scroll', onVVChange);
+    // textarea 포커스 시 강제 재계산
+    document.addEventListener('focusin', (e) => {
+      if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') {
+        setTimeout(onVVChange, 400);
+      }
+    });
+    document.addEventListener('focusout', () => {
+      setTimeout(onVVChange, 100);
+    });
   }
 </script>
 

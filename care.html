@@ -395,12 +395,18 @@
       flex: 1;
       min-height: 0;
     }
-    .modal-footer {
-      padding: 12px 22px 28px;
+    /* 저장 버튼 — 모달 독립 fixed 바 */
+    .float-save {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 12px 22px max(28px, env(safe-area-inset-bottom));
       background: var(--bg);
       border-top: 1px solid var(--line);
-      flex-shrink: 0;
+      z-index: 200;
     }
+    .float-save.hidden { display: none; }
     @media (min-width: 640px) {
       .modal { border-radius: 20px; }
     }
@@ -893,10 +899,12 @@
 
     </form>
     </div>
-    <div class="modal-footer">
-      <button type="submit" form="log-form" class="primary-cta" id="log-submit">기록 저장</button>
-    </div>
   </div>
+</div>
+
+<!-- 저장 버튼: 모달과 독립된 fixed 바 — 키보드 위에 항상 표시 -->
+<div class="float-save hidden" id="float-save-log">
+  <button type="submit" form="log-form" class="primary-cta" id="log-submit">기록 저장</button>
 </div>
 
 <!-- Invite modal (코드 만들기) -->
@@ -1642,13 +1650,24 @@ function toggleQuickCard(btn, wrapId) {
   }
   function closeModal(id) {
     $(id).classList.add('hidden');
+    // log-modal 닫힐 때 저장바도 숨김
+    if (id === 'log-modal') {
+      const bar = $('float-save-log');
+      if (bar) { bar.classList.add('hidden'); bar.style.bottom = ''; }
+    }
   }
   document.querySelectorAll('[data-close-modal]').forEach(btn => {
     btn.addEventListener('click', () => closeModal(btn.dataset.closeModal));
   });
   document.querySelectorAll('.modal-backdrop').forEach(bd => {
     bd.addEventListener('click', (e) => {
-      if (e.target === bd) bd.classList.add('hidden');
+      if (e.target === bd) {
+        bd.classList.add('hidden');
+        if (bd.id === 'log-modal') {
+          const bar = $('float-save-log');
+          if (bar) { bar.classList.add('hidden'); bar.style.bottom = ''; }
+        }
+      }
     });
   });
 
@@ -1731,6 +1750,7 @@ function toggleQuickCard(btn, wrapId) {
     state.editingLogId = logId || null;
     const modal = $('log-modal');
     modal.classList.remove('hidden');
+    $('float-save-log').classList.remove('hidden');
     $('log-modal-title').textContent = logId ? '기록 수정' : '오늘 기록 쓰기';
     $('log-form').reset();
 
@@ -1815,15 +1835,15 @@ function toggleQuickCard(btn, wrapId) {
     return div.innerHTML;
   }
 
-  // 키보드 올라올 때 백드롭을 visual viewport에 맞춰 조정 (iOS 대응)
+  // 키보드 올라올 때 저장 버튼을 키보드 바로 위로 올림 (iOS/Android 공통)
   if (window.visualViewport) {
     const onVVChange = () => {
       const vv = window.visualViewport;
-      document.querySelectorAll('.modal-backdrop').forEach(el => {
-        el.style.top = vv.offsetTop + 'px';
-        el.style.height = vv.height + 'px';
-        el.style.bottom = 'auto';
-      });
+      const keyboardH = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      const bar = $('float-save-log');
+      if (bar && !bar.classList.contains('hidden')) {
+        bar.style.bottom = keyboardH + 'px';
+      }
     };
     window.visualViewport.addEventListener('resize', onVVChange);
     window.visualViewport.addEventListener('scroll', onVVChange);
