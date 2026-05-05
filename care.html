@@ -894,10 +894,10 @@
         </div>
       </div>
 
+      <div style="padding: 16px 0 32px;">
+        <button type="submit" class="primary-cta" id="log-submit">기록 저장</button>
+      </div>
     </form>
-    </div>
-    <div class="modal-footer">
-      <button type="submit" form="log-form" class="primary-cta" id="log-submit">기록 저장</button>
     </div>
   </div>
 </div>
@@ -1818,19 +1818,15 @@ function toggleQuickCard(btn, wrapId) {
     return div.innerHTML;
   }
 
-  // iOS 15 이하 fallback: visualViewport로 backdrop 높이 직접 설정
-  if (window.visualViewport) {
-    const syncBackdrop = () => {
-      const h = window.visualViewport.height;
-      const t = window.visualViewport.offsetTop;
-      document.querySelectorAll('.modal-backdrop').forEach(el => {
-        el.style.height = h + 'px';
-        el.style.top = t + 'px';
-      });
-    };
-    window.visualViewport.addEventListener('resize', syncBackdrop);
-    window.visualViewport.addEventListener('scroll', syncBackdrop);
-  }
+  // 키보드 올라올 때 저장 버튼이 보이도록 스크롤
+  document.addEventListener('focusin', (e) => {
+    if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') {
+      setTimeout(() => {
+        const btn = document.getElementById('log-submit');
+        if (btn) btn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 400);
+    }
+  });
 
 </script>
 
