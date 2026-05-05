@@ -833,19 +833,33 @@
       .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
-  // 키보드 올라올 때 저장 버튼을 키보드 바로 위로 올림 (iOS/Android 공통)
-  if (window.visualViewport) {
-    const onVVChange = () => {
-      const vv = window.visualViewport;
+  // iOS Safari: 키보드 올라올 때 저장 버튼 위로 올리기
+  function adjustFloatSave(barId) {
+    const bar = document.getElementById(barId);
+    if (!bar || bar.classList.contains('hidden')) return;
+    const vv = window.visualViewport;
+    if (vv) {
       const keyboardH = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-      const bar = document.getElementById('float-save');
-      if (bar && !bar.classList.contains('hidden')) {
-        bar.style.bottom = keyboardH + 'px';
-      }
-    };
-    window.visualViewport.addEventListener('resize', onVVChange);
-    window.visualViewport.addEventListener('scroll', onVVChange);
+      bar.style.bottom = keyboardH + 'px';
+    }
   }
+
+  if (window.visualViewport) {
+    // resize/scroll 이벤트 (Android Chrome + iOS 일부)
+    window.visualViewport.addEventListener('resize', () => adjustFloatSave('float-save'));
+    window.visualViewport.addEventListener('scroll', () => adjustFloatSave('float-save'));
+  }
+
+  // iOS Safari 보조: input focus 시 딜레이 후 강제 재계산
+  document.addEventListener('focusin', (e) => {
+    if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') {
+      setTimeout(() => adjustFloatSave('float-save'), 400);
+      setTimeout(() => adjustFloatSave('float-save'), 800);
+    }
+  });
+  document.addEventListener('focusout', () => {
+    setTimeout(() => adjustFloatSave('float-save'), 100);
+  });
 </script>
 
 </body>

@@ -1104,26 +1104,32 @@
     return div.innerHTML;
   }
 
-  // 키보드 올라올 때 저장 버튼을 키보드 바로 위로 올림 (iOS/Android 공통)
-  if (window.visualViewport) {
-    const stepNav = document.getElementById('step-nav');
-    const onVVChange = () => {
-      const vv = window.visualViewport;
+  // iOS Safari: 키보드 올라올 때 저장 버튼 위로 올리기
+  const stepNav = document.getElementById('step-nav');
+  function adjustStepNav() {
+    if (!stepNav) return;
+    const vv = window.visualViewport;
+    if (vv) {
       const keyboardH = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-      if (stepNav) stepNav.style.bottom = keyboardH + 'px';
-    };
-    window.visualViewport.addEventListener('resize', onVVChange);
-    window.visualViewport.addEventListener('scroll', onVVChange);
-    // textarea 포커스 시 강제 재계산
-    document.addEventListener('focusin', (e) => {
-      if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') {
-        setTimeout(onVVChange, 400);
-      }
-    });
-    document.addEventListener('focusout', () => {
-      setTimeout(onVVChange, 100);
-    });
+      stepNav.style.bottom = keyboardH + 'px';
+    }
   }
+
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', adjustStepNav);
+    window.visualViewport.addEventListener('scroll', adjustStepNav);
+  }
+
+  // iOS Safari 보조: input focus 시 딜레이 후 강제 재계산
+  document.addEventListener('focusin', (e) => {
+    if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') {
+      setTimeout(adjustStepNav, 400);
+      setTimeout(adjustStepNav, 800);
+    }
+  });
+  document.addEventListener('focusout', () => {
+    setTimeout(adjustStepNav, 100);
+  });
 </script>
 
 </body>
