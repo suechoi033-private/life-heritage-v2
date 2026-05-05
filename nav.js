@@ -9,7 +9,7 @@ import { supabase } from './auth.js';
 const TABS = [
   { key: 'home',    label: '홈',        icon: '🏠', href: './index.html' },
   { key: 'care',    label: '돌봄',      icon: '🤝', href: './care.html'   },
-  { key: 'self',    label: '내 마무리', icon: '🕊',  href: './self.html'   },
+  { key: 'self',    label: '삶',        icon: '🕊',  href: './self.html'   },
   { key: 'stories', label: '기억',      icon: '🌿', href: './stories.html' },
   { key: 'my',      label: '마이',      icon: '👤', href: './my.html'     },
 ];

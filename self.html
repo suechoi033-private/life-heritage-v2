@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>내 마무리 · 잇다</title>
+  <title>나의 삶 · 잇다</title>
   <link rel="stylesheet" href="./auth-styles.css">
   <style>
     body { background: var(--bg); }
@@ -223,7 +223,7 @@
 import { supabase } from './auth.js';
 import { renderNav } from './nav.js';
 
-await renderNav({ active: 'self', infoIcon: true, title: '내 마무리' });
+await renderNav({ active: 'self', infoIcon: true, title: '나의 삶' });
 
 const { data: { session } } = await supabase.auth.getSession();
 const user = session?.user ?? null;
@@ -234,7 +234,7 @@ if (!user) {
   main.innerHTML = `
     <div class="login-prompt">
       <div class="login-prompt-icon">🕊</div>
-      <div class="login-prompt-title">내 마무리를<br>시작해 볼까요?</div>
+      <div class="login-prompt-title">나의 삶을<br>기록해 볼까요?</div>
       <div class="login-prompt-desc">
         사전연명의료의향서, 디지털 자산, 가족에게 남기는 메시지 —<br>
         한 번에 다 하지 않아도 괜찮아요.
@@ -338,7 +338,7 @@ const progressHtml = pct !== null ? `
 
 let html = `
   <div class="self-header">
-    <div class="self-header-sub">내 마무리</div>
+    <div class="self-header-sub">나의 삶</div>
     <div class="self-header-title">"이따가 하지 말고 지금."</div>
     <div class="self-header-desc">한 번에 다 하지 않아도 괜찮아요.</div>
   </div>
