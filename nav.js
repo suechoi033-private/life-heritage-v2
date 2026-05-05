@@ -44,6 +44,8 @@ function _renderTopBar({ loggedIn, infoIcon, title }) {
   }
   if (loggedIn) {
     actions.push(`<button id="itda-ask-btn" title="오늘 잇고" aria-label="오늘 잇고">✏️</button>`);
+  } else {
+    actions.push(`<a href="./login.html" style="font-size:14px;color:var(--ink-soft);text-decoration:none;font-weight:600;padding:4px 2px;">로그인</a>`);
   }
 
   bar.innerHTML = `

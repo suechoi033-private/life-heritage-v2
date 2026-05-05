@@ -651,6 +651,10 @@
   </section>
 </main>
 
+<div style="text-align:center;padding:28px 0 12px;">
+  <button class="logout-btn" id="logout-btn">로그아웃</button>
+</div>
+
 <footer class="auth-footer">
   © 2026 라이프헤리티지 · 잇다
 </footer>
@@ -828,6 +832,11 @@
   document.getElementById('tab-care').addEventListener('click', () => switchTab('care'));
   document.getElementById('tab-memory').addEventListener('click', () => switchTab('memory'));
   document.getElementById('tab-life').addEventListener('click', () => { switchTab('life'); loadLifeTab(); });
+
+  document.getElementById('logout-btn').addEventListener('click', async () => {
+    if (!confirm('로그아웃 하시겠어요?')) return;
+    await signOut();
+  });
 
   function switchTab(name) {
     document.querySelectorAll('.tab-btn').forEach(btn => {

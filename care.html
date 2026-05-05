@@ -632,8 +632,8 @@
     </p>
   </div>
 
-  <!-- 부모님 의향 유도 배너 -->
-  <div class="parent-intent-banner">
+  <!-- 부모님 의향 유도 배너 (돌봄 대상이 있을 때만 표시) -->
+  <div class="parent-intent-banner" id="parent-intent-banner" style="display:none;">
     <span style="font-size:18px;">🕊</span>
     <span>이 분의 의향이 등록되어 있나요? 본인이 직접 잇다를 써두시면 가족이 더 편해요.</span>
     <a href="./self.html">등록 안내 →</a>
@@ -1113,6 +1113,10 @@ function toggleQuickCard(btn, wrapId) {
     if (state.subjects.length === 0) {
       $('no-subject-state').classList.remove('hidden');
     } else {
+      // 돌봄 대상이 있을 때만 의향 유도 배너 표시
+      const banner = document.getElementById('parent-intent-banner');
+      if (banner) banner.style.display = '';
+
       // Keep current selection if still valid, else pick first active
       const stillValid = state.subjects.find(s => s.id === state.currentSubjectId);
       if (!stillValid) {

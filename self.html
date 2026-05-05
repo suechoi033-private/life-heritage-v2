@@ -245,8 +245,7 @@ if (!user) {
       </div>
     </div>
   `;
-  return;
-}
+} else {
 
 // 카드 정의 (우선순위 순)
 const CARDS = [
@@ -381,6 +380,8 @@ html += `</div>
 `;
 
 main.innerHTML = html;
+
+} // end if (user)
 </script>
 
 <script src="./scroll-top.js" defer></script>
