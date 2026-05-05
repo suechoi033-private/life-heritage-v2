@@ -251,9 +251,13 @@
     .empty p { color: var(--ink-muted); font-size: 14px; line-height: 1.7; }
 
     /* ── Write modal ─────────────────────── */
+    /* backdrop을 100dvh로 → 키보드 올라오면 backdrop 자체가 줄어서 모달이 키보드 위에 위치 */
     .modal-backdrop {
       position: fixed;
-      inset: 0;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 100dvh;
       background: rgba(10,10,10,0.4);
       z-index: 100;
       display: flex;
@@ -261,13 +265,12 @@
       justify-content: center;
     }
     .modal-backdrop.hidden { display: none; }
-    /* 모바일: 전체화면. dvh = 키보드 올라오면 자동 축소 */
     .modal {
       background: var(--bg);
       border-radius: 20px 20px 0 0;
       width: 100%;
       max-width: 600px;
-      height: 100dvh;
+      max-height: 92dvh;
       display: flex;
       flex-direction: column;
     }
@@ -277,22 +280,15 @@
       flex: 1;
       min-height: 0;
     }
-    /* 저장 버튼 — 모달 내부 sticky (dvh가 키보드 영역 제외해줌) */
     .modal-footer {
       flex-shrink: 0;
-      padding: 12px 22px env(safe-area-inset-bottom, 28px);
-      padding-bottom: max(28px, env(safe-area-inset-bottom));
+      padding: 12px 22px max(28px, env(safe-area-inset-bottom));
       background: var(--bg);
       border-top: 1px solid var(--line);
     }
-    /* 태블릿/데스크탑: 기존 시트 스타일 */
     @media (min-width: 640px) {
-      .modal-backdrop { align-items: center; }
-      .modal {
-        height: auto;
-        max-height: 90vh;
-        border-radius: 20px;
-      }
+      .modal-backdrop { height: 100vh; align-items: center; }
+      .modal { max-height: 90vh; border-radius: 20px; }
     }
     .modal-header {
       display: flex;
