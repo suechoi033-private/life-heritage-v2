@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>새 이야기 쓰기 · 잇다</title>
-  <link rel="stylesheet" href="/auth-styles.css">
+  <link rel="stylesheet" href="auth-styles.css">
   <style>
     /* ── Layout ─────────────────────────── */
     .write-shell {
@@ -638,16 +638,16 @@
       내 기록 페이지에서 언제든 다시 열어볼 수 있어요.
     </p>
     <div class="done-actions">
-      <a href="/my.html" class="btn btn-primary" style="text-decoration: none;">내 기록으로 →</a>
-      <a href="/write.html" class="btn btn-ghost" style="text-decoration: none;">또 다른 이야기 쓰기</a>
+      <a href="my.html" class="btn btn-primary" style="text-decoration: none;">내 기록으로 →</a>
+      <a href="write.html" class="btn btn-ghost" style="text-decoration: none;">또 다른 이야기 쓰기</a>
     </div>
   </div>
 </main>
 
 <script type="module">
-  import { requireAuth, supabase } from '/auth.js';
+  import { requireAuth, supabase } from 'auth.js';
 
-  const session = await requireAuth('/login.html');
+  const session = await requireAuth('login.html');
   if (!session) { /* redirected */ }
 
   const user = session.user;
@@ -804,7 +804,7 @@
 
   document.getElementById('exit-btn').addEventListener('click', () => {
     if (confirm('저장하지 않고 나가시겠어요? 지금까지 입력한 내용은 사라집니다.')) {
-      window.location.href = '/my.html';
+      window.location.href = 'my.html';
     }
   });
 
@@ -1056,7 +1056,7 @@
       // 3. Success
       if (isEdit) {
         // Redirect straight back to the story detail
-        window.location.href = '/story.html?id=' + story.id;
+        window.location.href = 'story.html?id=' + story.id;
         return;
       }
       document.getElementById('write-form').style.display = 'none';

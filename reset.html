@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>비밀번호 재설정 · 잇다</title>
-  <link rel="stylesheet" href="/auth-styles.css">
+  <link rel="stylesheet" href="auth-styles.css">
 </head>
 <body>
 
@@ -43,7 +43,7 @@
 </footer>
 
 <script type="module">
-  import { updatePassword, friendlyError, supabase } from '/auth.js';
+  import { updatePassword, friendlyError, supabase } from 'auth.js';
 
   const form = document.getElementById('reset-form');
   const alertBox = document.getElementById('alert');
@@ -103,7 +103,7 @@
     );
 
     setTimeout(() => {
-      window.location.href = '/login.html';
+      window.location.href = 'login.html';
     }, 3000);
   });
 </script>

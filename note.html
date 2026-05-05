@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>잇다 노트 · 잇다</title>
-  <link rel="stylesheet" href="/auth-styles.css">
+  <link rel="stylesheet" href="auth-styles.css">
   <style>
     .shell {
       max-width: 960px;
@@ -294,12 +294,12 @@
 </footer>
 
 <script type="module">
-  import { supabase } from '/auth.js';
+  import { supabase } from 'auth.js';
 
   const { data: { session } } = await supabase.auth.getSession();
   const currentUser = session?.user || null;
 
-  const { renderTopBar } = await import('/nav.js');
+  const { renderTopBar } = await import('nav.js');
   await renderTopBar({ active: 'note' });
 
   // 6개 도메인 정의
@@ -359,7 +359,7 @@
       const done = getProgress(d.key);
       const pct = d.total > 0 ? Math.round((done / d.total) * 100) : 0;
       return `
-        <a href="/note/${d.key}.html" class="domain-card" data-domain="${d.key}">
+        <a href="note/${d.key}.html" class="domain-card" data-domain="${d.key}">
           <div class="domain-card-head">
             <div class="domain-icon">${d.icon}</div>
             <div class="domain-name">${d.name}</div>
@@ -402,14 +402,14 @@
   document.getElementById('add-recipient-btn').addEventListener('click', (e) => {
     e.preventDefault();
     if (!currentUser) {
-      window.location.href = '/login.html';
+      window.location.href = 'login.html';
       return;
     }
     alert('신뢰 수신자 지정 기능은 잇다 노트 V2에서 열려요. 베타 테스터로 먼저 써보고 싶으시면 마이페이지에서 알려 주세요.');
   });
 </script>
 
-<script src="/scroll-top.js" defer></script>
+<script src="scroll-top.js" defer></script>
 
 </body>
 </html>

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>어드민 · 잇다</title>
-  <link rel="stylesheet" href="/auth-styles.css">
+  <link rel="stylesheet" href="auth-styles.css">
   <style>
     .admin-shell {
       max-width: 960px;
@@ -553,8 +553,8 @@
       <span class="admin-badge">ADMIN</span>
     </a>
     <div class="top-bar-links">
-      <a href="/my.html">내 기록</a>
-      <a href="/care.html">돌봄</a>
+      <a href="my.html">내 기록</a>
+      <a href="care.html">돌봄</a>
       <a href="/">홈</a>
     </div>
   </div>
@@ -656,11 +656,11 @@
 </footer>
 
 <script type="module">
-  import { requireAuth, supabase } from '/auth.js';
+  import { requireAuth, supabase } from 'auth.js';
 
   const ADMIN_EMAIL = 'sue.choi033@gmail.com';
 
-  const session = await requireAuth('/login.html');
+  const session = await requireAuth('login.html');
   if (!session) { /* redirected */ }
   const user = session.user;
 
@@ -915,7 +915,7 @@
               ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;">${tags.map(t => `<span class="story-tag ${t.primary ? 'primary' : ''}" style="font-size:10.5px;padding:1px 7px;">${escapeHtml(t.label)}</span>`).join('')}</div>`
               : '';
             return `
-              <a href="/story.html?id=${s.id}" target="_blank" class="item-row">
+              <a href="story.html?id=${s.id}" target="_blank" class="item-row">
                 <div class="item-main">
                   ${tagsHtml}
                   <div class="item-title">${escapeHtml(s.title || '(제목 없음)')}</div>
@@ -943,7 +943,7 @@
               ? `<div style="margin-bottom:6px;"><span class="story-tag primary" style="font-size:10.5px;padding:1px 7px;">${escapeHtml(catLabel)}</span></div>`
               : '';
             return `
-              <a href="/ask.html?id=${a.question_id}" target="_blank" class="item-row">
+              <a href="ask.html?id=${a.question_id}" target="_blank" class="item-row">
                 <div class="item-main">
                   ${catHtml}
                   <div class="item-title">Q. ${escapeHtml(qText)}</div>
@@ -1068,7 +1068,7 @@
         <div class="story-actions">
           ${featureBtn}
           ${hideBtn}
-          <a href="/story.html?id=${s.id}" target="_blank" class="btn-link">상세 →</a>
+          <a href="story.html?id=${s.id}" target="_blank" class="btn-link">상세 →</a>
         </div>
       </div>
     `;

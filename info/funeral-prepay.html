@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>상조 가입 가이드 — 미리 준비하기 전에 알아둘 것 · 잇다</title>
-  <link rel="stylesheet" href="/auth-styles.css">
+  <link rel="stylesheet" href="../auth-styles.css">
   <style>
     .shell { max-width: 820px; margin: 0 auto; padding: 32px 20px 80px; flex: 1; width: 100%; }
     @media (min-width: 640px) { .shell { padding: 56px 32px 120px; } }
@@ -104,7 +104,7 @@
 
 <main class="shell">
   <div class="breadcrumb">
-    <a href="/info.html">정보</a> · 미리 · <span style="color: var(--ink-soft);">상조 가입</span>
+    <a href="../info.html">정보</a> · 미리 · <span style="color: var(--ink-soft);">상조 가입</span>
   </div>
 
   <header class="header">
@@ -309,7 +309,7 @@
 
     <div class="faq-item">
       <div class="faq-q">잇다는 어떤 도움을 줄 수 있나요?</div>
-      <div class="faq-a">잇다 노트의 <a href="/note.html" style="color:var(--primary);">남기고 싶은 정리</a>에 ① 가입한 상조회사명·연락처 ② 회원번호 ③ 약정 서비스 내역 ④ 가족이 알아야 할 사용 의지를 함께 보관해두세요. 갑자기 일이 생겼을 때 가족이 헤매지 않을 수 있어요. <strong>잇다는 향후 공시 데이터 기반 상조 회사 비교 도구를 제공할 예정</strong>이에요.</div>
+      <div class="faq-a">잇다 노트의 <a href="../note.html" style="color:var(--primary);">남기고 싶은 정리</a>에 ① 가입한 상조회사명·연락처 ② 회원번호 ③ 약정 서비스 내역 ④ 가족이 알아야 할 사용 의지를 함께 보관해두세요. 갑자기 일이 생겼을 때 가족이 헤매지 않을 수 있어요. <strong>잇다는 향후 공시 데이터 기반 상조 회사 비교 도구를 제공할 예정</strong>이에요.</div>
     </div>
   </section>
 
@@ -361,7 +361,7 @@
 </footer>
 
 <script type="module">
-  const { renderTopBar } = await import('/nav.js');
+  const { renderTopBar } = await import('../nav.js');
   await renderTopBar({ active: 'info' });
 
   document.querySelectorAll('.faq-item').forEach(item => {
@@ -371,7 +371,7 @@
   });
 </script>
 
-<script src="/scroll-top.js" defer></script>
+<script src="../scroll-top.js" defer></script>
 
 </body>
 </html>

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>남기고 싶은 정리 · 잇다 노트</title>
-  <link rel="stylesheet" href="/auth-styles.css">
+  <link rel="stylesheet" href="../auth-styles.css">
   <style>
     .shell {
       max-width: 1080px;
@@ -291,14 +291,14 @@
   <div class="top-bar-inner">
     <a href="/" class="logo"><span class="logo-mark">●</span> 잇다</a>
     <div id="top-bar-links" style="display: flex; gap: 16px; font-size: 14.5px;">
-      <a href="/login.html" style="color: var(--ink-soft); text-decoration: none;">로그인</a>
+      <a href="../login.html" style="color: var(--ink-soft); text-decoration: none;">로그인</a>
     </div>
   </div>
 </nav>
 
 <main class="shell">
   <div class="breadcrumb">
-    <a href="/note.html">잇다 노트</a> · 유언·메시지
+    <a href="../note.html">잇다 노트</a> · 유언·메시지
   </div>
 
   <div class="header">
@@ -333,7 +333,7 @@
       <div class="links">
         <a href="https://www.lst.go.kr/" target="_blank">국립연명의료관리기관</a><br>
         <a href="https://www.scourt.go.kr/" target="_blank">대법원 — 자필 유언 안내</a><br>
-        <a href="/info.html" target="_blank">잇다 정보 — 미리 챙길 것</a>
+        <a href="../info.html" target="_blank">잇다 정보 — 미리 챙길 것</a>
       </div>
     </aside>
 
@@ -393,15 +393,15 @@
 </footer>
 
 <script type="module">
-  import { requireAuth, supabase } from '/auth.js';
+  import { requireAuth, supabase } from '../auth.js';
 
-  const session = await requireAuth('/login.html');
+  const session = await requireAuth('../login.html');
   if (!session) { /* redirected */ }
   const user = session.user;
   const userName = user.user_metadata?.name || user.email?.split('@')[0] || '나';
 
   // top-bar (unified nav)
-  const { renderTopBar } = await import('/nav.js');
+  const { renderTopBar } = await import('../nav.js');
   await renderTopBar({ active: 'note' });
 
   // ── 수신자 (V1: localStorage. V2: will_messages 테이블) ──

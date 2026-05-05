@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>정보 · 잇다</title>
-  <link rel="stylesheet" href="/auth-styles.css">
+  <link rel="stylesheet" href="auth-styles.css">
   <style>
     .shell {
       max-width: 1040px;
@@ -292,12 +292,12 @@
 </footer>
 
 <script type="module">
-  import { supabase } from '/auth.js';
+  import { supabase } from 'auth.js';
 
   const { data: { session } } = await supabase.auth.getSession();
   const currentUser = session?.user || null;
 
-  const { renderTopBar } = await import('/nav.js');
+  const { renderTopBar } = await import('nav.js');
   await renderTopBar({ active: 'info' });
 
   // ── 카테고리 정의 (시점별) ────────────────────
@@ -372,9 +372,9 @@
     const cat = cats.find(c => c.key === state.category);
     // 실제 콘텐츠가 준비된 카테고리는 해당 페이지로 직접 이동
     const ENABLED = {
-      'advance-directive': '/info/advance-directive.html',
-      'funeral-prepay':    '/info/funeral-prepay.html',
-      'long-term-care':    '/info/long-term-care.html',
+      'advance-directive': 'info/advance-directive.html',
+      'funeral-prepay':    'info/funeral-prepay.html',
+      'long-term-care':    'info/long-term-care.html',
     };
     if (ENABLED[cat.key]) {
       window.location.href = ENABLED[cat.key];
@@ -422,7 +422,7 @@
   render();
 </script>
 
-<script src="/scroll-top.js" defer></script>
+<script src="scroll-top.js" defer></script>
 
 </body>
 </html>

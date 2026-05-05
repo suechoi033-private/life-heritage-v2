@@ -64,7 +64,7 @@ export async function updatePassword(newPassword) {
 }
 
 // Redirect guard: use on protected pages
-export async function requireAuth(redirectTo = '/login.html') {
+export async function requireAuth(redirectTo = 'login.html') {
   const session = await getCurrentSession();
   if (!session) {
     window.location.href = redirectTo;
@@ -74,7 +74,7 @@ export async function requireAuth(redirectTo = '/login.html') {
 }
 
 // Redirect if already logged in (use on signup/login pages)
-export async function redirectIfAuthed(redirectTo = '/my.html') {
+export async function redirectIfAuthed(redirectTo = 'my.html') {
   const session = await getCurrentSession();
   if (session) {
     window.location.href = redirectTo;

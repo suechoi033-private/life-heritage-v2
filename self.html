@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>내 마무리 · 잇다</title>
-  <link rel="stylesheet" href="/auth-styles.css">
+  <link rel="stylesheet" href="auth-styles.css">
   <style>
     body { background: var(--bg); }
 
@@ -213,8 +213,8 @@
 </main>
 
 <script type="module">
-import { supabase } from '/auth.js';
-import { renderNav } from '/nav.js';
+import { supabase } from 'auth.js';
+import { renderNav } from 'nav.js';
 
 await renderNav({ active: 'self', infoIcon: true, title: '내 마무리' });
 
@@ -232,9 +232,9 @@ if (!user) {
         사전연명의료의향서, 디지털 자산, 가족에게 남기는 메시지 —<br>
         한 번에 다 하지 않아도 괜찮아요.
       </div>
-      <a href="/signup.html?mode=self" class="btn-primary">시작하기</a>
+      <a href="signup.html?mode=self" class="btn-primary">시작하기</a>
       <div style="margin-top:12px;font-size:13.5px;color:var(--ink-muted);">
-        이미 계정이 있으시면 <a href="/login.html" style="color:var(--primary);font-weight:700;">로그인</a>
+        이미 계정이 있으시면 <a href="login.html" style="color:var(--primary);font-weight:700;">로그인</a>
       </div>
     </div>
   `;
@@ -247,7 +247,7 @@ const CARDS = [
     key: 'directive',
     icon: '🩺',
     title: '사전연명의료의향서',
-    href: '/info/advance-directive.html',
+    href: 'info/advance-directive.html',
     getStatus: (data) => data?.directive_done
       ? `등록 완료 · ${data.directive_date || ''}`
       : '미작성 · 5분이면 충분해요',
@@ -258,7 +258,7 @@ const CARDS = [
     key: 'digital',
     icon: '🔐',
     title: '디지털 자산 노트',
-    href: '/note/digital.html',
+    href: 'note/digital.html',
     getStatus: (data) => {
       const done = data?.digital_count || 0;
       return done > 0 ? `${done} / 8 카테고리 작성` : '아직 작성 전이에요';
@@ -270,7 +270,7 @@ const CARDS = [
     key: 'funeral',
     icon: '🕊',
     title: '장례 의향',
-    href: '/note/funeral.html',
+    href: 'note/funeral.html',
     getStatus: (data) => data?.funeral_done ? '작성 완료' : '미작성',
     isDone: (data) => !!data?.funeral_done,
     progress: null,
@@ -279,7 +279,7 @@ const CARDS = [
     key: 'message',
     icon: '💌',
     title: '가족에게 남기는 메시지',
-    href: '/note/messages.html',
+    href: 'note/messages.html',
     getStatus: (data) => {
       const cnt = data?.message_count || 0;
       return cnt > 0 ? `초안 ${cnt}편 보관 중` : '아직 작성 전이에요';
@@ -291,7 +291,7 @@ const CARDS = [
     key: 'lock',
     icon: '👨‍👩‍👧',
     title: '가족 잠금 공유',
-    href: '/note/family-lock.html',
+    href: 'note/family-lock.html',
     getStatus: (data) => data?.lock_shared ? '공유 중' : '아직 공유 안 됨',
     isDone: (data) => !!data?.lock_shared,
     progress: null,
@@ -376,6 +376,6 @@ html += `</div>
 main.innerHTML = html;
 </script>
 
-<script src="/scroll-top.js" defer></script>
+<script src="scroll-top.js" defer></script>
 </body>
 </html>
