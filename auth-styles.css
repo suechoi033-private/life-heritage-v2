@@ -1,8 +1,7 @@
 /* Life Heritage · 잇다 — Auth pages shared styles
    Matches landing-v2 terracotta palette */
 
-@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css');
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700;800&display=swap');
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css');
 
 :root {
   /* === 잇다 디자인 토큰 v2 (모바일 우선) === */
@@ -24,8 +23,8 @@
   --danger-soft: #F5E4E4;
   --success: #4F8A67;
   --success-soft: #E4F2EA;
-  --font-sans: 'Pretendard Variable', 'Pretendard', -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
-  --font-serif: 'Noto Serif KR', 'Apple SD Gothic Neo', serif;
+  --font-sans: 'Pretendard Variable', 'Noto Sans KR', 'Apple SD Gothic Neo', '맑은 고딕', 'Malgun Gothic', sans-serif;
+  --font-serif: 'Pretendard Variable', 'Noto Sans KR', 'Apple SD Gothic Neo', '맑은 고딕', 'Malgun Gothic', sans-serif;
   --radius: 16px;
   --radius-sm: 12px;
 }
