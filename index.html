@@ -134,6 +134,7 @@
       display: flex;
       align-items: flex-start;
       gap: 12px;
+      cursor: pointer;
     }
     .card-nudge-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
     .card-nudge-body { flex: 1; }
@@ -398,8 +399,14 @@ if (user) {
 
   cardsEl.innerHTML = html;
 
+  // nudge 카드 전체 클릭 → self.html
+  document.getElementById('nudge-card')?.addEventListener('click', (e) => {
+    if (e.target.closest('.nudge-dismiss')) return; // X 버튼은 제외
+    window.location.href = './self.html';
+  });
   // nudge 닫기
-  document.getElementById('nudge-dismiss-btn')?.addEventListener('click', () => {
+  document.getElementById('nudge-dismiss-btn')?.addEventListener('click', (e) => {
+    e.stopPropagation();
     const d = new Date();
     d.setDate(d.getDate() + 7);
     localStorage.setItem('nudge_dismissed_until', d.toISOString());

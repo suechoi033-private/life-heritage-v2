@@ -824,6 +824,19 @@
       .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
+  // iOS 15 이하 fallback: visualViewport로 backdrop 높이 직접 설정
+  if (window.visualViewport) {
+    const syncBackdrop = () => {
+      const h = window.visualViewport.height;
+      const t = window.visualViewport.offsetTop;
+      document.querySelectorAll('.modal-backdrop').forEach(el => {
+        el.style.height = h + 'px';
+        el.style.top = t + 'px';
+      });
+    };
+    window.visualViewport.addEventListener('resize', syncBackdrop);
+    window.visualViewport.addEventListener('scroll', syncBackdrop);
+  }
 </script>
 
 </body>
