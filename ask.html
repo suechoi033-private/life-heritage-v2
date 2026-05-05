@@ -270,8 +270,18 @@
       width: 100%;
       max-width: 600px;
       max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .modal-body {
       overflow-y: auto;
-      padding: 24px 22px 32px;
+      padding: 0 22px;
+      flex: 1;
+    }
+    .modal-footer {
+      padding: 12px 22px 28px;
+      background: var(--bg);
+      border-top: 1px solid var(--line);
     }
     @media (min-width: 640px) {
       .modal { border-radius: 20px; }
@@ -406,17 +416,21 @@
 <!-- Write modal -->
 <div class="modal-backdrop hidden" id="write-modal">
   <div class="modal">
-    <div class="modal-header">
+    <div class="modal-header" style="padding: 20px 22px 0;">
       <div class="modal-title" id="write-modal-title">내 답 쓰기</div>
       <button type="button" class="modal-close" data-close-modal>×</button>
     </div>
-    <div class="modal-question" id="modal-question-text">—</div>
-    <textarea id="answer-input" placeholder="짧게 한 문장이라도 괜찮아요." maxlength="2000"></textarea>
-    <div class="visibility-row">
-      <label><input type="radio" name="vis" value="public" checked> 모두에게 공개</label>
-      <label><input type="radio" name="vis" value="private"> 나만 보기</label>
+    <div class="modal-body">
+      <div class="modal-question" id="modal-question-text">—</div>
+      <textarea id="answer-input" placeholder="짧게 한 문장이라도 괜찮아요." maxlength="2000"></textarea>
+      <div class="visibility-row">
+        <label><input type="radio" name="vis" value="public" checked> 모두에게 공개</label>
+        <label><input type="radio" name="vis" value="private"> 나만 보기</label>
+      </div>
     </div>
-    <button type="button" class="modal-submit" id="answer-submit">남기기</button>
+    <div class="modal-footer">
+      <button type="button" class="modal-submit" id="answer-submit">남기기</button>
+    </div>
   </div>
 </div>
 
