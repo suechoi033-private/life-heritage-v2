@@ -368,15 +368,11 @@
     }
 
     /* ── Modal ──────────────────────────── */
-    /* backdrop을 100dvh로 → 키보드 올라오면 backdrop 자체가 줄어서 모달이 키보드 위에 위치 */
     .modal-backdrop {
       position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 100dvh;
-      background: rgba(10,10,10,0.4);
-      z-index: 100;
+      inset: 0;
+      background: rgba(10,10,10,0.5);
+      z-index: 200;
       display: flex;
       align-items: flex-end;
       justify-content: center;
@@ -387,7 +383,9 @@
       border-radius: 20px 20px 0 0;
       width: 100%;
       max-width: 640px;
-      max-height: 92dvh;
+      max-height: 88dvh;
+      max-height: 88vh;
+      max-height: 88dvh;
       display: flex;
       flex-direction: column;
     }
@@ -397,14 +395,8 @@
       flex: 1;
       min-height: 0;
     }
-    .modal-footer {
-      flex-shrink: 0;
-      padding: 12px 22px max(28px, env(safe-area-inset-bottom));
-      background: var(--bg);
-      border-top: 1px solid var(--line);
-    }
     @media (min-width: 640px) {
-      .modal-backdrop { height: 100vh; align-items: center; }
+      .modal-backdrop { align-items: center; }
       .modal { max-height: 90vh; border-radius: 20px; }
     }
     .modal-header {
