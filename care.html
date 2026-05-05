@@ -707,13 +707,20 @@
     <!-- Tab: settings -->
     <section class="tab-panel hidden" data-panel="settings">
       <div class="empty" style="text-align: left; padding: 28px;">
-        <h3 id="settings-subject-name" style="margin-bottom: 14px;">돌봄 대상 정보</h3>
+        <h3 id="settings-subject-name" style="margin-bottom: 4px;">돌봄 대상 정보</h3>
+        <div id="settings-my-label-display" style="font-size: 13px; color: var(--primary); font-weight: 700; margin-bottom: 12px; display: none;">
+          내 호칭: <span id="settings-my-label-text"></span>
+        </div>
         <div id="settings-details" style="font-size: 14px; color: var(--ink-soft); line-height: 1.8;"></div>
         <div style="margin-top: 20px; display: flex; gap: 8px; flex-wrap: wrap;">
-          <button type="button" class="subject-btn" id="edit-subject-btn">수정</button>
+          <button type="button" class="subject-btn" id="my-label-btn">✏️ 내 호칭 변경</button>
+          <button type="button" class="subject-btn" id="edit-subject-btn">정보 수정</button>
           <button type="button" class="subject-btn" id="delete-subject-btn" style="color: var(--danger);">
             대상 삭제
           </button>
+        </div>
+        <div style="margin-top: 10px; font-size: 12px; color: var(--ink-muted);">
+          💡 내 호칭 변경은 나에게만 적용돼요. 가족마다 다르게 설정할 수 있어요.
         </div>
       </div>
     </section>
@@ -1134,7 +1141,7 @@ function toggleQuickCard(btn, wrapId) {
           <div class="subject-card-head">
             <div class="subject-avatar">${escapeHtml(initial)}</div>
             <div>
-              <div class="subject-name">${escapeHtml(s.name)}</div>
+              <div class="subject-name">${escapeHtml(getDisplayName(s))}</div>
               <div class="subject-meta">${metaParts.join(' · ') || '&nbsp;'}</div>
             </div>
           </div>
@@ -1168,6 +1175,22 @@ function toggleQuickCard(btn, wrapId) {
     $('add-subject-card')?.addEventListener('click', () => openSubjectModal());
   }
 
+  function getMyLabel(subjectId) {
+    return localStorage.getItem(`itda:mylabel_${user.id}_${subjectId}`) || null;
+  }
+
+  function setMyLabel(subjectId, label) {
+    if (label) {
+      localStorage.setItem(`itda:mylabel_${user.id}_${subjectId}`, label);
+    } else {
+      localStorage.removeItem(`itda:mylabel_${user.id}_${subjectId}`);
+    }
+  }
+
+  function getDisplayName(subject) {
+    return getMyLabel(subject.id) || subject.name;
+  }
+
   function renderSettings() {
     const s = state.subjects.find(x => x.id === state.currentSubjectId);
     if (!s) return;
@@ -1176,8 +1199,18 @@ function toggleQuickCard(btn, wrapId) {
     if (s.birth_year) parts.push(`생년: ${s.birth_year}년`);
     if (s.note) parts.push(`메모: ${s.note}`);
     if (s.consent_acknowledged) parts.push(`✓ 동의 확인 완료`);
-    $('settings-subject-name').textContent = s.name;
+    $('settings-subject-name').textContent = getDisplayName(s);
     $('settings-details').innerHTML = parts.map(p => `<div>${escapeHtml(p)}</div>`).join('');
+
+    // 내 호칭 표시
+    const myLabel = getMyLabel(s.id);
+    const labelDisplay = $('settings-my-label-display');
+    if (myLabel) {
+      $('settings-my-label-text').textContent = myLabel;
+      labelDisplay.style.display = 'block';
+    } else {
+      labelDisplay.style.display = 'none';
+    }
   }
 
   // ── Load logs ─────────────────────────
@@ -1304,14 +1337,10 @@ function toggleQuickCard(btn, wrapId) {
     const myRole = state.myRoleBySubject[subjectId];
     const isOwner = myRole === 'admin';
 
-    $('family-title').textContent = isOwner
-      ? `${subject.name} 돌봄 — 가족·도우미`
-      : `${subject.name} 돌봄에 함께하고 있어요`;
-    $('family-desc').textContent = isOwner
-      ? '코드를 만들어 가족·도우미에게 카톡·문자로 전달하세요. 받은 사람이 코드를 입력하면 자동으로 합류돼요.'
-      : '이 돌봄의 일지를 함께 보고 있어요. 더 이상 함께하고 싶지 않다면 아래에서 나갈 수 있어요.';
+    $('family-title').textContent = `${getDisplayName(subject)} 돌봄 — 가족·도우미`;
+    $('family-desc').textContent = '코드를 만들어 가족·도우미에게 카톡·문자로 전달하세요. 받은 사람이 코드를 입력하면 자동으로 합류돼요.';
 
-    $('create-invite-btn').classList.toggle('hidden', !isOwner);
+    $('create-invite-btn').classList.remove('hidden');
     $('family-self-leave').classList.toggle('hidden', isOwner);
 
     // 멤버 목록 조회 (owner는 모두, member는 본인+다른 멤버 RLS 따라)
@@ -1616,6 +1645,18 @@ function toggleQuickCard(btn, wrapId) {
 
   $('first-subject-btn').addEventListener('click', () => openSubjectModal());
   $('edit-subject-btn').addEventListener('click', () => openSubjectModal(state.currentSubjectId));
+
+  $('my-label-btn').addEventListener('click', () => {
+    const s = state.subjects.find(x => x.id === state.currentSubjectId);
+    if (!s) return;
+    const current = getMyLabel(s.id) || '';
+    const newLabel = prompt(`"${s.name}"을(를) 나에게는 어떻게 부르시나요?\n(비워두면 원래 이름 "${s.name}"으로 표시돼요)`, current);
+    if (newLabel === null) return; // 취소
+    setMyLabel(s.id, newLabel.trim());
+    renderSubjectCards();
+    renderSettings();
+    showAlert(newLabel.trim() ? `호칭이 "${newLabel.trim()}"(으)로 변경됐어요.` : '호칭을 초기화했어요.', 'success');
+  });
 
   $('subject-form').addEventListener('submit', async (e) => {
     e.preventDefault();
