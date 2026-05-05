@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>환영합니다 · 잇다</title>
+  <link rel="stylesheet" href="/auth-styles.css">
+  <style>
+    .shell {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 32px 20px 80px;
+      flex: 1;
+      width: 100%;
+    }
+    @media (min-width: 640px) { .shell { padding: 64px 32px 120px; } }
+
+    .top-bar {
+      background: var(--bg);
+      border-bottom: 1px solid var(--line);
+      padding: 14px 20px;
+    }
+    .top-bar-inner {
+      max-width: 1080px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* ── Stepper ─── */
+    .stepper {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 32px;
+    }
+    .step-dot {
+      flex: 1;
+      height: 4px;
+      background: var(--bg-alt);
+      border-radius: 999px;
+      transition: background 0.3s ease;
+    }
+    .step-dot.active, .step-dot.done { background: var(--primary); }
+
+    .step-label {
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      color: var(--primary);
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      line-height: 1.4;
+      margin-bottom: 14px;
+    }
+    @media (min-width: 640px) { h1 { font-size: 34px; } }
+    .lead {
+      color: var(--ink-soft);
+      font-size: 15.5px;
+      line-height: 1.7;
+      margin-bottom: 30px;
+    }
+
+    /* ── Choice cards ─── */
+    .choices {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    .choice {
+      display: block;
+      padding: 18px 22px;
+      background: var(--bg-alt);
+      border: 2px solid transparent;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-align: left;
+      font-family: inherit;
+      width: 100%;
+    }
+    .choice:hover {
+      background: var(--primary-soft);
+      border-color: var(--primary-soft);
+    }
+    .choice.selected {
+      background: var(--primary-soft);
+      border-color: var(--primary);
+    }
+    .choice-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }
+    .choice-desc {
+      font-size: 13px;
+      color: var(--ink-muted);
+      line-height: 1.5;
+    }
+
+    /* ── Form fields ─── */
+    .field { margin-bottom: 20px; }
+    .field label {
+      display: block;
+      font-size: 13.5px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .field input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 16px;
+      transition: border-color 0.15s ease;
+    }
+    .field input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    .field-hint {
+      display: block;
+      margin-top: 6px;
+      font-size: 12.5px;
+      color: var(--ink-muted);
+    }
+
+    /* ── Buttons ─── */
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .btn-primary {
+      flex: 1;
+      padding: 14px 24px;
+      background: var(--primary);
+      color: #FFF;
+      border: none;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-ghost {
+      padding: 14px 22px;
+      background: transparent;
+      color: var(--ink-soft);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .btn-ghost:hover { border-color: var(--primary); color: var(--primary); }
+    .skip-link {
+      display: inline-block;
+      margin-top: 16px;
+      color: var(--ink-muted);
+      font-size: 13px;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+    .skip-link:hover { color: var(--ink-soft); }
+
+    /* ── Other places (Step 3 secondary) ─── */
+    .other-places {
+      margin-bottom: 22px;
+      text-align: center;
+    }
+    .other-places-label {
+      display: block;
+      font-size: 13px;
+      color: var(--ink-muted);
+      margin-bottom: 10px;
+    }
+    .other-places-links {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+    }
+    .other-place-link {
+      padding: 7px 14px;
+      background: transparent;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--ink-soft);
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.15s ease;
+    }
+    .other-place-link:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    /* ── Final / recommend card ─── */
+    .recommend-card {
+      padding: 24px 26px;
+      background: var(--primary-soft);
+      border-radius: 16px;
+      margin-bottom: 22px;
+    }
+    .recommend-card .icon {
+      font-size: 36px;
+      margin-bottom: 12px;
+    }
+    .recommend-card h3 {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      color: var(--ink);
+    }
+    .recommend-card p {
+      font-size: 14px;
+      color: var(--ink-soft);
+      line-height: 1.7;
+      margin-bottom: 16px;
+    }
+    .recommend-card .btn-primary { width: 100%; }
+
+    .pane { display: none; }
+    .pane.active { display: block; }
+
+    .invite-share {
+      padding: 18px 20px;
+      background: var(--bg-alt);
+      border-radius: 12px;
+      margin-bottom: 16px;
+      font-size: 14px;
+      color: var(--ink-soft);
+      line-height: 1.7;
+    }
+  </style>
+</head>
+<body>
+
+<nav class="top-bar">
+  <div class="top-bar-inner">
+    <a href="/" class="logo"><span class="logo-mark">●</span> 잇다</a>
+  </div>
+</nav>
+
+<main class="shell">
+  <div class="stepper">
+    <div class="step-dot active" data-step="1"></div>
+    <div class="step-dot" data-step="2"></div>
+    <div class="step-dot" data-step="3"></div>
+    <div class="step-dot" data-step="4"></div>
+  </div>
+
+  <!-- ── Step 1: 인사 ─── -->
+  <section class="pane active" data-pane="1">
+    <span class="step-label">STEP 1 · 환영합니다</span>
+    <h1 id="greeting">잇다에 오신 것을<br>환영합니다</h1>
+    <p class="lead" id="greeting-sub">
+      잇다는 한 가족의 생애를 잇는 자리예요.<br>
+      서두를 필요는 없어요. 한 발씩 같이 걸어요.
+    </p>
+
+    <div class="field">
+      <label for="display-name">불리고 싶은 이름</label>
+      <input type="text" id="display-name" placeholder="예: 수련, 둘째 딸, J">
+      <span class="field-hint">실명이 아니어도 괜찮아요. 가족과 또래에게 보이는 이름이에요.</span>
+    </div>
+
+    <div class="btn-row">
+      <button type="button" class="btn-primary" id="step1-next">다음</button>
+    </div>
+    <a class="skip-link" id="skip-onboarding">건너뛰고 둘러보기</a>
+  </section>
+
+  <!-- ── Step 2: 자리 선택 ─── -->
+  <section class="pane" data-pane="2">
+    <span class="step-label">STEP 2 · 지금 어떤 자리에 계신가요?</span>
+    <h1>가장 가까운 자리를<br>골라주세요</h1>
+    <p class="lead">
+      지금 어디쯤에 계신지에 따라 잇다가 먼저 보여드릴 곳이 달라져요.<br><br>
+      여러 곳에 동시에 위치하실 수도 있어요. 가장 마음이 가는 자리부터 골라주세요.
+    </p>
+
+    <div class="choices">
+      <button type="button" class="choice" data-place="reflect">
+        <div class="choice-title">그냥 살펴보는 중</div>
+        <div class="choice-desc">제 삶을 돌아보고 싶어요. 한 문장씩 답하며 시작하고 싶어요.</div>
+      </button>
+      <button type="button" class="choice" data-place="pre">
+        <div class="choice-title">미리 알아보는 중</div>
+        <div class="choice-desc">건강, 치료방법, 요양원, 장례 등의 정보를 미리 알아보고 싶어요.</div>
+      </button>
+      <button type="button" class="choice" data-place="care">
+        <div class="choice-title">곁을 지키는 중</div>
+        <div class="choice-desc">부모님·가족이 아프시거나 돌봄이 필요해요. 가족과 함께 기록하고 싶어요.</div>
+      </button>
+      <button type="button" class="choice" data-place="memory">
+        <div class="choice-title">보내드린 뒤</div>
+        <div class="choice-desc">사랑하는 분을 떠나보냈어요. 마음을 기록하고 함께 기억하고 싶어요.</div>
+      </button>
+    </div>
+
+    <div class="btn-row">
+      <button type="button" class="btn-ghost" data-back="1">이전</button>
+      <button type="button" class="btn-primary" id="step2-next" disabled>다음</button>
+    </div>
+  </section>
+
+  <!-- ── Step 3: 추천 ─── -->
+  <section class="pane" data-pane="3">
+    <span class="step-label">STEP 3 · 첫걸음 추천</span>
+    <h1 id="recommend-title">함께 시작해요</h1>
+    <p class="lead">선택하신 자리에 맞는 첫걸음을 준비했어요.</p>
+
+    <div class="recommend-card" id="recommend-card">
+      <div class="icon" id="recommend-icon">🌿</div>
+      <h3 id="recommend-name">—</h3>
+      <p id="recommend-desc">—</p>
+      <button type="button" class="btn-primary" id="recommend-cta">시작하기 →</button>
+    </div>
+
+    <div class="other-places">
+      <span class="other-places-label">다른 자리도 둘러보고 싶으세요?</span>
+      <div class="other-places-links">
+        <a href="/info.html" class="other-place-link">정보</a>
+        <a href="/care.html" class="other-place-link">돌봄</a>
+        <a href="/write.html" class="other-place-link">기억</a>
+        <a href="/ask.html" class="other-place-link">오늘 잇고</a>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button type="button" class="btn-ghost" data-back="2">이전</button>
+      <button type="button" class="btn-ghost" id="step3-next" style="flex: 1;">건너뛰고 가족 초대 →</button>
+    </div>
+  </section>
+
+  <!-- ── Step 4: 가족 초대 ─── -->
+  <section class="pane" data-pane="4">
+    <span class="step-label">STEP 4 · 가족 초대 (선택)</span>
+    <h1>혼자 짊어지지<br>않아도 돼요</h1>
+    <p class="lead">
+      잇다는 가족 단위로 함께할 때 가장 깊어져요.<br>
+      형제·배우자·자녀와 함께 쓰면 기록이 풍성해집니다.
+    </p>
+
+    <div class="invite-share">
+      가족 초대 코드는 <strong>돌봄 페이지 → 가족 탭</strong>에서 만들 수 있어요.<br>
+      6자리 코드를 카톡으로 보내면 받은 사람이 가입 후 자동 합류됩니다.
+    </div>
+
+    <div class="btn-row">
+      <button type="button" class="btn-ghost" data-back="3">이전</button>
+      <button type="button" class="btn-primary" id="finish-onboarding">잇다 시작하기 →</button>
+    </div>
+  </section>
+</main>
+
+<footer class="auth-footer">
+  © 2026 라이프헤리티지 · 잇다
+</footer>
+
+<script type="module">
+  import { supabase } from '/auth.js';
+
+  const { data: { session } } = await supabase.auth.getSession();
+  const currentUser = session?.user || null;
+
+  const RECOMMEND = {
+    pre: {
+      icon: '🧭',
+      name: '정보 — 미리 챙길 것',
+      desc: '사전연명의료의향서, 가족 회의 가이드, 보험·연금 점검부터 시작해보세요.',
+      href: '/info.html',
+    },
+    care: {
+      icon: '🤝',
+      name: '돌봄 — 가족 공동 기록 시작',
+      desc: '돌볼 분을 등록하고, 가족을 초대해 일지를 함께 쓰세요. 혼자 떠안지 않아도 돼요.',
+      href: '/care.html',
+    },
+    memory: {
+      icon: '🌿',
+      name: '기억 — 첫 이야기 남기기',
+      desc: '사진 한 장과 짧은 메모로 시작해보세요. 함께 기억해주는 사람들이 곁에 있어요.',
+      href: '/write.html',
+    },
+    reflect: {
+      icon: '🪞',
+      name: '오늘 잇고 — 한 문장에 답하기',
+      desc: '오늘의 한 문장에 답하며 시작해보세요. 100개의 질문이 매일 차곡차곡 쌓여요.',
+      href: '/ask.html',
+    },
+  };
+
+  let state = { step: 1, place: null, name: '' };
+
+  function showStep(n) {
+    state.step = n;
+    document.querySelectorAll('.pane').forEach(p => p.classList.toggle('active', +p.dataset.pane === n));
+    document.querySelectorAll('.step-dot').forEach(d => {
+      const i = +d.dataset.step;
+      d.classList.toggle('active', i === n);
+      d.classList.toggle('done', i < n);
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // 환영 메시지에 이름 미리 채우기
+  if (currentUser) {
+    const fallback = currentUser.user_metadata?.name || currentUser.email?.split('@')[0] || '';
+    if (fallback) {
+      document.getElementById('display-name').value = fallback;
+      document.getElementById('greeting').innerHTML = `${escapeHtml(fallback)}님,<br>잇다에 오신 것을 환영합니다`;
+    }
+  }
+
+  // ── Step 1 → 2 ──
+  document.getElementById('step1-next').addEventListener('click', () => {
+    state.name = document.getElementById('display-name').value.trim();
+    showStep(2);
+  });
+
+  // ── Step 2: choice ──
+  document.querySelectorAll('.choice').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.choice').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      state.place = btn.dataset.place;
+      document.getElementById('step2-next').disabled = false;
+    });
+  });
+
+  document.getElementById('step2-next').addEventListener('click', () => {
+    const r = RECOMMEND[state.place];
+    if (r) {
+      document.getElementById('recommend-icon').textContent = r.icon;
+      document.getElementById('recommend-name').textContent = r.name;
+      document.getElementById('recommend-desc').textContent = r.desc;
+      document.getElementById('recommend-cta').onclick = () => persistAndGo(r.href);
+    }
+    showStep(3);
+  });
+
+  // ── Step 3 → 4 ──
+  document.getElementById('step3-next').addEventListener('click', () => showStep(4));
+
+  // ── Step 4: 마무리 → my.html ──
+  document.getElementById('finish-onboarding').addEventListener('click', () => persistAndGo('/my.html'));
+
+  // ── 건너뛰기 ──
+  document.getElementById('skip-onboarding').addEventListener('click', () => persistAndGo('/my.html'));
+
+  // ── 이전 버튼 (모든 pane) ──
+  document.querySelectorAll('[data-back]').forEach(btn => {
+    btn.addEventListener('click', () => showStep(+btn.dataset.back));
+  });
+
+  async function persistAndGo(href) {
+    // 가벼운 상태 저장 (LocalStorage). DB 저장은 다음 버전에 user_profile 테이블 추가 시.
+    if (state.name) localStorage.setItem('itda:display_name', state.name);
+    if (state.place) localStorage.setItem('itda:onboarding_place', state.place);
+    localStorage.setItem('itda:onboarded_at', new Date().toISOString());
+
+    // user_metadata에도 닉네임 업데이트 (가능할 때만)
+    if (currentUser && state.name && state.name !== currentUser.user_metadata?.name) {
+      try {
+        await supabase.auth.updateUser({ data: { name: state.name } });
+      } catch (e) { console.warn('updateUser failed', e); }
+    }
+    window.location.href = href;
+  }
+
+  function escapeHtml(s) {
+    if (s == null) return '';
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+</script>
+
+</body>
+</html>

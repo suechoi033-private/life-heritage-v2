@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>어드민 · 잇다</title>
+  <link rel="stylesheet" href="/auth-styles.css">
+  <style>
+    .admin-shell {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 32px 20px 80px;
+      flex: 1;
+      width: 100%;
+    }
+    @media (min-width: 640px) {
+      .admin-shell { padding: 48px 32px 120px; }
+    }
+
+    /* ── Top bar ────────────────────────── */
+    .top-bar {
+      background: var(--ink);
+      color: #FFF;
+      padding: 14px 20px;
+    }
+    .top-bar-inner {
+      max-width: 1080px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .top-bar .logo { color: #FFF; }
+    .top-bar .logo-mark { color: var(--primary); }
+    .admin-badge {
+      display: inline-block;
+      margin-left: 8px;
+      padding: 2px 8px;
+      background: var(--primary);
+      color: #FFF;
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: 999px;
+      vertical-align: middle;
+    }
+    .top-bar-links { display: flex; gap: 14px; font-size: 13.5px; }
+    .top-bar-links a { color: rgba(255,255,255,0.7); text-decoration: none; }
+    .top-bar-links a:hover { color: #FFF; }
+
+    /* ── Access denied ──────────────────── */
+    .denied-card {
+      background: var(--danger-soft);
+      border-radius: 16px;
+      padding: 60px 28px;
+      text-align: center;
+    }
+    .denied-card .icon { font-size: 48px; margin-bottom: 18px; }
+    .denied-card h2 { color: var(--danger); margin-bottom: 10px; }
+    .denied-card p { color: var(--ink-soft); line-height: 1.7; }
+
+    /* ── Page header ────────────────────── */
+    .page-title {
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+    }
+    .page-sub {
+      color: var(--ink-soft);
+      font-size: 15px;
+      line-height: 1.7;
+      margin-bottom: 28px;
+    }
+
+    /* ── Stats bar ──────────────────────── */
+    .stats-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .stat-pill {
+      padding: 10px 18px;
+      background: var(--bg-alt);
+      border-radius: 12px;
+      font-size: 13.5px;
+      color: var(--ink-soft);
+    }
+    .stat-pill strong {
+      color: var(--ink);
+      font-weight: 800;
+      font-size: 16px;
+      margin-right: 4px;
+    }
+
+    /* ── Filter tabs ────────────────────── */
+    .filter-tabs {
+      display: flex;
+      gap: 4px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 20px;
+      overflow-x: auto;
+    }
+    .filter-tab {
+      padding: 10px 14px;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink-muted);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .filter-tab.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+
+    /* ── Story list ─────────────────────── */
+    .story-list { display: flex; flex-direction: column; gap: 12px; }
+
+    .story-row {
+      display: flex;
+      gap: 16px;
+      padding: 16px 18px;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      transition: border-color 0.15s ease;
+      align-items: flex-start;
+    }
+    .story-row:hover { border-color: var(--ink-muted); }
+    .story-row.featured { border-color: var(--primary); background: var(--primary-soft); }
+    .story-row.hidden-story { opacity: 0.55; }
+
+    .story-info { flex: 1; min-width: 0; }
+    .story-tags {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 6px;
+    }
+    .story-tag {
+      display: inline-block;
+      padding: 2px 9px;
+      background: var(--bg-alt);
+      border-radius: 999px;
+      font-size: 11.5px;
+      color: var(--ink-soft);
+      font-weight: 600;
+    }
+    .story-tag.primary {
+      background: var(--primary-soft);
+      color: var(--primary-hover);
+    }
+    .story-row.featured .story-tag { background: rgba(180,110,90,0.15); }
+
+    .story-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 4px;
+      line-height: 1.4;
+    }
+    .story-preview {
+      font-size: 13.5px;
+      color: var(--ink-soft);
+      line-height: 1.6;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .story-foot {
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--ink-muted);
+    }
+
+    .story-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--bg);
+      font-family: inherit;
+      font-size: 12.5px;
+      color: var(--ink-soft);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+    .toggle-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .toggle-btn.on {
+      background: var(--primary);
+      color: #FFF;
+      border-color: var(--primary);
+    }
+    .toggle-btn.on:hover {
+      background: var(--primary-hover);
+      border-color: var(--primary-hover);
+      color: #FFF;
+    }
+
+    .btn-hide {
+      padding: 7px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--bg);
+      font-family: inherit;
+      font-size: 12.5px;
+      color: var(--ink-muted);
+      cursor: pointer;
+    }
+    .btn-hide:hover {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    .btn-link {
+      padding: 6px 10px;
+      font-size: 12px;
+      color: var(--ink-muted);
+      text-decoration: none;
+      border-radius: 999px;
+    }
+    .btn-link:hover { color: var(--primary); }
+
+    .visibility-chip {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .visibility-chip.public { background: #E4F2EA; color: var(--success); }
+    .visibility-chip.private { background: var(--bg-alt); color: var(--ink-muted); }
+    .visibility-chip.family { background: var(--primary-soft); color: var(--primary-hover); }
+
+    /* ── Empty ──────────────────────────── */
+    .empty {
+      background: var(--bg-alt);
+      border-radius: 14px;
+      padding: 50px 28px;
+      text-align: center;
+      color: var(--ink-muted);
+    }
+    .empty-icon { font-size: 40px; margin-bottom: 14px; }
+
+    .hidden { display: none !important; }
+
+    /* ── Top section tabs ──────────────── */
+    .section-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 28px;
+      border-bottom: 2px solid var(--ink);
+    }
+    .section-tab {
+      padding: 12px 20px;
+      background: transparent;
+      border: none;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--ink-muted);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .section-tab:hover { color: var(--ink); }
+    .section-tab.active {
+      color: var(--ink);
+      border-bottom-color: var(--primary);
+    }
+    .section-tab .count-badge {
+      display: inline-block;
+      margin-left: 6px;
+      padding: 1px 8px;
+      background: var(--bg-alt);
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink-muted);
+    }
+    .section-tab.active .count-badge {
+      background: var(--primary-soft);
+      color: var(--primary);
+    }
+
+    /* ── Users table ───────────────────── */
+    .users-search {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+    .users-search input {
+      flex: 1;
+      min-width: 220px;
+      padding: 10px 14px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 14px;
+      background: var(--bg);
+      color: var(--ink);
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .users-search input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(180, 110, 90, 0.14);
+    }
+
+    .users-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .users-table th, .users-table td {
+      padding: 12px 14px;
+      text-align: left;
+      font-size: 13.5px;
+      border-bottom: 1px solid var(--line);
+    }
+    .users-table th {
+      background: var(--bg-alt);
+      font-weight: 700;
+      color: var(--ink-soft);
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .users-table tbody tr:last-child td { border-bottom: none; }
+    .users-table tbody tr:hover { background: var(--bg-alt); }
+    .users-table .col-name { font-weight: 700; color: var(--ink); }
+    .users-table .col-email { color: var(--ink-soft); font-family: monospace; font-size: 12.5px; }
+    .users-table .col-date { color: var(--ink-muted); white-space: nowrap; font-size: 12.5px; }
+    .users-table .col-num { font-weight: 700; color: var(--ink); text-align: center; }
+    .users-table .admin-row { background: var(--primary-soft); }
+    .users-table .admin-row .col-name::after {
+      content: " ADMIN";
+      display: inline-block;
+      margin-left: 6px;
+      padding: 1px 7px;
+      background: var(--primary);
+      color: #FFF;
+      font-size: 10px;
+      letter-spacing: 0.04em;
+      border-radius: 999px;
+      font-weight: 800;
+      vertical-align: 1px;
+    }
+
+    @media (max-width: 720px) {
+      .users-table thead { display: none; }
+      .users-table, .users-table tbody, .users-table tr, .users-table td { display: block; width: 100%; }
+      .users-table tr {
+        border-bottom: 1px solid var(--line);
+        padding: 12px 14px;
+      }
+      .users-table td { border: none; padding: 4px 0; }
+      .users-table td.col-num { text-align: left; }
+      .users-table td::before {
+        content: attr(data-label);
+        display: inline-block;
+        width: 96px;
+        font-size: 11.5px;
+        color: var(--ink-muted);
+        font-weight: 700;
+      }
+    }
+
+    .user-stats-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .user-stat {
+      flex: 1;
+      min-width: 140px;
+      padding: 18px 20px;
+      background: var(--bg-alt);
+      border-radius: 14px;
+    }
+    .user-stat .num {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      margin-bottom: 2px;
+    }
+    .user-stat .label {
+      font-size: 12.5px;
+      color: var(--ink-muted);
+      font-weight: 600;
+    }
+
+    /* ── User clickable rows + detail panel ── */
+    .users-table tbody tr { cursor: pointer; }
+    .users-table tbody tr.selected {
+      background: var(--primary-soft) !important;
+      box-shadow: inset 3px 0 0 var(--primary);
+    }
+    .users-table .col-num.col-link {
+      color: var(--primary);
+      font-weight: 800;
+    }
+
+    .user-detail {
+      margin-top: 20px;
+      padding: 20px 22px 22px;
+      background: var(--bg);
+      border: 1px solid var(--primary);
+      border-radius: 14px;
+    }
+    .user-detail-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--line);
+    }
+    .user-detail-name {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--ink);
+      margin-bottom: 2px;
+    }
+    .user-detail-email {
+      font-size: 12.5px;
+      color: var(--ink-muted);
+      font-family: monospace;
+    }
+    .user-detail-meta {
+      font-size: 12px;
+      color: var(--ink-muted);
+      margin-top: 4px;
+    }
+    .user-detail-close {
+      padding: 6px 12px;
+      background: var(--bg-alt);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-family: inherit;
+      font-size: 12.5px;
+      color: var(--ink-soft);
+      cursor: pointer;
+    }
+    .user-detail-close:hover { border-color: var(--ink-muted); color: var(--ink); }
+
+    .user-detail-tabs {
+      display: flex;
+      gap: 4px;
+      margin: 14px 0 12px;
+      border-bottom: 1px solid var(--line);
+    }
+    .user-detail-tab {
+      padding: 8px 14px;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      font-family: inherit;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--ink-muted);
+      cursor: pointer;
+    }
+    .user-detail-tab.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+
+    .item-list { display: flex; flex-direction: column; gap: 8px; }
+    .item-row {
+      display: flex;
+      gap: 12px;
+      padding: 12px 14px;
+      background: var(--bg-alt);
+      border-radius: 10px;
+      align-items: flex-start;
+      text-decoration: none;
+      color: inherit;
+      transition: background 0.15s ease;
+    }
+    .item-row:hover { background: var(--primary-soft); }
+    .item-main { flex: 1; min-width: 0; }
+    .item-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 3px;
+      line-height: 1.4;
+    }
+    .item-preview {
+      font-size: 12.5px;
+      color: var(--ink-soft);
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .item-meta {
+      flex-shrink: 0;
+      font-size: 11.5px;
+      color: var(--ink-muted);
+      text-align: right;
+      white-space: nowrap;
+      line-height: 1.6;
+    }
+    .item-vis-chip {
+      display: inline-block;
+      padding: 1px 7px;
+      border-radius: 999px;
+      font-size: 10.5px;
+      font-weight: 700;
+      margin-left: 4px;
+    }
+    .item-vis-chip.public { background: #E4F2EA; color: var(--success); }
+    .item-vis-chip.private { background: var(--bg-alt); color: var(--ink-muted); }
+  </style>
+</head>
+<body>
+
+<nav class="top-bar">
+  <div class="top-bar-inner">
+    <a href="/" class="logo">
+      <span class="logo-mark">●</span> 잇다
+      <span class="admin-badge">ADMIN</span>
+    </a>
+    <div class="top-bar-links">
+      <a href="/my.html">내 기록</a>
+      <a href="/care.html">돌봄</a>
+      <a href="/">홈</a>
+    </div>
+  </div>
+</nav>
+
+<main class="admin-shell">
+
+  <div id="alert" class="hidden"></div>
+
+  <!-- Loading -->
+  <div id="loading" class="empty">
+    <div class="empty-icon">🌿</div>
+    <p>불러오는 중…</p>
+  </div>
+
+  <!-- Access denied -->
+  <div id="denied" class="denied-card hidden">
+    <div class="icon">🔒</div>
+    <h2>접근 권한이 없습니다</h2>
+    <p>이 페이지는 어드민만 접근할 수 있어요.</p>
+  </div>
+
+  <!-- Admin view -->
+  <div id="admin-view" class="hidden">
+    <h1 class="page-title">어드민</h1>
+
+    <!-- Section tabs -->
+    <div class="section-tabs">
+      <button type="button" class="section-tab active" data-section="stories">기록 큐레이션 <span class="count-badge" id="tab-count-stories">—</span></button>
+      <button type="button" class="section-tab" data-section="users">가입자 <span class="count-badge" id="tab-count-users">—</span></button>
+    </div>
+
+    <!-- Section: stories -->
+    <div class="admin-section" data-section-content="stories">
+      <p class="page-sub">
+        공개 기록은 <strong>자동으로 랜딩에 노출</strong>됩니다. 편집은 하지 않아요.
+        퀄리티가 떨어지거나 부적절한 글만 <strong>"숨기기"</strong>로 내리고, 돋보이게 하고 싶은 글은 <strong>"상단 고정"</strong>으로 랜딩 맨 위에 올릴 수 있습니다.
+      </p>
+
+      <div class="stats-bar">
+        <div class="stat-pill"><strong id="stat-total">0</strong>전체</div>
+        <div class="stat-pill"><strong id="stat-public">0</strong>공개 (랜딩 노출)</div>
+        <div class="stat-pill"><strong id="stat-featured">0</strong>상단 고정</div>
+        <div class="stat-pill"><strong id="stat-hidden">0</strong>숨김</div>
+      </div>
+
+      <div class="filter-tabs">
+        <button type="button" class="filter-tab active" data-filter="public">공개 (노출 중)</button>
+        <button type="button" class="filter-tab" data-filter="featured">📌 상단 고정</button>
+        <button type="button" class="filter-tab" data-filter="private">🚫 숨김</button>
+        <button type="button" class="filter-tab" data-filter="all">전체</button>
+      </div>
+
+      <div id="story-list"></div>
+    </div>
+
+    <!-- Section: users -->
+    <div class="admin-section hidden" data-section-content="users">
+      <p class="page-sub">
+        잇다에 가입한 사용자 목록입니다. 가입일·마지막 활동·작성 기록 수를 한 자리에서 볼 수 있어요.
+      </p>
+
+      <div class="user-stats-bar">
+        <div class="user-stat">
+          <div class="num" id="user-stat-total">—</div>
+          <div class="label">전체 가입자</div>
+        </div>
+        <div class="user-stat">
+          <div class="num" id="user-stat-week">—</div>
+          <div class="label">최근 7일 가입</div>
+        </div>
+        <div class="user-stat">
+          <div class="num" id="user-stat-active">—</div>
+          <div class="label">기록 작성자 수</div>
+        </div>
+        <div class="user-stat">
+          <div class="num" id="user-stat-answers">—</div>
+          <div class="label">답변 작성자 수</div>
+        </div>
+      </div>
+
+      <div class="users-search">
+        <input type="text" id="users-search-input" placeholder="이름 또는 이메일로 검색…">
+      </div>
+
+      <div id="users-area">
+        <div class="empty">
+          <div class="empty-icon">👥</div>
+          <p>불러오는 중…</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="auth-footer">
+  © 2026 라이프헤리티지 · 잇다
+</footer>
+
+<script type="module">
+  import { requireAuth, supabase } from '/auth.js';
+
+  const ADMIN_EMAIL = 'sue.choi033@gmail.com';
+
+  const session = await requireAuth('/login.html');
+  if (!session) { /* redirected */ }
+  const user = session.user;
+
+  // ── Access check ──────────────────────
+  if (user.email !== ADMIN_EMAIL) {
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('denied').classList.remove('hidden');
+    throw new Error('not-admin');
+  }
+
+  // ── State ─────────────────────────────
+  const state = {
+    allStories: [],
+    filter: 'public',
+    section: 'stories',
+    allUsers: [],
+    usersLoaded: false,
+    userSearch: '',
+    selectedUserId: null,
+    userDetailTab: 'stories',
+    questionTextMap: {},
+    questionCategoryMap: {},
+  };
+
+  const ANSWER_CATEGORY_LABEL = {
+    self: '나라는 사람',
+    relationships: '가까운 사람들',
+    work: '일과 커리어',
+    regret: '후회와 용서',
+    gratitude: '감사',
+    legacy: '남기고 싶은 것',
+    endings: '끝을 상상하기',
+  };
+
+  // ── Section tabs ──────────────────────
+  document.querySelectorAll('.section-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const section = tab.dataset.section;
+      document.querySelectorAll('.section-tab').forEach(t => t.classList.toggle('active', t === tab));
+      document.querySelectorAll('.admin-section').forEach(el => {
+        el.classList.toggle('hidden', el.dataset.sectionContent !== section);
+      });
+      state.section = section;
+      if (section === 'users' && !state.usersLoaded) {
+        loadUsers();
+      }
+    });
+  });
+
+  // ── Load ──────────────────────────────
+  await loadStories();
+
+  async function loadStories() {
+    const { data, error } = await supabase
+      .from('stories')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      showAlert('불러오기 실패: ' + error.message);
+      return;
+    }
+
+    state.allStories = data || [];
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('admin-view').classList.remove('hidden');
+
+    updateStats();
+    renderList();
+  }
+
+  function updateStats() {
+    const total = state.allStories.length;
+    const pub = state.allStories.filter(s => s.visibility === 'public').length;
+    const feat = state.allStories.filter(s => s.featured && s.visibility === 'public').length;
+    const hidden = state.allStories.filter(s => s.visibility === 'private' || s.visibility === 'family').length;
+
+    document.getElementById('stat-total').textContent = total;
+    document.getElementById('stat-public').textContent = pub;
+    document.getElementById('stat-featured').textContent = feat;
+    document.getElementById('stat-hidden').textContent = hidden;
+    document.getElementById('tab-count-stories').textContent = total;
+  }
+
+  // ── Users ─────────────────────────────
+  async function loadUsers() {
+    state.usersLoaded = true;
+    const area = document.getElementById('users-area');
+    area.innerHTML = `<div class="empty"><div class="empty-icon">👥</div><p>불러오는 중…</p></div>`;
+
+    const [{ data: profiles, error }, { data: storiesData }, { data: answersData }, { data: questionsData }] = await Promise.all([
+      supabase.from('profiles').select('id, email, name, created_at').order('created_at', { ascending: false }),
+      supabase.from('stories').select('id, user_id, title, body, visibility, created_at, relation, cause, writer_relation').order('created_at', { ascending: false }),
+      supabase.from('daily_answers').select('id, user_id, question_id, body, visibility, created_at').order('created_at', { ascending: false }),
+      supabase.from('daily_questions').select('id, question_text, category'),
+    ]);
+
+    if (error) {
+      area.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><p>가입자 정보를 불러오지 못했어요: ${escapeHtml(error.message)}</p></div>`;
+      return;
+    }
+
+    // Group stories/answers per user
+    const storiesByUser = {};
+    (storiesData || []).forEach(s => {
+      if (!s.user_id) return;
+      if (!storiesByUser[s.user_id]) storiesByUser[s.user_id] = [];
+      storiesByUser[s.user_id].push(s);
+    });
+    const answersByUser = {};
+    (answersData || []).forEach(a => {
+      if (!a.user_id) return;
+      if (!answersByUser[a.user_id]) answersByUser[a.user_id] = [];
+      answersByUser[a.user_id].push(a);
+    });
+    state.questionTextMap = {};
+    state.questionCategoryMap = {};
+    (questionsData || []).forEach(q => {
+      state.questionTextMap[q.id] = q.question_text;
+      state.questionCategoryMap[q.id] = q.category;
+    });
+
+    state.allUsers = (profiles || []).map(p => ({
+      ...p,
+      stories: storiesByUser[p.id] || [],
+      answers: answersByUser[p.id] || [],
+      story_count: (storiesByUser[p.id] || []).length,
+      answer_count: (answersByUser[p.id] || []).length,
+    }));
+
+    updateUserStats();
+    renderUsers();
+
+    document.getElementById('users-search-input').addEventListener('input', e => {
+      state.userSearch = (e.target.value || '').trim().toLowerCase();
+      state.selectedUserId = null;
+      renderUsers();
+    });
+  }
+
+  function updateUserStats() {
+    const total = state.allUsers.length;
+    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const recent = state.allUsers.filter(u => new Date(u.created_at).getTime() > weekAgo).length;
+    const writers = state.allUsers.filter(u => u.story_count > 0).length;
+    const answerers = state.allUsers.filter(u => u.answer_count > 0).length;
+
+    document.getElementById('user-stat-total').textContent = total;
+    document.getElementById('user-stat-week').textContent = recent;
+    document.getElementById('user-stat-active').textContent = writers;
+    document.getElementById('user-stat-answers').textContent = answerers;
+    document.getElementById('tab-count-users').textContent = total;
+  }
+
+  function renderUsers() {
+    const area = document.getElementById('users-area');
+    const q = state.userSearch;
+    const list = q
+      ? state.allUsers.filter(u =>
+          (u.email || '').toLowerCase().includes(q) ||
+          (u.name || '').toLowerCase().includes(q))
+      : state.allUsers;
+
+    if (list.length === 0) {
+      area.innerHTML = `<div class="empty"><div class="empty-icon">🕯️</div><p>${q ? '검색 결과가 없어요.' : '아직 가입자가 없어요.'}</p></div>`;
+      return;
+    }
+
+    const rows = list.map((u) => {
+      const date = new Date(u.created_at).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+      const isAdmin = u.email === ADMIN_EMAIL;
+      const idx = state.allUsers.indexOf(u) + 1;
+      const selected = state.selectedUserId === u.id;
+      return `
+        <tr class="${isAdmin ? 'admin-row' : ''} ${selected ? 'selected' : ''}" data-user-id="${u.id}">
+          <td class="col-num" data-label="번호">${idx}</td>
+          <td class="col-name" data-label="이름">${escapeHtml(u.name || '(이름 없음)')}</td>
+          <td class="col-email" data-label="이메일">${escapeHtml(u.email || '—')}</td>
+          <td class="col-date" data-label="가입일">${date}</td>
+          <td class="col-num ${u.story_count > 0 ? 'col-link' : ''}" data-label="기록">${u.story_count}</td>
+          <td class="col-num ${u.answer_count > 0 ? 'col-link' : ''}" data-label="답변">${u.answer_count}</td>
+        </tr>
+      `;
+    }).join('');
+
+    const selectedUser = state.selectedUserId ? state.allUsers.find(u => u.id === state.selectedUserId) : null;
+    const detailHtml = selectedUser ? renderUserDetail(selectedUser) : '';
+
+    area.innerHTML = `
+      <div style="font-size:13px;color:var(--ink-muted);margin-bottom:10px;">
+        ${q ? `검색 결과 ${list.length}명` : `전체 ${list.length}명 — 최신 가입 순`} · 행 클릭하면 작성한 글을 볼 수 있어요
+      </div>
+      <table class="users-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>이름</th>
+            <th>이메일</th>
+            <th>가입일</th>
+            <th>기록</th>
+            <th>답변</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+      ${detailHtml}
+    `;
+
+    area.querySelectorAll('tbody tr').forEach(tr => {
+      tr.addEventListener('click', () => {
+        const id = tr.dataset.userId;
+        state.selectedUserId = state.selectedUserId === id ? null : id;
+        state.userDetailTab = 'stories';
+        renderUsers();
+        if (state.selectedUserId) {
+          area.querySelector('.user-detail')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      });
+    });
+
+    area.querySelector('.user-detail-close')?.addEventListener('click', () => {
+      state.selectedUserId = null;
+      renderUsers();
+    });
+    area.querySelectorAll('.user-detail-tab').forEach(t => {
+      t.addEventListener('click', () => {
+        state.userDetailTab = t.dataset.detailTab;
+        renderUsers();
+      });
+    });
+  }
+
+  function renderUserDetail(u) {
+    const isAdmin = u.email === ADMIN_EMAIL;
+    const date = new Date(u.created_at).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
+    const tab = state.userDetailTab || 'stories';
+
+    let body = '';
+    if (tab === 'stories') {
+      body = u.stories.length === 0
+        ? `<div style="padding:24px 0;text-align:center;color:var(--ink-muted);font-size:13.5px;">아직 작성한 기록이 없어요.</div>`
+        : `<div class="item-list">${u.stories.map(s => {
+            const sDate = new Date(s.created_at).toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric' });
+            const preview = (s.body || '').slice(0, 110).replace(/\n+/g, ' ');
+            const visKey = s.visibility === 'public' ? 'public' : 'private';
+            const visLabel = s.visibility === 'public' ? '공개' : (s.visibility === 'family' ? '가족' : '비공개');
+            const tags = [];
+            if (s.relation) tags.push({ label: s.relation, primary: true });
+            if (s.cause) tags.push({ label: s.cause });
+            if (s.writer_relation) tags.push({ label: s.writer_relation + '의 기록' });
+            const tagsHtml = tags.length > 0
+              ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;">${tags.map(t => `<span class="story-tag ${t.primary ? 'primary' : ''}" style="font-size:10.5px;padding:1px 7px;">${escapeHtml(t.label)}</span>`).join('')}</div>`
+              : '';
+            return `
+              <a href="/story.html?id=${s.id}" target="_blank" class="item-row">
+                <div class="item-main">
+                  ${tagsHtml}
+                  <div class="item-title">${escapeHtml(s.title || '(제목 없음)')}</div>
+                  <div class="item-preview">${escapeHtml(preview)}${(s.body || '').length > 110 ? '…' : ''}</div>
+                </div>
+                <div class="item-meta">
+                  ${sDate}<br>
+                  <span class="item-vis-chip ${visKey}">${visLabel}</span>
+                </div>
+              </a>
+            `;
+          }).join('')}</div>`;
+    } else {
+      body = u.answers.length === 0
+        ? `<div style="padding:24px 0;text-align:center;color:var(--ink-muted);font-size:13.5px;">아직 작성한 답변이 없어요.</div>`
+        : `<div class="item-list">${u.answers.map(a => {
+            const aDate = new Date(a.created_at).toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric' });
+            const qText = state.questionTextMap[a.question_id] || '(질문)';
+            const qCat = state.questionCategoryMap[a.question_id];
+            const catLabel = qCat ? (ANSWER_CATEGORY_LABEL[qCat] || qCat) : '';
+            const preview = (a.body || '').slice(0, 110).replace(/\n+/g, ' ');
+            const visKey = a.visibility === 'public' ? 'public' : 'private';
+            const visLabel = a.visibility === 'public' ? '공개' : '비공개';
+            const catHtml = catLabel
+              ? `<div style="margin-bottom:6px;"><span class="story-tag primary" style="font-size:10.5px;padding:1px 7px;">${escapeHtml(catLabel)}</span></div>`
+              : '';
+            return `
+              <a href="/ask.html?id=${a.question_id}" target="_blank" class="item-row">
+                <div class="item-main">
+                  ${catHtml}
+                  <div class="item-title">Q. ${escapeHtml(qText)}</div>
+                  <div class="item-preview">${escapeHtml(preview)}${(a.body || '').length > 110 ? '…' : ''}</div>
+                </div>
+                <div class="item-meta">
+                  ${aDate}<br>
+                  <span class="item-vis-chip ${visKey}">${visLabel}</span>
+                </div>
+              </a>
+            `;
+          }).join('')}</div>`;
+    }
+
+    return `
+      <div class="user-detail">
+        <div class="user-detail-head">
+          <div>
+            <div class="user-detail-name">${escapeHtml(u.name || '(이름 없음)')}${isAdmin ? ' · <span style="color:var(--primary);font-size:11px;font-weight:800;">ADMIN</span>' : ''}</div>
+            <div class="user-detail-email">${escapeHtml(u.email || '—')}</div>
+            <div class="user-detail-meta">가입 ${date} · 기록 ${u.story_count}개 · 답변 ${u.answer_count}개</div>
+          </div>
+          <button type="button" class="user-detail-close">닫기 ✕</button>
+        </div>
+        <div class="user-detail-tabs">
+          <button type="button" class="user-detail-tab ${tab === 'stories' ? 'active' : ''}" data-detail-tab="stories">기록 ${u.story_count}</button>
+          <button type="button" class="user-detail-tab ${tab === 'answers' ? 'active' : ''}" data-detail-tab="answers">답변 ${u.answer_count}</button>
+        </div>
+        ${body}
+      </div>
+    `;
+  }
+
+  // ── Filter tabs ───────────────────────
+  document.querySelectorAll('.filter-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.filter-tab').forEach(t => t.classList.toggle('active', t === tab));
+      state.filter = tab.dataset.filter;
+      renderList();
+    });
+  });
+
+  function getFilteredStories() {
+    switch (state.filter) {
+      case 'public':   return state.allStories.filter(s => s.visibility === 'public');
+      case 'featured': return state.allStories.filter(s => s.featured && s.visibility === 'public');
+      case 'private':  return state.allStories.filter(s => s.visibility === 'private' || s.visibility === 'family');
+      case 'all':
+      default:         return state.allStories;
+    }
+  }
+
+  // ── Render ────────────────────────────
+  function renderList() {
+    const list = getFilteredStories();
+    const container = document.getElementById('story-list');
+
+    if (list.length === 0) {
+      container.innerHTML = `
+        <div class="empty">
+          <div class="empty-icon">🕯️</div>
+          <p>이 필터에 해당하는 기록이 없습니다.</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = `<div class="story-list">${list.map(renderRow).join('')}</div>`;
+
+    container.querySelectorAll('[data-feature]').forEach(btn => {
+      btn.addEventListener('click', () => toggleFeatured(btn.dataset.feature));
+    });
+    container.querySelectorAll('[data-hide]').forEach(btn => {
+      btn.addEventListener('click', () => hideStory(btn.dataset.hide));
+    });
+    container.querySelectorAll('[data-unhide]').forEach(btn => {
+      btn.addEventListener('click', () => unhideStory(btn.dataset.unhide));
+    });
+  }
+
+  function renderRow(s) {
+    const preview = (s.body || '').slice(0, 140).replace(/\n+/g, ' ');
+    const date = new Date(s.created_at).toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric' });
+    const visLabel = s.visibility === 'public' ? '🌐 공개'
+      : s.visibility === 'family' ? '👨‍👩‍👧 가족' : '🔒 비공개';
+
+    const rowClass = [
+      'story-row',
+      s.featured && s.visibility === 'public' ? 'featured' : '',
+      s.visibility !== 'public' ? 'hidden-story' : '',
+    ].filter(Boolean).join(' ');
+
+    const metaTags = [];
+    if (s.relation) metaTags.push({ label: s.relation, primary: true });
+    if (s.age) metaTags.push({ label: s.age + '세' });
+    if (s.cause) metaTags.push({ label: s.cause });
+    if (s.writer_relation) metaTags.push({ label: s.writer_relation + '의 기록' });
+
+    const canFeature = s.visibility === 'public';
+    const featureBtn = canFeature
+      ? `<button type="button" class="toggle-btn ${s.featured ? 'on' : ''}" data-feature="${s.id}">
+           ${s.featured ? '📌 상단 고정 중' : '📌 상단 고정'}
+         </button>`
+      : '';
+    const hideBtn = s.visibility === 'public'
+      ? `<button type="button" class="btn-hide" data-hide="${s.id}">🚫 숨기기</button>`
+      : `<button type="button" class="toggle-btn" data-unhide="${s.id}">🔓 공개로 복구</button>`;
+
+    return `
+      <div class="${rowClass}">
+        <div class="story-info">
+          <div class="story-tags">
+            ${metaTags.map(t =>
+              `<span class="story-tag ${t.primary ? 'primary' : ''}">${escapeHtml(t.label)}</span>`
+            ).join('')}
+            <span class="visibility-chip ${s.visibility}">${visLabel}</span>
+          </div>
+          <div class="story-title">${escapeHtml(s.title || '(제목 없음)')}</div>
+          <div class="story-preview">${escapeHtml(preview)}${(s.body || '').length > 140 ? '…' : ''}</div>
+          <div class="story-foot">${date}</div>
+        </div>
+        <div class="story-actions">
+          ${featureBtn}
+          ${hideBtn}
+          <a href="/story.html?id=${s.id}" target="_blank" class="btn-link">상세 →</a>
+        </div>
+      </div>
+    `;
+  }
+
+  // ── Actions ───────────────────────────
+  async function toggleFeatured(id) {
+    const story = state.allStories.find(s => s.id === id);
+    if (!story) return;
+    const newVal = !story.featured;
+    const { error } = await supabase
+      .from('stories')
+      .update({ featured: newVal })
+      .eq('id', id);
+    if (error) { showAlert('변경 실패: ' + error.message); return; }
+    story.featured = newVal;
+    updateStats();
+    renderList();
+  }
+
+  async function hideStory(id) {
+    if (!confirm('이 기록을 비공개로 전환하시겠어요?\n랜딩에서도 사라지고, 작성자는 그대로 접근 가능합니다.')) return;
+    const { error } = await supabase
+      .from('stories')
+      .update({ visibility: 'private', featured: false })
+      .eq('id', id);
+    if (error) { showAlert('변경 실패: ' + error.message); return; }
+    const s = state.allStories.find(x => x.id === id);
+    if (s) { s.visibility = 'private'; s.featured = false; }
+    updateStats();
+    renderList();
+  }
+
+  async function unhideStory(id) {
+    if (!confirm('다시 공개로 되돌리시겠어요?')) return;
+    const { error } = await supabase
+      .from('stories')
+      .update({ visibility: 'public' })
+      .eq('id', id);
+    if (error) { showAlert('변경 실패: ' + error.message); return; }
+    const s = state.allStories.find(x => x.id === id);
+    if (s) s.visibility = 'public';
+    updateStats();
+    renderList();
+  }
+
+  // ── Utils ─────────────────────────────
+  function showAlert(msg) {
+    const el = document.getElementById('alert');
+    el.className = 'alert alert-error';
+    el.textContent = msg;
+    el.classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str || '';
+    return div.innerHTML;
+  }
+</script>
+
+</body>
+</html>

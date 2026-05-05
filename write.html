@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>새 이야기 쓰기 · 잇다</title>
+  <link rel="stylesheet" href="/auth-styles.css">
+  <style>
+    /* ── Layout ─────────────────────────── */
+    .write-shell {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 32px 20px 80px;
+      flex: 1;
+      width: 100%;
+    }
+    @media (min-width: 640px) {
+      .write-shell { padding: 48px 32px 120px; }
+    }
+
+    /* ── Top bar ────────────────────────── */
+    .top-bar {
+      background: var(--bg);
+      border-bottom: 1px solid var(--line);
+      padding: 14px 20px;
+    }
+    .top-bar-inner {
+      max-width: 1080px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .exit-btn {
+      padding: 8px 14px;
+      background: transparent;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--ink-soft);
+      cursor: pointer;
+    }
+    .exit-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+    /* ── Progress ───────────────────────── */
+    .progress {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 36px;
+    }
+    .progress-step {
+      flex: 1;
+      height: 3px;
+      background: var(--line);
+      border-radius: 3px;
+      transition: background 0.25s ease;
+    }
+    .progress-step.active { background: var(--primary); }
+    .progress-step.done { background: var(--primary-hover); }
+
+    .step-label {
+      font-size: 12.5px;
+      color: var(--ink-muted);
+      letter-spacing: 0.08em;
+      font-weight: 700;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+    .step-title {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.3;
+      margin-bottom: 10px;
+    }
+    @media (min-width: 640px) {
+      .step-title { font-size: 30px; }
+    }
+    .step-sub {
+      color: var(--ink-soft);
+      font-size: 15px;
+      line-height: 1.7;
+      margin-bottom: 28px;
+    }
+
+    /* ── Fields ─────────────────────────── */
+    .step { display: none; }
+    .step.active { display: block; animation: fade 0.25s ease; }
+    @keyframes fade {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .field { margin-bottom: 20px; }
+    .field label {
+      display: block;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 8px;
+    }
+    .field .required { color: var(--primary); margin-left: 4px; }
+    .field .optional {
+      font-size: 12px;
+      color: var(--ink-muted);
+      font-weight: 500;
+      margin-left: 6px;
+    }
+    .field input[type="text"],
+    .field input[type="number"],
+    .field select,
+    .field textarea {
+      width: 100%;
+      padding: 13px 14px;
+      font-family: inherit;
+      font-size: 15px;
+      color: var(--ink);
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      transition: border-color 0.15s ease;
+    }
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    .field textarea {
+      resize: vertical;
+      min-height: 120px;
+      line-height: 1.7;
+    }
+    .field .hint {
+      font-size: 12.5px;
+      color: var(--ink-muted);
+      margin-top: 6px;
+      line-height: 1.6;
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    @media (min-width: 560px) {
+      .field-row { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* ── Photo grid ─────────────────────── */
+    .photo-drop {
+      border: 2px dashed var(--line);
+      border-radius: 14px;
+      padding: 32px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+    .photo-drop:hover {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+    }
+    .photo-drop-icon { font-size: 28px; margin-bottom: 10px; }
+    .photo-drop-text { color: var(--ink-soft); font-size: 14px; }
+    .photo-drop input[type="file"] { display: none; }
+
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .photo-thumb {
+      position: relative;
+      aspect-ratio: 1;
+      background: var(--bg-alt);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .photo-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .photo-remove {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      border: none;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── AI section ─────────────────────── */
+    .ai-panel {
+      background: var(--primary-soft);
+      border-radius: 14px;
+      padding: 24px 20px;
+      margin-bottom: 20px;
+    }
+    .ai-panel-lead {
+      font-size: 14px;
+      color: var(--ink-soft);
+      line-height: 1.7;
+      margin-bottom: 16px;
+    }
+    .ai-weave-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 20px;
+      background: var(--primary);
+      color: #FFF;
+      border: none;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .ai-weave-btn:hover { background: var(--primary-hover); }
+    .ai-weave-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .ai-draft {
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 18px 16px;
+      margin-top: 16px;
+      display: none;
+    }
+    .ai-draft.visible { display: block; }
+    .ai-draft-label {
+      font-size: 12px;
+      color: var(--ink-muted);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+    }
+
+    /* ── Visibility choices ─────────────── */
+    .radio-group { display: flex; flex-direction: column; gap: 10px; }
+    .radio-item {
+      display: flex;
+      gap: 12px;
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+    .radio-item:hover { border-color: var(--ink-muted); }
+    .radio-item input { margin-top: 3px; accent-color: var(--primary); }
+    .radio-item input:checked ~ .radio-body { color: var(--ink); }
+    .radio-item:has(input:checked) {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+    }
+    .radio-body { flex: 1; }
+    .radio-title { font-weight: 700; font-size: 15px; margin-bottom: 3px; }
+    .radio-desc { font-size: 13px; color: var(--ink-muted); line-height: 1.55; }
+
+    /* ── Toggle (checkbox) item ─────────── */
+    .toggle-item {
+      display: flex;
+      gap: 12px;
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease;
+      align-items: flex-start;
+    }
+    .toggle-item:hover { border-color: var(--ink-muted); }
+    .toggle-item input[type="checkbox"] {
+      margin-top: 3px;
+      width: 18px;
+      height: 18px;
+      accent-color: var(--primary);
+      flex-shrink: 0;
+    }
+    .toggle-item:has(input:checked) {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+    }
+    .toggle-body { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+    .toggle-title { font-weight: 700; font-size: 15px; color: var(--ink); }
+    .toggle-desc { font-size: 13px; color: var(--ink-muted); line-height: 1.55; }
+
+    /* ── Preview ────────────────────────── */
+    .preview-card {
+      background: var(--bg-alt);
+      border-radius: 16px;
+      padding: 24px 20px;
+      margin-bottom: 24px;
+    }
+    .preview-kicker {
+      font-size: 12px;
+      color: var(--ink-muted);
+      letter-spacing: 0.08em;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .preview-title {
+      font-family: var(--font-serif);
+      font-size: 22px;
+      font-weight: 800;
+      line-height: 1.4;
+      margin-bottom: 14px;
+      color: var(--ink);
+    }
+    .preview-body {
+      font-size: 15px;
+      line-height: 1.85;
+      color: var(--ink-soft);
+      white-space: pre-wrap;
+    }
+    .preview-empty { color: var(--ink-muted); font-style: italic; }
+
+    /* ── Nav buttons ────────────────────── */
+    .step-nav {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding-top: 24px;
+      border-top: 1px solid var(--line);
+      margin-top: 28px;
+    }
+    .btn {
+      padding: 13px 22px;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 14.5px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    }
+    .btn-primary {
+      background: var(--ink);
+      color: #FFF;
+    }
+    .btn-primary:hover { background: var(--primary); }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-ghost {
+      background: transparent;
+      color: var(--ink-soft);
+      border: 1px solid var(--line);
+    }
+    .btn-ghost:hover { border-color: var(--ink-muted); color: var(--ink); }
+
+    /* ── Alert ──────────────────────────── */
+    #alert { margin-bottom: 16px; }
+
+    /* ── Success screen ─────────────────── */
+    .done-screen {
+      text-align: center;
+      padding: 60px 20px;
+      display: none;
+    }
+    .done-screen.visible { display: block; }
+    .done-screen .icon { font-size: 48px; margin-bottom: 16px; }
+    .done-screen h2 { font-size: 24px; font-weight: 800; margin-bottom: 10px; }
+    .done-screen p { color: var(--ink-soft); margin-bottom: 24px; line-height: 1.7; }
+    .done-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+
+<nav class="top-bar">
+  <div class="top-bar-inner">
+    <a href="/" class="logo"><span class="logo-mark">●</span> 잇다</a>
+    <button class="exit-btn" id="exit-btn" type="button">나가기</button>
+  </div>
+</nav>
+
+<main class="write-shell">
+  <div id="alert" class="hidden"></div>
+
+  <!-- Progress bar -->
+  <div class="progress" id="progress">
+    <div class="progress-step active"></div>
+    <div class="progress-step"></div>
+    <div class="progress-step"></div>
+    <div class="progress-step"></div>
+    <div class="progress-step"></div>
+    <div class="progress-step"></div>
+  </div>
+
+  <form id="write-form" autocomplete="off">
+
+    <!-- Step 1: 관계 + 한 줄 기억 (필수) -->
+    <section class="step active" data-step="1">
+      <div class="step-label">STEP 1 · 6</div>
+      <h1 class="step-title">어떤 분을 기억하려고 하나요?</h1>
+      <p class="step-sub">
+        관계와 짧은 한 줄만 적어주셔도 됩니다. 길게 쓰지 않아도 괜찮습니다.
+      </p>
+
+      <div class="field">
+        <label for="relation">관계<span class="required">*</span></label>
+        <select id="relation" name="relation" required>
+          <option value="">선택해주세요</option>
+          <option value="어머니">어머니</option>
+          <option value="아버지">아버지</option>
+          <option value="시어머니">시어머니</option>
+          <option value="시아버지">시아버지</option>
+          <option value="장모">장모</option>
+          <option value="장인">장인</option>
+          <option value="배우자">배우자</option>
+          <option value="할머니">할머니</option>
+          <option value="할아버지">할아버지</option>
+          <option value="형제자매">형제·자매</option>
+          <option value="자녀">자녀</option>
+          <option value="친구">친구</option>
+          <option value="반려동물">반려동물</option>
+          <option value="기타">그 외</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="nickname_deceased">부르던 호칭 <span class="optional">(선택)</span></label>
+        <input type="text" id="nickname_deceased" name="nickname_deceased" placeholder="예: 엄마, 아빠, 할머니, 철수 형">
+        <span class="hint">본인에게 불렸던 호칭이 있으면 적어주세요. 없으면 비워두셔도 됩니다.</span>
+      </div>
+
+      <div class="field">
+        <label for="body">이 분을 기억하는 한 줄<span class="required">*</span></label>
+        <textarea id="body" name="body" required minlength="1" placeholder="예: 새벽마다 창문 여는 소리로 아침을 알려주던 사람."></textarea>
+        <span class="hint">지금 떠오르는 장면, 느낌, 한 마디 — 어떤 것이든 괜찮습니다.</span>
+      </div>
+    </section>
+
+    <!-- Step 2: 선택 메타 -->
+    <section class="step" data-step="2">
+      <div class="step-label">STEP 2 · 6</div>
+      <h1 class="step-title">더 기억하고 싶은 것이 있다면</h1>
+      <p class="step-sub">
+        모두 선택 항목입니다. 생각나는 것만 적으셔도 충분합니다.
+      </p>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="age">연세 <span class="optional">(선택)</span></label>
+          <input type="number" id="age" name="age" min="0" max="130" placeholder="예: 78">
+        </div>
+        <div class="field">
+          <label for="death_year">돌아가신 해 <span class="optional">(선택)</span></label>
+          <input type="number" id="death_year" name="death_year" min="1900" max="2030" placeholder="예: 2023">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="cause">투병 원인 <span class="optional">(선택)</span></label>
+        <input type="text" id="cause" name="cause" placeholder="예: 폐암, 노환, 심장질환 …">
+      </div>
+
+      <div class="field">
+        <label for="duration">투병 기간 <span class="optional">(선택)</span></label>
+        <select id="duration" name="duration">
+          <option value="">선택하지 않음</option>
+          <option value="갑작스러움">갑작스러움</option>
+          <option value="단기">단기 (1년 미만)</option>
+          <option value="중기">중기 (1-5년)</option>
+          <option value="장기">장기 (5년 이상)</option>
+          <option value="모름">잘 모르겠음</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="last_place">마지막 계셨던 곳 <span class="optional">(선택)</span></label>
+        <select id="last_place" name="last_place">
+          <option value="">선택하지 않음</option>
+          <option value="집">집</option>
+          <option value="병원">병원</option>
+          <option value="요양원">요양원</option>
+          <option value="호스피스">호스피스</option>
+          <option value="기타">그 외</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="funeral">장례 방식 <span class="optional">(선택)</span></label>
+        <select id="funeral" name="funeral">
+          <option value="">선택하지 않음</option>
+          <option value="매장">매장</option>
+          <option value="화장">화장</option>
+          <option value="자연장">자연장·수목장</option>
+          <option value="기타">그 외</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- Step 3: 사진 -->
+    <section class="step" data-step="3">
+      <div class="step-label">STEP 3 · 6</div>
+      <h1 class="step-title">함께 남기고 싶은 사진이 있나요?</h1>
+      <p class="step-sub">
+        사진은 선택입니다. 최대 10장까지 올릴 수 있습니다.
+      </p>
+
+      <label class="photo-drop" for="photo-input">
+        <div class="photo-drop-icon">🌿</div>
+        <div class="photo-drop-text">
+          <strong>사진을 선택</strong>해 주세요<br>
+          <span style="font-size: 12.5px; color: var(--ink-muted);">jpg, png, heic · 장당 10MB 이하</span>
+        </div>
+        <input type="file" id="photo-input" multiple accept="image/*">
+      </label>
+
+      <div class="photo-grid" id="photo-grid"></div>
+    </section>
+
+    <!-- Step 4: 메모 -->
+    <section class="step" data-step="4">
+      <div class="step-label">STEP 4 · 6</div>
+      <h1 class="step-title">더 풀어내고 싶은 이야기</h1>
+      <p class="step-sub">
+        길게 쓰지 않아도 됩니다. 짧은 조각들을 이어 적어도 괜찮습니다. 이 메모는 다음 단계에서 AI가 이야기로 엮는 재료가 됩니다.
+      </p>
+
+      <div class="field">
+        <label for="draft_memo">메모 <span class="optional">(선택)</span></label>
+        <textarea id="draft_memo" name="draft_memo" rows="8" placeholder="기억나는 장면, 말투, 습관, 함께 있었던 하루 — 떠오르는 대로 적어주세요."></textarea>
+        <span class="hint">맞춤법·순서는 신경 쓰지 않으셔도 됩니다.</span>
+      </div>
+    </section>
+
+    <!-- Step 5: AI 엮기 -->
+    <section class="step" data-step="5">
+      <div class="step-label">STEP 5 · 6</div>
+      <h1 class="step-title">이야기로 엮어드릴까요?</h1>
+      <p class="step-sub">
+        AI가 대신 쓰는 게 아니라, 적어주신 메모를 문장으로 엮어 초안을 만듭니다. 마음에 들지 않는 부분은 다음 단계에서 문단 단위로 바꾸실 수 있어요.
+      </p>
+
+      <div class="ai-panel">
+        <p class="ai-panel-lead">
+          🕊️ 지금 바로 엮지 않아도 됩니다. 건너뛰시고, 나중에 기록 페이지에서 다시 엮으실 수 있습니다.
+        </p>
+        <button type="button" class="ai-weave-btn" id="ai-weave-btn">
+          ✍️ 이야기로 엮기
+        </button>
+        <span style="display: inline-block; margin-left: 10px; font-size: 12.5px; color: var(--ink-muted);">
+          (준비 중)
+        </span>
+      </div>
+
+      <div class="ai-draft" id="ai-draft">
+        <div class="ai-draft-label">초안 · 문단별 수정 가능</div>
+        <div id="ai-draft-content"></div>
+      </div>
+    </section>
+
+    <!-- Step 6: 발행 -->
+    <section class="step" data-step="6">
+      <div class="step-label">STEP 6 · 6</div>
+      <h1 class="step-title">마지막으로 확인해 주세요</h1>
+      <p class="step-sub">
+        어떻게 표시하고, 누구에게 보여질지 정해주세요. 언제든 바꾸실 수 있습니다.
+      </p>
+
+      <div class="preview-card">
+        <div class="preview-kicker" id="preview-kicker">기록</div>
+        <div class="preview-title" id="preview-title">(제목 없음)</div>
+        <div class="preview-body" id="preview-body"></div>
+      </div>
+
+      <div class="field">
+        <label for="writer_name">작성자 닉네임<span class="required">*</span></label>
+        <input type="text" id="writer_name" name="writer_name" required placeholder="예: 수련, 둘째 아들, J">
+        <span class="hint">실명 대신 불리고 싶은 이름을 적어주셔도 됩니다.</span>
+      </div>
+
+      <div class="field">
+        <label class="toggle-item">
+          <input type="checkbox" id="show_relation">
+          <span class="toggle-body">
+            <span class="toggle-title">작성자 관계도 함께 보이기</span>
+            <span class="toggle-desc">켜면 "딸의 기록" / "둘째 아들의 기록" 처럼 관계가 함께 표시됩니다.</span>
+          </span>
+        </label>
+      </div>
+
+      <div class="field">
+        <label>누구에게 보여드릴까요?</label>
+        <div class="radio-group">
+          <label class="radio-item">
+            <input type="radio" name="visibility" value="private" checked>
+            <div class="radio-body">
+              <div class="radio-title">🔒 나만 보기</div>
+              <div class="radio-desc">나만 볼 수 있는 사적 기록입니다. 기본값입니다.</div>
+            </div>
+          </label>
+          <label class="radio-item">
+            <input type="radio" name="visibility" value="family">
+            <div class="radio-body">
+              <div class="radio-title">👨‍👩‍👧 가족만 보기</div>
+              <div class="radio-desc">초대한 가족만 볼 수 있습니다.</div>
+            </div>
+          </label>
+          <label class="radio-item">
+            <input type="radio" name="visibility" value="public">
+            <div class="radio-body">
+              <div class="radio-title">🌐 비슷한 경험의 사람들과 함께</div>
+              <div class="radio-desc">잇다 이용자 누구나 볼 수 있고, 국화로 함께 기억할 수 있습니다.</div>
+            </div>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <!-- Nav buttons -->
+    <div class="step-nav" id="step-nav">
+      <button type="button" class="btn btn-ghost" id="prev-btn" style="visibility: hidden;">← 이전</button>
+      <button type="button" class="btn btn-primary" id="next-btn">다음 →</button>
+    </div>
+
+  </form>
+
+  <!-- Done screen -->
+  <div class="done-screen" id="done-screen">
+    <div class="icon">🌼</div>
+    <h2>기록이 저장되었습니다</h2>
+    <p>
+      천천히 다듬으실 수 있습니다.<br>
+      내 기록 페이지에서 언제든 다시 열어볼 수 있어요.
+    </p>
+    <div class="done-actions">
+      <a href="/my.html" class="btn btn-primary" style="text-decoration: none;">내 기록으로 →</a>
+      <a href="/write.html" class="btn btn-ghost" style="text-decoration: none;">또 다른 이야기 쓰기</a>
+    </div>
+  </div>
+</main>
+
+<script type="module">
+  import { requireAuth, supabase } from '/auth.js';
+
+  const session = await requireAuth('/login.html');
+  if (!session) { /* redirected */ }
+
+  const user = session.user;
+  const userName = user.user_metadata?.name || user.email.split('@')[0];
+
+  // ── Edit mode detection ───────────────
+  const editId = new URLSearchParams(window.location.search).get('edit');
+  const isEdit = !!editId;
+
+  // ── State ─────────────────────────────
+  const state = {
+    currentStep: 1,
+    totalSteps: 6,
+    photos: [],              // NEW photos: { file, previewUrl }
+    existingPhotos: [],      // LOADED from DB: { id, storage_path, publicUrl, markedForDelete }
+    aiDraftBody: null,
+    editId,
+  };
+
+  // Default writer name
+  document.getElementById('writer_name').value = userName;
+
+  // ── Load existing story if editing ────
+  if (isEdit) {
+    await loadStoryForEdit(editId);
+  }
+
+  async function loadStoryForEdit(id) {
+    try {
+      // Fetch story — RLS ensures only owner can read private/family
+      const { data: story, error } = await supabase
+        .from('stories')
+        .select('*')
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .single();
+      if (error || !story) throw error || new Error('not found');
+
+      // Pre-fill fields
+      const setVal = (id, v) => { const el = document.getElementById(id); if (el && v != null) el.value = v; };
+      setVal('relation', story.relation);
+      setVal('nickname_deceased', extractNickname(story.title));
+      setVal('body', story.body);
+      setVal('age', story.age);
+      setVal('death_year', story.death_year);
+      setVal('cause', story.cause);
+      setVal('duration', story.duration);
+      setVal('last_place', story.last_place);
+      setVal('funeral', story.funeral);
+      setVal('draft_memo', story.draft_memo);
+      if (story.writer_relation) {
+        document.getElementById('show_relation').checked = true;
+      }
+      // Visibility radio
+      const visRadio = document.querySelector(`input[name="visibility"][value="${story.visibility}"]`);
+      if (visRadio) visRadio.checked = true;
+
+      // Load existing photos
+      const { data: photos } = await supabase
+        .from('story_photos')
+        .select('*')
+        .eq('story_id', id)
+        .order('sort_order', { ascending: true });
+
+      if (photos && photos.length > 0) {
+        state.existingPhotos = photos.map(p => {
+          const { data: { publicUrl } } = supabase.storage
+            .from('story-photos')
+            .getPublicUrl(p.storage_path);
+          return {
+            id: p.id,
+            storage_path: p.storage_path,
+            publicUrl,
+            markedForDelete: false,
+          };
+        });
+        renderPhotoGrid();
+      }
+
+      // UI: change title + button text
+      document.querySelector('section[data-step="1"] .step-title').textContent = '이 기록을 이어서 다듬어 보세요';
+      document.querySelector('section[data-step="1"] .step-sub').textContent = '이미 쓰신 내용이 채워져 있습니다. 바꾸고 싶은 부분만 고치시면 됩니다.';
+      document.querySelector('section[data-step="6"] .step-title').textContent = '수정 내용을 확인해 주세요';
+    } catch (e) {
+      console.error(e);
+      showAlert('기록을 불러오지 못했습니다. 다시 시도해주세요.');
+    }
+  }
+
+  // title = "{nickname}에 대한 기억" → extract nickname (best-effort)
+  function extractNickname(title) {
+    if (!title) return '';
+    const m = title.match(/^(.+?)에 대한 기억$/);
+    if (!m) return '';
+    const name = m[1];
+    const relations = ['어머니','아버지','시어머니','시아버지','장모','장인','배우자','할머니','할아버지','형제자매','자녀','친구','반려동물','기타'];
+    if (relations.includes(name)) return '';  // title used relation as fallback
+    return name;
+  }
+
+  // ── Step navigation ───────────────────
+  const progressSteps = document.querySelectorAll('.progress-step');
+  const steps = document.querySelectorAll('.step');
+  const prevBtn = document.getElementById('prev-btn');
+  const nextBtn = document.getElementById('next-btn');
+
+  function updateStepUI() {
+    steps.forEach(s => s.classList.toggle('active', +s.dataset.step === state.currentStep));
+    progressSteps.forEach((p, i) => {
+      p.classList.toggle('active', i + 1 === state.currentStep);
+      p.classList.toggle('done', i + 1 < state.currentStep);
+    });
+    prevBtn.style.visibility = state.currentStep === 1 ? 'hidden' : 'visible';
+    nextBtn.textContent = state.currentStep === state.totalSteps
+      ? (isEdit ? '🌿 수정 저장' : '🌿 저장하기')
+      : '다음 →';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // Refresh preview when entering step 6
+    if (state.currentStep === 6) refreshPreview();
+  }
+
+  function validateStep(step) {
+    hideAlert();
+    if (step === 1) {
+      const rel = document.getElementById('relation').value.trim();
+      const body = document.getElementById('body').value.trim();
+      if (!rel) { showAlert('관계를 선택해주세요.'); return false; }
+      if (!body) { showAlert('이 분을 기억하는 한 줄을 적어주세요.'); return false; }
+    }
+    if (step === 6) {
+      const name = document.getElementById('writer_name').value.trim();
+      if (!name) { showAlert('작성자 닉네임을 적어주세요.'); return false; }
+    }
+    return true;
+  }
+
+  nextBtn.addEventListener('click', async () => {
+    if (!validateStep(state.currentStep)) return;
+    if (state.currentStep === state.totalSteps) {
+      await saveStory();
+      return;
+    }
+    state.currentStep++;
+    updateStepUI();
+  });
+
+  prevBtn.addEventListener('click', () => {
+    if (state.currentStep > 1) {
+      state.currentStep--;
+      updateStepUI();
+    }
+  });
+
+  document.getElementById('exit-btn').addEventListener('click', () => {
+    if (confirm('저장하지 않고 나가시겠어요? 지금까지 입력한 내용은 사라집니다.')) {
+      window.location.href = '/my.html';
+    }
+  });
+
+  // ── Photo handling ────────────────────
+  const photoInput = document.getElementById('photo-input');
+  const photoGrid = document.getElementById('photo-grid');
+
+  photoInput.addEventListener('change', (e) => {
+    const files = Array.from(e.target.files || []);
+    const MAX = 10;
+    const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+    files.forEach(f => {
+      if (state.photos.length >= MAX) return;
+      if (f.size > MAX_SIZE) {
+        showAlert(`"${f.name}"은(는) 10MB를 초과합니다.`);
+        return;
+      }
+      const previewUrl = URL.createObjectURL(f);
+      state.photos.push({ file: f, previewUrl });
+    });
+    renderPhotoGrid();
+    photoInput.value = '';
+  });
+
+  function renderPhotoGrid() {
+    const existingHtml = state.existingPhotos
+      .filter(p => !p.markedForDelete)
+      .map((p) => `
+        <div class="photo-thumb" data-existing="${p.id}">
+          <img src="${p.publicUrl}" alt="기존 사진" loading="lazy">
+          <button type="button" class="photo-remove" data-existing-id="${p.id}" aria-label="삭제">×</button>
+        </div>
+      `).join('');
+    const newHtml = state.photos.map((p, i) => `
+      <div class="photo-thumb">
+        <img src="${p.previewUrl}" alt="photo ${i+1}">
+        <button type="button" class="photo-remove" data-index="${i}" aria-label="삭제">×</button>
+      </div>
+    `).join('');
+    photoGrid.innerHTML = existingHtml + newHtml;
+
+    photoGrid.querySelectorAll('.photo-remove').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (btn.dataset.existingId) {
+          // Mark existing photo for deletion
+          const id = btn.dataset.existingId;
+          const p = state.existingPhotos.find(x => x.id === id);
+          if (p) p.markedForDelete = true;
+        } else {
+          const idx = +btn.dataset.index;
+          URL.revokeObjectURL(state.photos[idx].previewUrl);
+          state.photos.splice(idx, 1);
+        }
+        renderPhotoGrid();
+      });
+    });
+  }
+
+  // ── AI weave (placeholder — Week 2에 Edge Function 연결) ──
+  const aiWeaveBtn = document.getElementById('ai-weave-btn');
+  const aiDraftEl = document.getElementById('ai-draft');
+  const aiDraftContent = document.getElementById('ai-draft-content');
+
+  aiWeaveBtn.addEventListener('click', () => {
+    const relation = document.getElementById('relation').value;
+    const body = document.getElementById('body').value.trim();
+    const memo = document.getElementById('draft_memo').value.trim();
+    const nickDeceased = document.getElementById('nickname_deceased').value.trim();
+
+    // Week 1 플레이스홀더: 간단히 문단 합치기
+    const subject = nickDeceased || (relation ? relation + '님' : '그 사람');
+    const draft = [
+      body,
+      memo ? '' : null,
+      memo,
+    ].filter(x => x !== null).join('\n\n');
+
+    state.aiDraftBody = draft;
+    aiDraftContent.innerHTML = draft
+      .split('\n\n')
+      .map(p => `<p style="margin-bottom:14px;line-height:1.85;">${escapeHtml(p)}</p>`)
+      .join('');
+    aiDraftEl.classList.add('visible');
+  });
+
+  // ── Preview ───────────────────────────
+  function refreshPreview() {
+    const relation = document.getElementById('relation').value;
+    const nickDeceased = document.getElementById('nickname_deceased').value.trim();
+    const body = document.getElementById('body').value.trim();
+    const memo = document.getElementById('draft_memo').value.trim();
+    const writerName = document.getElementById('writer_name').value.trim() || userName;
+    const showRel = document.getElementById('show_relation').checked;
+
+    const writerRel = showRel && relation
+      ? relationToWriter(relation)
+      : null;
+
+    const kicker = writerRel
+      ? `${writerRel}의 기록 · ${writerName}`
+      : `${writerName}의 기록`;
+
+    const fallbackTitle = nickDeceased
+      ? `${nickDeceased}에 대한 기억`
+      : `${relation || '그 사람'}에 대한 기억`;
+
+    document.getElementById('preview-kicker').textContent = kicker;
+    document.getElementById('preview-title').textContent = fallbackTitle;
+    const bodyText = state.aiDraftBody || [body, memo].filter(Boolean).join('\n\n');
+    document.getElementById('preview-body').textContent = bodyText || '(본문 없음)';
+  }
+
+  function relationToWriter(rel) {
+    const map = {
+      '어머니': '딸 또는 아들',
+      '아버지': '딸 또는 아들',
+      '시어머니': '며느리',
+      '시아버지': '며느리',
+      '장모': '사위',
+      '장인': '사위',
+      '배우자': '배우자',
+      '할머니': '손주',
+      '할아버지': '손주',
+      '형제자매': '형제·자매',
+      '자녀': '부모',
+      '친구': '친구',
+      '반려동물': '가족',
+      '기타': '가족',
+    };
+    return map[rel] || null;
+  }
+
+  // Re-render preview when inputs change on step 6
+  ['relation', 'nickname_deceased', 'body', 'draft_memo', 'writer_name'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => {
+      if (state.currentStep === 6) refreshPreview();
+    });
+  });
+  document.getElementById('show_relation').addEventListener('change', () => {
+    if (state.currentStep === 6) refreshPreview();
+  });
+
+  // ── Save ──────────────────────────────
+  async function saveStory() {
+    nextBtn.disabled = true;
+    nextBtn.textContent = '저장 중...';
+    hideAlert();
+
+    try {
+      const form = document.getElementById('write-form');
+      const fd = new FormData(form);
+
+      const relation = fd.get('relation');
+      const body = fd.get('body');
+      const writerName = fd.get('writer_name');
+      const showRel = document.getElementById('show_relation').checked;
+      const visibility = fd.get('visibility') || 'private';
+
+      // Compose title (MVP — later editable by user)
+      const nickDeceased = fd.get('nickname_deceased')?.trim();
+      const title = nickDeceased
+        ? `${nickDeceased}에 대한 기억`
+        : `${relation}에 대한 기억`;
+
+      const storyPayload = {
+        user_id: user.id,
+        title,
+        body: state.aiDraftBody || body,
+        draft_memo: fd.get('draft_memo') || null,
+        relation,
+        age: fd.get('age') ? parseInt(fd.get('age'), 10) : null,
+        death_year: fd.get('death_year') ? parseInt(fd.get('death_year'), 10) : null,
+        cause: fd.get('cause') || null,
+        duration: fd.get('duration') || null,
+        last_place: fd.get('last_place') || null,
+        funeral: fd.get('funeral') || null,
+        writer_relation: showRel ? relationToWriter(relation) : null,
+        visibility,
+        ai_generated: !!state.aiDraftBody,
+      };
+
+      // 1. Insert or update story
+      let story;
+      if (isEdit) {
+        const { data, error: upErr } = await supabase
+          .from('stories')
+          .update({ ...storyPayload, updated_at: new Date().toISOString() })
+          .eq('id', state.editId)
+          .eq('user_id', user.id)
+          .select()
+          .single();
+        if (upErr) throw upErr;
+        story = data;
+      } else {
+        const { data, error: insertErr } = await supabase
+          .from('stories')
+          .insert(storyPayload)
+          .select()
+          .single();
+        if (insertErr) throw insertErr;
+        story = data;
+      }
+
+      // 2a. Remove photos marked for deletion (edit mode)
+      const toDelete = state.existingPhotos.filter(p => p.markedForDelete);
+      if (toDelete.length > 0) {
+        for (const p of toDelete) {
+          await supabase.storage.from('story-photos').remove([p.storage_path]);
+          await supabase.from('story_photos').delete().eq('id', p.id);
+        }
+      }
+
+      // 2b. Upload NEW photos (best-effort)
+      if (state.photos.length > 0) {
+        let uploadedCount = 0;
+        let lastError = null;
+        for (let i = 0; i < state.photos.length; i++) {
+          const photo = state.photos[i];
+          const ext = photo.file.name.split('.').pop()?.toLowerCase() || 'jpg';
+          const path = `${user.id}/${story.id}/${Date.now()}_${i}.${ext}`;
+          const { error: upErr } = await supabase.storage
+            .from('story-photos')
+            .upload(path, photo.file, {
+              cacheControl: '3600',
+              upsert: false,
+              contentType: photo.file.type,
+            });
+          if (upErr) {
+            console.warn('Photo upload failed:', upErr);
+            lastError = upErr;
+            continue;
+          }
+          await supabase.from('story_photos').insert({
+            story_id: story.id,
+            storage_path: path,
+            sort_order: state.existingPhotos.filter(p => !p.markedForDelete).length + i,
+          });
+          uploadedCount++;
+        }
+        // Surface upload errors clearly if ALL failed
+        if (uploadedCount === 0 && lastError) {
+          showAlert('사진 업로드가 실패했습니다. Supabase Storage에 "story-photos" 버킷이 있고 Public으로 설정되어 있는지 확인해주세요. (' + lastError.message + ')');
+          nextBtn.disabled = false;
+          nextBtn.textContent = isEdit ? '🌿 수정 저장' : '🌿 저장하기';
+          return;
+        }
+      }
+
+      // 3. Success
+      if (isEdit) {
+        // Redirect straight back to the story detail
+        window.location.href = '/story.html?id=' + story.id;
+        return;
+      }
+      document.getElementById('write-form').style.display = 'none';
+      document.getElementById('progress').style.display = 'none';
+      document.getElementById('done-screen').classList.add('visible');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err) {
+      console.error(err);
+      showAlert('저장 중 문제가 발생했습니다: ' + (err.message || err));
+      nextBtn.disabled = false;
+      nextBtn.textContent = isEdit ? '🌿 수정 저장' : '🌿 저장하기';
+    }
+  }
+
+  // ── Utilities ─────────────────────────
+  function showAlert(message, type = 'error') {
+    const el = document.getElementById('alert');
+    el.className = `alert alert-${type}`;
+    el.textContent = message;
+    el.classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  function hideAlert() {
+    document.getElementById('alert').classList.add('hidden');
+  }
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>로그인 · 잇다</title>
+  <link rel="stylesheet" href="/auth-styles.css">
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="logo"><span class="logo-mark">●</span> 잇다</a>
+  </div>
+</nav>
+
+<main class="auth-container">
+  <span class="auth-kicker">LOGIN</span>
+  <h1>다시 오신 것을<br>환영합니다</h1>
+  <p class="auth-lead">
+    이메일과 비밀번호로 로그인해주세요.
+  </p>
+
+  <div id="alert" class="hidden"></div>
+
+  <form id="login-form" class="auth-form">
+    <div class="field">
+      <label for="email">이메일</label>
+      <input type="email" id="email" name="email" placeholder="you@example.com" required autocomplete="email">
+    </div>
+
+    <div class="field">
+      <label for="password">비밀번호</label>
+      <input type="password" id="password" name="password" placeholder="비밀번호" required autocomplete="current-password">
+    </div>
+
+    <button type="submit" class="auth-submit">로그인</button>
+  </form>
+
+  <div class="auth-links">
+    <a href="/forgot.html">비밀번호를 잊으셨나요?</a>
+  </div>
+
+  <div class="auth-bottom">
+    아직 가입하지 않으셨다면 <a href="/signup.html">가입하기</a>
+  </div>
+</main>
+
+<footer class="auth-footer">
+  © 2026 라이프헤리티지 · 잇다
+</footer>
+
+<script type="module">
+  import { signIn, redirectIfAuthed, friendlyError } from '/auth.js';
+
+  // ── 초대 코드 캡처 ────────────────────────
+  const inviteCode = (new URLSearchParams(location.search).get('invite')
+    || localStorage.getItem('itda:pending_invite')
+    || '').toUpperCase();
+  if (inviteCode) {
+    localStorage.setItem('itda:pending_invite', inviteCode);
+    await redirectIfAuthed(`/care.html?accept=${encodeURIComponent(inviteCode)}`);
+    const lead = document.querySelector('.auth-lead');
+    if (lead) lead.innerHTML = `<strong style="color: var(--primary);">초대 코드 ${inviteCode}</strong>를 받으셨네요. 로그인하시면 자동으로 합류됩니다.`;
+    const signupLinks = document.querySelectorAll('a[href="/signup.html"]');
+    signupLinks.forEach(a => { a.href = `/signup.html?invite=${inviteCode}`; });
+  } else {
+    await redirectIfAuthed('/my.html');
+  }
+
+  const form = document.getElementById('login-form');
+  const alertBox = document.getElementById('alert');
+  const submitBtn = form.querySelector('.auth-submit');
+
+  function showAlert(message, type = 'error') {
+    alertBox.className = `alert alert-${type}`;
+    alertBox.textContent = message;
+    alertBox.classList.remove('hidden');
+  }
+
+  function hideAlert() {
+    alertBox.classList.add('hidden');
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideAlert();
+    submitBtn.disabled = true;
+    submitBtn.textContent = '로그인 중...';
+
+    const email = form.email.value.trim();
+    const password = form.password.value;
+
+    const { data, error } = await signIn(email, password);
+
+    if (error) {
+      showAlert(friendlyError(error), 'error');
+      submitBtn.disabled = false;
+      submitBtn.textContent = '로그인';
+      return;
+    }
+
+    // 초대 코드 있으면 care.html?accept=CODE로, 없으면 my.html
+    if (inviteCode) {
+      window.location.href = `/care.html?accept=${encodeURIComponent(inviteCode)}`;
+    } else {
+      window.location.href = '/my.html';
+    }
+  });
+</script>
+
+</body>
+</html>

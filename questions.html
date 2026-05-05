@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>지난 질문들 · 잇다</title>
+  <link rel="stylesheet" href="/auth-styles.css">
+  <style>
+    .shell {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 32px 20px 80px;
+      flex: 1;
+      width: 100%;
+    }
+    @media (min-width: 640px) {
+      .shell { padding: 56px 32px 120px; }
+    }
+
+    .top-bar {
+      background: var(--bg);
+      border-bottom: 1px solid var(--line);
+      padding: 14px 20px;
+    }
+    .top-bar-inner {
+      max-width: 1080px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .top-bar-links { display: flex; gap: 16px; align-items: center; font-size: 14px; }
+    .top-bar-links a { color: var(--ink-soft); text-decoration: none; }
+    .top-bar-links a:hover { color: var(--primary); }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+    .lead {
+      color: var(--ink-soft);
+      font-size: 15px;
+      line-height: 1.7;
+      margin-bottom: 28px;
+    }
+
+    .filter-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 22px;
+    }
+    .filter-btn {
+      padding: 7px 14px;
+      background: transparent;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink-soft);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .filter-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .filter-btn.active {
+      background: var(--ink);
+      color: #FFF;
+      border-color: var(--ink);
+    }
+
+    .q-list {
+      border-top: 2px solid var(--ink);
+      border-bottom: 1px solid var(--line);
+    }
+    .q-row {
+      display: grid;
+      grid-template-columns: 50px 1fr 90px;
+      gap: 12px;
+      align-items: center;
+      padding: 16px 8px;
+      border-bottom: 1px solid var(--line);
+      text-decoration: none;
+      color: inherit;
+    }
+    .q-row:hover { background: var(--bg-alt); }
+    .q-num {
+      font-size: 13px;
+      color: var(--ink-muted);
+      font-weight: 700;
+    }
+    .q-text {
+      font-size: 14.5px;
+      line-height: 1.5;
+      color: var(--ink);
+    }
+    .q-text .cat {
+      display: inline-block;
+      padding: 2px 8px;
+      background: var(--bg-alt);
+      color: var(--ink-muted);
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      margin-right: 6px;
+    }
+    .q-count {
+      font-size: 12.5px;
+      color: var(--ink-muted);
+      text-align: right;
+      white-space: nowrap;
+      line-height: 1.4;
+    }
+    .q-count.has { color: var(--primary); font-weight: 700; }
+    .q-count .q-count-num { font-weight: 800; font-size: 13.5px; }
+    .q-count .q-count-label { font-size: 11.5px; color: var(--ink-muted); margin-left: 3px; font-weight: 500; }
+    .q-count .q-count-likes { display: block; font-size: 11.5px; color: var(--ink-muted); font-weight: 500; margin-top: 2px; }
+    .q-count .q-count-empty { color: var(--ink-faint); font-weight: 500; }
+
+    @media (max-width: 640px) {
+      .q-row {
+        grid-template-columns: 36px 1fr 60px;
+        gap: 8px;
+        padding: 14px 6px;
+      }
+    }
+
+    .empty {
+      padding: 48px 20px;
+      text-align: center;
+      color: var(--ink-muted);
+    }
+
+    /* ── Today's question featured card ─── */
+    .today-card {
+      display: block;
+      padding: 28px 30px;
+      background: linear-gradient(135deg, var(--primary-soft) 0%, #FFFCF9 100%);
+      border-radius: 20px;
+      border: 1px solid var(--primary-soft);
+      text-decoration: none;
+      color: inherit;
+      margin-bottom: 36px;
+      transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.15s ease;
+    }
+    .today-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(180, 110, 90, 0.12);
+      border-color: var(--primary);
+    }
+    .today-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11.5px;
+      letter-spacing: 0.1em;
+      color: var(--primary);
+      font-weight: 800;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+    .today-kicker::before {
+      content: "";
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--primary);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.3); }
+    }
+    .today-cat {
+      display: inline-block;
+      padding: 3px 10px;
+      background: rgba(255, 255, 255, 0.7);
+      color: var(--ink-soft);
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .today-text {
+      font-family: var(--font-serif);
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 1.55;
+      color: var(--ink);
+      margin-bottom: 22px;
+      letter-spacing: -0.01em;
+    }
+    @media (min-width: 640px) {
+      .today-text { font-size: 23px; }
+    }
+    .today-foot {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(180, 110, 90, 0.18);
+    }
+    .today-count {
+      font-size: 13.5px;
+      color: var(--ink-soft);
+      font-weight: 600;
+    }
+    .today-count strong {
+      color: var(--primary);
+      font-weight: 800;
+    }
+    .today-go {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    /* ── Past questions section divider ─── */
+    .past-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .past-title {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+    .past-stat {
+      font-size: 13px;
+      color: var(--ink-muted);
+    }
+    .past-stat strong { color: var(--primary); font-weight: 800; }
+  </style>
+</head>
+<body>
+
+<nav class="top-bar">
+  <div class="top-bar-inner">
+    <a href="/" class="logo"><span class="logo-mark">●</span> 잇다</a>
+    <div class="top-bar-links" id="top-bar-links">
+      <a href="/login.html">로그인</a>
+    </div>
+  </div>
+</nav>
+
+<main class="shell">
+  <h1>매일의 질문</h1>
+  <p class="lead">100개의 질문이 매일 한 개씩 떠올라요. 모두에게 같은 질문이 같은 날 도착해요. 옆에는 답변 수와 받은 공감 수예요.</p>
+
+  <!-- Today's question featured card -->
+  <a id="today-card" class="today-card" href="/ask.html" style="display: none;">
+    <div class="today-kicker"><span id="today-date">오늘</span></div>
+    <div id="today-cat" class="today-cat"></div>
+    <div id="today-text" class="today-text">오늘의 질문을 불러오는 중…</div>
+    <div class="today-foot">
+      <span class="today-count" id="today-count">—</span>
+      <span class="today-go">내 답 쓰러 가기 →</span>
+    </div>
+  </a>
+
+  <div class="past-header">
+    <span class="past-title">지난 질문들</span>
+    <span class="past-stat" id="past-stat"></span>
+  </div>
+
+  <div class="filter-row" id="filter-row">
+    <button type="button" class="filter-btn active" data-cat="all">전체</button>
+    <button type="button" class="filter-btn" data-cat="self">나라는 사람</button>
+    <button type="button" class="filter-btn" data-cat="relationships">가까운 사람들</button>
+    <button type="button" class="filter-btn" data-cat="work">일과 커리어</button>
+    <button type="button" class="filter-btn" data-cat="regret">후회와 용서</button>
+    <button type="button" class="filter-btn" data-cat="gratitude">감사</button>
+    <button type="button" class="filter-btn" data-cat="legacy">남기고 싶은 것</button>
+    <button type="button" class="filter-btn" data-cat="endings">끝을 상상하기</button>
+  </div>
+
+  <div id="list-area">
+    <div class="empty">불러오는 중…</div>
+  </div>
+</main>
+
+<footer class="auth-footer">
+  © 2026 라이프헤리티지 · 잇다
+</footer>
+
+<script type="module">
+  import { supabase } from '/auth.js';
+
+  const { data: { session } } = await supabase.auth.getSession();
+  const currentUser = session?.user || null;
+
+  const { renderTopBar } = await import('/nav.js');
+  await renderTopBar({ active: 'ask' });
+
+  const CATEGORY_LABEL = {
+    self: '나라는 사람',
+    relationships: '가까운 사람들',
+    work: '일과 커리어',
+    regret: '후회와 용서',
+    gratitude: '감사',
+    legacy: '남기고 싶은 것',
+    endings: '끝을 상상하기',
+  };
+  const CATEGORY_LABEL_SHORT = {
+    self: '나',
+    relationships: '관계',
+    work: '일',
+    regret: '후회',
+    gratitude: '감사',
+    legacy: '남김',
+    endings: '끝',
+  };
+
+  // 모든 질문 + 답변 + 공감 + 오늘의 질문
+  const [{ data: questions }, { data: answers }, { data: likes }, { data: todayData }] = await Promise.all([
+    supabase.from('daily_questions').select('id, display_order, category, question_text').order('display_order', { ascending: true }),
+    supabase.from('daily_answers').select('id, question_id, visibility').eq('visibility', 'public'),
+    supabase.from('answer_likes').select('answer_id'),
+    supabase.rpc('get_todays_question'),
+  ]);
+
+  const countMap = {};
+  (answers || []).forEach(a => { countMap[a.question_id] = (countMap[a.question_id] || 0) + 1; });
+
+  // 공감(❤) 카운트: answer_id → question_id 매핑한 뒤 question 단위 합산
+  const answerToQ = {};
+  (answers || []).forEach(a => { answerToQ[a.id] = a.question_id; });
+  const likeCountMap = {};
+  (likes || []).forEach(l => {
+    const qId = answerToQ[l.answer_id];
+    if (qId) likeCountMap[qId] = (likeCountMap[qId] || 0) + 1;
+  });
+
+  // 오늘의 질문 카드 렌더링
+  const todayQ = (todayData && todayData[0]) || null;
+  if (todayQ) {
+    const card = document.getElementById('today-card');
+    card.style.display = 'block';
+    card.href = `/ask.html?id=${todayQ.id}`;
+
+    const today = new Date();
+    const dateStr = `${today.getFullYear()}.${String(today.getMonth() + 1).padStart(2, '0')}.${String(today.getDate()).padStart(2, '0')}`;
+    document.getElementById('today-date').textContent = `오늘 · ${dateStr}`;
+
+    document.getElementById('today-cat').textContent = CATEGORY_LABEL[todayQ.category] || todayQ.category || '';
+    document.getElementById('today-text').textContent = todayQ.question_text;
+
+    const todayCount = countMap[todayQ.id] || 0;
+    const todayLikes = likeCountMap[todayQ.id] || 0;
+    const parts = [];
+    if (todayCount > 0) parts.push(`지금까지 <strong>${todayCount}명</strong>이 답을 남겼어요`);
+    else parts.push('아직 답이 없어요. 첫 답을 남겨보세요');
+    if (todayLikes > 0) parts.push(`❤️ ${todayLikes}`);
+    document.getElementById('today-count').innerHTML = parts.join(' · ');
+  }
+
+  // 지난 질문들 통계 — 전체 답변 수 + 공감 수
+  const totalAnswers = (answers || []).length;
+  const totalLikes = (likes || []).length;
+  const totalQuestions = (questions || []).length;
+  const pastStat = document.getElementById('past-stat');
+  if (pastStat) {
+    const bits = [`${totalQuestions}개 질문`];
+    if (totalAnswers > 0) bits.push(`모두 <strong>${totalAnswers}개</strong>의 답`);
+    if (totalLikes > 0) bits.push(`❤️ ${totalLikes}`);
+    pastStat.innerHTML = bits.join(' · ');
+  }
+
+  let state = { filter: 'all' };
+
+  function render() {
+    const list = (questions || []).filter(q => state.filter === 'all' || q.category === state.filter);
+    const area = document.getElementById('list-area');
+    if (list.length === 0) {
+      area.innerHTML = '<div class="empty">해당 카테고리에 질문이 없어요.</div>';
+      return;
+    }
+    area.innerHTML = `
+      <div class="q-list">
+        ${list.map(q => {
+          const c = countMap[q.id] || 0;
+          const isToday = todayQ && q.id === todayQ.id;
+          const lk = likeCountMap[q.id] || 0;
+          const hasContent = c > 0 || lk > 0;
+          let countHtml;
+          if (!hasContent) {
+            countHtml = '<span class="q-count-empty">—</span>';
+          } else {
+            const lines = [];
+            if (c > 0) lines.push(`<span class="q-count-num">${c}</span><span class="q-count-label">개의 답변</span>`);
+            if (lk > 0) lines.push(`<span class="q-count-likes">❤️ ${lk}</span>`);
+            countHtml = lines.join('');
+          }
+          return `
+            <a href="/ask.html?id=${q.id}" class="q-row" ${isToday ? 'style="background: var(--primary-soft);"' : ''}>
+              <div class="q-num">${q.display_order}</div>
+              <div class="q-text">
+                <span class="cat">${CATEGORY_LABEL_SHORT[q.category] || q.category}</span>
+                ${isToday ? '<span class="cat" style="background:var(--primary);color:#FFF;">오늘</span>' : ''}
+                ${escapeHtml(q.question_text)}
+              </div>
+              <div class="q-count ${c > 0 ? 'has' : ''}">${countHtml}</div>
+            </a>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b === btn));
+      state.filter = btn.dataset.cat;
+      render();
+    });
+  });
+
+  render();
+
+  function escapeHtml(s) {
+    if (s == null) return '';
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+</script>
+
+<script src="/scroll-top.js" defer></script>
+
+</body>
+</html>

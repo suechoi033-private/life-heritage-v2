@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>남기고 싶은 정리 · 잇다 노트</title>
+  <link rel="stylesheet" href="/auth-styles.css">
+  <style>
+    .shell {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 32px 20px 80px;
+      flex: 1;
+      width: 100%;
+    }
+    @media (min-width: 640px) { .shell { padding: 56px 32px 120px; } }
+
+    .top-bar {
+      background: var(--bg);
+      border-bottom: 1px solid var(--line);
+      padding: 14px 20px;
+    }
+    .top-bar-inner {
+      max-width: 1080px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .breadcrumb {
+      font-size: 13px;
+      color: var(--ink-muted);
+      margin-bottom: 12px;
+    }
+    .breadcrumb a { color: var(--ink-muted); text-decoration: none; }
+    .breadcrumb a:hover { color: var(--primary); }
+
+    .header { margin-bottom: 26px; }
+    .kicker {
+      display: inline-block;
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      color: var(--primary);
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      line-height: 1.4;
+      margin-bottom: 12px;
+    }
+    @media (min-width: 640px) { h1 { font-size: 32px; } }
+    .lead {
+      color: var(--ink-soft);
+      font-size: 15px;
+      line-height: 1.7;
+      max-width: 720px;
+    }
+
+    /* ── 2-column layout ─── */
+    .body-grid {
+      display: grid;
+      gap: 28px;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 880px) {
+      .body-grid { grid-template-columns: 280px 1fr; gap: 36px; }
+    }
+
+    /* ── Left: guide ─── */
+    .guide-panel {
+      background: var(--bg-alt);
+      border-radius: 16px;
+      padding: 22px 24px;
+      align-self: start;
+    }
+    .guide-panel h3 {
+      font-size: 14px;
+      font-weight: 800;
+      margin-bottom: 12px;
+      letter-spacing: -0.01em;
+    }
+    .guide-panel .compare {
+      margin-bottom: 18px;
+    }
+    .guide-panel .compare-row {
+      padding: 12px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .guide-panel .compare-row:last-child { border-bottom: none; }
+    .guide-panel .compare-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 4px;
+      letter-spacing: 0.04em;
+    }
+    .guide-panel .compare-text {
+      font-size: 13px;
+      color: var(--ink-soft);
+      line-height: 1.6;
+    }
+    .guide-panel .links {
+      margin-top: 10px;
+      font-size: 12.5px;
+      line-height: 1.8;
+    }
+    .guide-panel .links a {
+      color: var(--primary);
+      text-decoration: underline;
+    }
+
+    /* ── Right: workspace ─── */
+    .workspace { min-width: 0; }
+
+    .recipients-bar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+    .recipient-chip {
+      padding: 8px 14px;
+      background: var(--bg-alt);
+      border: 1px solid transparent;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink-soft);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+    .recipient-chip:hover {
+      background: var(--primary-soft);
+      color: var(--primary);
+    }
+    .recipient-chip.active {
+      background: var(--primary);
+      color: #FFF;
+    }
+    .recipient-chip-add {
+      padding: 8px 14px;
+      background: transparent;
+      border: 1px dashed var(--line);
+      border-radius: 999px;
+      font-size: 13px;
+      color: var(--ink-muted);
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .recipient-chip-add:hover { border-color: var(--primary); color: var(--primary); }
+
+    .editor-card {
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 26px 28px;
+      margin-bottom: 22px;
+    }
+    .editor-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 14px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .editor-recipient-name {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--ink);
+    }
+    .editor-recipient-relation {
+      font-size: 12.5px;
+      color: var(--ink-muted);
+      margin-left: 8px;
+    }
+    .editor-status {
+      font-size: 12px;
+      color: var(--ink-muted);
+    }
+
+    .editor-textarea {
+      width: 100%;
+      min-height: 220px;
+      padding: 16px 18px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      font-family: var(--font-serif);
+      font-size: 16px;
+      line-height: 1.8;
+      resize: vertical;
+      box-sizing: border-box;
+      transition: border-color 0.15s ease;
+    }
+    .editor-textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .editor-options {
+      display: grid;
+      gap: 14px;
+      margin-top: 16px;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 600px) { .editor-options { grid-template-columns: 1fr 1fr; } }
+    .opt-block label {
+      display: block;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--ink-soft);
+      margin-bottom: 6px;
+    }
+    .opt-block select,
+    .opt-block input {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 14px;
+      background: var(--bg);
+    }
+
+    .editor-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 18px;
+      flex-wrap: wrap;
+    }
+    .btn-primary {
+      padding: 12px 22px;
+      background: var(--ink);
+      color: #FFF;
+      border: none;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .btn-primary:hover { background: var(--primary); }
+    .btn-ghost {
+      padding: 12px 18px;
+      background: transparent;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--ink-soft);
+      cursor: pointer;
+    }
+    .btn-ghost:hover { border-color: var(--primary); color: var(--primary); }
+    .btn-ai {
+      padding: 12px 18px;
+      background: var(--primary-soft);
+      border: none;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--primary);
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-ai:hover { background: var(--primary); color: #FFF; }
+
+    .legal-warning {
+      margin-top: 22px;
+      padding: 16px 20px;
+      background: var(--primary-soft);
+      border-radius: 12px;
+      font-size: 13px;
+      color: var(--ink-soft);
+      line-height: 1.7;
+    }
+    .legal-warning strong { color: var(--primary); }
+  </style>
+</head>
+<body>
+
+<nav class="top-bar">
+  <div class="top-bar-inner">
+    <a href="/" class="logo"><span class="logo-mark">●</span> 잇다</a>
+    <div id="top-bar-links" style="display: flex; gap: 16px; font-size: 14.5px;">
+      <a href="/login.html" style="color: var(--ink-soft); text-decoration: none;">로그인</a>
+    </div>
+  </div>
+</nav>
+
+<main class="shell">
+  <div class="breadcrumb">
+    <a href="/note.html">잇다 노트</a> · 유언·메시지
+  </div>
+
+  <div class="header">
+    <span class="kicker">잇다 노트 · 남기고 싶은 정리</span>
+    <h1>아직 못 한 말이 있나요?</h1>
+    <p class="lead">
+      가족 한 명 한 명에게 따로 적어둘 수 있어요. 지금은 짧게 한 줄이라도 괜찮아요.<br>
+      나중에 손글씨·서명을 더해 법적 효력을 갖춘 자필 유언으로 보완할 수 있어요.
+    </p>
+  </div>
+
+  <div class="body-grid">
+    <!-- Left: 가이드 -->
+    <aside class="guide-panel">
+      <h3>법적 유언 vs 마음의 메시지</h3>
+      <div class="compare">
+        <div class="compare-row">
+          <div class="compare-label">법적 유언</div>
+          <div class="compare-text">
+            상속·재산 분배에 효력. 한국 민법은 <strong>자필 유언 또는 공증</strong>이 필수예요. 디지털만으로는 효력이 없어요.
+          </div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-label">마음의 메시지</div>
+          <div class="compare-text">
+            가족·친구에게 남기는 말, 추모·감사·당부. 형식 제약 없음. 잇다 노트는 여기서부터 함께해요.
+          </div>
+        </div>
+      </div>
+
+      <h3>참고할 곳</h3>
+      <div class="links">
+        <a href="https://www.lst.go.kr/" target="_blank">국립연명의료관리기관</a><br>
+        <a href="https://www.scourt.go.kr/" target="_blank">대법원 — 자필 유언 안내</a><br>
+        <a href="/info.html" target="_blank">잇다 정보 — 미리 챙길 것</a>
+      </div>
+    </aside>
+
+    <!-- Right: workspace -->
+    <section class="workspace">
+      <div class="recipients-bar" id="recipients-bar">
+        <!-- chips here -->
+      </div>
+
+      <div class="editor-card" id="editor-card">
+        <div class="editor-meta">
+          <div>
+            <span class="editor-recipient-name" id="editor-recipient-name">—</span>
+            <span class="editor-recipient-relation" id="editor-recipient-relation"></span>
+          </div>
+          <span class="editor-status" id="editor-status">아직 저장되지 않음</span>
+        </div>
+
+        <textarea
+          id="message-body"
+          class="editor-textarea"
+          placeholder="짧게 한 줄이라도 좋아요. '엄마, 그 시간이 한꺼번에 끝난 자리 — 거기서도 잘 지내요.' 처럼."
+        ></textarea>
+
+        <div class="editor-options">
+          <div class="opt-block">
+            <label for="release-trigger">언제 전달할까요?</label>
+            <select id="release-trigger">
+              <option value="immediate">바로 (확인 후 즉시 전달)</option>
+              <option value="after">사후 (가족이 사망신고 후 열람)</option>
+              <option value="date">특정 날짜</option>
+            </select>
+          </div>
+          <div class="opt-block">
+            <label for="release-date">전달 날짜 <span style="color: var(--ink-muted); font-weight: 400;">(특정 날짜 선택 시)</span></label>
+            <input type="date" id="release-date" disabled>
+          </div>
+        </div>
+
+        <div class="editor-actions">
+          <button type="button" class="btn-primary" id="save-btn">저장</button>
+          <button type="button" class="btn-ai" id="ai-polish-btn">✨ AI로 다듬기</button>
+          <button type="button" class="btn-ghost" id="preview-btn">미리보기</button>
+        </div>
+      </div>
+
+      <div class="legal-warning">
+        <strong>법적 효력 안내</strong>
+        잇다 노트의 메시지는 마음과 의지를 전하는 기록이에요. <strong>상속·재산 효력이 필요한 유언</strong>은 자필로 직접 적고 서명하시거나, 변호사·공증인을 통해 공증을 받으셔야 해요. 잇다는 향후 변호사 매칭(파트너십)을 준비하고 있어요.
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="auth-footer">
+  © 2026 라이프헤리티지 · 잇다
+</footer>
+
+<script type="module">
+  import { requireAuth, supabase } from '/auth.js';
+
+  const session = await requireAuth('/login.html');
+  if (!session) { /* redirected */ }
+  const user = session.user;
+  const userName = user.user_metadata?.name || user.email?.split('@')[0] || '나';
+
+  // top-bar (unified nav)
+  const { renderTopBar } = await import('/nav.js');
+  await renderTopBar({ active: 'note' });
+
+  // ── 수신자 (V1: localStorage. V2: will_messages 테이블) ──
+  const STORAGE_KEY = `itda:will_drafts:${user.id}`;
+  function loadDrafts() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+    catch { return []; }
+  }
+  function saveDrafts(arr) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+  }
+
+  let drafts = loadDrafts();
+  if (drafts.length === 0) {
+    // 기본 수신자 셋
+    drafts = [
+      { id: crypto.randomUUID(), name: '가족 모두에게', relation: '', body: '', release: 'after', date: '' },
+    ];
+    saveDrafts(drafts);
+  }
+
+  let activeId = drafts[0].id;
+
+  function renderChips() {
+    const bar = document.getElementById('recipients-bar');
+    bar.innerHTML = '';
+    drafts.forEach(d => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'recipient-chip' + (d.id === activeId ? ' active' : '');
+      btn.textContent = d.name;
+      btn.addEventListener('click', () => { activeId = d.id; renderEditor(); renderChips(); });
+      bar.appendChild(btn);
+    });
+    const addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.className = 'recipient-chip-add';
+    addBtn.textContent = '＋ 받는 사람 추가';
+    addBtn.addEventListener('click', () => {
+      const name = prompt('받는 분의 이름이나 호칭을 적어주세요. (예: 큰딸, 영수, 아내)');
+      if (!name || !name.trim()) return;
+      const relation = prompt('관계 (선택. 예: 아들, 딸, 배우자, 친구). 비워둬도 돼요.', '') || '';
+      const newDraft = { id: crypto.randomUUID(), name: name.trim(), relation: relation.trim(), body: '', release: 'after', date: '' };
+      drafts.push(newDraft);
+      saveDrafts(drafts);
+      activeId = newDraft.id;
+      renderChips();
+      renderEditor();
+    });
+    bar.appendChild(addBtn);
+  }
+
+  function renderEditor() {
+    const d = drafts.find(x => x.id === activeId);
+    if (!d) return;
+    document.getElementById('editor-recipient-name').textContent = d.name;
+    document.getElementById('editor-recipient-relation').textContent = d.relation ? `· ${d.relation}` : '';
+    document.getElementById('message-body').value = d.body || '';
+    document.getElementById('release-trigger').value = d.release || 'after';
+    document.getElementById('release-date').value = d.date || '';
+    document.getElementById('release-date').disabled = (d.release !== 'date');
+    document.getElementById('editor-status').textContent = d.body ? '저장됨' : '아직 저장되지 않음';
+  }
+
+  document.getElementById('release-trigger').addEventListener('change', (e) => {
+    document.getElementById('release-date').disabled = (e.target.value !== 'date');
+  });
+
+  document.getElementById('save-btn').addEventListener('click', () => {
+    const d = drafts.find(x => x.id === activeId);
+    if (!d) return;
+    d.body = document.getElementById('message-body').value;
+    d.release = document.getElementById('release-trigger').value;
+    d.date = document.getElementById('release-date').value;
+    saveDrafts(drafts);
+    document.getElementById('editor-status').textContent = `저장됨 · ${new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}`;
+  });
+
+  document.getElementById('ai-polish-btn').addEventListener('click', () => {
+    alert('✨ AI로 다듬기 — 내가 쓴 거친 문장을 따뜻한 한 편의 편지로 엮어드려요. 다음 버전에서 열려요.');
+  });
+
+  document.getElementById('preview-btn').addEventListener('click', () => {
+    const d = drafts.find(x => x.id === activeId);
+    if (!d) return;
+    const body = document.getElementById('message-body').value || '(아직 비어 있어요)';
+    const releaseLabel = d.release === 'immediate' ? '바로 전달'
+      : d.release === 'date' ? `${d.date} 전달`
+      : '사후 전달';
+    alert(`To. ${d.name}\n(${releaseLabel})\n\n${body}`);
+  });
+
+  document.getElementById('message-body').addEventListener('input', () => {
+    document.getElementById('editor-status').textContent = '아직 저장되지 않음';
+  });
+
+  renderChips();
+  renderEditor();
+</script>
+
+</body>
+</html>

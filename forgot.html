@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>비밀번호 찾기 · 잇다</title>
+  <link rel="stylesheet" href="/auth-styles.css">
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="logo"><span class="logo-mark">●</span> 잇다</a>
+  </div>
+</nav>
+
+<main class="auth-container">
+  <span class="auth-kicker">RESET</span>
+  <h1>비밀번호 재설정</h1>
+  <p class="auth-lead">
+    가입하신 이메일을 적어주시면 비밀번호를 다시 설정할 수 있는 링크를 보내드립니다.
+  </p>
+
+  <div id="alert" class="hidden"></div>
+
+  <form id="forgot-form" class="auth-form">
+    <div class="field">
+      <label for="email">이메일</label>
+      <input type="email" id="email" name="email" placeholder="you@example.com" required autocomplete="email">
+      <span class="field-hint">가입 시 사용하신 이메일을 적어주세요.</span>
+    </div>
+
+    <button type="submit" class="auth-submit">링크 받기</button>
+  </form>
+
+  <div class="auth-bottom">
+    <a href="/login.html">← 로그인 화면으로 돌아가기</a>
+  </div>
+</main>
+
+<footer class="auth-footer">
+  © 2026 라이프헤리티지 · 잇다
+</footer>
+
+<script type="module">
+  import { resetPassword, friendlyError } from '/auth.js';
+
+  const form = document.getElementById('forgot-form');
+  const alertBox = document.getElementById('alert');
+  const submitBtn = form.querySelector('.auth-submit');
+
+  function showAlert(message, type = 'error') {
+    alertBox.className = `alert alert-${type}`;
+    alertBox.textContent = message;
+    alertBox.classList.remove('hidden');
+  }
+
+  function hideAlert() {
+    alertBox.classList.add('hidden');
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideAlert();
+    submitBtn.disabled = true;
+    submitBtn.textContent = '전송 중...';
+
+    const email = form.email.value.trim();
+
+    const { error } = await resetPassword(email);
+
+    if (error) {
+      showAlert(friendlyError(error), 'error');
+      submitBtn.disabled = false;
+      submitBtn.textContent = '링크 받기';
+      return;
+    }
+
+    // Success
+    form.classList.add('hidden');
+    showAlert(
+      '🌼 ' + email + ' 으로 비밀번호 재설정 링크를 보냈습니다. 받은 편지함을 확인해주세요.',
+      'success'
+    );
+  });
+</script>
+
+</body>
+</html>

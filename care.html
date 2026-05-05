@@ -1,0 +1,1756 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>돌봄 · 잇다</title>
+  <link rel="stylesheet" href="/auth-styles.css">
+  <style>
+    .care-shell {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 20px 20px 32px;
+      flex: 1;
+      width: 100%;
+    }
+    @media (min-width: 640px) {
+      .care-shell { padding: 32px 24px 48px; }
+    }
+
+    /* ── Top bar ────────────────────────── */
+    .top-bar {
+      background: var(--bg);
+      border-bottom: 1px solid var(--line);
+      padding: 14px 20px;
+    }
+    .top-bar-inner {
+      max-width: 1080px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .top-bar-links { display: flex; gap: 16px; font-size: 14px; }
+    .top-bar-links a { color: var(--ink-soft); text-decoration: none; }
+    .top-bar-links a:hover { color: var(--primary); }
+
+    /* ── Consent banner (민감정보 고지) ──── */
+    .consent-banner {
+      background: var(--primary-soft);
+      border-radius: 14px;
+      padding: 14px 18px;
+      margin-bottom: 28px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 13px;
+      color: var(--ink-soft);
+      line-height: 1.6;
+    }
+    .consent-banner-icon { font-size: 18px; flex-shrink: 0; }
+
+    /* ── Page header ────────────────────── */
+    .page-kicker {
+      display: inline-block;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      color: var(--primary);
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .page-title {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+    }
+    @media (min-width: 640px) {
+      .page-title { font-size: 34px; }
+    }
+    .page-sub {
+      color: var(--ink-soft);
+      font-size: 15px;
+      line-height: 1.7;
+      margin-bottom: 32px;
+    }
+
+    /* ── Subject cards (프로필 관리) ──────── */
+    .subjects-section {
+      margin-bottom: 28px;
+    }
+    .subjects-section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 12px;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .subjects-section-title {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--ink-muted);
+      text-transform: uppercase;
+    }
+    .subjects-section-count {
+      font-size: 12.5px;
+      color: var(--ink-muted);
+    }
+
+    .subject-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 12px;
+    }
+
+    .subject-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 16px 16px 14px;
+      background: var(--bg);
+      border: 1.5px solid var(--line);
+      border-radius: 14px;
+      cursor: pointer;
+      text-align: left;
+      font-family: inherit;
+      transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.15s ease, background 0.12s ease;
+    }
+    .subject-card:hover {
+      border-color: var(--ink-muted);
+      transform: translateY(-2px);
+    }
+    .subject-card.selected {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+      box-shadow: 0 4px 16px rgba(180, 110, 90, 0.12);
+    }
+    .subject-card.selected::after {
+      content: "";
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--primary);
+    }
+
+    .subject-card-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .subject-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #FFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+    .subject-card.selected .subject-avatar {
+      background: var(--primary-hover);
+    }
+    .subject-name {
+      font-weight: 700;
+      font-size: 15.5px;
+      color: var(--ink);
+      line-height: 1.3;
+    }
+    .subject-meta {
+      font-size: 12px;
+      color: var(--ink-muted);
+      margin-top: 2px;
+    }
+    .subject-stats {
+      display: flex;
+      gap: 8px;
+      font-size: 11.5px;
+      color: var(--ink-muted);
+      margin-top: 2px;
+    }
+    .subject-stat-item::before {
+      content: "·";
+      margin-right: 6px;
+    }
+    .subject-stat-item:first-child::before { display: none; }
+
+    /* Add-new card */
+    .subject-card.subject-add {
+      border: 1.5px dashed var(--line);
+      background: transparent;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      min-height: 100px;
+      color: var(--ink-muted);
+      font-size: 13.5px;
+      font-weight: 600;
+    }
+    .subject-card.subject-add:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: var(--primary-soft);
+    }
+    .subject-add-icon {
+      font-size: 22px;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .subject-btn {
+      padding: 8px 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--bg);
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--ink-soft);
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .subject-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+    /* ── Tabs ───────────────────────────── */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 24px;
+      overflow-x: auto;
+    }
+    .tab {
+      padding: 10px 14px;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink-muted);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: color 0.15s ease, border-color 0.15s ease;
+    }
+    .tab.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+    .tab:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+    .tab-badge {
+      display: inline-block;
+      margin-left: 6px;
+      padding: 2px 7px;
+      background: var(--bg-alt);
+      border-radius: 999px;
+      font-size: 10.5px;
+      color: var(--ink-muted);
+      font-weight: 600;
+    }
+
+    /* ── Log list ───────────────────────── */
+    .log-list { display: flex; flex-direction: column; gap: 14px; }
+    .log-item {
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 18px 20px;
+      transition: border-color 0.15s ease;
+    }
+    .log-item:hover { border-color: var(--primary); }
+    .log-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    .log-date {
+      font-weight: 700;
+      color: var(--ink);
+      font-size: 14.5px;
+    }
+    .log-time {
+      color: var(--ink-muted);
+      font-size: 12.5px;
+      font-weight: 500;
+    }
+    .log-actions { display: flex; gap: 6px; }
+    .log-action-btn {
+      padding: 3px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: transparent;
+      font-family: inherit;
+      font-size: 11.5px;
+      color: var(--ink-muted);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .log-action-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .log-action-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
+
+    .log-fields {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .log-field {
+      display: flex;
+      gap: 10px;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+    .log-field-icon { font-size: 16px; flex-shrink: 0; }
+    .log-field-body { flex: 1; color: var(--ink); white-space: pre-wrap; }
+    .log-field-label {
+      font-size: 11.5px;
+      color: var(--ink-muted);
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    /* ── Empty state ────────────────────── */
+    .empty {
+      background: var(--bg-alt);
+      border-radius: 16px;
+      padding: 60px 28px;
+      text-align: center;
+    }
+    .empty-icon { font-size: 42px; margin-bottom: 16px; }
+    .empty h3 { font-size: 19px; font-weight: 800; margin-bottom: 10px; }
+    .empty p { color: var(--ink-soft); line-height: 1.7; margin-bottom: 24px; font-size: 14.5px; }
+
+    /* ── CTA ────────────────────────────── */
+    .primary-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 22px;
+      background: var(--ink);
+      color: #FFF;
+      text-decoration: none;
+      border: none;
+      font-family: inherit;
+      font-size: 14.5px;
+      font-weight: 700;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .primary-cta:hover { background: var(--primary); color: #FFF; }
+
+    .write-cta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .write-cta-row h3 {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    /* ── Modal ──────────────────────────── */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(10,10,10,0.4);
+      z-index: 100;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    @media (min-width: 640px) {
+      .modal-backdrop { align-items: center; }
+    }
+    .modal {
+      background: var(--bg);
+      border-radius: 20px 20px 0 0;
+      width: 100%;
+      max-width: 640px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 24px 22px 32px;
+    }
+    @media (min-width: 640px) {
+      .modal { border-radius: 20px; }
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .modal-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--ink);
+    }
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: var(--bg-alt);
+      border-radius: 50%;
+      font-size: 18px;
+      color: var(--ink-soft);
+      cursor: pointer;
+    }
+    .modal-sub {
+      color: var(--ink-soft);
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    /* ── Field ──────────────────────────── */
+    .field { margin-bottom: 16px; }
+    .field label {
+      display: block;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 6px;
+    }
+    .field .optional {
+      font-size: 11.5px;
+      color: var(--ink-muted);
+      font-weight: 500;
+      margin-left: 4px;
+    }
+    .field input[type="text"],
+    .field input[type="number"],
+    .field input[type="date"],
+    .field input[type="time"],
+    .field select,
+    .field textarea {
+      width: 100%;
+      padding: 11px 13px;
+      font-family: inherit;
+      font-size: 14.5px;
+      color: var(--ink);
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      transition: border-color 0.15s ease;
+    }
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus { outline: none; border-color: var(--primary); }
+    .field textarea {
+      resize: vertical;
+      min-height: 70px;
+      line-height: 1.6;
+    }
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .hint {
+      font-size: 12px;
+      color: var(--ink-muted);
+      margin-top: 4px;
+      line-height: 1.5;
+    }
+
+    .consent-box {
+      background: var(--primary-soft);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+      font-size: 13px;
+      line-height: 1.65;
+      color: var(--ink-soft);
+    }
+    .consent-box label {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 8px;
+    }
+    .consent-box input[type="checkbox"] {
+      margin-top: 3px;
+      accent-color: var(--primary);
+      flex-shrink: 0;
+    }
+
+    /* ── Coming soon panels ─────────────── */
+    .coming-soon {
+      background: var(--bg-alt);
+      border: 1px dashed var(--line);
+      border-radius: 16px;
+      padding: 48px 28px;
+      text-align: center;
+    }
+    .coming-soon-icon { font-size: 38px; margin-bottom: 14px; }
+    .coming-soon h3 { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
+    .coming-soon p { color: var(--ink-soft); line-height: 1.7; font-size: 14px; margin-bottom: 18px; }
+    .roadmap-list {
+      display: inline-flex;
+      flex-direction: column;
+      gap: 8px;
+      text-align: left;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+    .roadmap-item {
+      display: flex;
+      gap: 10px;
+      font-size: 13.5px;
+      color: var(--ink-soft);
+    }
+    .roadmap-week {
+      font-weight: 700;
+      color: var(--primary);
+      min-width: 70px;
+    }
+
+    .hidden { display: none !important; }
+
+    /* 4카드 빠른 입력 */
+    .quick-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 16px 8px;
+      background: var(--bg-alt);
+      border: 1.5px solid var(--line);
+      border-radius: 14px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: border-color 0.15s, background 0.15s;
+      min-height: 72px;
+    }
+    .quick-card:hover { border-color: var(--primary); background: var(--primary-soft); }
+    .quick-card.active { border-color: var(--primary); background: var(--primary-soft); }
+    .qc-icon { font-size: 22px; }
+    .qc-label { font-size: 13px; font-weight: 700; color: var(--ink); }
+
+    /* 저장 후 공유 배너 */
+    .share-after-save {
+      background: var(--primary-soft);
+      border: 1px solid rgba(92,138,111,0.2);
+      border-radius: 14px;
+      padding: 16px 18px;
+      margin-top: 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13.5px;
+    }
+    .share-after-save-btn {
+      flex-shrink: 0;
+      padding: 8px 14px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* 부모님 의향 배너 */
+    .parent-intent-banner {
+      background: var(--warm-soft);
+      border: 1px solid rgba(176,112,67,0.18);
+      border-radius: 14px;
+      padding: 14px 18px;
+      margin: 18px 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+    }
+    .parent-intent-banner a {
+      color: var(--warm);
+      font-weight: 700;
+      margin-left: auto;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+
+<!-- 탑바·바텀탭은 nav.js가 동적으로 삽입 -->
+
+<main class="care-shell">
+
+  <div id="alert" class="hidden"></div>
+
+  <div class="consent-banner">
+    <div class="consent-banner-icon">🔒</div>
+    <div>
+      돌봄 기록은 민감한 건강정보입니다. 본인(또는 법정대리인)의 허락을 받은 경우에만 기록해주세요.
+      이 서비스는 의료 진료·판단을 대체하지 않습니다. 모든 기록은 암호화되어 저장되며, 본인만 볼 수 있습니다.
+    </div>
+  </div>
+
+  <div>
+    <span class="page-kicker">CARE · 돌봄</span>
+    <h1 class="page-title" id="page-title">곁에 있는 오늘을 함께 기록합니다</h1>
+    <p class="page-sub" id="page-sub">
+      부모님의 하루·약·병원 방문을 짧게라도 남기면, 다음 결정에 힘이 됩니다.
+    </p>
+  </div>
+
+  <!-- 부모님 의향 유도 배너 -->
+  <div class="parent-intent-banner">
+    <span style="font-size:18px;">🕊</span>
+    <span>이 분의 의향이 등록되어 있나요? 본인이 직접 잇다를 써두시면 가족이 더 편해요.</span>
+    <a href="/self.html">등록 안내 →</a>
+  </div>
+
+  <!-- Loading -->
+  <div id="loading-state" class="empty">
+    <div class="empty-icon">🌿</div>
+    <p>불러오는 중…</p>
+  </div>
+
+  <!-- Empty — no subject yet -->
+  <div id="no-subject-state" class="hidden">
+    <div class="empty">
+      <div class="empty-icon">🤝</div>
+      <h3>누구의 하루를 함께 기록할까요?</h3>
+      <p>
+        부모님·배우자·할머니·반려동물 — 돌봄이 필요한 한 분을 먼저 등록해 주세요.<br>
+        언제든 여러 분을 추가하실 수 있습니다.
+      </p>
+      <button type="button" class="primary-cta" id="first-subject-btn">돌봄 대상 등록하기</button>
+      <p style="margin-top: 22px; color: var(--ink-muted); font-size: 13.5px;">
+        또는 가족이 보내준 코드가 있다면
+        <button type="button" id="enter-code-empty-btn" style="background:none;border:none;color:var(--primary);font-weight:700;cursor:pointer;text-decoration:underline;font-size:13.5px;font-family:inherit;">초대 코드 입력하기</button>
+      </p>
+    </div>
+  </div>
+
+  <!-- Main app (shown when subject exists) -->
+  <div id="main-app" class="hidden">
+
+    <!-- Subject cards -->
+    <section class="subjects-section">
+      <div class="subjects-section-head">
+        <span class="subjects-section-title">돌봄 대상</span>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <button type="button" id="enter-code-top-btn" style="background:none;border:none;color:var(--primary);font-weight:700;cursor:pointer;font-size:13px;font-family:inherit;text-decoration:underline;">＋ 초대 코드 입력</button>
+          <span class="subjects-section-count" id="subjects-count"></span>
+        </div>
+      </div>
+      <div class="subject-cards" id="subject-cards"></div>
+    </section>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button type="button" class="tab active" data-tab="logs">일지</button>
+      <button type="button" class="tab" data-tab="family">가족</button>
+      <button type="button" class="tab" data-tab="settings">설정</button>
+    </div>
+
+    <!-- Tab: logs -->
+    <section class="tab-panel" data-panel="logs">
+      <div class="write-cta-row">
+        <h3 id="logs-count">오늘의 기록</h3>
+        <button type="button" class="primary-cta" id="write-log-btn">✍️ 오늘 기록 쓰기</button>
+      </div>
+      <div id="logs-container"></div>
+    </section>
+
+    <!-- Tab: family -->
+    <section class="tab-panel hidden" data-panel="family">
+      <div class="write-cta-row">
+        <h3 id="family-title">함께 돌보는 사람들</h3>
+        <button type="button" class="primary-cta hidden" id="create-invite-btn">＋ 초대 코드 만들기</button>
+      </div>
+      <p class="modal-sub" id="family-desc" style="margin-top:0;"></p>
+      <div id="family-list"></div>
+      <div id="family-self-leave" class="hidden" style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--line);">
+        <button type="button" class="subject-btn" id="leave-care-btn" style="color: var(--danger);">
+          이 돌봄에서 나가기
+        </button>
+      </div>
+    </section>
+
+    <!-- Tab: settings -->
+    <section class="tab-panel hidden" data-panel="settings">
+      <div class="empty" style="text-align: left; padding: 28px;">
+        <h3 id="settings-subject-name" style="margin-bottom: 14px;">돌봄 대상 정보</h3>
+        <div id="settings-details" style="font-size: 14px; color: var(--ink-soft); line-height: 1.8;"></div>
+        <div style="margin-top: 20px; display: flex; gap: 8px; flex-wrap: wrap;">
+          <button type="button" class="subject-btn" id="edit-subject-btn">수정</button>
+          <button type="button" class="subject-btn" id="delete-subject-btn" style="color: var(--danger);">
+            대상 삭제
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bridge card: care → memory -->
+    <section style="margin-top: 36px; padding: 22px 24px; background: var(--bg-alt); border-radius: 16px; border: 1px solid var(--line);">
+      <div style="display: flex; gap: 14px; align-items: flex-start;">
+        <div style="font-size: 22px; line-height: 1; padding-top: 2px;">🌿</div>
+        <div style="flex: 1;">
+          <div style="font-size: 14.5px; font-weight: 700; color: var(--ink); margin-bottom: 6px;">곁에서 보낸 시간이 충분히 쌓인 후엔</div>
+          <p style="font-size: 13.5px; color: var(--ink-soft); line-height: 1.7; margin: 0 0 12px;">
+            여기 적은 일지와 사진은 잇다 <a href="/stories.html" style="color: var(--primary); font-weight: 600;">기억</a> 자리에서 오래 간직하실 수 있어요.
+            서두를 일은 아닙니다 — 오늘은 오늘의 자리만 채워주셔도 충분합니다.
+          </p>
+          <a href="/stories.html" style="display: inline-flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 600; color: var(--ink-soft); text-decoration: none; padding: 6px 12px; background: var(--bg); border-radius: 8px; border: 1px solid var(--line);">
+            기억 자리 둘러보기 →
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+</main>
+
+<footer class="auth-footer">
+  © 2026 라이프헤리티지 · 잇다
+</footer>
+
+
+<!-- Subject modal -->
+<div class="modal-backdrop hidden" id="subject-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="subject-modal-title">돌봄 대상 등록</div>
+      <button type="button" class="modal-close" data-close-modal="subject-modal">×</button>
+    </div>
+    <p class="modal-sub">
+      누구의 하루를 함께 기록하시나요? 실명 대신 "엄마", "아버님" 같은 호칭도 괜찮습니다.
+    </p>
+    <form id="subject-form">
+      <div class="field">
+        <label for="s-name">이름 또는 호칭 <span style="color:var(--primary)">*</span></label>
+        <input type="text" id="s-name" name="name" required maxlength="40" placeholder="예: 엄마, 아버님, 초롱이">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="s-relation">관계 <span class="optional">(선택)</span></label>
+          <select id="s-relation" name="relation">
+            <option value="">선택하지 않음</option>
+            <option value="어머니">어머니</option>
+            <option value="아버지">아버지</option>
+            <option value="시어머니">시어머니</option>
+            <option value="시아버지">시아버지</option>
+            <option value="장모">장모</option>
+            <option value="장인">장인</option>
+            <option value="배우자">배우자</option>
+            <option value="할머니">할머니</option>
+            <option value="할아버지">할아버지</option>
+            <option value="형제자매">형제·자매</option>
+            <option value="자녀">자녀</option>
+            <option value="반려동물">반려동물</option>
+            <option value="기타">그 외</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="s-birth">생년 <span class="optional">(선택)</span></label>
+          <input type="number" id="s-birth" name="birth_year" min="1900" max="2030" placeholder="예: 1952">
+        </div>
+      </div>
+      <div class="field">
+        <label for="s-note">간단한 메모 <span class="optional">(선택)</span></label>
+        <textarea id="s-note" name="note" maxlength="200" placeholder="예: 2020년 가벼운 치매 진단. 현재 서울 자택 거주. 혈압약 복용 중."></textarea>
+      </div>
+
+      <div class="consent-box">
+        <label>
+          <input type="checkbox" id="s-consent" required>
+          <span>이 분(또는 법정대리인)의 돌봄 기록 동의를 받았습니다. 민감한 건강정보 기록의 책임을 이해하고, 잇다가 의료 진료를 대체하지 않음을 확인했습니다.</span>
+        </label>
+      </div>
+
+      <button type="submit" class="primary-cta" id="subject-submit">저장</button>
+    </form>
+  </div>
+</div>
+
+
+<!-- Log modal -->
+<div class="modal-backdrop hidden" id="log-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="log-modal-title">오늘 기록 쓰기</div>
+      <button type="button" class="modal-close" data-close-modal="log-modal">×</button>
+    </div>
+    <p class="modal-sub">
+      떠오르는 칸만 채우셔도 됩니다. 모두 선택 항목입니다.
+    </p>
+    <form id="log-form">
+      <div class="field-row">
+        <div class="field">
+          <label for="l-date">날짜</label>
+          <input type="date" id="l-date" name="log_date">
+        </div>
+        <div class="field">
+          <label for="l-time">시간 <span class="optional">(선택)</span></label>
+          <input type="time" id="l-time" name="log_time">
+        </div>
+      </div>
+
+      <!-- 4카드 빠른 입력 -->
+      <div class="quick-cards" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0;">
+        <button type="button" class="quick-card" data-target="l-daily" onclick="toggleQuickCard(this,'l-daily-wrap')">
+          <span class="qc-icon">🍚</span><span class="qc-label">식사</span>
+        </button>
+        <button type="button" class="quick-card" data-target="l-meds" onclick="toggleQuickCard(this,'l-meds-wrap')">
+          <span class="qc-icon">💊</span><span class="qc-label">약</span>
+        </button>
+        <button type="button" class="quick-card" data-target="l-emotion" onclick="toggleQuickCard(this,'l-emotion-wrap')">
+          <span class="qc-icon">😊</span><span class="qc-label">기분</span>
+        </button>
+        <button type="button" class="quick-card" data-target="l-hospital" onclick="toggleQuickCard(this,'l-hospital-wrap')">
+          <span class="qc-icon">🏥</span><span class="qc-label">병원</span>
+        </button>
+      </div>
+
+      <div id="l-daily-wrap" class="field hidden">
+        <label for="l-daily">🍚 식사 상태</label>
+        <textarea id="l-daily" name="daily_status" placeholder="예: 아침 죽 반 공기 드심. 낮잠 길었고 저녁엔 기운 있으심."></textarea>
+      </div>
+      <div id="l-meds-wrap" class="field hidden">
+        <label for="l-meds">💊 복용 약</label>
+        <textarea id="l-meds" name="medications" placeholder="예: 아침 혈압약 복용, 저녁 당뇨약은 식사 거부로 넘김."></textarea>
+      </div>
+      <div id="l-emotion-wrap" class="field hidden">
+        <label for="l-emotion">😊 기분·감정</label>
+        <textarea id="l-emotion" name="emotion" placeholder="예: 봄이 오면 한강 가고 싶다고 하셨다."></textarea>
+      </div>
+      <div id="l-hospital-wrap" class="field hidden">
+        <label for="l-hospital">🏥 병원 방문</label>
+        <textarea id="l-hospital" name="hospital_visit" placeholder="예: 내과 김ㅇㅇ 선생님. 혈압 안정, 다음 검진 3주 후."></textarea>
+      </div>
+
+      <!-- 더 적기 펼치기 -->
+      <button type="button" id="more-fields-btn" style="background:transparent;border:none;color:var(--primary);font-size:13px;font-weight:700;cursor:pointer;padding:4px 0;margin-bottom:4px;">+ 더 적기</button>
+      <div id="more-fields" class="hidden">
+        <div class="field">
+          <label for="l-cautions">📝 유의할 점</label>
+          <textarea id="l-cautions" name="cautions" placeholder="예: 욕실 가실 때 꼭 옆에. 아침 약 거부 반응 있음."></textarea>
+        </div>
+        <div class="field">
+          <label for="l-nutrition">🍲 영양·식단 <span class="optional">(선택)</span></label>
+          <textarea id="l-nutrition" name="nutrition" placeholder="예: 단백질 보충용 죽. 물 섭취 적음."></textarea>
+        </div>
+        <div class="field">
+          <label for="l-memo">📝 자유 메모 <span class="optional">(선택)</span></label>
+          <textarea id="l-memo" name="free_memo" placeholder="떠오르는 무엇이든."></textarea>
+        </div>
+      </div>
+
+      <button type="submit" class="primary-cta" id="log-submit">기록 저장</button>
+    </form>
+  </div>
+</div>
+
+<!-- Invite modal (코드 만들기) -->
+<div class="modal-backdrop hidden" id="invite-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">초대 코드 만들기</div>
+      <button type="button" class="modal-close" data-close-modal="invite-modal">×</button>
+    </div>
+    <p class="modal-sub" id="invite-modal-sub">
+      이 돌봄을 함께할 가족·도우미에게 보낼 6자리 코드를 만듭니다. 코드는 7일간 유효해요.
+    </p>
+
+    <div id="invite-form-area">
+      <div class="field">
+        <label for="invite-role">역할</label>
+        <select id="invite-role" name="invite-role">
+          <option value="family">가족 (읽기 + 일지 작성)</option>
+          <option value="helper">도움주시는분 (읽기만)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="invite-name">표시 이름 <span style="color: var(--ink-muted); font-weight: 400;">(선택)</span></label>
+        <input type="text" id="invite-name" placeholder="예: 동생, 김간병인" maxlength="40">
+      </div>
+      <button type="button" class="primary-cta" id="generate-code-btn" style="width: 100%;">코드 생성하기</button>
+    </div>
+
+    <div id="invite-result-area" class="hidden">
+      <div style="background: var(--bg-alt); border-radius: 14px; padding: 28px 20px; text-align: center; margin-bottom: 18px;">
+        <div style="font-size: 12px; color: var(--ink-muted); letter-spacing: 0.1em; margin-bottom: 10px;">초대 코드</div>
+        <div id="generated-code-display" style="font-family: 'SF Mono', monospace; font-size: 36px; font-weight: 800; letter-spacing: 0.18em; color: var(--ink);">------</div>
+        <div id="generated-code-meta" style="font-size: 12.5px; color: var(--ink-muted); margin-top: 12px;"></div>
+      </div>
+      <p style="font-size: 13.5px; color: var(--ink-soft); line-height: 1.7; margin-bottom: 18px;">
+        이 코드를 가족에게 카톡·문자로 전달해주세요. 받은 사람이 잇다에 가입(또는 로그인) 후 <strong>"초대 코드 입력하기"</strong>에서 코드를 입력하면 자동으로 합류돼요.
+      </p>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <button type="button" class="subject-btn" id="copy-code-btn" style="flex: 1; min-width: 130px;">📋 코드 복사</button>
+        <button type="button" class="subject-btn" id="share-code-btn" style="flex: 1; min-width: 130px;">💬 공유하기</button>
+        <button type="button" class="primary-cta" id="close-invite-btn" style="flex: 1; min-width: 100px;">완료</button>
+      </div>
+      <p id="share-fallback-hint" class="hidden" style="font-size: 12px; color: var(--ink-muted); margin-top: 10px; text-align: center;"></p>
+    </div>
+  </div>
+</div>
+
+<!-- Code entry modal (받는 쪽) -->
+<div class="modal-backdrop hidden" id="code-entry-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">초대 코드 입력</div>
+      <button type="button" class="modal-close" data-close-modal="code-entry-modal">×</button>
+    </div>
+    <p class="modal-sub">
+      가족이 보내준 6자리 코드를 입력해주세요.
+    </p>
+    <div class="field">
+      <label for="code-entry-input">초대 코드</label>
+      <input type="text" id="code-entry-input" placeholder="예: 7H3K9P" maxlength="6"
+        style="font-family: 'SF Mono', monospace; font-size: 22px; letter-spacing: 0.18em; text-align: center; text-transform: uppercase;">
+      <span class="field-hint" id="code-entry-hint">대문자·숫자 6자리 (혼동방지로 0/O/1/I/L 제외)</span>
+    </div>
+    <button type="button" class="primary-cta" id="submit-code-btn" style="width: 100%;">참여하기</button>
+  </div>
+</div>
+
+
+<script>
+// 4카드 빠른 입력 토글 (module 밖에서 onclick용)
+function toggleQuickCard(btn, wrapId) {
+  const wrap = document.getElementById(wrapId);
+  if (!wrap) return;
+  const isOpen = !wrap.classList.contains('hidden');
+  if (isOpen) {
+    wrap.classList.add('hidden');
+    btn.classList.remove('active');
+  } else {
+    wrap.classList.remove('hidden');
+    btn.classList.add('active');
+    wrap.querySelector('textarea')?.focus();
+  }
+}
+</script>
+
+<script type="module">
+  import { requireAuth, supabase } from '/auth.js';
+  import { renderNav } from '/nav.js';
+  await renderNav({ active: 'care', infoIcon: true, title: '돌봄' });
+
+  // "더 적기" 토글
+  document.getElementById('more-fields-btn')?.addEventListener('click', function() {
+    const more = document.getElementById('more-fields');
+    if (more.classList.contains('hidden')) {
+      more.classList.remove('hidden');
+      this.textContent = '− 접기';
+    } else {
+      more.classList.add('hidden');
+      this.textContent = '+ 더 적기';
+    }
+  });
+
+  // 로그인 안 된 상태에서 초대 코드를 들고 왔으면 로그인 페이지로 invite 파라미터 유지
+  const _urlParams = new URLSearchParams(location.search);
+  const _acceptCode = (_urlParams.get('accept') || localStorage.getItem('itda:pending_invite') || '').toUpperCase();
+
+  const session = await (async () => {
+    const { data } = await supabase.auth.getSession();
+    if (data?.session) return data.session;
+    // 비로그인: 초대 코드 보존하면서 로그인으로
+    const target = _acceptCode ? `/login.html?invite=${encodeURIComponent(_acceptCode)}` : '/login.html';
+    window.location.href = target;
+    return null;
+  })();
+  if (!session) { throw new Error('redirecting'); }
+  const user = session.user;
+
+  // ── State ─────────────────────────────
+  const state = {
+    subjects: [],
+    currentSubjectId: null,
+    logs: [],
+    editingLogId: null,
+    editingSubjectId: null,
+  };
+
+  // ── DOM helpers ───────────────────────
+  const $ = (id) => document.getElementById(id);
+  const showAlert = (msg, type='error') => {
+    const el = $('alert');
+    el.className = `alert alert-${type}`;
+    el.textContent = msg;
+    el.classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+  const hideAlert = () => $('alert').classList.add('hidden');
+
+  // ── 초대 코드 자동 수락 (URL ?accept= 또는 localStorage 보류분) ──
+  if (_acceptCode) {
+    const { data: acceptData, error: acceptErr } = await supabase.rpc('accept_care_invite', { p_code: _acceptCode });
+    localStorage.removeItem('itda:pending_invite');
+    if (acceptErr) {
+      showAlert('초대 처리 중 문제가 생겼어요: ' + acceptErr.message);
+    } else {
+      const result = (acceptData && acceptData[0]) || {};
+      if (result.success) {
+        showAlert('초대를 수락했어요. 페이지에 추가됐습니다.', 'success');
+        setTimeout(hideAlert, 4000);
+      } else {
+        showAlert(result.message || '초대 코드를 처리하지 못했어요.');
+      }
+    }
+    if (_urlParams.has('accept')) {
+      _urlParams.delete('accept');
+      const cleanUrl = location.pathname + (_urlParams.toString() ? '?' + _urlParams.toString() : '');
+      window.history.replaceState({}, '', cleanUrl);
+    }
+  }
+
+  // ── Load subjects on start ────────────
+  await loadSubjects();
+
+  async function loadSubjects() {
+    // RLS가 owner + 수락한 멤버 모두에게 접근 허용
+    const [subjectsRes, membershipsRes] = await Promise.all([
+      supabase
+        .from('care_subjects')
+        .select('*')
+        .order('created_at', { ascending: true }),
+      supabase
+        .from('care_members')
+        .select('subject_id, role')
+        .eq('user_id', user.id)
+        .not('accepted_at', 'is', null),
+    ]);
+
+    $('loading-state').classList.add('hidden');
+
+    if (subjectsRes.error) {
+      showAlert('돌봄 대상을 불러오지 못했습니다: ' + (subjectsRes.error.message || subjectsRes.error));
+      return;
+    }
+
+    state.subjects = subjectsRes.data || [];
+    const myMemberships = membershipsRes.data || [];
+    state.myRoleBySubject = {};
+    state.subjects.forEach(s => {
+      if (s.user_id === user.id) {
+        state.myRoleBySubject[s.id] = 'admin';
+      } else {
+        const m = myMemberships.find(mm => mm.subject_id === s.id);
+        state.myRoleBySubject[s.id] = m ? m.role : null;
+      }
+    });
+
+    // Count logs per subject (best effort)
+    if (state.subjects.length > 0) {
+      const { data: allLogs } = await supabase
+        .from('care_logs')
+        .select('id, subject_id')
+        .in('subject_id', state.subjects.map(s => s.id));
+      state.logCountBySubject = {};
+      (allLogs || []).forEach(l => {
+        state.logCountBySubject[l.subject_id] = (state.logCountBySubject[l.subject_id] || 0) + 1;
+      });
+    }
+
+    if (state.subjects.length === 0) {
+      $('no-subject-state').classList.remove('hidden');
+    } else {
+      // Keep current selection if still valid, else pick first active
+      const stillValid = state.subjects.find(s => s.id === state.currentSubjectId);
+      if (!stillValid) {
+        const active = state.subjects.find(s => s.status === 'active') || state.subjects[0];
+        state.currentSubjectId = active.id;
+      }
+      $('main-app').classList.remove('hidden');
+      renderSubjectCards();
+      renderSettings();
+      await loadLogs();
+    }
+  }
+
+  function renderSubjectCards() {
+    const container = $('subject-cards');
+    $('subjects-count').textContent = state.subjects.length === 1
+      ? '1명'
+      : `${state.subjects.length}명`;
+
+    const cardsHtml = state.subjects.map(s => {
+      const initial = (s.name || '?').trim().charAt(0);
+      const metaParts = [];
+      if (s.relation) metaParts.push(escapeHtml(s.relation));
+      if (s.birth_year) {
+        const age = new Date().getFullYear() - s.birth_year;
+        metaParts.push(age + '세');
+      }
+      if (s.created_at) {
+        const days = Math.max(1, Math.ceil((Date.now() - new Date(s.created_at)) / 86400000));
+        metaParts.push(days + '일째');
+      }
+      const logCount = state.logCountBySubject?.[s.id] || 0;
+      const selected = s.id === state.currentSubjectId ? 'selected' : '';
+      const statusLabel = s.status === 'memorialized'
+        ? '🕊️ 추모 중'
+        : s.status === 'transferred'
+          ? '🌿 이관됨'
+          : '';
+      return `
+        <button type="button" class="subject-card ${selected}" data-subject-id="${s.id}">
+          <div class="subject-card-head">
+            <div class="subject-avatar">${escapeHtml(initial)}</div>
+            <div>
+              <div class="subject-name">${escapeHtml(s.name)}</div>
+              <div class="subject-meta">${metaParts.join(' · ') || '&nbsp;'}</div>
+            </div>
+          </div>
+          <div class="subject-stats">
+            <span class="subject-stat-item">기록 ${logCount}개</span>
+            ${statusLabel ? `<span class="subject-stat-item">${statusLabel}</span>` : ''}
+          </div>
+        </button>
+      `;
+    }).join('');
+
+    const addHtml = `
+      <button type="button" class="subject-card subject-add" id="add-subject-card">
+        <div class="subject-add-icon">＋</div>
+        <div>대상 추가</div>
+      </button>
+    `;
+
+    container.innerHTML = cardsHtml + addHtml;
+
+    container.querySelectorAll('[data-subject-id]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.subjectId;
+        if (id === state.currentSubjectId) return;
+        state.currentSubjectId = id;
+        renderSubjectCards();
+        renderSettings();
+        await loadLogs();
+      });
+    });
+    $('add-subject-card')?.addEventListener('click', () => openSubjectModal());
+  }
+
+  function renderSettings() {
+    const s = state.subjects.find(x => x.id === state.currentSubjectId);
+    if (!s) return;
+    const parts = [];
+    if (s.relation) parts.push(`관계: ${s.relation}`);
+    if (s.birth_year) parts.push(`생년: ${s.birth_year}년`);
+    if (s.note) parts.push(`메모: ${s.note}`);
+    if (s.consent_acknowledged) parts.push(`✓ 동의 확인 완료`);
+    $('settings-subject-name').textContent = s.name;
+    $('settings-details').innerHTML = parts.map(p => `<div>${escapeHtml(p)}</div>`).join('');
+  }
+
+  // ── Load logs ─────────────────────────
+  async function loadLogs() {
+    if (!state.currentSubjectId) return;
+    const { data, error } = await supabase
+      .from('care_logs')
+      .select('*, author:profiles!author_id(name)')
+      .eq('subject_id', state.currentSubjectId)
+      .order('log_date', { ascending: false })
+      .order('created_at', { ascending: false });
+    if (error) {
+      console.error(error);
+      return;
+    }
+    state.logs = data || [];
+    renderLogs();
+  }
+
+  function renderLogs() {
+    const container = $('logs-container');
+    const countEl = $('logs-count');
+
+    if (state.logs.length === 0) {
+      countEl.textContent = '아직 기록이 없어요';
+      container.innerHTML = `
+        <div class="empty">
+          <div class="empty-icon">✍️</div>
+          <h3>첫 기록을 남겨보세요</h3>
+          <p>하루 한 줄, 약 한 번의 기록이<br>다음 선택에 큰 힘이 돼요.</p>
+          <button type="button" class="primary-cta" id="empty-write-btn">오늘 기록 쓰기 →</button>
+        </div>
+      `;
+      $('empty-write-btn')?.addEventListener('click', () => openLogModal());
+      return;
+    }
+
+    countEl.textContent = `기록 ${state.logs.length}개`;
+    container.innerHTML = `<div class="log-list">${state.logs.map(renderLogItem).join('')}</div>`;
+    container.querySelectorAll('[data-edit]').forEach(btn => {
+      btn.addEventListener('click', () => openLogModal(btn.dataset.edit));
+    });
+    container.querySelectorAll('[data-delete]').forEach(btn => {
+      btn.addEventListener('click', () => deleteLog(btn.dataset.delete));
+    });
+  }
+
+  function renderLogItem(log) {
+    const fields = [
+      { icon: '🗓️', label: '오늘의 상태', value: log.daily_status },
+      { icon: '💊', label: '복용 약', value: log.medications },
+      { icon: '📝', label: '유의할 점', value: log.cautions },
+      { icon: '🏥', label: '병원 방문', value: log.hospital_visit },
+      { icon: '🍲', label: '영양·식단', value: log.nutrition },
+      { icon: '🎯', label: '감정·소원', value: log.emotion },
+      { icon: '📝', label: '자유 메모', value: log.free_memo },
+    ].filter(f => f.value && f.value.trim());
+
+    const dateStr = new Date(log.log_date).toLocaleDateString('ko-KR', {
+      year: 'numeric', month: 'long', day: 'numeric', weekday: 'short'
+    });
+    const timeStr = log.log_time ? formatTime(log.log_time) : '';
+
+    const authorName = log.author?.name || (log.author_id === user.id ? '나' : '');
+    const isMine = log.author_id === user.id;
+    return `
+      <div class="log-item">
+        <div class="log-head">
+          <div>
+            <span class="log-date">${dateStr}</span>
+            ${timeStr ? `<span class="log-time">· ${timeStr}</span>` : ''}
+            ${authorName ? `<span class="log-time" style="color: var(--ink-muted);">· ${escapeHtml(authorName)} 적음</span>` : ''}
+          </div>
+          <div class="log-actions">
+            ${isMine ? `<button type="button" class="log-action-btn" data-edit="${log.id}">수정</button>
+            <button type="button" class="log-action-btn danger" data-delete="${log.id}">삭제</button>` : ''}
+          </div>
+        </div>
+        ${fields.length === 0 ? `<p style="color: var(--ink-muted); font-size: 13px;">내용 없음</p>` : `
+          <div class="log-fields">
+            ${fields.map(f => `
+              <div class="log-field">
+                <div class="log-field-icon">${f.icon}</div>
+                <div>
+                  <div class="log-field-label">${f.label}</div>
+                  <div class="log-field-body">${escapeHtml(f.value)}</div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `}
+      </div>
+    `;
+  }
+
+  function formatTime(time) {
+    // "14:30:00" → "오후 2:30"
+    const [h, m] = time.split(':').map(Number);
+    const period = h < 12 ? '오전' : '오후';
+    const hour12 = h % 12 || 12;
+    return `${period} ${hour12}:${String(m).padStart(2, '0')}`;
+  }
+
+  // ── Tab switching ─────────────────────
+  document.querySelectorAll('.tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (btn.disabled) return;
+      document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b === btn));
+      const target = btn.dataset.tab;
+      document.querySelectorAll('.tab-panel').forEach(p => {
+        p.classList.toggle('hidden', p.dataset.panel !== target);
+      });
+      if (target === 'family') loadFamilyTab();
+    });
+  });
+
+  // ── Family tab ────────────────────────
+  async function loadFamilyTab() {
+    const subjectId = state.currentSubjectId;
+    if (!subjectId) return;
+    const subject = state.subjects.find(s => s.id === subjectId);
+    if (!subject) return;
+
+    const myRole = state.myRoleBySubject[subjectId];
+    const isOwner = myRole === 'admin';
+
+    $('family-title').textContent = isOwner
+      ? `${subject.name} 돌봄 — 가족·도우미`
+      : `${subject.name} 돌봄에 함께하고 있어요`;
+    $('family-desc').textContent = isOwner
+      ? '코드를 만들어 가족·도우미에게 카톡·문자로 전달하세요. 받은 사람이 코드를 입력하면 자동으로 합류돼요.'
+      : '이 돌봄의 일지를 함께 보고 있어요. 더 이상 함께하고 싶지 않다면 아래에서 나갈 수 있어요.';
+
+    $('create-invite-btn').classList.toggle('hidden', !isOwner);
+    $('family-self-leave').classList.toggle('hidden', isOwner);
+
+    // 멤버 목록 조회 (owner는 모두, member는 본인+다른 멤버 RLS 따라)
+    const { data: members, error } = await supabase
+      .from('care_members')
+      .select('*, profile:profiles!user_id(name, email)')
+      .eq('subject_id', subjectId)
+      .order('invited_at', { ascending: true });
+
+    const list = $('family-list');
+    if (error) {
+      list.innerHTML = `<p style="color: var(--danger); font-size: 13.5px;">멤버를 불러오지 못했어요: ${escapeHtml(error.message)}</p>`;
+      return;
+    }
+
+    // owner 정보 (subject.user_id의 프로필)
+    const { data: ownerProfile } = await supabase
+      .from('profiles')
+      .select('name, email')
+      .eq('id', subject.user_id)
+      .single();
+
+    const ownerRow = `
+      <div class="log-item" style="margin-bottom: 8px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+          <div>
+            <div style="font-weight: 700;">${escapeHtml(ownerProfile?.name || '주 보호자')}</div>
+            <div style="font-size: 12.5px; color: var(--ink-muted); margin-top: 2px;">주 보호자 · ${escapeHtml(ownerProfile?.email || '')}</div>
+          </div>
+          <span style="font-size: 11px; padding: 3px 9px; background: var(--primary-soft); color: var(--primary); border-radius: 999px; font-weight: 700;">ADMIN</span>
+        </div>
+      </div>
+    `;
+
+    const memberRows = (members || []).map(m => {
+      const isPending = !m.accepted_at;
+      const roleLabel = m.role === 'family' ? '가족' : '도움주시는분';
+      const nameDisplay = m.profile?.name || m.display_name || (isPending ? '(대기 중)' : '(이름 없음)');
+      const emailDisplay = m.profile?.email || '';
+      const expiresLabel = m.invite_expires_at
+        ? `${Math.max(0, Math.ceil((new Date(m.invite_expires_at) - Date.now()) / 86400000))}일 남음`
+        : '';
+
+      const codeBlock = isPending ? `
+        <div style="margin-top: 12px; padding: 10px 14px; background: var(--bg-alt); border-radius: 10px; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+          <div>
+            <span style="font-family: 'SF Mono', monospace; font-size: 18px; font-weight: 800; letter-spacing: 0.15em;">${m.invite_code || '------'}</span>
+            <span style="font-size: 12px; color: var(--ink-muted); margin-left: 10px;">${expiresLabel}</span>
+          </div>
+          <div style="display: flex; gap: 6px;">
+            <button type="button" class="log-action-btn" data-copy-code="${m.invite_code}">복사</button>
+            ${isOwner ? `<button type="button" class="log-action-btn danger" data-cancel-invite="${m.id}">취소</button>` : ''}
+          </div>
+        </div>
+      ` : '';
+
+      const removeBtn = (isOwner && !isPending) ? `
+        <button type="button" class="log-action-btn danger" data-remove-member="${m.id}">내보내기</button>
+      ` : '';
+
+      return `
+        <div class="log-item" style="margin-bottom: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+            <div>
+              <div style="font-weight: 700;">${escapeHtml(nameDisplay)}</div>
+              <div style="font-size: 12.5px; color: var(--ink-muted); margin-top: 2px;">
+                ${roleLabel}${isPending ? ' · 초대 대기' : (emailDisplay ? ' · ' + escapeHtml(emailDisplay) : '')}
+              </div>
+            </div>
+            <div style="display: flex; gap: 6px;">
+              ${removeBtn}
+              <span style="font-size: 11px; padding: 3px 9px; background: ${isPending ? 'var(--bg-alt)' : 'var(--primary-soft)'}; color: ${isPending ? 'var(--ink-muted)' : 'var(--primary)'}; border-radius: 999px; font-weight: 700;">
+                ${isPending ? '대기' : (m.role === 'family' ? 'FAMILY' : 'HELPER')}
+              </span>
+            </div>
+          </div>
+          ${codeBlock}
+        </div>
+      `;
+    }).join('');
+
+    list.innerHTML = ownerRow + (memberRows || '<p style="color: var(--ink-muted); font-size: 13.5px; padding: 12px 4px;">아직 함께하는 사람이 없어요.</p>');
+
+    list.querySelectorAll('[data-copy-code]').forEach(btn => {
+      btn.addEventListener('click', () => copyCode(btn.dataset.copyCode));
+    });
+    list.querySelectorAll('[data-cancel-invite]').forEach(btn => {
+      btn.addEventListener('click', () => cancelInvite(btn.dataset.cancelInvite));
+    });
+    list.querySelectorAll('[data-remove-member]').forEach(btn => {
+      btn.addEventListener('click', () => removeMember(btn.dataset.removeMember));
+    });
+  }
+
+  function copyCode(code) {
+    if (!code) return;
+    navigator.clipboard.writeText(code).then(() => {
+      showAlert(`코드 ${code} 복사됨`, 'success');
+      setTimeout(hideAlert, 2000);
+    });
+  }
+
+  async function cancelInvite(memberId) {
+    if (!confirm('이 초대를 취소할까요?')) return;
+    const { error } = await supabase.from('care_members').delete().eq('id', memberId);
+    if (error) { showAlert('취소하지 못했어요: ' + error.message); return; }
+    loadFamilyTab();
+  }
+
+  async function removeMember(memberId) {
+    if (!confirm('이 사람을 돌봄에서 내보낼까요? 이후로는 일지를 볼 수 없게 돼요.')) return;
+    const { error } = await supabase.from('care_members').delete().eq('id', memberId);
+    if (error) { showAlert('내보내지 못했어요: ' + error.message); return; }
+    loadFamilyTab();
+  }
+
+  // 초대 코드 생성
+  $('create-invite-btn').addEventListener('click', () => {
+    $('invite-form-area').classList.remove('hidden');
+    $('invite-result-area').classList.add('hidden');
+    $('invite-name').value = '';
+    $('invite-role').value = 'family';
+    $('invite-modal').classList.remove('hidden');
+  });
+
+  $('generate-code-btn').addEventListener('click', async () => {
+    const subjectId = state.currentSubjectId;
+    if (!subjectId) return;
+    const role = $('invite-role').value;
+    const displayName = $('invite-name').value.trim() || null;
+
+    $('generate-code-btn').disabled = true;
+    $('generate-code-btn').textContent = '생성 중...';
+
+    // 생성 함수 호출
+    const { data: codeData, error: codeErr } = await supabase.rpc('generate_care_invite_code');
+    if (codeErr) {
+      showAlert('코드 생성 실패: ' + codeErr.message);
+      $('generate-code-btn').disabled = false;
+      $('generate-code-btn').textContent = '코드 생성하기';
+      return;
+    }
+    const code = codeData;
+    const expiresAt = new Date(Date.now() + 7 * 86400000).toISOString();
+
+    // care_members 행 생성 (email은 null — 코드 수락 시 user_id로 매칭됨)
+    const { error: insertErr } = await supabase.from('care_members').insert({
+      subject_id: subjectId,
+      role,
+      display_name: displayName,
+      invite_code: code,
+      invite_expires_at: expiresAt,
+      invited_by: user.id,
+    });
+
+    $('generate-code-btn').disabled = false;
+    $('generate-code-btn').textContent = '코드 생성하기';
+
+    if (insertErr) {
+      showAlert('초대 생성 실패: ' + insertErr.message);
+      return;
+    }
+
+    $('generated-code-display').textContent = code;
+    $('generated-code-meta').textContent = `7일간 유효 · ${role === 'family' ? '가족' : '도움주시는분'} 권한`;
+    $('invite-form-area').classList.add('hidden');
+    $('invite-result-area').classList.remove('hidden');
+
+    loadFamilyTab();
+  });
+
+  $('copy-code-btn').addEventListener('click', () => {
+    copyCode($('generated-code-display').textContent);
+  });
+
+  $('share-code-btn').addEventListener('click', async () => {
+    const code = $('generated-code-display').textContent;
+    const subject = state.subjects.find(s => s.id === state.currentSubjectId);
+    // 공유 메시지는 항상 공개 도메인 사용 (localhost 방지)
+    const PUBLIC_ORIGIN = window.location.hostname === 'localhost'
+      ? 'https://itda-one.vercel.app'
+      : window.location.origin;
+    const shareText = `[잇다] ${subject?.name || ''} 돌봄에 함께해주세요.\n\n아래 링크에서 가입(또는 로그인)하시면 자동으로 합류돼요.\n${PUBLIC_ORIGIN}/signup.html?invite=${code}\n\n(혹시 자동 처리가 안 되면 직접 입력하세요. 초대 코드: ${code}, 7일간 유효)`;
+    const hintEl = $('share-fallback-hint');
+    hintEl.classList.add('hidden');
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: '잇다 · 함께 돌보기 초대',
+          text: shareText,
+        });
+      } catch (e) {
+        if (e.name === 'AbortError') return;
+        // 공유 실패 → 클립보드 폴백
+        await navigator.clipboard.writeText(shareText);
+        hintEl.textContent = '초대 메시지 복사됨 — 카톡에 붙여넣기 하세요.';
+        hintEl.classList.remove('hidden');
+      }
+    } else {
+      // Web Share 미지원 (대부분 데스크탑)
+      await navigator.clipboard.writeText(shareText);
+      hintEl.textContent = '초대 메시지 복사됨 — 카톡 등에 붙여넣기 하세요.';
+      hintEl.classList.remove('hidden');
+    }
+  });
+
+  $('close-invite-btn').addEventListener('click', () => {
+    $('invite-modal').classList.add('hidden');
+  });
+
+  // 코드 입력 모달
+  function openCodeEntryModal() {
+    $('code-entry-input').value = '';
+    $('code-entry-hint').textContent = '대문자·숫자 6자리 (혼동방지로 0/O/1/I/L 제외)';
+    $('code-entry-hint').style.color = '';
+    $('code-entry-modal').classList.remove('hidden');
+    setTimeout(() => $('code-entry-input').focus(), 100);
+  }
+
+  $('enter-code-empty-btn')?.addEventListener('click', openCodeEntryModal);
+  $('enter-code-top-btn')?.addEventListener('click', openCodeEntryModal);
+
+  $('code-entry-input').addEventListener('input', (e) => {
+    e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  });
+
+  $('submit-code-btn').addEventListener('click', async () => {
+    const code = $('code-entry-input').value.trim().toUpperCase();
+    if (code.length !== 6) {
+      $('code-entry-hint').textContent = '6자리 코드를 입력해주세요.';
+      $('code-entry-hint').style.color = 'var(--danger)';
+      return;
+    }
+    $('submit-code-btn').disabled = true;
+    $('submit-code-btn').textContent = '확인 중...';
+
+    const { data, error } = await supabase.rpc('accept_care_invite', { p_code: code });
+
+    $('submit-code-btn').disabled = false;
+    $('submit-code-btn').textContent = '참여하기';
+
+    if (error) {
+      $('code-entry-hint').textContent = error.message;
+      $('code-entry-hint').style.color = 'var(--danger)';
+      return;
+    }
+    const result = (data && data[0]) || {};
+    if (!result.success) {
+      $('code-entry-hint').textContent = result.message || '코드를 확인해주세요.';
+      $('code-entry-hint').style.color = 'var(--danger)';
+      return;
+    }
+    $('code-entry-modal').classList.add('hidden');
+    showAlert('초대를 수락했어요. 새로고침할게요.', 'success');
+    setTimeout(() => window.location.reload(), 1200);
+  });
+
+  // 나가기
+  $('leave-care-btn').addEventListener('click', async () => {
+    const subjectId = state.currentSubjectId;
+    if (!subjectId) return;
+    const subject = state.subjects.find(s => s.id === subjectId);
+    if (!confirm(`${subject.name} 돌봄에서 나갈까요? 다시 합류하려면 초대 코드를 받아야 해요.`)) return;
+    const { error } = await supabase.from('care_members').delete()
+      .eq('subject_id', subjectId).eq('user_id', user.id);
+    if (error) { showAlert('나가지 못했어요: ' + error.message); return; }
+    showAlert('나갔습니다.', 'success');
+    setTimeout(() => window.location.reload(), 800);
+  });
+
+  // ── Subject modal ─────────────────────
+  function openSubjectModal(subjectId) {
+    state.editingSubjectId = subjectId || null;
+    const modal = $('subject-modal');
+    modal.classList.remove('hidden');
+    $('subject-modal-title').textContent = subjectId ? '대상 정보 수정' : '돌봄 대상 등록';
+    $('subject-form').reset();
+
+    if (subjectId) {
+      const s = state.subjects.find(x => x.id === subjectId);
+      if (s) {
+        $('s-name').value = s.name || '';
+        $('s-relation').value = s.relation || '';
+        $('s-birth').value = s.birth_year || '';
+        $('s-note').value = s.note || '';
+        $('s-consent').checked = !!s.consent_acknowledged;
+      }
+    }
+  }
+  function closeModal(id) {
+    $(id).classList.add('hidden');
+  }
+  document.querySelectorAll('[data-close-modal]').forEach(btn => {
+    btn.addEventListener('click', () => closeModal(btn.dataset.closeModal));
+  });
+  document.querySelectorAll('.modal-backdrop').forEach(bd => {
+    bd.addEventListener('click', (e) => {
+      if (e.target === bd) bd.classList.add('hidden');
+    });
+  });
+
+  $('first-subject-btn').addEventListener('click', () => openSubjectModal());
+  $('edit-subject-btn').addEventListener('click', () => openSubjectModal(state.currentSubjectId));
+
+  $('subject-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submit = $('subject-submit');
+    submit.disabled = true;
+    submit.textContent = '저장 중…';
+    hideAlert();
+
+    const payload = {
+      user_id: user.id,
+      name: $('s-name').value.trim(),
+      relation: $('s-relation').value || null,
+      birth_year: $('s-birth').value ? parseInt($('s-birth').value, 10) : null,
+      note: $('s-note').value.trim() || null,
+      consent_acknowledged: $('s-consent').checked,
+      consent_type: 'self',
+      consent_date: $('s-consent').checked ? new Date().toISOString() : null,
+    };
+
+    try {
+      if (state.editingSubjectId) {
+        const { error } = await supabase
+          .from('care_subjects')
+          .update(payload)
+          .eq('id', state.editingSubjectId);
+        if (error) throw error;
+      } else {
+        const { data, error } = await supabase
+          .from('care_subjects')
+          .insert(payload)
+          .select()
+          .single();
+        if (error) throw error;
+        state.currentSubjectId = data.id;
+      }
+      closeModal('subject-modal');
+      $('no-subject-state').classList.add('hidden');
+      $('main-app').classList.remove('hidden');
+      await loadSubjects();
+      await loadLogs();
+    } catch (e) {
+      console.error(e);
+      showAlert('저장 실패: ' + (e.message || e));
+    } finally {
+      submit.disabled = false;
+      submit.textContent = '저장';
+    }
+  });
+
+  $('delete-subject-btn').addEventListener('click', async () => {
+    if (!confirm('이 돌봄 대상과 모든 기록을 삭제하시겠어요?\n되돌릴 수 없습니다.')) return;
+    const { error } = await supabase
+      .from('care_subjects')
+      .delete()
+      .eq('id', state.currentSubjectId);
+    if (error) { showAlert('삭제 실패: ' + error.message); return; }
+    state.currentSubjectId = null;
+    await loadSubjects();
+  });
+
+  // ── Log modal ─────────────────────────
+  function openLogModal(logId) {
+    state.editingLogId = logId || null;
+    const modal = $('log-modal');
+    modal.classList.remove('hidden');
+    $('log-modal-title').textContent = logId ? '기록 수정' : '오늘 기록 쓰기';
+    $('log-form').reset();
+
+    // Default date = today
+    $('l-date').value = new Date().toISOString().split('T')[0];
+
+    if (logId) {
+      const log = state.logs.find(l => l.id === logId);
+      if (log) {
+        $('l-date').value = log.log_date || '';
+        $('l-time').value = log.log_time || '';
+        $('l-daily').value = log.daily_status || '';
+        $('l-meds').value = log.medications || '';
+        $('l-cautions').value = log.cautions || '';
+        $('l-hospital').value = log.hospital_visit || '';
+        $('l-nutrition').value = log.nutrition || '';
+        $('l-emotion').value = log.emotion || '';
+        $('l-memo').value = log.free_memo || '';
+      }
+    }
+  }
+
+  $('write-log-btn').addEventListener('click', () => openLogModal());
+
+  $('log-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submit = $('log-submit');
+    submit.disabled = true;
+    submit.textContent = '저장 중…';
+    hideAlert();
+
+    const val = (id) => $(id).value.trim() || null;
+    const payload = {
+      subject_id: state.currentSubjectId,
+      author_id: user.id,
+      log_date: $('l-date').value,
+      log_time: $('l-time').value || null,
+      daily_status: val('l-daily'),
+      medications: val('l-meds'),
+      cautions: val('l-cautions'),
+      hospital_visit: val('l-hospital'),
+      nutrition: val('l-nutrition'),
+      emotion: val('l-emotion'),
+      free_memo: val('l-memo'),
+    };
+
+    try {
+      if (state.editingLogId) {
+        const { error } = await supabase
+          .from('care_logs')
+          .update({ ...payload, updated_at: new Date().toISOString() })
+          .eq('id', state.editingLogId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('care_logs')
+          .insert(payload);
+        if (error) throw error;
+      }
+      closeModal('log-modal');
+      await loadSubjects();   // refreshes cards + counts + logs
+    } catch (e) {
+      console.error(e);
+      showAlert('저장 실패: ' + (e.message || e));
+    } finally {
+      submit.disabled = false;
+      submit.textContent = '기록 저장';
+    }
+  });
+
+  async function deleteLog(id) {
+    if (!confirm('이 기록을 삭제하시겠어요?')) return;
+    const { error } = await supabase.from('care_logs').delete().eq('id', id);
+    if (error) { showAlert('삭제 실패: ' + error.message); return; }
+    await loadSubjects();
+  }
+
+  // ── Utilities ─────────────────────────
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+</script>
+
+</body>
+</html>

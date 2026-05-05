@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>마이페이지 · 잇다</title>
+  <link rel="stylesheet" href="/auth-styles.css">
+  <style>
+    .dashboard {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 40px 20px 80px;
+      flex: 1;
+      width: 100%;
+    }
+    @media (min-width: 640px) {
+      .dashboard { padding: 64px 32px 120px; }
+    }
+
+    /* ── Top bar ──────────────────────────── */
+    .top-bar {
+      background: var(--bg);
+      border-bottom: 1px solid var(--line);
+      padding: 14px 20px;
+    }
+    .top-bar-inner {
+      max-width: 1080px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .top-bar-links { display: flex; gap: 18px; font-size: 14px; }
+    .top-bar-links a {
+      color: var(--ink-soft);
+      text-decoration: none;
+      transition: color 0.15s ease;
+    }
+    .top-bar-links a:hover { color: var(--primary); }
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+      color: var(--ink-soft);
+    }
+    .logout-btn {
+      padding: 8px 14px;
+      background: transparent;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--ink-soft);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .logout-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+    /* ── Greeting ─────────────────────────── */
+    .greeting {
+      margin-bottom: 32px;
+    }
+    .greeting h1 {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+    }
+    @media (min-width: 640px) {
+      .greeting h1 { font-size: 32px; }
+    }
+    .greeting-sub {
+      color: var(--ink-soft);
+      font-size: 15px;
+      line-height: 1.7;
+    }
+    .care-day-badge {
+      display: inline-block;
+      margin-left: 6px;
+      padding: 3px 10px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    /* ── 오늘의 잇다 대시보드 ──────────── */
+    .today-dash {
+      margin-bottom: 36px;
+    }
+    .today-dash-head {
+      margin-bottom: 14px;
+    }
+    .today-dash-kicker {
+      display: inline-block;
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      color: var(--primary);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .today-dash-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 640px) {
+      .today-dash-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    }
+    @media (min-width: 920px) {
+      .today-dash-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+    .today-card {
+      display: block;
+      padding: 18px 20px;
+      background: var(--bg-alt);
+      border-radius: 14px;
+      text-decoration: none;
+      color: inherit;
+      border: 1px solid transparent;
+      transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+      min-height: 130px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .today-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--primary-soft);
+      box-shadow: 0 6px 16px rgba(43, 43, 43, 0.05);
+    }
+    .today-card-icon {
+      font-size: 22px;
+      margin-bottom: 8px;
+    }
+    .today-card-meta {
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      color: var(--ink-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .today-card-title {
+      font-size: 14px;
+      color: var(--ink);
+      font-weight: 700;
+      line-height: 1.4;
+      margin-bottom: 10px;
+      flex: 1;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .today-card-cta {
+      font-size: 12.5px;
+      color: var(--primary);
+      font-weight: 700;
+    }
+    .today-card-progress {
+      height: 4px;
+      background: var(--bg);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+    .today-card-progress-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--primary);
+      transition: width 0.4s ease;
+    }
+    .today-card .badge-mini {
+      display: inline-block;
+      margin-left: 6px;
+      padding: 1px 7px;
+      background: var(--primary);
+      color: #FFF;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    /* ── Tabs ─────────────────────────────── */
+    .tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 28px;
+    }
+    .tab-btn {
+      flex: 1;
+      max-width: 180px;
+      padding: 14px 18px;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--ink-muted);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      position: relative;
+    }
+    .tab-btn:hover { color: var(--ink); }
+    .tab-btn.active {
+      color: var(--ink);
+      border-bottom-color: var(--primary);
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 20px;
+      height: 20px;
+      padding: 0 6px;
+      background: var(--primary);
+      color: #FFF;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+    .badge.hidden { display: none; }
+
+    /* ── Tab panes ────────────────────────── */
+    .pane { display: none; }
+    .pane.active { display: block; }
+
+    /* ── Section heading ──────────────────── */
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 14px;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--ink-muted);
+      text-transform: uppercase;
+    }
+    .section-action {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--primary);
+      text-decoration: none;
+    }
+    .section-action:hover { text-decoration: underline; }
+
+    /* ── Care subject cards ───────────────── */
+    .subject-grid {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+    @media (min-width: 720px) {
+      .subject-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    .subject-card {
+      background: var(--bg-alt);
+      border-radius: 14px;
+      padding: 20px;
+      text-decoration: none;
+      color: inherit;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      display: block;
+    }
+    .subject-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(43,43,43,0.05);
+    }
+    .subject-name {
+      font-size: 17px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .subject-relation {
+      font-size: 12.5px;
+      color: var(--ink-muted);
+      margin-bottom: 14px;
+    }
+    .subject-meta {
+      display: flex;
+      gap: 14px;
+      font-size: 12.5px;
+      color: var(--ink-soft);
+      flex-wrap: wrap;
+    }
+    .subject-meta strong { color: var(--ink); }
+
+    /* ── Activity feed ────────────────────── */
+    .activity-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      border-top: 1px solid var(--line);
+      margin-bottom: 32px;
+    }
+    .activity-item {
+      padding: 14px 4px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      gap: 12px;
+      align-items: start;
+    }
+    .activity-bullet {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--ink-faint);
+      margin-top: 8px;
+      flex-shrink: 0;
+    }
+    .activity-bullet.new { background: var(--primary); }
+    .activity-text {
+      flex: 1;
+      font-size: 14px;
+      color: var(--ink);
+      line-height: 1.55;
+    }
+    .activity-meta {
+      display: block;
+      margin-top: 3px;
+      font-size: 12px;
+      color: var(--ink-muted);
+    }
+
+    /* ── Stories board (게시판형) ─────────── */
+    .stories-board {
+      width: 100%;
+      border-top: 2px solid var(--ink);
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 24px;
+    }
+    .board-row {
+      display: grid;
+      grid-template-columns: 50px 1fr 90px 90px 70px 60px;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 8px;
+      border-bottom: 1px solid var(--line);
+      font-size: 14px;
+    }
+    .board-row.head {
+      font-size: 12px;
+      letter-spacing: 0.05em;
+      color: var(--ink-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--line);
+    }
+    .board-row.body { color: var(--ink); }
+    .board-row.body:hover { background: var(--bg-alt); }
+    .board-row.body a { color: inherit; text-decoration: none; }
+    .board-cell-title {
+      font-weight: 700;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .board-cell-title .new-mark {
+      display: inline-block;
+      margin-left: 6px;
+      padding: 1px 6px;
+      background: var(--primary);
+      color: #FFF;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      vertical-align: 2px;
+    }
+    .board-cell {
+      font-size: 12.5px;
+      color: var(--ink-soft);
+    }
+    .board-cell.muted { color: var(--ink-muted); }
+    .visibility-pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      background: var(--bg-alt);
+      color: var(--ink-soft);
+    }
+
+    /* ── Action toolbar (기억 탭) ─────────── */
+    .action-bar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    .action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 8px 14px;
+      background: var(--bg);
+      color: var(--ink);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .action-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .action-btn.primary {
+      background: var(--ink);
+      color: #FFF;
+      border-color: var(--ink);
+    }
+    .action-btn.primary:hover {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #FFF;
+    }
+    .action-btn.danger:hover {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+    .action-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .action-btn:disabled:hover { border-color: var(--line); color: var(--ink); }
+    .selected-count {
+      font-size: 12.5px;
+      color: var(--ink-muted);
+      margin-left: auto;
+    }
+
+    /* checkbox column */
+    .board-row { grid-template-columns: 28px 40px 1fr 90px 90px 70px 60px; }
+    .board-row.head .board-check { font-size: 0; }
+    .board-check {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .board-check input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      accent-color: var(--primary);
+    }
+    .board-row.body.is-checked { background: var(--primary-soft); }
+
+    @media (max-width: 640px) {
+      .board-row {
+        grid-template-columns: 24px 32px 1fr 60px;
+        gap: 8px;
+        padding: 12px 6px;
+      }
+      .board-row .board-hide-mobile { display: none; }
+    }
+
+    /* ── Empty state ──────────────────────── */
+    .empty-state {
+      background: var(--bg-alt);
+      border-radius: 16px;
+      padding: 48px 24px;
+      text-align: center;
+    }
+    .empty-icon { font-size: 40px; margin-bottom: 14px; }
+    .empty-state h2 {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+    .empty-state p {
+      color: var(--ink-soft);
+      font-size: 14.5px;
+      line-height: 1.7;
+      margin-bottom: 22px;
+      max-width: 380px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* ── CTA buttons ──────────────────────── */
+    .primary-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 12px 22px;
+      background: var(--ink);
+      color: #FFF;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 14px;
+      border-radius: 12px;
+      transition: background 0.15s ease;
+    }
+    .primary-btn:hover { background: var(--primary); }
+    .ghost-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 11px 20px;
+      background: transparent;
+      color: var(--ink);
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      transition: all 0.15s ease;
+    }
+    .ghost-btn:hover { border-color: var(--primary); color: var(--primary); }
+  </style>
+</head>
+<body>
+
+<!-- 탑바·바텀탭은 nav.js가 동적으로 삽입 -->
+
+<main class="dashboard">
+  <div class="greeting">
+    <h1 id="greeting-title">안녕하세요</h1>
+    <p class="greeting-sub" id="greeting-sub">불러오는 중...</p>
+  </div>
+
+  <!-- ── 오늘의 잇다 대시보드 ─── -->
+  <section class="today-dash" id="today-dash">
+    <div class="today-dash-head">
+      <span class="today-dash-kicker">오늘의 잇다</span>
+    </div>
+    <div class="today-dash-grid">
+      <a href="/ask.html" class="today-card today-card--question">
+        <div class="today-card-icon">🪞</div>
+        <div class="today-card-meta">오늘의 한 문장</div>
+        <div class="today-card-title" id="dash-q-title">불러오는 중…</div>
+        <div class="today-card-cta" id="dash-q-cta">답하러 가기 →</div>
+      </a>
+      <a href="/care.html" class="today-card today-card--care">
+        <div class="today-card-icon">🤝</div>
+        <div class="today-card-meta">돌봄</div>
+        <div class="today-card-title" id="dash-care-title">불러오는 중…</div>
+        <div class="today-card-cta" id="dash-care-cta">기록하러 가기 →</div>
+      </a>
+      <a href="/note.html" class="today-card today-card--note">
+        <div class="today-card-icon">📝</div>
+        <div class="today-card-meta">잇다 노트</div>
+        <div class="today-card-title" id="dash-note-title">정리 0%</div>
+        <div class="today-card-progress">
+          <div class="today-card-progress-fill" id="dash-note-fill"></div>
+        </div>
+        <div class="today-card-cta">정리하러 가기 →</div>
+      </a>
+      <a href="/my.html#memory" class="today-card today-card--memory" id="dash-memory-link">
+        <div class="today-card-icon">🌿</div>
+        <div class="today-card-meta">기억</div>
+        <div class="today-card-title" id="dash-memory-title">새 활동 없음</div>
+        <div class="today-card-cta">기록 보기 →</div>
+      </a>
+    </div>
+  </section>
+
+  <div class="tabs" role="tablist">
+    <button class="tab-btn" id="tab-care" role="tab" aria-selected="false">
+      돌봄 <span class="badge hidden" id="badge-care">0</span>
+    </button>
+    <button class="tab-btn" id="tab-memory" role="tab" aria-selected="false">
+      기억 <span class="badge hidden" id="badge-memory">0</span>
+    </button>
+    <button class="tab-btn" id="tab-life" role="tab" aria-selected="false">
+      삶 <span class="badge hidden" id="badge-life">0</span>
+    </button>
+  </div>
+
+  <!-- ── 돌봄 탭 ─────────────────────────── -->
+  <section class="pane" id="pane-care" role="tabpanel">
+    <div class="section-head">
+      <span class="section-title">진행 중 돌봄</span>
+      <a href="/care.html" class="section-action">전체 보기 →</a>
+    </div>
+    <div id="subjects-container">
+      <div class="empty-state" id="subjects-loading">
+        <p style="color: var(--ink-muted); font-size: 14px;">불러오는 중...</p>
+      </div>
+    </div>
+
+    <div class="section-head">
+      <span class="section-title">가족 활동</span>
+    </div>
+    <div id="activity-container"></div>
+  </section>
+
+  <!-- ── 기억 탭 ─────────────────────────── -->
+  <section class="pane" id="pane-memory" role="tabpanel">
+    <div class="section-head">
+      <span class="section-title">내가 쓴 이야기</span>
+    </div>
+    <div class="action-bar" id="memory-actions">
+      <a href="/write.html" class="action-btn primary">＋ 쓰기</a>
+      <button type="button" class="action-btn" id="btn-edit" disabled>편집</button>
+      <button type="button" class="action-btn danger" id="btn-delete" disabled>삭제</button>
+      <span class="selected-count" id="selected-count"></span>
+    </div>
+    <div id="stories-container">
+      <div class="empty-state" id="stories-loading">
+        <p style="color: var(--ink-muted); font-size: 14px;">불러오는 중...</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 삶 탭 ──────────────────────────── -->
+  <section class="pane" id="pane-life" role="tabpanel">
+    <div id="todays-q-card" style="background: var(--bg-alt); border-radius: 16px; padding: 22px 24px; margin-bottom: 26px;">
+      <div style="font-size: 12px; letter-spacing: 0.08em; color: var(--primary); font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">
+        오늘 잇고 · 가입 <span id="life-q-day">--</span>일째
+      </div>
+      <div id="life-q-text" style="font-family: var(--font-serif); font-size: 17px; line-height: 1.6; margin-bottom: 14px;">불러오는 중…</div>
+      <a href="/ask.html" style="display: inline-block; padding: 9px 18px; background: var(--ink); color: #FFF; border-radius: 999px; text-decoration: none; font-size: 13.5px; font-weight: 700;">오늘 잇고 →</a>
+      <a href="/questions.html" style="display: inline-block; margin-left: 8px; padding: 9px 18px; color: var(--ink-soft); border-radius: 999px; text-decoration: underline; font-size: 13px;">지난 질문 보기</a>
+    </div>
+
+    <div class="section-head">
+      <span class="section-title">내가 남긴 답</span>
+      <span style="font-size: 13px; color: var(--ink-muted);" id="life-streak"></span>
+    </div>
+    <div id="life-answers-container">
+      <div class="empty-state">
+        <p style="color: var(--ink-muted); font-size: 14px;">불러오는 중...</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="auth-footer">
+  © 2026 라이프헤리티지 · 잇다
+</footer>
+
+<script type="module">
+  import { requireAuth, signOut, supabase } from '/auth.js';
+  import { renderNav } from '/nav.js';
+
+  const session = await requireAuth('/login.html');
+  if (!session) { /* redirected */ }
+
+  const user = session.user;
+
+  // 보류된 초대 코드 있으면 care.html로 이동해서 자동 수락
+  const _pendingInvite = localStorage.getItem('itda:pending_invite');
+  if (_pendingInvite) {
+    window.location.href = `/care.html?accept=${encodeURIComponent(_pendingInvite)}`;
+    throw new Error('redirecting to accept invite');
+  }
+  const userName = user.user_metadata?.name || user.email.split('@')[0];
+
+  await renderNav({ active: 'my', infoIcon: true, title: '마이' });
+
+  // ── localStorage: 마지막 마이페이지 방문 시각 ──
+  const LAST_VISIT_KEY = `itda:last_visit:${user.id}`;
+  const lastVisit = localStorage.getItem(LAST_VISIT_KEY);
+  const lastVisitDate = lastVisit ? new Date(lastVisit) : new Date(0);
+
+  // 페이지 떠날 때 갱신
+  window.addEventListener('beforeunload', () => {
+    localStorage.setItem(LAST_VISIT_KEY, new Date().toISOString());
+  });
+
+  // ── 데이터 병렬 로드 ──
+  const [
+    { data: subjects },
+    { data: stories },
+  ] = await Promise.all([
+    supabase
+      .from('care_subjects')
+      .select('id, name, relation, status, created_at, user_id')
+      .eq('status', 'active')
+      .order('created_at', { ascending: true }),
+    supabase
+      .from('stories')
+      .select('id, title, relation, created_at, visibility')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false }),
+  ]);
+
+  const subjectIds = (subjects || []).map(s => s.id);
+  const storyIds = (stories || []).map(s => s.id);
+
+  const [
+    { data: recentLogs },
+    { data: recentRemembrances },
+  ] = await Promise.all([
+    subjectIds.length
+      ? supabase
+          .from('care_logs')
+          .select('id, subject_id, author_id, daily_status, free_memo, log_date, created_at')
+          .in('subject_id', subjectIds)
+          .order('created_at', { ascending: false })
+          .limit(10)
+      : Promise.resolve({ data: [] }),
+    storyIds.length
+      ? supabase
+          .from('remembrances')
+          .select('id, story_id, author_id, content, created_at')
+          .in('story_id', storyIds)
+          .order('created_at', { ascending: false })
+          .limit(50)
+      : Promise.resolve({ data: [] }),
+  ]);
+
+  // ── 오늘의 잇다 대시보드 데이터 ──
+  const [
+    { data: qData },
+    { data: myAnswerToday },
+  ] = await Promise.all([
+    supabase.rpc('get_todays_question'),
+    Promise.resolve({ data: null }), // placeholder; checked below
+  ]);
+  const todaysQ = qData && qData[0];
+
+  // 오늘의 한 문장
+  if (todaysQ) {
+    document.getElementById('dash-q-title').textContent = todaysQ.question_text;
+    // 이미 답했는지 체크
+    const { data: myAns } = await supabase
+      .from('daily_answers')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('question_id', todaysQ.id)
+      .maybeSingle();
+    if (myAns) {
+      document.getElementById('dash-q-cta').textContent = '내 답 다시 보기 →';
+    }
+  } else {
+    document.getElementById('dash-q-title').textContent = '오늘의 한 문장이 곧 도착해요';
+    document.getElementById('dash-q-cta').textContent = '오늘 잇고 →';
+  }
+
+  // 돌봄 카드
+  if (subjects && subjects.length > 0) {
+    const top = subjects[0];
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const todayLogs = (recentLogs || []).filter(l => l.subject_id === top.id && l.log_date === todayStr);
+    if (todayLogs.length > 0) {
+      document.getElementById('dash-care-title').textContent = `${top.name} 오늘 ${todayLogs.length}건 기록됨`;
+      document.getElementById('dash-care-cta').textContent = '오늘 더 추가 →';
+    } else {
+      document.getElementById('dash-care-title').textContent = `${top.name} 오늘 기록을 남겨주세요`;
+      document.getElementById('dash-care-cta').textContent = '오늘 기록 쓰기 →';
+    }
+  } else {
+    document.getElementById('dash-care-title').textContent = '아직 돌봄 대상이 없어요';
+    document.getElementById('dash-care-cta').textContent = '돌봄 시작하기 →';
+  }
+
+  // 잇다 노트 (V1: 모두 0%, V2에 note_entries 연결)
+  document.getElementById('dash-note-title').textContent = '아직 정리한 항목이 없어요';
+  document.getElementById('dash-note-fill').style.width = '0%';
+
+  // 기억 — 새 활동 (다른 사람의 댓글 또는 본인 글 수)
+  const newRemForMe = (recentRemembrances || [])
+    .filter(r => r.author_id !== user.id && new Date(r.created_at) > lastVisitDate)
+    .length;
+  if (newRemForMe > 0) {
+    document.getElementById('dash-memory-title').innerHTML = `새 댓글 <span class="badge-mini">${newRemForMe > 99 ? '99+' : newRemForMe}</span>`;
+  } else if (stories && stories.length > 0) {
+    document.getElementById('dash-memory-title').textContent = `내 이야기 ${stories.length}편`;
+  } else {
+    document.getElementById('dash-memory-title').textContent = '아직 기록된 이야기가 없어요';
+  }
+
+  // ── 인사말 ──
+  const greetingTitle = document.getElementById('greeting-title');
+  const greetingSub = document.getElementById('greeting-sub');
+  greetingTitle.textContent = `${userName}님, 안녕하세요`;
+
+  if (subjects && subjects.length > 0) {
+    const oldest = subjects[0];
+    const days = Math.max(1, Math.ceil((Date.now() - new Date(oldest.created_at)) / 86400000));
+    greetingSub.innerHTML = `${oldest.name} 돌봄 <span class="care-day-badge">${days}일째</span>예요. 오늘도 함께해요.`;
+  } else if (stories && stories.length > 0) {
+    greetingSub.textContent = '오늘도 기억하고 싶은 이야기를 남겨보세요.';
+  } else {
+    greetingSub.textContent = '돌봄 기록과 기억을 함께 모아두는 공간이에요.';
+  }
+
+  // ── 알림 배지: 마지막 방문 이후 새 활동 ──
+  const newLogsCount = (recentLogs || [])
+    .filter(l => l.author_id !== user.id && new Date(l.created_at) > lastVisitDate)
+    .length;
+  const newRemembrancesCount = (recentRemembrances || [])
+    .filter(r => r.author_id !== user.id && new Date(r.created_at) > lastVisitDate)
+    .length;
+
+  const badgeCare = document.getElementById('badge-care');
+  const badgeMemory = document.getElementById('badge-memory');
+  if (newLogsCount > 0) {
+    badgeCare.textContent = newLogsCount > 99 ? '99+' : newLogsCount;
+    badgeCare.classList.remove('hidden');
+  }
+  if (newRemembrancesCount > 0) {
+    badgeMemory.textContent = newRemembrancesCount > 99 ? '99+' : newRemembrancesCount;
+    badgeMemory.classList.remove('hidden');
+  }
+
+  // ── 기본 탭 결정 ──
+  const defaultTab = (subjects && subjects.length > 0) ? 'care' : 'memory';
+  switchTab(defaultTab);
+
+  document.getElementById('tab-care').addEventListener('click', () => switchTab('care'));
+  document.getElementById('tab-memory').addEventListener('click', () => switchTab('memory'));
+  document.getElementById('tab-life').addEventListener('click', () => { switchTab('life'); loadLifeTab(); });
+
+  function switchTab(name) {
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      const isActive = btn.id === `tab-${name}`;
+      btn.classList.toggle('active', isActive);
+      btn.setAttribute('aria-selected', isActive);
+    });
+    document.querySelectorAll('.pane').forEach(pane => {
+      pane.classList.toggle('active', pane.id === `pane-${name}`);
+    });
+  }
+
+  // ── 돌봄 탭 렌더 ──
+  const subjectsContainer = document.getElementById('subjects-container');
+  if (!subjects || subjects.length === 0) {
+    subjectsContainer.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🌿</div>
+        <h2>아직 돌봄 대상이 없어요</h2>
+        <p>가족과 함께 돌볼 수 있도록<br>첫 대상부터 등록해보세요.</p>
+        <a href="/care.html" class="primary-btn">돌봄 시작하기</a>
+      </div>
+    `;
+  } else {
+    subjectsContainer.innerHTML = `
+      <div class="subject-grid">
+        ${subjects.map(s => {
+          const days = Math.max(1, Math.ceil((Date.now() - new Date(s.created_at)) / 86400000));
+          const myLogsForSubject = (recentLogs || []).filter(l => l.subject_id === s.id);
+          const lastLog = myLogsForSubject[0];
+          const lastLogText = lastLog
+            ? `마지막 기록 ${formatRelative(lastLog.created_at)}`
+            : '기록 없음';
+          return `
+            <a href="/care.html?subject=${s.id}" class="subject-card">
+              <div class="subject-name">${escapeHtml(s.name)}</div>
+              <div class="subject-relation">${escapeHtml(s.relation || '')} · ${days}일째</div>
+              <div class="subject-meta">
+                <span><strong>${myLogsForSubject.length}</strong> 최근 메모</span>
+                <span class="muted">${lastLogText}</span>
+              </div>
+            </a>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+
+  // 가족 활동 (다른 author가 쓴 logs 5건)
+  const activityContainer = document.getElementById('activity-container');
+  const familyLogs = (recentLogs || [])
+    .filter(l => l.author_id && l.author_id !== user.id)
+    .slice(0, 5);
+  if (familyLogs.length === 0) {
+    activityContainer.innerHTML = `
+      <p style="color: var(--ink-muted); font-size: 13.5px; padding: 12px 4px;">
+        아직 가족 활동이 없어요. 가족을 초대해보세요.
+      </p>
+    `;
+  } else {
+    const subjectMap = Object.fromEntries((subjects || []).map(s => [s.id, s.name]));
+    activityContainer.innerHTML = `
+      <div class="activity-list">
+        ${familyLogs.map(l => {
+          const isNew = new Date(l.created_at) > lastVisitDate;
+          const summary = l.daily_status || l.free_memo || '메모를 남겼어요';
+          return `
+            <div class="activity-item">
+              <div class="activity-bullet ${isNew ? 'new' : ''}"></div>
+              <div class="activity-text">
+                <strong>${escapeHtml(subjectMap[l.subject_id] || '')}</strong>
+                ${escapeHtml(summary.slice(0, 60))}${summary.length > 60 ? '…' : ''}
+                <span class="activity-meta">${formatRelative(l.created_at)}</span>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+
+  // ── 기억 탭 렌더 (게시판형) ──
+  const storiesContainer = document.getElementById('stories-container');
+  if (!stories || stories.length === 0) {
+    storiesContainer.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🕯️</div>
+        <h2>아직 기록된 이야기가 없어요</h2>
+        <p>사진 몇 장과 짧은 메모로 시작해보세요.<br>길게 쓰지 않아도 돼요.</p>
+        <a href="/write.html" class="primary-btn">첫 이야기 시작하기</a>
+      </div>
+    `;
+  } else {
+    // 댓글 수 매핑
+    const remCountMap = {};
+    (recentRemembrances || []).forEach(r => {
+      remCountMap[r.story_id] = (remCountMap[r.story_id] || 0) + 1;
+    });
+    const newRemMap = {};
+    (recentRemembrances || []).forEach(r => {
+      if (r.author_id !== user.id && new Date(r.created_at) > lastVisitDate) {
+        newRemMap[r.story_id] = (newRemMap[r.story_id] || 0) + 1;
+      }
+    });
+
+    storiesContainer.innerHTML = `
+      <div class="stories-board" id="stories-board">
+        <div class="board-row head">
+          <div class="board-check"><input type="checkbox" id="check-all" aria-label="전체 선택"></div>
+          <div>번호</div>
+          <div>제목</div>
+          <div class="board-hide-mobile">관계</div>
+          <div class="board-hide-mobile">작성일</div>
+          <div class="board-hide-mobile">공개</div>
+          <div>댓글</div>
+        </div>
+        ${stories.map((s, idx) => {
+          const num = stories.length - idx;
+          const date = new Date(s.created_at).toLocaleDateString('ko-KR', { year: '2-digit', month: '2-digit', day: '2-digit' });
+          const visText = s.visibility === 'public' ? '공개' : s.visibility === 'family' ? '가족' : '나만';
+          const remCount = remCountMap[s.id] || 0;
+          const newRem = newRemMap[s.id] || 0;
+          return `
+            <div class="board-row body" data-story-id="${s.id}">
+              <div class="board-check">
+                <input type="checkbox" class="story-check" data-id="${s.id}" aria-label="선택">
+              </div>
+              <a href="/story.html?id=${s.id}" class="board-cell muted" style="text-decoration:none;color:inherit;">${num}</a>
+              <a href="/story.html?id=${s.id}" class="board-cell-title" style="text-decoration:none;color:inherit;">
+                ${escapeHtml(s.title || '(제목 없음)')}
+                ${newRem > 0 ? `<span class="new-mark">N</span>` : ''}
+              </a>
+              <a href="/story.html?id=${s.id}" class="board-cell board-hide-mobile" style="text-decoration:none;color:inherit;">${escapeHtml(s.relation || '-')}</a>
+              <a href="/story.html?id=${s.id}" class="board-cell board-hide-mobile" style="text-decoration:none;color:inherit;">${date}</a>
+              <div class="board-cell board-hide-mobile">
+                <span class="visibility-pill">${visText}</span>
+              </div>
+              <a href="/story.html?id=${s.id}" class="board-cell" style="text-decoration:none;color:inherit;">${remCount > 0 ? remCount : '-'}</a>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+
+    // ── Selection + delete logic ──
+    const checkAll = document.getElementById('check-all');
+    const checks = document.querySelectorAll('.story-check');
+    const btnEdit = document.getElementById('btn-edit');
+    const btnDelete = document.getElementById('btn-delete');
+    const selCountEl = document.getElementById('selected-count');
+
+    function selectedIds() {
+      return Array.from(document.querySelectorAll('.story-check:checked')).map(c => c.dataset.id);
+    }
+    function refreshState() {
+      const ids = selectedIds();
+      const count = ids.length;
+      btnEdit.disabled = count !== 1;
+      btnDelete.disabled = count === 0;
+      selCountEl.textContent = count > 0 ? `${count}개 선택됨` : '';
+      checks.forEach(c => {
+        c.closest('.board-row').classList.toggle('is-checked', c.checked);
+      });
+      const allChecked = checks.length > 0 && Array.from(checks).every(c => c.checked);
+      checkAll.checked = allChecked;
+      checkAll.indeterminate = count > 0 && !allChecked;
+    }
+
+    checkAll.addEventListener('change', () => {
+      checks.forEach(c => { c.checked = checkAll.checked; });
+      refreshState();
+    });
+    checks.forEach(c => c.addEventListener('change', refreshState));
+
+    btnEdit.addEventListener('click', () => {
+      const ids = selectedIds();
+      if (ids.length === 1) window.location.href = `/write.html?edit=${ids[0]}`;
+    });
+
+    btnDelete.addEventListener('click', async () => {
+      const ids = selectedIds();
+      if (ids.length === 0) return;
+      const confirmed = confirm(`선택한 ${ids.length}개의 글을 삭제할까요?\n삭제하면 되돌릴 수 없어요.`);
+      if (!confirmed) return;
+      btnDelete.disabled = true;
+      btnDelete.textContent = '삭제 중...';
+      const { error } = await supabase.from('stories').delete().in('id', ids);
+      if (error) {
+        alert('삭제하지 못했어요: ' + error.message);
+        btnDelete.disabled = false;
+        btnDelete.textContent = '삭제';
+        return;
+      }
+      window.location.reload();
+    });
+  }
+
+  // ── 유틸 ──
+  // ── 삶 탭 로드 ────────────────────────
+  let _lifeLoaded = false;
+  async function loadLifeTab() {
+    if (_lifeLoaded) return;
+    _lifeLoaded = true;
+
+    const [{ data: qData }, { data: myAnswers }] = await Promise.all([
+      supabase.rpc('get_todays_question'),
+      supabase
+        .from('daily_answers')
+        .select('id, content, visibility, created_at, updated_at, question_id, question:daily_questions(display_order, question_text, category)')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false }),
+    ]);
+
+    if (qData && qData.length > 0) {
+      const q = qData[0];
+      // 가입일 기준 N일째
+      const joinDays = user.created_at
+        ? Math.max(1, Math.ceil((Date.now() - new Date(user.created_at)) / 86400000))
+        : 1;
+      document.getElementById('life-q-day').textContent = joinDays;
+      document.getElementById('life-q-text').textContent = q.question_text;
+    }
+
+    const ans = myAnswers || [];
+
+    // 연속 기록 계산 (오늘부터 거꾸로 연속 N일 답변 있는지)
+    const dateSet = new Set(ans.map(a => new Date(a.created_at).toISOString().slice(0, 10)));
+    let streak = 0;
+    const today = new Date();
+    for (let i = 0; i < 365; i++) {
+      const d = new Date(today.getTime() - i * 86400000).toISOString().slice(0, 10);
+      if (dateSet.has(d)) streak++;
+      else if (i > 0) break;
+    }
+    if (streak > 0) {
+      document.getElementById('life-streak').textContent = `🔥 연속 ${streak}일째`;
+    } else {
+      document.getElementById('life-streak').textContent = '';
+    }
+
+    const container = document.getElementById('life-answers-container');
+    if (ans.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">🌿</div>
+          <h2>아직 남긴 답이 없어요</h2>
+          <p>오늘의 한 문장에 짧게 한 줄 남겨보세요.</p>
+          <a href="/ask.html" class="primary-btn">첫 답 남기기</a>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = `
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        ${ans.map(a => {
+          const order = a.question?.display_order ?? '—';
+          const qText = a.question?.question_text || '';
+          const visTag = a.visibility === 'private'
+            ? `<span style="font-size: 11px; padding: 2px 7px; background: var(--bg); color: var(--ink-muted); border-radius: 999px; margin-left: 6px;">나만 보기</span>`
+            : '';
+          return `
+            <a href="/ask.html" style="display: block; background: var(--bg-alt); border-radius: 14px; padding: 18px 20px; text-decoration: none; color: inherit;">
+              <div style="font-size: 12px; color: var(--ink-muted); margin-bottom: 6px;">
+                Day ${order} · ${formatRelative(a.created_at)}${visTag}
+              </div>
+              <div style="font-family: var(--font-serif); font-size: 14.5px; color: var(--ink-soft); margin-bottom: 8px; line-height: 1.5;">
+                ${escapeHtml(qText.slice(0, 80))}${qText.length > 80 ? '…' : ''}
+              </div>
+              <div style="font-size: 14.5px; line-height: 1.6; white-space: pre-wrap;">
+                ${escapeHtml(a.content.slice(0, 160))}${a.content.length > 160 ? '…' : ''}
+              </div>
+            </a>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+
+  function formatRelative(iso) {
+    const diff = Date.now() - new Date(iso);
+    const min = Math.floor(diff / 60000);
+    if (min < 1) return '방금';
+    if (min < 60) return `${min}분 전`;
+    const hr = Math.floor(min / 60);
+    if (hr < 24) return `${hr}시간 전`;
+    const day = Math.floor(hr / 24);
+    if (day < 7) return `${day}일 전`;
+    return new Date(iso).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' });
+  }
+
+  function escapeHtml(s) {
+    if (!s) return '';
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+</script>
+
+</body>
+</html>

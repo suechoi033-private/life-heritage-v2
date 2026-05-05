@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>기억 · 잇다</title>
+  <link rel="stylesheet" href="/auth-styles.css">
+  <style>
+    .story-shell {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 32px 20px 80px;
+      flex: 1;
+      width: 100%;
+    }
+    @media (min-width: 640px) {
+      .story-shell { padding: 56px 32px 120px; }
+    }
+
+    /* ── Top bar ────────────────────────── */
+    .top-bar {
+      background: var(--bg);
+      border-bottom: 1px solid var(--line);
+      padding: 14px 20px;
+    }
+    .top-bar-inner {
+      max-width: 1080px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .top-bar-links { display: flex; gap: 16px; align-items: center; font-size: 14px; }
+    .top-bar-links a {
+      color: var(--ink-soft);
+      text-decoration: none;
+    }
+    .top-bar-links a:hover { color: var(--primary); }
+
+    /* ── Loading & error ────────────────── */
+    .state-card {
+      background: var(--bg-alt);
+      border-radius: 20px;
+      padding: 60px 28px;
+      text-align: center;
+    }
+    .state-card .icon { font-size: 48px; margin-bottom: 18px; }
+    .state-card h2 { font-size: 22px; margin-bottom: 12px; }
+    .state-card p { color: var(--ink-soft); line-height: 1.7; }
+
+    /* ── Story layout ───────────────────── */
+    .story-header {
+      margin-bottom: 32px;
+    }
+    .story-kicker {
+      display: inline-block;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      color: var(--primary);
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .story-title {
+      font-family: var(--font-serif);
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.35;
+      margin-bottom: 14px;
+      color: var(--ink);
+    }
+    @media (min-width: 640px) {
+      .story-title { font-size: 38px; }
+    }
+    .story-byline {
+      font-size: 13.5px;
+      color: var(--ink-muted);
+      margin-bottom: 16px;
+    }
+    .story-byline .visibility-chip {
+      display: inline-block;
+      margin-left: 8px;
+      padding: 2px 9px;
+      background: var(--bg-alt);
+      border-radius: 999px;
+      font-size: 12px;
+      color: var(--ink-soft);
+    }
+
+    .story-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 28px;
+    }
+    .meta-tag {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--primary-soft);
+      color: var(--primary-hover);
+      font-size: 12.5px;
+      font-weight: 600;
+    }
+    .meta-tag.muted {
+      background: var(--bg-alt);
+      color: var(--ink-soft);
+      font-weight: 500;
+    }
+
+    /* ── Photos ─────────────────────────── */
+    .story-photos {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 10px;
+      margin-bottom: 32px;
+    }
+    .story-photos img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      border-radius: 12px;
+      background: var(--bg-alt);
+      cursor: pointer;
+    }
+
+    /* ── Body ───────────────────────────── */
+    .story-body {
+      font-size: 17px;
+      line-height: 1.95;
+      color: var(--ink);
+      white-space: pre-wrap;
+      margin-bottom: 40px;
+    }
+    .story-body p {
+      margin-bottom: 1.2em;
+    }
+
+    /* ── Owner actions ──────────────────── */
+    .owner-actions {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 32px;
+      padding: 16px;
+      background: var(--bg-alt);
+      border-radius: 14px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .owner-actions .label {
+      font-size: 13px;
+      color: var(--ink-muted);
+      margin-right: auto;
+    }
+    .owner-btn {
+      padding: 8px 14px;
+      background: transparent;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--ink-soft);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-decoration: none;
+    }
+    .owner-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .owner-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
+
+    /* ── Flower + remembrance section ───── */
+    .remember-section {
+      border-top: 1px solid var(--line);
+      padding-top: 36px;
+    }
+    .remember-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    .remember-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--ink);
+    }
+    .flower-display {
+      font-size: 14px;
+      color: var(--ink-soft);
+      font-weight: 600;
+    }
+    .remember-sub {
+      color: var(--ink-soft);
+      font-size: 14.5px;
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
+
+    .flower-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px;
+      background: var(--primary);
+      color: #FFF;
+      border: none;
+      border-radius: 999px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-bottom: 24px;
+      transition: background 0.15s ease;
+    }
+    .flower-btn:hover { background: var(--primary-hover); }
+    .flower-btn.given {
+      background: var(--bg-alt);
+      color: var(--primary);
+      border: 1px solid var(--primary);
+    }
+    .flower-btn.given:hover { background: var(--primary-soft); }
+
+    /* ── Remembrance form ───────────────── */
+    .remember-form {
+      background: var(--bg-alt);
+      border-radius: 14px;
+      padding: 20px 18px;
+      margin-bottom: 24px;
+    }
+    .remember-form .field { margin-bottom: 12px; }
+    .remember-form label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 6px;
+    }
+    .remember-form input,
+    .remember-form textarea {
+      width: 100%;
+      padding: 11px 13px;
+      font-family: inherit;
+      font-size: 14.5px;
+      color: var(--ink);
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+    }
+    .remember-form input:focus,
+    .remember-form textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    .remember-form textarea {
+      resize: vertical;
+      min-height: 80px;
+      line-height: 1.7;
+    }
+    .remember-submit {
+      padding: 10px 20px;
+      background: var(--ink);
+      color: #FFF;
+      border: none;
+      border-radius: 999px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .remember-submit:hover { background: var(--primary); }
+    .remember-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── Remembrance list ───────────────── */
+    .remember-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .remember-item {
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px 18px;
+    }
+    .remember-item-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+      font-size: 13px;
+      color: var(--ink-muted);
+    }
+    .remember-item-name {
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .remember-item-body {
+      color: var(--ink-soft);
+      font-size: 14.5px;
+      line-height: 1.75;
+      white-space: pre-wrap;
+    }
+    .remember-empty {
+      padding: 24px;
+      text-align: center;
+      color: var(--ink-muted);
+      font-size: 14px;
+    }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<nav class="top-bar">
+  <div class="top-bar-inner">
+    <a href="/" class="logo"><span class="logo-mark">●</span> 잇다</a>
+    <div class="top-bar-links" id="top-bar-links">
+      <a href="/">홈</a>
+    </div>
+  </div>
+</nav>
+
+<main class="story-shell">
+
+  <!-- Loading -->
+  <div class="state-card" id="loading-state">
+    <div class="icon">🌿</div>
+    <p>기록을 불러오고 있습니다…</p>
+  </div>
+
+  <!-- Not found -->
+  <div class="state-card hidden" id="notfound-state">
+    <div class="icon">🕯️</div>
+    <h2>이 기록을 찾을 수 없습니다</h2>
+    <p>삭제되었거나, 공개 범위가 바뀌었을 수 있습니다.<br>링크를 다시 확인해주세요.</p>
+    <div style="margin-top:20px;"><a href="/" class="owner-btn">홈으로 돌아가기</a></div>
+  </div>
+
+  <!-- Story view -->
+  <article id="story-view" class="hidden">
+
+    <header class="story-header">
+      <div class="story-kicker" id="story-kicker">기록</div>
+      <h1 class="story-title" id="story-title"></h1>
+      <div class="story-byline" id="story-byline"></div>
+      <div class="story-meta" id="story-meta"></div>
+    </header>
+
+    <div class="story-photos" id="story-photos"></div>
+
+    <div class="story-body" id="story-body"></div>
+
+    <!-- Owner actions (only shown to owner) -->
+    <div class="owner-actions hidden" id="owner-actions">
+      <div class="label">이 기록은 당신이 쓰신 기록입니다.</div>
+      <a href="#" class="owner-btn" id="edit-btn">편집</a>
+      <button type="button" class="owner-btn danger" id="delete-btn">삭제</button>
+    </div>
+
+    <!-- Remember section -->
+    <section class="remember-section">
+      <div class="remember-header">
+        <div class="remember-title">🌼 함께 기억하기</div>
+        <div class="flower-display" id="flower-display">🌼 0</div>
+      </div>
+      <p class="remember-sub">
+        국화 한 송이를 놓아주세요. 짧은 말씀이나 비슷한 경험을 함께 남기셔도 괜찮습니다.
+      </p>
+
+      <button type="button" class="flower-btn" id="flower-btn">
+        🌼 국화 한 송이 놓기
+      </button>
+
+      <form class="remember-form" id="remember-form">
+        <div class="field">
+          <label for="author_name">이름 또는 별명</label>
+          <input type="text" id="author_name" name="author_name" maxlength="40" placeholder="예: 딸, 이름 없는 사람, J">
+        </div>
+        <div class="field">
+          <label for="message">함께 남기실 말씀</label>
+          <textarea id="message" name="message" maxlength="500" placeholder="위로나 조의의 말, 비슷한 경험을 짧게 나누어주셔도 좋습니다."></textarea>
+        </div>
+        <button type="submit" class="remember-submit" id="remember-submit">함께 기억합니다</button>
+      </form>
+
+      <div class="remember-list" id="remember-list"></div>
+
+    </section>
+  </article>
+
+</main>
+
+<footer class="auth-footer">
+  © 2026 라이프헤리티지 · 잇다
+</footer>
+
+<script type="module">
+  import { supabase } from '/auth.js';
+
+  // ── Parse story ID from URL ───────────
+  const params = new URLSearchParams(window.location.search);
+  const storyId = params.get('id');
+
+  if (!storyId) {
+    showNotFound();
+  }
+
+  // ── Current session (guest OK) ────────
+  const { data: { session } } = await supabase.auth.getSession();
+  const currentUserId = session?.user?.id || null;
+  const currentUserName = session?.user?.user_metadata?.name
+    || session?.user?.email?.split('@')[0]
+    || null;
+  const ADMIN_EMAIL = 'sue.choi033@gmail.com';
+  const isAdmin = session?.user?.email === ADMIN_EMAIL;
+
+  // Update top-bar links (unified nav)
+  const { renderTopBar } = await import('/nav.js');
+  await renderTopBar({ active: 'my' });
+
+  // ── Load story ────────────────────────
+  let story = null;
+  let isOwner = false;
+  try {
+    const { data, error } = await supabase
+      .from('stories')
+      .select('*')
+      .eq('id', storyId)
+      .single();
+
+    if (error || !data) throw error || new Error('not found');
+    story = data;
+    isOwner = currentUserId === story.user_id;
+
+    // Visibility check (client-side — RLS also enforces server-side; admin bypasses)
+    if (story.visibility === 'private' && !isOwner && !isAdmin) {
+      showNotFound();
+    }
+    // 'family' — for MVP, only owner + admin. Family invite flow comes in Week 2.
+    if (story.visibility === 'family' && !isOwner && !isAdmin) {
+      showNotFound();
+    }
+  } catch (e) {
+    console.error(e);
+    showNotFound();
+  }
+
+  // ── Render ────────────────────────────
+  if (story) {
+    document.getElementById('loading-state').classList.add('hidden');
+    document.getElementById('story-view').classList.remove('hidden');
+    renderStory(story);
+    if (isOwner) {
+      document.getElementById('owner-actions').classList.remove('hidden');
+      document.getElementById('edit-btn').href = '/write.html?edit=' + story.id;
+    }
+    await loadPhotos(story.id);
+    await loadFlowerAndRemembrances(story.id);
+  }
+
+  function renderStory(s) {
+    // Title
+    document.getElementById('story-title').textContent = s.title || '(제목 없음)';
+    document.title = (s.title || '기억') + ' · 잇다';
+
+    // Writer relation + date for kicker
+    const kickerParts = [];
+    if (s.writer_relation) kickerParts.push(s.writer_relation + '의 기록');
+    else kickerParts.push('기록');
+    document.getElementById('story-kicker').textContent = kickerParts.join(' · ');
+
+    // Byline
+    const visMap = {
+      'private': '🔒 나만 보기',
+      'family': '👨‍👩‍👧 가족만',
+      'public': '🌐 공개',
+    };
+    const date = new Date(s.created_at).toLocaleDateString('ko-KR', {
+      year: 'numeric', month: 'long', day: 'numeric'
+    });
+    document.getElementById('story-byline').innerHTML = `
+      ${date}
+      <span class="visibility-chip">${visMap[s.visibility] || ''}</span>
+    `;
+
+    // Meta tags
+    const meta = document.getElementById('story-meta');
+    const tags = [];
+    if (s.relation) tags.push({ label: s.relation, primary: true });
+    if (s.age) tags.push({ label: s.age + '세' });
+    if (s.cause) tags.push({ label: s.cause });
+    if (s.duration) tags.push({ label: '투병 ' + s.duration });
+    if (s.last_place) tags.push({ label: '마지막: ' + s.last_place });
+    if (s.funeral) tags.push({ label: s.funeral });
+    if (s.death_year) tags.push({ label: s.death_year + '년' });
+    meta.innerHTML = tags.map(t =>
+      `<span class="meta-tag ${t.primary ? '' : 'muted'}">${escapeHtml(t.label)}</span>`
+    ).join('');
+
+    // Body
+    const body = s.body || '';
+    const paragraphs = body.split(/\n\n+/).filter(Boolean);
+    document.getElementById('story-body').innerHTML = paragraphs
+      .map(p => `<p>${escapeHtml(p)}</p>`)
+      .join('');
+  }
+
+  async function loadPhotos(storyId) {
+    const { data: photos, error } = await supabase
+      .from('story_photos')
+      .select('*')
+      .eq('story_id', storyId)
+      .order('sort_order', { ascending: true });
+    if (error || !photos || photos.length === 0) return;
+
+    const container = document.getElementById('story-photos');
+    container.innerHTML = photos.map(p => {
+      const { data: { publicUrl } } = supabase.storage
+        .from('story-photos')
+        .getPublicUrl(p.storage_path);
+      return `<img src="${publicUrl}" alt="${escapeHtml(p.caption || '')}" loading="lazy">`;
+    }).join('');
+  }
+
+  // ── Flowers + Remembrances ────────────
+  async function loadFlowerAndRemembrances(storyId) {
+    // Flowers: count + has current user given?
+    const [{ count: flowerCount }, { data: myFlower }] = await Promise.all([
+      supabase.from('flowers').select('*', { count: 'exact', head: true }).eq('story_id', storyId),
+      currentUserId
+        ? supabase.from('flowers').select('id').eq('story_id', storyId).eq('user_id', currentUserId).maybeSingle()
+        : Promise.resolve({ data: null }),
+    ]);
+    renderFlowerDisplay(flowerCount || 0);
+    if (myFlower?.data || myFlower?.id) markFlowerGiven(true);
+
+    // Remembrances
+    const { data: list } = await supabase
+      .from('remembrances')
+      .select('*')
+      .eq('story_id', storyId)
+      .order('created_at', { ascending: false });
+    renderRemembrances(list || []);
+  }
+
+  function renderFlowerDisplay(n) {
+    const el = document.getElementById('flower-display');
+    if (n === 0) el.textContent = '🌼 아직 없음';
+    else if (n === 1) el.textContent = '🌼 1';
+    else if (n <= 3) el.textContent = '🌼 × ' + n;
+    else el.textContent = '💐 × ' + n;
+  }
+
+  function markFlowerGiven(given) {
+    const btn = document.getElementById('flower-btn');
+    if (given) {
+      btn.classList.add('given');
+      btn.textContent = '🌼 이미 놓으셨습니다';
+      btn.disabled = true;
+    } else {
+      btn.classList.remove('given');
+      btn.textContent = '🌼 국화 한 송이 놓기';
+      btn.disabled = false;
+    }
+  }
+
+  function renderRemembrances(list) {
+    const container = document.getElementById('remember-list');
+    if (list.length === 0) {
+      container.innerHTML = `<div class="remember-empty">가장 먼저 함께 기억해주시겠어요?</div>`;
+      return;
+    }
+    container.innerHTML = list.map(r => `
+      <article class="remember-item">
+        <div class="remember-item-head">
+          <span class="remember-item-name">${escapeHtml(r.author_name || '이름 없는 사람')}</span>
+          <span>${new Date(r.created_at).toLocaleDateString('ko-KR')}</span>
+        </div>
+        <div class="remember-item-body">${escapeHtml(r.message)}</div>
+      </article>
+    `).join('');
+  }
+
+  // ── Flower action ─────────────────────
+  document.getElementById('flower-btn').addEventListener('click', async () => {
+    if (!currentUserId) {
+      alert('국화 한 송이는 로그인 후 놓으실 수 있어요.\n아래 메시지 남기기는 로그인 없이도 가능합니다.');
+      return;
+    }
+    const btn = document.getElementById('flower-btn');
+    btn.disabled = true;
+    btn.textContent = '놓는 중…';
+    const { error } = await supabase
+      .from('flowers')
+      .insert({ story_id: story.id, user_id: currentUserId });
+    if (error) {
+      console.error(error);
+      alert('놓기에 실패했습니다: ' + error.message);
+      btn.disabled = false;
+      btn.textContent = '🌼 국화 한 송이 놓기';
+      return;
+    }
+    markFlowerGiven(true);
+    const { count } = await supabase
+      .from('flowers').select('*', { count: 'exact', head: true }).eq('story_id', story.id);
+    renderFlowerDisplay(count || 0);
+  });
+
+  // ── Remembrance submit ────────────────
+  document.getElementById('remember-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submit = document.getElementById('remember-submit');
+    const nameInput = document.getElementById('author_name');
+    const msgInput = document.getElementById('message');
+    const name = nameInput.value.trim() || currentUserName || '이름 없는 사람';
+    const message = msgInput.value.trim();
+    if (!message) {
+      alert('함께 남기실 말씀을 적어주세요.');
+      return;
+    }
+    submit.disabled = true;
+    submit.textContent = '남기는 중…';
+
+    const { error } = await supabase
+      .from('remembrances')
+      .insert({
+        story_id: story.id,
+        author_id: currentUserId,
+        author_name: name,
+        message,
+      });
+    if (error) {
+      alert('남기기에 실패했습니다: ' + error.message);
+      submit.disabled = false;
+      submit.textContent = '함께 기억합니다';
+      return;
+    }
+    nameInput.value = '';
+    msgInput.value = '';
+    submit.disabled = false;
+    submit.textContent = '함께 기억합니다';
+    // Reload
+    const { data: list } = await supabase
+      .from('remembrances')
+      .select('*')
+      .eq('story_id', story.id)
+      .order('created_at', { ascending: false });
+    renderRemembrances(list || []);
+  });
+
+  // ── Delete (owner only) ───────────────
+  document.getElementById('delete-btn')?.addEventListener('click', async () => {
+    if (!confirm('이 기록을 삭제하시겠어요? 되돌릴 수 없습니다.')) return;
+    const { error } = await supabase.from('stories').delete().eq('id', story.id);
+    if (error) { alert('삭제에 실패했습니다: ' + error.message); return; }
+    window.location.href = '/my.html';
+  });
+
+  // ── Helpers ───────────────────────────
+  function showNotFound() {
+    document.getElementById('loading-state').classList.add('hidden');
+    document.getElementById('notfound-state').classList.remove('hidden');
+    throw new Error('not-found');
+  }
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+</script>
+
+</body>
+</html>

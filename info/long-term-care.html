@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>장기요양보험 — 등급·서비스·신청 안내 · 잇다</title>
+  <link rel="stylesheet" href="/auth-styles.css">
+  <style>
+    .shell {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 32px 20px 80px;
+      flex: 1;
+      width: 100%;
+    }
+    @media (min-width: 640px) { .shell { padding: 56px 32px 120px; } }
+
+    .top-bar { background: var(--bg); border-bottom: 1px solid var(--line); padding: 14px 20px; }
+    .top-bar-inner { max-width: 1080px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+
+    .breadcrumb { font-size: 13px; color: var(--ink-muted); margin-bottom: 12px; }
+    .breadcrumb a { color: var(--ink-muted); text-decoration: none; }
+    .breadcrumb a:hover { color: var(--primary); }
+
+    .header { margin-bottom: 32px; }
+    .kicker {
+      display: inline-block;
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      color: var(--primary);
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      line-height: 1.4;
+      margin-bottom: 14px;
+    }
+    @media (min-width: 640px) { h1 { font-size: 34px; } }
+    .lead { color: var(--ink-soft); font-size: 15.5px; line-height: 1.8; }
+
+    .quickfacts { display: grid; gap: 12px; margin-bottom: 36px; }
+    @media (min-width: 720px) { .quickfacts { grid-template-columns: repeat(2, 1fr); gap: 14px; } }
+    .qf-card { background: var(--bg-alt); border-radius: 14px; padding: 18px 22px; }
+    .qf-num { font-size: 13px; color: var(--primary); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 4px; }
+    .qf-title { font-size: 15.5px; font-weight: 800; color: var(--ink); margin-bottom: 4px; }
+    .qf-desc { font-size: 13.5px; color: var(--ink-muted); line-height: 1.6; }
+
+    section.block { margin-bottom: 44px; }
+    h2 {
+      font-family: var(--font-serif);
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--ink);
+    }
+    h3 { font-size: 16px; font-weight: 800; margin: 20px 0 10px; }
+    p, li { font-size: 15px; color: var(--ink-soft); line-height: 1.8; }
+    p { margin-bottom: 14px; }
+
+    /* Grade table */
+    .grade-table {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+    .grade-row {
+      display: grid;
+      grid-template-columns: 80px 1fr;
+      gap: 14px;
+      padding: 14px 16px;
+      background: var(--bg-alt);
+      border-radius: 12px;
+      align-items: start;
+    }
+    @media (max-width: 480px) { .grade-row { grid-template-columns: 70px 1fr; gap: 10px; padding: 12px 14px; } }
+    .grade-num {
+      font-weight: 800;
+      color: var(--primary);
+      font-size: 15px;
+    }
+    .grade-desc { font-size: 14px; color: var(--ink-soft); line-height: 1.7; }
+    .grade-desc strong { color: var(--ink); }
+
+    /* Service cards */
+    .service-grid {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    @media (min-width: 720px) { .service-grid { grid-template-columns: repeat(2, 1fr); } }
+    .service-card {
+      padding: 18px 20px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--bg);
+    }
+    .service-icon { font-size: 24px; margin-bottom: 8px; }
+    .service-name { font-size: 15.5px; font-weight: 800; color: var(--ink); margin-bottom: 4px; }
+    .service-desc { font-size: 13.5px; color: var(--ink-muted); line-height: 1.6; }
+
+    .step-list { list-style: none; padding: 0; counter-reset: step; }
+    .step-list li {
+      position: relative;
+      padding: 18px 22px 18px 60px;
+      background: var(--bg-alt);
+      border-radius: 14px;
+      margin-bottom: 12px;
+      counter-increment: step;
+    }
+    .step-list li::before {
+      content: counter(step);
+      position: absolute;
+      left: 18px;
+      top: 18px;
+      width: 30px;
+      height: 30px;
+      background: var(--primary);
+      color: #FFF;
+      border-radius: 50%;
+      font-size: 14px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Pretendard Variable', sans-serif;
+    }
+    .step-list strong { display: block; color: var(--ink); font-size: 15.5px; margin-bottom: 4px; }
+    .step-list .step-desc { font-size: 14px; color: var(--ink-muted); line-height: 1.7; }
+
+    .faq-item { border-bottom: 1px solid var(--line); padding: 18px 0; }
+    .faq-q { cursor: pointer; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 15.5px; font-weight: 700; color: var(--ink); }
+    .faq-q::after { content: "+"; font-size: 22px; color: var(--ink-muted); transition: transform 0.2s ease; }
+    .faq-item.open .faq-q::after { content: "−"; }
+    .faq-a { display: none; margin-top: 10px; font-size: 14.5px; color: var(--ink-soft); line-height: 1.8; }
+    .faq-item.open .faq-a { display: block; }
+
+    .callout { padding: 18px 22px; border-radius: 12px; margin-bottom: 18px; font-size: 14.5px; line-height: 1.7; }
+    .callout.warm { background: var(--primary-soft); color: var(--ink-soft); }
+    .callout.warm strong { color: var(--primary); display: block; margin-bottom: 4px; font-size: 14px; }
+
+    .ext-links { display: grid; gap: 10px; margin-top: 12px; }
+    .ext-link {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px; background: var(--bg-alt); border-radius: 12px;
+      text-decoration: none; color: var(--ink); font-size: 14.5px;
+      transition: background 0.15s ease;
+    }
+    .ext-link:hover { background: var(--primary-soft); }
+    .ext-link-meta { font-size: 12.5px; color: var(--ink-muted); margin-top: 2px; }
+    .ext-link span:last-child { color: var(--primary); font-weight: 700; }
+
+    .toc { padding: 16px 20px; background: var(--bg-alt); border-radius: 12px; margin-bottom: 36px; }
+    .toc-title { font-size: 12px; letter-spacing: 0.1em; font-weight: 700; color: var(--primary); text-transform: uppercase; margin-bottom: 10px; }
+    .toc ol { padding-left: 18px; margin: 0; }
+    .toc li { font-size: 14px; line-height: 1.9; }
+    .toc a { color: var(--ink-soft); text-decoration: none; }
+    .toc a:hover { color: var(--primary); }
+
+    .meta-row { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12.5px; color: var(--ink-muted); margin-top: 14px; }
+    .meta-row span::before { content: "·"; margin-right: 8px; color: var(--ink-faint); }
+    .meta-row span:first-child::before { content: ""; margin: 0; }
+
+    .source-note {
+      margin-top: 48px;
+      padding: 18px 22px;
+      background: var(--bg-alt);
+      border-radius: 12px;
+      font-size: 13px;
+      color: var(--ink-muted);
+      line-height: 1.7;
+    }
+  </style>
+</head>
+<body>
+
+<nav class="top-bar">
+  <div class="top-bar-inner">
+    <a href="/" class="logo"><span class="logo-mark">●</span> 잇다</a>
+    <div id="top-bar-links"></div>
+  </div>
+</nav>
+
+<main class="shell">
+  <div class="breadcrumb">
+    <a href="/info.html">정보</a> · 곁에 · <span style="color: var(--ink-soft);">장기요양보험</span>
+  </div>
+
+  <header class="header">
+    <span class="kicker">정보 · 곁에</span>
+    <h1>장기요양보험<br>— 부모님이 도움이 필요해질 때</h1>
+    <p class="lead">
+      혼자 일상생활이 어려워진 어르신을 가정·지역사회·시설에서 돌볼 수 있도록 국가가 비용 일부를 지원하는 사회보험이에요.
+      등급을 받으면 요양원·요양병원 입소부터 방문요양·주야간보호까지 본인부담 15%로 이용할 수 있어요.
+    </p>
+    <div class="meta-row">
+      <span>법적 근거: 노인장기요양보험법 (2008.07 시행)</span>
+      <span>주관: 국민건강보험공단</span>
+      <span>2026.01 기준 인정자 약 130만 명</span>
+    </div>
+  </header>
+
+  <!-- 한눈 요약 -->
+  <div class="quickfacts">
+    <div class="qf-card">
+      <div class="qf-num">01</div>
+      <div class="qf-title">만 65세 이상이면 신청 가능</div>
+      <div class="qf-desc">또는 65세 미만이어도 노인성 질병(치매·뇌혈관·파킨슨 등)이 있으면 신청 가능</div>
+    </div>
+    <div class="qf-card">
+      <div class="qf-num">02</div>
+      <div class="qf-title">등급 1~5 + 인지지원등급</div>
+      <div class="qf-desc">신체·인지 기능에 따라 6개 등급. 등급별로 이용 가능 서비스와 한도액이 다름</div>
+    </div>
+    <div class="qf-card">
+      <div class="qf-num">03</div>
+      <div class="qf-title">본인부담 15~20%</div>
+      <div class="qf-desc">시설급여 20%, 재가급여 15%. 의료급여·차상위는 50% 감경, 기초생활수급자는 면제</div>
+    </div>
+    <div class="qf-card">
+      <div class="qf-num">04</div>
+      <div class="qf-title">신청은 공단·전화·온라인</div>
+      <div class="qf-desc">국민건강보험공단 지사 방문, 1577-1000 전화, 또는 노인장기요양보험 홈페이지·앱</div>
+    </div>
+  </div>
+
+  <nav class="toc">
+    <div class="toc-title">이 페이지 안에서</div>
+    <ol>
+      <li><a href="#what">장기요양보험이란</a></li>
+      <li><a href="#grades">등급 — 1~5등급 + 인지지원등급</a></li>
+      <li><a href="#services">이용 가능한 서비스 — 4가지</a></li>
+      <li><a href="#process">신청 절차 — 6단계</a></li>
+      <li><a href="#cost">비용·본인부담</a></li>
+      <li><a href="#faq">자주 묻는 질문</a></li>
+      <li><a href="#links">공식 링크 모음</a></li>
+    </ol>
+  </nav>
+
+  <!-- 1. 무엇인가 -->
+  <section class="block" id="what">
+    <h2>장기요양보험이란</h2>
+    <p>
+      일상생활을 혼자 하기 어려워진 어르신에게 신체활동·가사활동·인지활동 지원 서비스를 제공하고, 그 비용의 대부분을 국가가 부담하는 사회보험이에요.
+      국민건강보험과 별개로, 모든 건강보험 가입자가 보험료를 함께 내고 있어요(2026년 보험료율 약 12.95%).
+    </p>
+    <p>
+      <strong>왜 알아 두면 좋을까요?</strong> 부모님이 갑자기 병환이 생기시면 가족이 가장 먼저 마주하는 질문이 "어디로 모실 것인가, 비용은 어떻게 감당할 것인가"예요.
+      장기요양 등급을 받으면 본인부담이 크게 줄고, 요양원·방문요양 같은 옵션이 열려요. 신청부터 등급 판정까지 약 30일이 걸리니, 필요해 보이실 때 미리 신청해두는 게 부담이 덜해요.
+    </p>
+    <div class="callout warm">
+      <strong>건강보험과 무엇이 다른가요?</strong>
+      건강보험은 <em>병원 진료비</em>를 보장하고, 장기요양보험은 <em>일상 돌봄·요양 서비스</em>를 보장해요. 의료비는 건강보험으로, 요양 서비스는 장기요양보험으로 — 두 개가 함께 갈아입혀집니다.
+    </div>
+  </section>
+
+  <!-- 2. 등급 -->
+  <section class="block" id="grades">
+    <h2>등급 — 1~5등급 + 인지지원등급</h2>
+    <p>
+      방문조사관이 어르신의 신체·인지 기능을 평가해 점수를 산정하고, 등급판정위원회가 6개 등급 중 하나를 부여해요. 점수가 낮을수록(=기능이 더 떨어질수록) 1등급에 가까워요.
+    </p>
+
+    <div class="grade-table">
+      <div class="grade-row">
+        <div class="grade-num">1등급</div>
+        <div class="grade-desc"><strong>전적인 도움 필요</strong> · 일상생활 대부분에서 다른 사람의 전적인 도움이 필요한 상태. 침대 생활이 대부분.</div>
+      </div>
+      <div class="grade-row">
+        <div class="grade-num">2등급</div>
+        <div class="grade-desc"><strong>상당 부분 도움</strong> · 일상생활에서 상당 부분 다른 사람의 도움이 필요. 식사·이동에 많은 보조 필요.</div>
+      </div>
+      <div class="grade-row">
+        <div class="grade-num">3등급</div>
+        <div class="grade-desc"><strong>부분적 도움</strong> · 일상생활에서 부분적으로 도움이 필요. 자립과 도움이 섞여 있음.</div>
+      </div>
+      <div class="grade-row">
+        <div class="grade-num">4등급</div>
+        <div class="grade-desc"><strong>일정 부분 도움</strong> · 일상생활에서 일정 부분 도움이 필요. 가벼운 인지 저하 동반 가능.</div>
+      </div>
+      <div class="grade-row">
+        <div class="grade-num">5등급</div>
+        <div class="grade-desc"><strong>치매 특화</strong> · 치매 진단을 받은 어르신 중 일정 기준을 충족. 인지 기능 저하가 주요 원인일 때.</div>
+      </div>
+      <div class="grade-row">
+        <div class="grade-num">인지지원</div>
+        <div class="grade-desc"><strong>경증 치매</strong> · 신체 기능은 비교적 좋지만 경증 치매가 있는 어르신. 주야간보호·방문요양 등 일부 재가급여만 이용 가능.</div>
+      </div>
+    </div>
+
+    <div class="callout warm">
+      <strong>등급을 못 받으면 어떻게 되나요?</strong>
+      "등급 외 A·B·C"로 분류돼 장기요양 서비스는 이용할 수 없지만, 시·군·구청의 노인돌봄종합서비스나 보건소 방문건강관리 등 다른 지역 자원을 안내받을 수 있어요. 이의 신청도 90일 이내 가능합니다.
+    </div>
+  </section>
+
+  <!-- 3. 서비스 -->
+  <section class="block" id="services">
+    <h2>이용 가능한 서비스 — 4가지</h2>
+    <p>등급별로 이용 한도가 다르지만, 큰 틀에서는 시설급여·재가급여·복지용구·가족요양비 4가지 중 선택할 수 있어요.</p>
+
+    <div class="service-grid">
+      <div class="service-card">
+        <div class="service-icon">🏥</div>
+        <div class="service-name">시설급여 (요양원 입소)</div>
+        <div class="service-desc">노인요양시설(요양원)·요양공동생활가정에 입소해 24시간 돌봄. 1·2등급 위주, 일부 3등급도 가능. 본인부담 20%.</div>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">🏠</div>
+        <div class="service-name">재가급여 (집에서 받는 서비스)</div>
+        <div class="service-desc">방문요양·방문목욕·방문간호·주야간보호·단기보호 5종. 등급별 월 한도액 안에서 조합 이용. 본인부담 15%.</div>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">🦽</div>
+        <div class="service-name">복지용구</div>
+        <div class="service-desc">전동·수동침대, 이동변기, 욕창매트, 보행보조차, 안전손잡이 등. 연 한도 160만원, 본인부담 15%.</div>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">💞</div>
+        <div class="service-name">가족요양비</div>
+        <div class="service-desc">도서·산간 등 서비스 부족 지역 거주자, 또는 가족이 돌보는 경우 월 약 23만원 현금 지급. 조건 까다로움.</div>
+      </div>
+    </div>
+
+    <h3>요양원 vs 요양병원, 헷갈리지 않으려면</h3>
+    <p>
+      <strong>요양원</strong>은 일상 돌봄(식사·목욕·기저귀·재활) 중심의 <em>장기요양 시설</em>이고, <strong>요양병원</strong>은 의료적 치료가 필요한 환자를 위한 <em>의료기관</em>이에요.
+      장기요양보험으로 비용을 지원받을 수 있는 곳은 요양원이고, 요양병원은 건강보험이 적용돼요. 어르신 상태에 따라 둘을 옮겨가며 이용하는 경우도 많아요.
+    </p>
+  </section>
+
+  <!-- 4. 신청 절차 -->
+  <section class="block" id="process">
+    <h2>신청 절차 — 6단계</h2>
+    <ol class="step-list">
+      <li>
+        <strong>신청서 제출</strong>
+        <div class="step-desc">국민건강보험공단 지사 방문, 1577-1000 전화, 또는 <a href="https://www.longtermcare.or.kr/" target="_blank" style="color:var(--primary);">노인장기요양보험 홈페이지</a>·앱에서 신청. 본인 또는 가족·대리인이 신청 가능. 신청서·신분증·의사소견서(필요 시) 준비.</div>
+      </li>
+      <li>
+        <strong>방문조사</strong>
+        <div class="step-desc">공단 직원이 어르신 자택을 방문해 신체·인지 기능, 행동 변화, 간호 처치, 재활 등 5개 영역 52개 항목을 평가. 약 1시간. 가족 1명 동석 권장.</div>
+      </li>
+      <li>
+        <strong>의사소견서 제출</strong>
+        <div class="step-desc">방문조사 결과 점수가 일정 기준이면 의사소견서 제출 요청. 어르신 주치의 또는 가까운 병·의원에서 발급. 비용은 일반 진료비 수준 (약 1~3만원).</div>
+      </li>
+      <li>
+        <strong>등급판정위원회 심의</strong>
+        <div class="step-desc">의사·간호사·사회복지사·공단 직원 등으로 구성된 위원회가 방문조사 결과 + 의사소견서를 종합 심의. 신청일로부터 약 30일 이내 결정.</div>
+      </li>
+      <li>
+        <strong>결과 통보 + 인정서·표준이용계획서 발급</strong>
+        <div class="step-desc">등급(또는 등급 외) 통보. 등급을 받으면 인정서와 함께 "표준이용계획서"가 동봉돼 어떤 서비스를 얼마나 이용할 수 있는지 안내됨.</div>
+      </li>
+      <li>
+        <strong>서비스 이용 시작</strong>
+        <div class="step-desc">원하는 시설·재가센터를 선택해 계약 후 이용. 시설·센터는 공단 홈페이지 "장기요양기관 찾기"에서 평가 등급·서비스 종류·후기 확인 가능.</div>
+      </li>
+    </ol>
+  </section>
+
+  <!-- 5. 비용 -->
+  <section class="block" id="cost">
+    <h2>비용·본인부담</h2>
+    <p>
+      서비스 비용의 대부분은 장기요양보험에서 부담하고, 이용자는 일정 비율만 본인부담으로 내면 돼요. 등급별로 월 한도액이 정해져 있고, 한도를 초과한 사용분은 전액 본인부담이에요.
+    </p>
+
+    <h3>본인부담률 (2026 기준)</h3>
+    <ul>
+      <li><strong>일반:</strong> 시설급여 20%, 재가급여 15%</li>
+      <li><strong>의료급여 수급자·차상위 계층:</strong> 50% 감경 (시설 10%, 재가 7.5%)</li>
+      <li><strong>기초생활수급자:</strong> 본인부담 면제 (0%)</li>
+    </ul>
+
+    <h3>등급별 월 한도액 (2026 재가급여 기준, 약)</h3>
+    <ul>
+      <li><strong>1등급:</strong> 약 217만원</li>
+      <li><strong>2등급:</strong> 약 193만원</li>
+      <li><strong>3등급:</strong> 약 184만원</li>
+      <li><strong>4등급:</strong> 약 169만원</li>
+      <li><strong>5등급:</strong> 약 145만원</li>
+      <li><strong>인지지원:</strong> 약 81만원</li>
+    </ul>
+    <p style="font-size: 13.5px; color: var(--ink-muted);">
+      ※ 한도액과 본인부담률은 매년 조정돼요. 최신 금액은 노인장기요양보험 홈페이지에서 확인하세요.
+    </p>
+
+    <div class="callout warm">
+      <strong>본인부담금이 부담된다면</strong>
+      소득·재산 기준에 따라 본인부담금 추가 감경(40·60% 감경)을 신청할 수 있어요. 의료급여 수급권자가 아니어도 건강보험료 하위 50%이면 감경 대상이 될 수 있으니 공단에 확인해보세요.
+    </div>
+  </section>
+
+  <!-- 6. FAQ -->
+  <section class="block" id="faq">
+    <h2>자주 묻는 질문</h2>
+
+    <div class="faq-item">
+      <div class="faq-q">치매 진단만 받으면 등급이 나오나요?</div>
+      <div class="faq-a">아니요. 치매 진단이 있어도 일상생활 자립도가 양호하면 등급 외가 나올 수 있어요. 다만 5등급(치매 특화)과 인지지원등급은 치매 진단이 있어야 해당돼요. 치매 진단을 받았다면 신청 시 의사소견서에 명시되도록 미리 준비하세요.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">신청은 본인이 못 해도 되나요?</div>
+      <div class="faq-a">가족(자녀·배우자·형제 등) 또는 대리인(요양보호사·사회복지사 등)이 신청할 수 있어요. 어르신이 의사 표현이 어려우신 경우가 많아 가족 신청이 일반적이에요. 신청서에 가족관계증명서 등을 함께 제출해요.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">등급은 한 번 받으면 끝인가요?</div>
+      <div class="faq-a">유효기간이 있어요. 일반적으로 1~4년 (등급별 차이). 만료 60일 전 갱신 신청이 가능하고, 상태가 악화·호전되면 중간에 등급변경 신청도 가능해요. 변경 신청은 6개월 이상 등급을 받은 뒤 신청 가능.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">요양원과 요양병원 중 어디가 나은가요?</div>
+      <div class="faq-a">의료적 치료가 주된 필요라면 요양병원, 일상 돌봄이 주된 필요라면 요양원이 맞아요. 요양원은 건강보험 적용이 안 되고 장기요양보험으로 부담이 줄지만, 의료처치는 제한적이에요. 어르신 상태가 변화하면 둘 사이를 옮겨가시는 경우도 많아요.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">시설을 어떻게 고르나요?</div>
+      <div class="faq-a"><a href="https://www.longtermcare.or.kr/" target="_blank" style="color:var(--primary);">노인장기요양보험 홈페이지</a> "장기요양기관 찾기"에서 거주 지역 시설 검색 가능. 정원·재원 인원·평가 등급(A~E)·종사자 수·식단·프로그램 등을 비교할 수 있어요. 직접 두세 곳 방문해 시설·분위기·식사·간호 인력 등을 보고 결정하시는 걸 권해요. <strong>잇다는 향후 후기 큐레이션을 추가할 예정</strong>이에요.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">갑자기 입소가 필요한데 등급 판정 30일을 기다릴 수 없어요</div>
+      <div class="faq-a">단기 입소는 가능해요. 등급 신청과 별개로 요양원에 자비 입소할 수 있고, 등급이 결정되면 그 시점부터 본인부담이 적용돼요. 또는 단기보호(주야간 + 단기 입소) 서비스를 통해 임시로 모실 수 있어요.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">잇다에서 무엇을 도와줄 수 있나요?</div>
+      <div class="faq-a"><strong>잇다 노트의 "의료 의지"</strong> 영역에 어르신의 등급·이용 시설·담당 사회복지사 연락처를 가족이 함께 기록해 둘 수 있어요. 갑자기 일이 생겼을 때 가족 누구나 찾아볼 수 있어 헤매는 시간을 줄여줘요.</div>
+    </div>
+  </section>
+
+  <!-- 7. 공식 링크 -->
+  <section class="block" id="links">
+    <h2>공식 링크 모음</h2>
+    <div class="ext-links">
+      <a class="ext-link" href="https://www.longtermcare.or.kr/" target="_blank" rel="noopener">
+        <div>
+          <div>노인장기요양보험</div>
+          <div class="ext-link-meta">국민건강보험공단 · 신청·기관 찾기·민원</div>
+        </div>
+        <span>바로가기 →</span>
+      </a>
+      <a class="ext-link" href="https://www.nhis.or.kr/" target="_blank" rel="noopener">
+        <div>
+          <div>국민건강보험공단</div>
+          <div class="ext-link-meta">전화 1577-1000 · 본인부담금 감경 신청</div>
+        </div>
+        <span>바로가기 →</span>
+      </a>
+      <a class="ext-link" href="https://www.bokjiro.go.kr/" target="_blank" rel="noopener">
+        <div>
+          <div>복지로</div>
+          <div class="ext-link-meta">보건복지부 · 노인 복지 서비스 모아보기</div>
+        </div>
+        <span>바로가기 →</span>
+      </a>
+    </div>
+  </section>
+
+  <div class="source-note">
+    이 페이지의 정보는 국민건강보험공단·노인장기요양보험·보건복지부의 공개 자료를 기반으로 정리한 것입니다. 한도액·본인부담률·등급 기준은 매년 조정될 수 있으니, 정확한 수치는 작성 직전에 공단에 직접 문의하세요. 마지막 업데이트: 2026-04-30.
+  </div>
+</main>
+
+<footer class="auth-footer">
+  © 2026 라이프헤리티지 · 잇다
+</footer>
+
+<script type="module">
+  const { renderTopBar } = await import('/nav.js');
+  await renderTopBar({ active: 'info' });
+
+  document.querySelectorAll('.faq-item').forEach(item => {
+    item.querySelector('.faq-q').addEventListener('click', () => {
+      item.classList.toggle('open');
+    });
+  });
+</script>
+
+<script src="/scroll-top.js" defer></script>
+
+</body>
+</html>

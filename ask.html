@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>오늘 잇고 · 잇다</title>
+  <link rel="stylesheet" href="/auth-styles.css">
+  <style>
+    .ask-shell {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 32px 20px 80px;
+      flex: 1;
+      width: 100%;
+    }
+    @media (min-width: 640px) {
+      .ask-shell { padding: 56px 32px 120px; }
+    }
+
+    /* ── Top bar ────────────────────────── */
+    .top-bar {
+      background: var(--bg);
+      border-bottom: 1px solid var(--line);
+      padding: 14px 20px;
+    }
+    .top-bar-inner {
+      max-width: 1080px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .top-bar-links { display: flex; gap: 16px; align-items: center; font-size: 14px; }
+    .top-bar-links a { color: var(--ink-soft); text-decoration: none; }
+    .top-bar-links a:hover { color: var(--primary); }
+
+    /* ── Question header ─────────────────── */
+    .q-kicker {
+      display: inline-block;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      color: var(--primary);
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .q-title {
+      font-size: 22px;
+      font-weight: 800;
+      line-height: 1.5;
+      letter-spacing: -0.01em;
+      margin-bottom: 12px;
+    }
+    @media (min-width: 640px) {
+      .q-title { font-size: 26px; }
+    }
+    .q-meta {
+      font-size: 13.5px;
+      color: var(--ink-muted);
+      margin-bottom: 26px;
+    }
+
+    /* ── Action row ──────────────────────── */
+    .action-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .write-btn {
+      flex: 1;
+      min-width: 200px;
+      padding: 14px 22px;
+      background: var(--ink);
+      color: #FFF;
+      border: none;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .write-btn:hover { background: var(--primary); }
+    .sort-toggle {
+      display: flex;
+      gap: 0;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .sort-toggle button {
+      padding: 9px 14px;
+      background: transparent;
+      border: none;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink-muted);
+      cursor: pointer;
+    }
+    .sort-toggle button.active {
+      background: var(--ink);
+      color: #FFF;
+    }
+
+    /* ── Answer board (게시판형) ─────────── */
+    .answer-list {
+      border-top: 2px solid var(--ink);
+      border-bottom: 1px solid var(--line);
+    }
+    .answer-row {
+      padding: 18px 4px;
+      border-bottom: 1px solid var(--line);
+    }
+    .answer-row:hover { background: var(--bg-alt); }
+    .answer-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .answer-author {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .answer-time {
+      font-size: 12.5px;
+      color: var(--ink-muted);
+    }
+    .answer-body {
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--ink);
+      white-space: pre-wrap;
+      margin-bottom: 10px;
+      word-break: break-word;
+    }
+    .answer-actions {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      font-size: 13px;
+      color: var(--ink-soft);
+    }
+    .like-btn, .comment-btn {
+      background: none;
+      border: none;
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--ink-soft);
+      cursor: pointer;
+      padding: 4px 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .like-btn:hover, .comment-btn:hover { color: var(--primary); }
+    .like-btn.active { color: var(--primary); font-weight: 700; }
+    .answer-mine-actions {
+      margin-left: auto;
+      display: flex;
+      gap: 6px;
+    }
+    .mini-btn {
+      padding: 4px 10px;
+      background: transparent;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-family: inherit;
+      font-size: 12px;
+      color: var(--ink-soft);
+      cursor: pointer;
+    }
+    .mini-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .mini-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
+
+    /* ── Comments (inline expand) ────────── */
+    .comments-wrap {
+      display: none;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px dashed var(--line);
+    }
+    .comments-wrap.open { display: block; }
+    .comment-item {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .comment-item:last-child { border-bottom: none; }
+    .comment-author {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 3px;
+    }
+    .comment-body {
+      font-size: 13.5px;
+      line-height: 1.6;
+      color: var(--ink-soft);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .comment-meta {
+      font-size: 11.5px;
+      color: var(--ink-muted);
+      margin-top: 3px;
+    }
+    .comment-form {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .comment-form input {
+      flex: 1;
+      padding: 10px 14px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 14px;
+    }
+    .comment-form input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    .comment-submit {
+      padding: 10px 16px;
+      background: var(--ink);
+      color: #FFF;
+      border: none;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 13.5px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .comment-submit:hover { background: var(--primary); }
+    .comment-submit:disabled { opacity: 0.5; }
+
+    /* ── Empty / loading ─────────────────── */
+    .empty {
+      padding: 48px 20px;
+      text-align: center;
+    }
+    .empty-icon { font-size: 36px; margin-bottom: 12px; }
+    .empty p { color: var(--ink-muted); font-size: 14px; line-height: 1.7; }
+
+    /* ── Write modal ─────────────────────── */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(10,10,10,0.4);
+      z-index: 100;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    @media (min-width: 640px) {
+      .modal-backdrop { align-items: center; }
+    }
+    .modal-backdrop.hidden { display: none; }
+    .modal {
+      background: var(--bg);
+      border-radius: 20px 20px 0 0;
+      width: 100%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 24px 22px 32px;
+    }
+    @media (min-width: 640px) {
+      .modal { border-radius: 20px; }
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+    .modal-title {
+      font-size: 18px;
+      font-weight: 800;
+    }
+    .modal-close {
+      width: 30px;
+      height: 30px;
+      border: none;
+      background: var(--bg-alt);
+      border-radius: 50%;
+      font-size: 16px;
+      color: var(--ink-soft);
+      cursor: pointer;
+    }
+    .modal-question {
+      font-size: 15px;
+      color: var(--ink-soft);
+      line-height: 1.6;
+      margin: 14px 0 18px;
+      padding: 14px 16px;
+      background: var(--bg-alt);
+      border-radius: 12px;
+    }
+    .modal textarea {
+      width: 100%;
+      min-height: 140px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 15px;
+      line-height: 1.7;
+      resize: vertical;
+      box-sizing: border-box;
+    }
+    .modal textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    .visibility-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 14px 0 18px;
+      font-size: 13.5px;
+      color: var(--ink-soft);
+    }
+    .visibility-row label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+    .modal-submit {
+      width: 100%;
+      padding: 14px;
+      background: var(--ink);
+      color: #FFF;
+      border: none;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .modal-submit:hover { background: var(--primary); }
+    .modal-submit:disabled { opacity: 0.5; }
+
+    .login-cta {
+      padding: 32px 20px;
+      text-align: center;
+      background: var(--bg-alt);
+      border-radius: 14px;
+      margin-bottom: 18px;
+    }
+    .login-cta a {
+      color: var(--primary);
+      font-weight: 700;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+<nav class="top-bar">
+  <div class="top-bar-inner">
+    <a href="/" class="logo"><span class="logo-mark">●</span> 잇다</a>
+    <div class="top-bar-links" id="top-bar-links">
+      <a href="/login.html">로그인</a>
+    </div>
+  </div>
+</nav>
+
+<main class="ask-shell">
+  <div id="loading" class="empty">
+    <div class="empty-icon">🌿</div>
+    <p>오늘의 질문을 불러오고 있어요...</p>
+  </div>
+
+  <div id="content" class="hidden">
+    <span class="q-kicker" id="q-kicker">오늘 잇고</span>
+    <h1 class="q-title" id="q-title">—</h1>
+    <p class="q-meta">
+      <span id="q-category">—</span> ·
+      <span id="q-count">0명이 답을 남겼어요</span>
+      <a href="/questions.html" style="margin-left: 10px; color: var(--primary); text-decoration: none; font-weight: 700;">지난 질문 보기 →</a>
+    </p>
+
+    <div class="action-row">
+      <button type="button" class="write-btn" id="write-btn">✍️ 내 답 쓰기</button>
+      <div class="sort-toggle">
+        <button type="button" data-sort="newest" class="active">최신순</button>
+        <button type="button" data-sort="popular">공감순</button>
+      </div>
+    </div>
+
+    <div id="login-cta-area"></div>
+    <div id="answer-list-area"></div>
+  </div>
+</main>
+
+<!-- Write modal -->
+<div class="modal-backdrop hidden" id="write-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="write-modal-title">내 답 쓰기</div>
+      <button type="button" class="modal-close" data-close-modal>×</button>
+    </div>
+    <div class="modal-question" id="modal-question-text">—</div>
+    <textarea id="answer-input" placeholder="짧게 한 문장이라도 괜찮아요." maxlength="2000"></textarea>
+    <div class="visibility-row">
+      <label><input type="radio" name="vis" value="public" checked> 모두에게 공개</label>
+      <label><input type="radio" name="vis" value="private"> 나만 보기</label>
+    </div>
+    <button type="button" class="modal-submit" id="answer-submit">남기기</button>
+  </div>
+</div>
+
+<footer class="auth-footer">
+  © 2026 라이프헤리티지 · 잇다
+</footer>
+
+<script type="module">
+  import { supabase } from '/auth.js';
+
+  const { data: { session } } = await supabase.auth.getSession();
+  const currentUser = session?.user || null;
+  const currentUserName = currentUser?.user_metadata?.name || currentUser?.email?.split('@')[0] || null;
+
+  const { renderTopBar } = await import('/nav.js');
+  await renderTopBar({ active: 'ask' });
+
+  const CATEGORY_LABEL = {
+    self: '나라는 사람',
+    relationships: '가까운 사람들',
+    work: '일과 커리어',
+    regret: '후회와 용서',
+    gratitude: '감사',
+    legacy: '남기고 싶은 것',
+    endings: '끝을 상상하기',
+  };
+
+  // ── 질문 로드 (URL ?id= 있으면 그 질문, 없으면 오늘) ──────────
+  const urlQuestionId = new URLSearchParams(location.search).get('id');
+  let todaysQ;
+  let isPastQuestion = false;
+
+  if (urlQuestionId) {
+    const { data: pastQ, error: pastErr } = await supabase
+      .from('daily_questions')
+      .select('id, display_order, category, question_text')
+      .eq('id', urlQuestionId)
+      .single();
+    if (pastErr || !pastQ) {
+      document.getElementById('loading').innerHTML = `
+        <div class="empty-icon">⚠️</div>
+        <p>질문을 찾을 수 없어요.<br><a href="/ask.html" style="color: var(--primary);">오늘의 질문으로</a></p>
+      `;
+      throw new Error('past question not found');
+    }
+    todaysQ = pastQ;
+    isPastQuestion = true;
+  } else {
+    const { data: qData, error: qErr } = await supabase.rpc('get_todays_question');
+    if (qErr || !qData || qData.length === 0) {
+      document.getElementById('loading').innerHTML = `
+        <div class="empty-icon">⚠️</div>
+        <p>오늘의 질문을 불러오지 못했어요.<br>${escapeHtml(qErr?.message || '잠시 후 다시 시도해주세요.')}</p>
+      `;
+      throw new Error('no question');
+    }
+    todaysQ = qData[0];
+  }
+
+  document.getElementById('loading').classList.add('hidden');
+  document.getElementById('content').classList.remove('hidden');
+
+  // 헤더(kicker) — 오늘은 가입 N일째, 지난 질문은 "지난 질문 · 71번째"
+  const kicker = document.getElementById('q-kicker');
+  if (isPastQuestion) {
+    kicker.textContent = `지난 질문 · ${todaysQ.display_order}번째`;
+  } else if (currentUser?.created_at) {
+    const days = Math.max(1, Math.ceil((Date.now() - new Date(currentUser.created_at)) / 86400000));
+    kicker.textContent = `오늘 잇고 · 가입 ${days}일째`;
+  } else {
+    kicker.textContent = '오늘 잇고';
+  }
+
+  document.getElementById('q-title').textContent = todaysQ.question_text;
+  document.getElementById('q-category').textContent = CATEGORY_LABEL[todaysQ.category] || todaysQ.category;
+  document.getElementById('modal-question-text').textContent = todaysQ.question_text;
+
+  // ── 답변 목록 ────────────────────────────
+  let state = { sort: 'newest', answers: [], myAnswer: null };
+
+  await loadAnswers();
+
+  async function loadAnswers() {
+    const { data, error } = await supabase
+      .from('daily_answers')
+      .select('id, user_id, content, visibility, created_at, updated_at, author:profiles!user_id(name)')
+      .eq('question_id', todaysQ.id);
+
+    if (error) {
+      document.getElementById('answer-list-area').innerHTML = `
+        <div class="empty"><div class="empty-icon">⚠️</div><p>${escapeHtml(error.message)}</p></div>
+      `;
+      return;
+    }
+
+    state.answers = data || [];
+    state.myAnswer = currentUser ? state.answers.find(a => a.user_id === currentUser.id) : null;
+
+    // 공감 카운트 + 댓글 카운트 + 내 공감 여부
+    if (state.answers.length > 0) {
+      const ids = state.answers.map(a => a.id);
+      const [{ data: likes }, { data: comments }] = await Promise.all([
+        supabase.from('answer_likes').select('answer_id, user_id').in('answer_id', ids),
+        supabase.from('answer_comments').select('answer_id').in('answer_id', ids),
+      ]);
+      const likeMap = {}, myLikeSet = new Set(), commentMap = {};
+      (likes || []).forEach(l => {
+        likeMap[l.answer_id] = (likeMap[l.answer_id] || 0) + 1;
+        if (currentUser && l.user_id === currentUser.id) myLikeSet.add(l.answer_id);
+      });
+      (comments || []).forEach(c => {
+        commentMap[c.answer_id] = (commentMap[c.answer_id] || 0) + 1;
+      });
+      state.answers.forEach(a => {
+        a._likes = likeMap[a.id] || 0;
+        a._myLike = myLikeSet.has(a.id);
+        a._comments = commentMap[a.id] || 0;
+      });
+    }
+
+    // count text
+    const publicCount = state.answers.filter(a => a.visibility === 'public').length;
+    document.getElementById('q-count').textContent = `${publicCount}명이 답을 남겼어요`;
+
+    // write button label
+    document.getElementById('write-btn').textContent = state.myAnswer ? '✍️ 내 답 수정' : '✍️ 내 답 쓰기';
+
+    renderAnswers();
+  }
+
+  function renderAnswers() {
+    const area = document.getElementById('answer-list-area');
+    let visible = state.answers.slice();
+    if (currentUser) {
+      // 본인 글은 visibility 무관 + 다른 사람 public만
+      visible = visible.filter(a => a.user_id === currentUser.id || a.visibility === 'public');
+    } else {
+      visible = visible.filter(a => a.visibility === 'public');
+    }
+    if (state.sort === 'newest') {
+      visible.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    } else {
+      visible.sort((a, b) => b._likes - a._likes || new Date(b.created_at) - new Date(a.created_at));
+    }
+
+    if (visible.length === 0) {
+      area.innerHTML = `
+        <div class="empty">
+          <div class="empty-icon">🌿</div>
+          <p>아직 남긴 답이 없어요.<br>첫 답을 남겨보세요.</p>
+        </div>
+      `;
+      return;
+    }
+
+    area.innerHTML = `<div class="answer-list">${visible.map(renderAnswerRow).join('')}</div>`;
+    bindAnswerEvents();
+  }
+
+  function renderAnswerRow(a) {
+    const author = a.author?.name || '닉네임 없음';
+    const isMine = currentUser && a.user_id === currentUser.id;
+    const visTag = a.visibility === 'private' ? `<span style="font-size: 11px; padding: 2px 7px; background: var(--bg-alt); color: var(--ink-muted); border-radius: 999px; margin-left: 6px;">나만 보기</span>` : '';
+    return `
+      <div class="answer-row" data-answer-id="${a.id}">
+        <div class="answer-head">
+          <div>
+            <span class="answer-author">${escapeHtml(author)}</span>
+            ${visTag}
+          </div>
+          <span class="answer-time">${formatRelative(a.created_at)}</span>
+        </div>
+        <div class="answer-body">${escapeHtml(a.content)}</div>
+        <div class="answer-actions">
+          <button type="button" class="like-btn ${a._myLike ? 'active' : ''}" data-like="${a.id}">
+            ${a._myLike ? '❤️' : '🤍'} <span>${a._likes}</span>
+          </button>
+          <button type="button" class="comment-btn" data-toggle-comments="${a.id}">
+            💬 <span>${a._comments}</span>
+          </button>
+          ${isMine ? `
+            <div class="answer-mine-actions">
+              <button type="button" class="mini-btn" data-edit-answer="${a.id}">수정</button>
+              <button type="button" class="mini-btn danger" data-delete-answer="${a.id}">삭제</button>
+            </div>
+          ` : ''}
+        </div>
+        <div class="comments-wrap" id="comments-${a.id}"></div>
+      </div>
+    `;
+  }
+
+  function bindAnswerEvents() {
+    document.querySelectorAll('[data-like]').forEach(btn => {
+      btn.addEventListener('click', () => toggleLike(btn.dataset.like));
+    });
+    document.querySelectorAll('[data-toggle-comments]').forEach(btn => {
+      btn.addEventListener('click', () => toggleComments(btn.dataset.toggleComments));
+    });
+    document.querySelectorAll('[data-edit-answer]').forEach(btn => {
+      btn.addEventListener('click', () => openWriteModal(true));
+    });
+    document.querySelectorAll('[data-delete-answer]').forEach(btn => {
+      btn.addEventListener('click', () => deleteMyAnswer());
+    });
+  }
+
+  // ── Sort toggle ──────────────────────────
+  document.querySelectorAll('.sort-toggle button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.sort-toggle button').forEach(b => b.classList.toggle('active', b === btn));
+      state.sort = btn.dataset.sort;
+      renderAnswers();
+    });
+  });
+
+  // ── Write modal ──────────────────────────
+  document.getElementById('write-btn').addEventListener('click', () => {
+    if (!currentUser) {
+      window.location.href = '/login.html';
+      return;
+    }
+    openWriteModal(!!state.myAnswer);
+  });
+
+  function openWriteModal(isEdit) {
+    const modal = document.getElementById('write-modal');
+    document.getElementById('write-modal-title').textContent = isEdit ? '내 답 수정' : '내 답 쓰기';
+    document.getElementById('answer-input').value = isEdit ? (state.myAnswer?.content || '') : '';
+    const visRadio = document.querySelector(`input[name="vis"][value="${state.myAnswer?.visibility || 'public'}"]`);
+    if (visRadio) visRadio.checked = true;
+    modal.classList.remove('hidden');
+    setTimeout(() => document.getElementById('answer-input').focus(), 100);
+  }
+
+  document.querySelectorAll('[data-close-modal]').forEach(btn => {
+    btn.addEventListener('click', () => document.getElementById('write-modal').classList.add('hidden'));
+  });
+  document.getElementById('write-modal').addEventListener('click', (e) => {
+    if (e.target.id === 'write-modal') document.getElementById('write-modal').classList.add('hidden');
+  });
+
+  document.getElementById('answer-submit').addEventListener('click', async () => {
+    const content = document.getElementById('answer-input').value.trim();
+    if (!content) return;
+    const visibility = document.querySelector('input[name="vis"]:checked').value;
+    const submitBtn = document.getElementById('answer-submit');
+    submitBtn.disabled = true;
+    submitBtn.textContent = '남기는 중...';
+
+    if (state.myAnswer) {
+      const { error } = await supabase.from('daily_answers').update({
+        content, visibility, updated_at: new Date().toISOString(),
+      }).eq('id', state.myAnswer.id);
+      if (error) { alert('수정 실패: ' + error.message); submitBtn.disabled = false; submitBtn.textContent = '남기기'; return; }
+    } else {
+      const { error } = await supabase.from('daily_answers').insert({
+        user_id: currentUser.id,
+        question_id: todaysQ.id,
+        content, visibility,
+      });
+      if (error) { alert('남기지 못했어요: ' + error.message); submitBtn.disabled = false; submitBtn.textContent = '남기기'; return; }
+    }
+    document.getElementById('write-modal').classList.add('hidden');
+    submitBtn.disabled = false;
+    submitBtn.textContent = '남기기';
+    await loadAnswers();
+  });
+
+  async function deleteMyAnswer() {
+    if (!confirm('내 답을 삭제할까요?')) return;
+    const { error } = await supabase.from('daily_answers').delete().eq('id', state.myAnswer.id);
+    if (error) { alert('삭제 실패: ' + error.message); return; }
+    state.myAnswer = null;
+    await loadAnswers();
+  }
+
+  // ── Like ─────────────────────────────────
+  async function toggleLike(answerId) {
+    if (!currentUser) { window.location.href = '/login.html'; return; }
+    const a = state.answers.find(x => x.id === answerId);
+    if (!a) return;
+    if (a._myLike) {
+      const { error } = await supabase.from('answer_likes').delete()
+        .eq('answer_id', answerId).eq('user_id', currentUser.id);
+      if (error) { alert('실패: ' + error.message); return; }
+      a._myLike = false; a._likes = Math.max(0, a._likes - 1);
+    } else {
+      const { error } = await supabase.from('answer_likes').insert({
+        answer_id: answerId, user_id: currentUser.id,
+      });
+      if (error) { alert('실패: ' + error.message); return; }
+      a._myLike = true; a._likes += 1;
+    }
+    renderAnswers();
+  }
+
+  // ── Comments ─────────────────────────────
+  async function toggleComments(answerId) {
+    const wrap = document.getElementById(`comments-${answerId}`);
+    if (wrap.classList.contains('open')) {
+      wrap.classList.remove('open');
+      return;
+    }
+    wrap.classList.add('open');
+    wrap.innerHTML = '<p style="color: var(--ink-muted); font-size: 13px; padding: 8px 0;">댓글을 불러오고 있어요...</p>';
+    const { data, error } = await supabase
+      .from('answer_comments')
+      .select('id, user_id, content, created_at, author:profiles!user_id(name)')
+      .eq('answer_id', answerId)
+      .order('created_at', { ascending: true });
+    if (error) {
+      wrap.innerHTML = `<p style="color: var(--danger); font-size: 13px;">${escapeHtml(error.message)}</p>`;
+      return;
+    }
+    const items = (data || []).map(c => `
+      <div class="comment-item">
+        <div class="comment-author">${escapeHtml(c.author?.name || '닉네임 없음')}</div>
+        <div class="comment-body">${escapeHtml(c.content)}</div>
+        <div class="comment-meta">${formatRelative(c.created_at)}</div>
+      </div>
+    `).join('') || '<p style="color: var(--ink-muted); font-size: 13px; padding: 8px 0;">첫 댓글을 남겨보세요.</p>';
+
+    const form = currentUser ? `
+      <div class="comment-form">
+        <input type="text" id="comment-input-${answerId}" placeholder="댓글 남기기..." maxlength="500">
+        <button type="button" class="comment-submit" data-submit-comment="${answerId}">남기기</button>
+      </div>
+    ` : `
+      <div style="padding: 8px 0; font-size: 13px; color: var(--ink-muted);">
+        댓글을 남기려면 <a href="/login.html" style="color: var(--primary);">로그인</a>하세요.
+      </div>
+    `;
+
+    wrap.innerHTML = items + form;
+
+    if (currentUser) {
+      const submitBtn = wrap.querySelector(`[data-submit-comment="${answerId}"]`);
+      const input = wrap.querySelector(`#comment-input-${answerId}`);
+      const submit = async () => {
+        const content = input.value.trim();
+        if (!content) return;
+        submitBtn.disabled = true;
+        const { error } = await supabase.from('answer_comments').insert({
+          answer_id: answerId, user_id: currentUser.id, content,
+        });
+        if (error) { alert('실패: ' + error.message); submitBtn.disabled = false; return; }
+        input.value = '';
+        // refresh count and comment list
+        const a = state.answers.find(x => x.id === answerId);
+        if (a) a._comments += 1;
+        await toggleComments(answerId); // close
+        await toggleComments(answerId); // reopen → re-renders
+      };
+      submitBtn.addEventListener('click', submit);
+      input.addEventListener('keydown', (e) => { if (e.key === 'Enter') submit(); });
+    }
+  }
+
+  // ── Utils ────────────────────────────────
+  function formatRelative(iso) {
+    const diff = Date.now() - new Date(iso);
+    const min = Math.floor(diff / 60000);
+    if (min < 1) return '방금';
+    if (min < 60) return `${min}분 전`;
+    const hr = Math.floor(min / 60);
+    if (hr < 24) return `${hr}시간 전`;
+    const day = Math.floor(hr / 24);
+    if (day < 7) return `${day}일 전`;
+    return new Date(iso).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' });
+  }
+
+  function escapeHtml(s) {
+    if (s == null) return '';
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+</script>
+
+</body>
+</html>

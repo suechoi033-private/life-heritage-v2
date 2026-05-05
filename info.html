@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>정보 · 잇다</title>
+  <link rel="stylesheet" href="/auth-styles.css">
+  <style>
+    .shell {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 32px 20px 80px;
+      flex: 1;
+      width: 100%;
+    }
+    @media (min-width: 640px) {
+      .shell { padding: 56px 32px 120px; }
+    }
+
+    .top-bar {
+      background: var(--bg);
+      border-bottom: 1px solid var(--line);
+      padding: 14px 20px;
+    }
+    .top-bar-inner {
+      max-width: 1080px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .top-bar-links { display: flex; gap: 16px; align-items: center; font-size: 14.5px; }
+    .top-bar-links a { color: var(--ink-soft); text-decoration: none; }
+    .top-bar-links a:hover { color: var(--primary); }
+
+    .header { margin-bottom: 28px; }
+    .kicker {
+      display: inline-block;
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      color: var(--primary);
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+    @media (min-width: 640px) { h1 { font-size: 34px; } }
+    .lead {
+      color: var(--ink-soft);
+      font-size: 15.5px;
+      line-height: 1.7;
+      max-width: 640px;
+    }
+
+    /* ── 시점 토글 ─── */
+    .stage-tabs {
+      display: flex;
+      gap: 8px;
+      margin: 28px 0 24px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 0;
+      overflow-x: auto;
+    }
+    .stage-tab {
+      flex: 1;
+      min-width: 110px;
+      padding: 14px 18px;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--ink-muted);
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+    }
+    .stage-tab:hover { color: var(--ink); }
+    .stage-tab.active {
+      color: var(--ink);
+      border-bottom-color: var(--primary);
+    }
+    .stage-tab small {
+      display: block;
+      font-size: 11.5px;
+      font-weight: 500;
+      color: var(--ink-muted);
+      margin-top: 2px;
+      letter-spacing: 0;
+    }
+
+    /* ── Body 2-column ─── */
+    .body-grid {
+      display: grid;
+      gap: 28px;
+    }
+    @media (min-width: 800px) {
+      .body-grid { grid-template-columns: 220px 1fr; gap: 36px; }
+    }
+
+    /* ── Category sidebar ─── */
+    .category-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .category-item {
+      display: block;
+      padding: 11px 14px;
+      border-radius: 10px;
+      font-size: 14px;
+      color: var(--ink-soft);
+      cursor: pointer;
+      margin-bottom: 4px;
+      transition: all 0.15s ease;
+    }
+    .category-item:hover { background: var(--bg-alt); color: var(--ink); }
+    .category-item.active {
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    /* ── Article cards ─── */
+    .articles-grid {
+      display: grid;
+      gap: 16px;
+    }
+    @media (min-width: 720px) {
+      .articles-grid { grid-template-columns: repeat(2, 1fr); gap: 18px; }
+    }
+    .article-card {
+      background: var(--bg-alt);
+      border-radius: 14px;
+      padding: 22px 24px;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      border: 1px solid transparent;
+    }
+    .article-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(43, 43, 43, 0.06);
+      border-color: var(--primary-soft);
+    }
+    .article-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      background: var(--bg);
+      color: var(--ink-muted);
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .article-title {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+    .article-summary {
+      font-size: 13.5px;
+      color: var(--ink-muted);
+      line-height: 1.6;
+      margin-bottom: 12px;
+    }
+    .article-meta {
+      display: flex;
+      gap: 14px;
+      font-size: 12px;
+      color: var(--ink-muted);
+    }
+    .article-meta strong { color: var(--ink-soft); }
+
+    /* ── Empty state ─── */
+    .empty {
+      grid-column: 1 / -1;
+      padding: 56px 28px;
+      text-align: center;
+      background: var(--bg-alt);
+      border-radius: 16px;
+    }
+    .empty-icon { font-size: 36px; margin-bottom: 14px; }
+    .empty h2 { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
+    .empty p {
+      color: var(--ink-muted);
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 18px;
+      max-width: 460px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* ── CTA ─── */
+    .primary-btn {
+      display: inline-block;
+      padding: 11px 22px;
+      background: var(--ink);
+      color: #FFF;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 14px;
+      border-radius: 12px;
+      transition: background 0.15s ease;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .primary-btn:hover { background: var(--primary); }
+
+    .waitlist-card {
+      margin-top: 28px;
+      padding: 24px 26px;
+      background: var(--primary-soft);
+      border-radius: 16px;
+      text-align: center;
+    }
+    .waitlist-card h3 {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 8px;
+    }
+    .waitlist-card p {
+      font-size: 14px;
+      color: var(--ink-soft);
+      line-height: 1.7;
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- 탑바·바텀탭은 nav.js가 동적으로 삽입 -->
+
+<main class="shell">
+  <div class="header">
+    <span class="kicker">정보 · INFORMATION</span>
+    <h1>정보는 한 시점이 아니라<br>시간축입니다</h1>
+    <p class="lead">
+      부모님이 건강하실 때 미리 챙길 것, 아프실 때 챙길 정보, 떠나신 후 정리할 일.<br>
+      잇다는 한 자리에서 세 시점 모두 잇습니다.
+    </p>
+  </div>
+
+  <div class="stage-tabs" role="tablist">
+    <button type="button" class="stage-tab active" data-stage="pre" role="tab">
+      미리
+      <small>건강하실 때 준비</small>
+    </button>
+    <button type="button" class="stage-tab" data-stage="in" role="tab">
+      곁에
+      <small>아프실 때 정보</small>
+    </button>
+    <button type="button" class="stage-tab" data-stage="after" role="tab">
+      떠난 뒤
+      <small>사별 후 정리</small>
+    </button>
+  </div>
+
+  <div class="body-grid">
+    <aside>
+      <ul class="category-list" id="category-list"></ul>
+    </aside>
+    <section id="articles-area">
+      <!-- articles or empty state -->
+    </section>
+  </div>
+
+  <div class="waitlist-card">
+    <h3>먼저 받고 싶은 정보가 있나요?</h3>
+    <p>
+      잇다 정보 카테고리는 베타로 열어가고 있어요. 가장 필요한 주제를 알려 주시면 우선 정리해 드릴게요.
+    </p>
+    <button type="button" class="primary-btn" id="waitlist-btn">베타 알림 받기</button>
+  </div>
+</main>
+
+<footer class="auth-footer">
+  © 2026 라이프헤리티지 · 잇다
+</footer>
+
+<script type="module">
+  import { supabase } from '/auth.js';
+
+  const { data: { session } } = await supabase.auth.getSession();
+  const currentUser = session?.user || null;
+
+  const { renderTopBar } = await import('/nav.js');
+  await renderTopBar({ active: 'info' });
+
+  // ── 카테고리 정의 (시점별) ────────────────────
+  const STAGES = {
+    pre: {
+      label: '미리',
+      categories: [
+        { key: 'advance-directive', name: '사전연명의료의향서', summary: '국립연명의료관리기관 등록 안내' },
+        { key: 'funeral-prepay', name: '상조 가입 가이드', summary: '미리 가입하기 전에 알아둘 것' },
+        { key: 'family-talk', name: '가족 회의', summary: '미리 나눠 두면 좋은 대화 가이드' },
+        { key: 'insurance-check', name: '보험·연금 점검', summary: '40-60대 가입 점검 체크리스트' },
+        { key: 'digital-cleanup', name: '디지털 정리', summary: '계정·구독 미리 정돈하기' },
+      ],
+    },
+    in: {
+      label: '곁에',
+      categories: [
+        { key: 'long-term-care', name: '장기요양보험', summary: '등급·서비스·신청 안내' },
+        { key: 'disease', name: '질병 가이드', summary: '치매·암·뇌졸중·파킨슨 단계별' },
+        { key: 'nursing-home', name: '요양원·요양병원', summary: '서울/경기 큐레이션 + 후기' },
+        { key: 'medical-cost', name: '의료비·보험', summary: '청구·환급·실비 활용' },
+        { key: 'caregiver', name: '간병 서비스', summary: '재가·시설 비교' },
+        { key: 'medication', name: '약 정보', summary: '복용 주의·부작용·상호작용' },
+      ],
+    },
+    after: {
+      label: '떠난 뒤',
+      categories: [
+        { key: 'death-report', name: '사망신고 절차', summary: '7일 이내 해야 할 일' },
+        { key: 'insurance-claim', name: '보험금 청구', summary: '사망보험·실비 청구 안내' },
+        { key: 'inheritance', name: '상속·세금', summary: '상속세·취득세 큰 그림' },
+        { key: 'funeral', name: '장례 절차', summary: '3일장 체크리스트, 비용 비교' },
+        { key: 'digital-close', name: '디지털 계정 폐쇄', summary: '카카오·네이버·SNS 폐쇄 절차' },
+        { key: 'belongings', name: '유품 정리', summary: '가족이 함께하는 정리법' },
+      ],
+    },
+  };
+
+  let state = { stage: 'pre', category: null };
+
+  // 콘텐츠가 준비된 카테고리 (확장 시 추가)
+  const ENABLED_KEYS = new Set(['advance-directive', 'funeral-prepay', 'long-term-care']);
+
+  function render() {
+    // 카테고리 사이드바
+    const list = document.getElementById('category-list');
+    const cats = STAGES[state.stage].categories;
+    list.innerHTML = cats.map(c => `
+      <li class="category-item ${state.category === c.key ? 'active' : ''}" data-cat="${c.key}">
+        ${c.name}${ENABLED_KEYS.has(c.key) ? '<span style="display:inline-block;margin-left:6px;padding:1px 7px;background:var(--primary);color:#FFF;border-radius:999px;font-size:10px;font-weight:800;letter-spacing:0.04em;vertical-align:1px;">NEW</span>' : ''}
+      </li>
+    `).join('');
+    list.querySelectorAll('.category-item').forEach(el => {
+      el.addEventListener('click', () => {
+        state.category = el.dataset.cat;
+        render();
+      });
+    });
+
+    // 본문
+    const area = document.getElementById('articles-area');
+    if (!state.category) {
+      area.innerHTML = `
+        <div class="empty">
+          <div class="empty-icon">🌿</div>
+          <h2>왼쪽에서 알고 싶은 주제를 선택해 주세요</h2>
+          <p>각 시점마다 가족이 가장 자주 마주치는 주제를 모았어요. 베타 단계라 일부 주제만 열려 있어요.</p>
+        </div>
+      `;
+      return;
+    }
+    const cat = cats.find(c => c.key === state.category);
+    // 실제 콘텐츠가 준비된 카테고리는 해당 페이지로 직접 이동
+    const ENABLED = {
+      'advance-directive': '/info/advance-directive.html',
+      'funeral-prepay':    '/info/funeral-prepay.html',
+      'long-term-care':    '/info/long-term-care.html',
+    };
+    if (ENABLED[cat.key]) {
+      window.location.href = ENABLED[cat.key];
+      return;
+    }
+    // V1 — 그 외 카테고리는 "정리 중" + 베타 알림
+    area.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">📝</div>
+        <h2>${cat.name} — 정리 중이에요</h2>
+        <p>${cat.summary}<br><br>이 주제에 대해 먼저 받아 보고 싶으시면, 아래 베타 알림에 신청해 주세요.</p>
+        <button type="button" class="primary-btn" id="topic-waitlist-btn">${cat.name} 알림 받기</button>
+      </div>
+    `;
+    document.getElementById('topic-waitlist-btn')?.addEventListener('click', () => {
+      handleWaitlist(`${STAGES[state.stage].label} · ${cat.name}`);
+    });
+  }
+
+  document.querySelectorAll('.stage-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.stage-tab').forEach(t => t.classList.toggle('active', t === tab));
+      state.stage = tab.dataset.stage;
+      state.category = null;
+      render();
+    });
+  });
+
+  document.getElementById('waitlist-btn').addEventListener('click', () => {
+    handleWaitlist('전체 알림');
+  });
+
+  function handleWaitlist(topic) {
+    if (!currentUser) {
+      // 비로그인 시 가입 페이지로
+      const msg = encodeURIComponent(`잇다 정보 베타 알림 신청 (주제: ${topic})`);
+      window.location.href = `/signup.html?topic=${msg}`;
+      return;
+    }
+    // V1 — 단순 토글로 가입자에 표시 메시지
+    alert(`"${topic}" 베타 알림에 신청하셨어요. 정리되면 가장 먼저 알려 드릴게요.`);
+    // TODO V2: insert into info_waitlist table
+  }
+
+  render();
+</script>
+
+<script src="/scroll-top.js" defer></script>
+
+</body>
+</html>
