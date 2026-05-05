@@ -1662,7 +1662,7 @@ function toggleQuickCard(btn, wrapId) {
     const s = state.subjects.find(x => x.id === state.currentSubjectId);
     if (!s) return;
     const current = getMyLabel(s.id) || '';
-    const newLabel = prompt(`"${s.name}"을(를) 나에게는 어떻게 부르시나요?\n(비워두면 원래 이름 "${s.name}"으로 표시돼요)`, current);
+    const newLabel = prompt(`돌봄대상자 닉네임 변경`, current);
     if (newLabel === null) return; // 취소
     setMyLabel(s.id, newLabel.trim());
     renderSubjectCards();
