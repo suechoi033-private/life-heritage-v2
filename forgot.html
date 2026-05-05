@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>비밀번호 찾기 · 잇다</title>
-  <link rel="stylesheet" href="auth-styles.css">
+  <link rel="stylesheet" href="./auth-styles.css">
 </head>
 <body>
 
@@ -34,7 +34,7 @@
   </form>
 
   <div class="auth-bottom">
-    <a href="login.html">← 로그인 화면으로 돌아가기</a>
+    <a href="./login.html">← 로그인 화면으로 돌아가기</a>
   </div>
 </main>
 
@@ -43,7 +43,7 @@
 </footer>
 
 <script type="module">
-  import { resetPassword, friendlyError } from 'auth.js';
+  import { resetPassword, friendlyError } from './auth.js';
 
   const form = document.getElementById('forgot-form');
   const alertBox = document.getElementById('alert');

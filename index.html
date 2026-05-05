@@ -7,7 +7,7 @@
   <meta name="description" content="부모님의 돌봄, 나의 마무리, 함께한 기억 — 한 자리에서 한 발씩.">
   <meta property="og:title" content="잇다 — 이따가 하지 말고 지금">
   <meta property="og:description" content="미루지 말고 지금. 잇다는 인생의 마무리를 미리 준비하는 일을 조금 더 가볍게 만듭니다.">
-  <link rel="stylesheet" href="auth-styles.css">
+  <link rel="stylesheet" href="./auth-styles.css">
   <style>
     body { background: var(--bg); }
 
@@ -298,8 +298,8 @@
 </main>
 
 <script type="module">
-import { supabase } from 'auth.js';
-import { renderNav } from 'nav.js';
+import { supabase } from './auth.js';
+import { renderNav } from './nav.js';
 
 await renderNav({ active: 'home', infoIcon: true });
 
@@ -343,7 +343,7 @@ if (user) {
 
   // 1. 오늘 잇고 카드
   html += `
-    <a href="ask.html" class="card-today" aria-label="오늘 잇고">
+    <a href="./ask.html" class="card-today" aria-label="오늘 잇고">
       <div class="card-eyebrow">✨ 오늘 잇고</div>
       <div class="card-question">${todayQ?.question_text || '오늘 당신은 어떤 하루를 보냈나요?'}</div>
       <div class="card-cta">답변 남기기 <span>→</span></div>
@@ -352,7 +352,7 @@ if (user) {
 
   // 2. 돌봄 카드
   html += `
-    <a href="care.html" class="card-care" aria-label="돌봄 일지">
+    <a href="./care.html" class="card-care" aria-label="돌봄 일지">
       <div class="card-icon-wrap">🤝</div>
       <div class="card-body">
         <div class="card-title">오늘 한 칸 · 돌봄</div>
@@ -364,7 +364,7 @@ if (user) {
 
   // 3. 내 마무리 카드
   html += `
-    <a href="self.html" class="card-care" aria-label="내 마무리">
+    <a href="./self.html" class="card-care" aria-label="내 마무리">
       <div class="card-icon-wrap" style="background:var(--warm-soft)">🕊</div>
       <div class="card-body">
         <div class="card-title">내 마무리</div>
@@ -382,7 +382,7 @@ if (user) {
         <div class="card-nudge-body">
           <div class="card-nudge-title">미루지 마요</div>
           <div class="card-nudge-desc">사전연명의료의향서, 아직 작성 전이시죠?<br>5분이면 충분해요.</div>
-          <a href="self.html" class="card-nudge-action">지금 시작하기</a>
+          <a href="./self.html" class="card-nudge-action">지금 시작하기</a>
         </div>
         <button class="nudge-dismiss" id="nudge-dismiss-btn" aria-label="닫기">✕</button>
       </div>
@@ -406,21 +406,21 @@ if (user) {
       <div class="card-onboard-title">오늘 어떤 마음으로<br>오셨어요?</div>
       <div class="card-onboard-desc">잇다는 두 가지 모두 함께 하실 수 있어요.</div>
       <div class="onboard-options">
-        <a href="signup.html?mode=care" class="onboard-opt">
+        <a href="./signup.html?mode=care" class="onboard-opt">
           <div class="onboard-opt-icon">🤝</div>
           <div class="onboard-opt-text">
             부모님 안부를 함께 기록하고 싶어요
             <span class="onboard-opt-sub">돌봄 일지 · 가족 초대 · 안심 정보</span>
           </div>
         </a>
-        <a href="signup.html?mode=self" class="onboard-opt">
+        <a href="./signup.html?mode=self" class="onboard-opt">
           <div class="onboard-opt-icon">🕊</div>
           <div class="onboard-opt-text">
             나의 의향을 미리 정리하려고요
             <span class="onboard-opt-sub">내 마무리 · 디지털 자산 · 가족 메시지</span>
           </div>
         </a>
-        <a href="stories.html" class="onboard-opt" style="border-style:dashed;">
+        <a href="./stories.html" class="onboard-opt" style="border-style:dashed;">
           <div class="onboard-opt-icon">🌿</div>
           <div class="onboard-opt-text">
             먼저 둘러볼게요
@@ -428,7 +428,7 @@ if (user) {
           </div>
         </a>
       </div>
-      <div class="onboard-note">이미 계정이 있으시면 <a href="login.html" style="color:var(--primary);font-weight:700;">로그인</a></div>
+      <div class="onboard-note">이미 계정이 있으시면 <a href="./login.html" style="color:var(--primary);font-weight:700;">로그인</a></div>
     </div>
   `;
 }
@@ -437,22 +437,22 @@ if (user) {
 const quickHtml = `
   <div class="section-label">바로가기</div>
   <div class="quick-grid">
-    <a href="stories.html" class="quick-item">
+    <a href="./stories.html" class="quick-item">
       <div class="quick-item-icon">🌿</div>
       <span class="quick-item-label">기억</span>
       <div class="quick-item-desc">함께한 시간의 이야기</div>
     </a>
-    <a href="info.html" class="quick-item">
+    <a href="./info.html" class="quick-item">
       <div class="quick-item-icon">📚</div>
       <span class="quick-item-label">정보</span>
       <div class="quick-item-desc">미리·곁에·떠난 뒤</div>
     </a>
-    <a href="info/advance-directive.html" class="quick-item">
+    <a href="./info/advance-directive.html" class="quick-item">
       <div class="quick-item-icon">🩺</div>
       <span class="quick-item-label">사전연명의향서</span>
       <div class="quick-item-desc">가까운 등록기관 찾기</div>
     </a>
-    <a href="info/long-term-care.html" class="quick-item">
+    <a href="./info/long-term-care.html" class="quick-item">
       <div class="quick-item-icon">🏥</div>
       <span class="quick-item-label">장기요양보험</span>
       <div class="quick-item-desc">등급·신청 안내</div>
@@ -462,6 +462,6 @@ const quickHtml = `
 document.getElementById('main-content').insertAdjacentHTML('beforeend', quickHtml);
 </script>
 
-<script src="scroll-top.js" defer></script>
+<script src="./scroll-top.js" defer></script>
 </body>
 </html>

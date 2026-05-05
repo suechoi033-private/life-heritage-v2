@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>기억 · 잇다</title>
-  <link rel="stylesheet" href="auth-styles.css">
+  <link rel="stylesheet" href="./auth-styles.css">
   <style>
     .story-shell {
       max-width: 720px;
@@ -400,7 +400,7 @@
 </footer>
 
 <script type="module">
-  import { supabase } from 'auth.js';
+  import { supabase } from './auth.js';
 
   // ── Parse story ID from URL ───────────
   const params = new URLSearchParams(window.location.search);
@@ -420,7 +420,7 @@
   const isAdmin = session?.user?.email === ADMIN_EMAIL;
 
   // Update top-bar links (unified nav)
-  const { renderTopBar } = await import('nav.js');
+  const { renderTopBar } = await import('./nav.js');
   await renderTopBar({ active: 'my' });
 
   // ── Load story ────────────────────────
@@ -457,7 +457,7 @@
     renderStory(story);
     if (isOwner) {
       document.getElementById('owner-actions').classList.remove('hidden');
-      document.getElementById('edit-btn').href = 'write.html?edit=' + story.id;
+      document.getElementById('edit-btn').href = './write.html?edit=' + story.id;
     }
     await loadPhotos(story.id);
     await loadFlowerAndRemembrances(story.id);
@@ -658,7 +658,7 @@
     if (!confirm('이 기록을 삭제하시겠어요? 되돌릴 수 없습니다.')) return;
     const { error } = await supabase.from('stories').delete().eq('id', story.id);
     if (error) { alert('삭제에 실패했습니다: ' + error.message); return; }
-    window.location.href = 'my.html';
+    window.location.href = './my.html';
   });
 
   // ── Helpers ───────────────────────────

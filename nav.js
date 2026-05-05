@@ -1,17 +1,17 @@
 // 잇다 — 공통 바텀 탭 + 탑바 내비게이션 (모바일 우선 v2)
-// 사용법: import { renderNav } from 'nav.js';
+// 사용법: import { renderNav } from './nav.js';
 //          renderNav({ active: 'care' });
 // active: home | care | self | stories | my
 // opts.infoIcon: true → 탑바 우상단에 정보 아이콘 표시
 
-import { supabase } from 'auth.js';
+import { supabase } from './auth.js';
 
 const TABS = [
-  { key: 'home',    label: '홈',        icon: '🏠', href: 'index.html' },
-  { key: 'care',    label: '돌봄',      icon: '🤝', href: 'care.html'   },
-  { key: 'self',    label: '내 마무리', icon: '🕊',  href: 'self.html'   },
-  { key: 'stories', label: '기억',      icon: '🌿', href: 'stories.html' },
-  { key: 'my',      label: '마이',      icon: '👤', href: 'my.html'     },
+  { key: 'home',    label: '홈',        icon: '🏠', href: './index.html' },
+  { key: 'care',    label: '돌봄',      icon: '🤝', href: './care.html'   },
+  { key: 'self',    label: '내 마무리', icon: '🕊',  href: './self.html'   },
+  { key: 'stories', label: '기억',      icon: '🌿', href: './stories.html' },
+  { key: 'my',      label: '마이',      icon: '👤', href: './my.html'     },
 ];
 
 export async function renderNav(opts = {}) {
@@ -36,11 +36,11 @@ function _renderTopBar({ loggedIn, infoIcon, title }) {
 
   const logoText = title
     ? `<span class="itda-top-bar-pagetitle">${title}</span>`
-    : `<a href="index.html" class="logo"><span class="logo-mark">●</span> 잇다</a>`;
+    : `<a href="./index.html" class="logo"><span class="logo-mark">●</span> 잇다</a>`;
 
   const actions = [];
   if (infoIcon) {
-    actions.push(`<a href="info.html" title="정보" aria-label="정보">📚</a>`);
+    actions.push(`<a href="./info.html" title="정보" aria-label="정보">📚</a>`);
   }
   if (loggedIn) {
     actions.push(`<button id="itda-ask-btn" title="오늘 잇고" aria-label="오늘 잇고">✏️</button>`);
@@ -58,7 +58,7 @@ function _renderTopBar({ loggedIn, infoIcon, title }) {
   const askBtn = document.getElementById('itda-ask-btn');
   if (askBtn) {
     askBtn.addEventListener('click', () => {
-      window.location.href = 'ask.html';
+      window.location.href = './ask.html';
     });
   }
 
@@ -91,7 +91,7 @@ function _renderBottomTabs({ active, loggedIn }) {
     const isActive = t.key === active;
     // 로그인 필요 탭: self, care, my — 비로그인이면 login으로 이동
     const href = (!loggedIn && ['self', 'care', 'my'].includes(t.key))
-      ? `/login.html`
+      ? `./login.html`
       : t.href;
     return `
       <a href="${href}" class="${isActive ? 'active' : ''}" aria-label="${t.label}" aria-current="${isActive ? 'page' : 'false'}">

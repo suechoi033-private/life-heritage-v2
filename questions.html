@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>지난 질문들 · 잇다</title>
-  <link rel="stylesheet" href="auth-styles.css">
+  <link rel="stylesheet" href="./auth-styles.css">
   <style>
     .shell {
       max-width: 820px;
@@ -248,7 +248,7 @@
   <div class="top-bar-inner">
     <a href="/" class="logo"><span class="logo-mark">●</span> 잇다</a>
     <div class="top-bar-links" id="top-bar-links">
-      <a href="login.html">로그인</a>
+      <a href="./login.html">로그인</a>
     </div>
   </div>
 </nav>
@@ -258,7 +258,7 @@
   <p class="lead">100개의 질문이 매일 한 개씩 떠올라요. 모두에게 같은 질문이 같은 날 도착해요. 옆에는 답변 수와 받은 공감 수예요.</p>
 
   <!-- Today's question featured card -->
-  <a id="today-card" class="today-card" href="ask.html" style="display: none;">
+  <a id="today-card" class="today-card" href="./ask.html" style="display: none;">
     <div class="today-kicker"><span id="today-date">오늘</span></div>
     <div id="today-cat" class="today-cat"></div>
     <div id="today-text" class="today-text">오늘의 질문을 불러오는 중…</div>
@@ -294,12 +294,12 @@
 </footer>
 
 <script type="module">
-  import { supabase } from 'auth.js';
+  import { supabase } from './auth.js';
 
   const { data: { session } } = await supabase.auth.getSession();
   const currentUser = session?.user || null;
 
-  const { renderTopBar } = await import('nav.js');
+  const { renderTopBar } = await import('./nav.js');
   await renderTopBar({ active: 'ask' });
 
   const CATEGORY_LABEL = {
@@ -402,7 +402,7 @@
             countHtml = lines.join('');
           }
           return `
-            <a href="ask.html?id=${q.id}" class="q-row" ${isToday ? 'style="background: var(--primary-soft);"' : ''}>
+            <a href="./ask.html?id=${q.id}" class="q-row" ${isToday ? 'style="background: var(--primary-soft);"' : ''}>
               <div class="q-num">${q.display_order}</div>
               <div class="q-text">
                 <span class="cat">${CATEGORY_LABEL_SHORT[q.category] || q.category}</span>
@@ -434,7 +434,7 @@
   }
 </script>
 
-<script src="scroll-top.js" defer></script>
+<script src="./scroll-top.js" defer></script>
 
 </body>
 </html>

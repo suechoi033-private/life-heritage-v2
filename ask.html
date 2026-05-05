@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>오늘 잇고 · 잇다</title>
-  <link rel="stylesheet" href="auth-styles.css">
+  <link rel="stylesheet" href="./auth-styles.css">
   <style>
     .ask-shell {
       max-width: 820px;
@@ -380,7 +380,7 @@
   <div class="top-bar-inner">
     <a href="/" class="logo"><span class="logo-mark">●</span> 잇다</a>
     <div class="top-bar-links" id="top-bar-links">
-      <a href="login.html">로그인</a>
+      <a href="./login.html">로그인</a>
     </div>
   </div>
 </nav>
@@ -397,7 +397,7 @@
     <p class="q-meta">
       <span id="q-category">—</span> ·
       <span id="q-count">0명이 답을 남겼어요</span>
-      <a href="questions.html" style="margin-left: 10px; color: var(--primary); text-decoration: none; font-weight: 700;">지난 질문 보기 →</a>
+      <a href="./questions.html" style="margin-left: 10px; color: var(--primary); text-decoration: none; font-weight: 700;">지난 질문 보기 →</a>
     </p>
 
     <div class="action-row">
@@ -439,13 +439,13 @@
 </footer>
 
 <script type="module">
-  import { supabase } from 'auth.js';
+  import { supabase } from './auth.js';
 
   const { data: { session } } = await supabase.auth.getSession();
   const currentUser = session?.user || null;
   const currentUserName = currentUser?.user_metadata?.name || currentUser?.email?.split('@')[0] || null;
 
-  const { renderTopBar } = await import('nav.js');
+  const { renderTopBar } = await import('./nav.js');
   await renderTopBar({ active: 'ask' });
 
   const CATEGORY_LABEL = {
@@ -472,7 +472,7 @@
     if (pastErr || !pastQ) {
       document.getElementById('loading').innerHTML = `
         <div class="empty-icon">⚠️</div>
-        <p>질문을 찾을 수 없어요.<br><a href="ask.html" style="color: var(--primary);">오늘의 질문으로</a></p>
+        <p>질문을 찾을 수 없어요.<br><a href="./ask.html" style="color: var(--primary);">오늘의 질문으로</a></p>
       `;
       throw new Error('past question not found');
     }
@@ -650,7 +650,7 @@
   // ── Write modal ──────────────────────────
   document.getElementById('write-btn').addEventListener('click', () => {
     if (!currentUser) {
-      window.location.href = 'login.html';
+      window.location.href = './login.html';
       return;
     }
     openWriteModal(!!state.myAnswer);
@@ -710,7 +710,7 @@
 
   // ── Like ─────────────────────────────────
   async function toggleLike(answerId) {
-    if (!currentUser) { window.location.href = 'login.html'; return; }
+    if (!currentUser) { window.location.href = './login.html'; return; }
     const a = state.answers.find(x => x.id === answerId);
     if (!a) return;
     if (a._myLike) {
@@ -761,7 +761,7 @@
       </div>
     ` : `
       <div style="padding: 8px 0; font-size: 13px; color: var(--ink-muted);">
-        댓글을 남기려면 <a href="login.html" style="color: var(--primary);">로그인</a>하세요.
+        댓글을 남기려면 <a href="./login.html" style="color: var(--primary);">로그인</a>하세요.
       </div>
     `;
 

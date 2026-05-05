@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>로그인 · 잇다</title>
-  <link rel="stylesheet" href="auth-styles.css">
+  <link rel="stylesheet" href="./auth-styles.css">
 </head>
 <body>
 
@@ -38,11 +38,11 @@
   </form>
 
   <div class="auth-links">
-    <a href="forgot.html">비밀번호를 잊으셨나요?</a>
+    <a href="./forgot.html">비밀번호를 잊으셨나요?</a>
   </div>
 
   <div class="auth-bottom">
-    아직 가입하지 않으셨다면 <a href="signup.html">가입하기</a>
+    아직 가입하지 않으셨다면 <a href="./signup.html">가입하기</a>
   </div>
 </main>
 
@@ -51,7 +51,7 @@
 </footer>
 
 <script type="module">
-  import { signIn, redirectIfAuthed, friendlyError } from 'auth.js';
+  import { signIn, redirectIfAuthed, friendlyError } from './auth.js';
 
   // ── 초대 코드 캡처 ────────────────────────
   const inviteCode = (new URLSearchParams(location.search).get('invite')
@@ -62,7 +62,7 @@
     await redirectIfAuthed(`/care.html?accept=${encodeURIComponent(inviteCode)}`);
     const lead = document.querySelector('.auth-lead');
     if (lead) lead.innerHTML = `<strong style="color: var(--primary);">초대 코드 ${inviteCode}</strong>를 받으셨네요. 로그인하시면 자동으로 합류됩니다.`;
-    const signupLinks = document.querySelectorAll('a[href="signup.html"]');
+    const signupLinks = document.querySelectorAll('a[href="./signup.html"]');
     signupLinks.forEach(a => { a.href = `/signup.html?invite=${inviteCode}`; });
   } else {
     await redirectIfAuthed('my.html');

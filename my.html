@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>마이페이지 · 잇다</title>
-  <link rel="stylesheet" href="auth-styles.css">
+  <link rel="stylesheet" href="./auth-styles.css">
   <style>
     .dashboard {
       max-width: 960px;
@@ -455,7 +455,7 @@
       align-items: center;
       justify-content: center;
     }
-    .board-check input[type="checkbox"] {
+    .board-check input[type="checkbox"./] {
       width: 16px;
       height: 16px;
       cursor: pointer;
@@ -543,19 +543,19 @@
       <span class="today-dash-kicker">오늘의 잇다</span>
     </div>
     <div class="today-dash-grid">
-      <a href="ask.html" class="today-card today-card--question">
+      <a href="./ask.html" class="today-card today-card--question">
         <div class="today-card-icon">🪞</div>
         <div class="today-card-meta">오늘의 한 문장</div>
         <div class="today-card-title" id="dash-q-title">불러오는 중…</div>
         <div class="today-card-cta" id="dash-q-cta">답하러 가기 →</div>
       </a>
-      <a href="care.html" class="today-card today-card--care">
+      <a href="./care.html" class="today-card today-card--care">
         <div class="today-card-icon">🤝</div>
         <div class="today-card-meta">돌봄</div>
         <div class="today-card-title" id="dash-care-title">불러오는 중…</div>
         <div class="today-card-cta" id="dash-care-cta">기록하러 가기 →</div>
       </a>
-      <a href="note.html" class="today-card today-card--note">
+      <a href="./note.html" class="today-card today-card--note">
         <div class="today-card-icon">📝</div>
         <div class="today-card-meta">잇다 노트</div>
         <div class="today-card-title" id="dash-note-title">정리 0%</div>
@@ -564,7 +564,7 @@
         </div>
         <div class="today-card-cta">정리하러 가기 →</div>
       </a>
-      <a href="my.html#memory" class="today-card today-card--memory" id="dash-memory-link">
+      <a href="./my.html#memory" class="today-card today-card--memory" id="dash-memory-link">
         <div class="today-card-icon">🌿</div>
         <div class="today-card-meta">기억</div>
         <div class="today-card-title" id="dash-memory-title">새 활동 없음</div>
@@ -589,7 +589,7 @@
   <section class="pane" id="pane-care" role="tabpanel">
     <div class="section-head">
       <span class="section-title">진행 중 돌봄</span>
-      <a href="care.html" class="section-action">전체 보기 →</a>
+      <a href="./care.html" class="section-action">전체 보기 →</a>
     </div>
     <div id="subjects-container">
       <div class="empty-state" id="subjects-loading">
@@ -609,7 +609,7 @@
       <span class="section-title">내가 쓴 이야기</span>
     </div>
     <div class="action-bar" id="memory-actions">
-      <a href="write.html" class="action-btn primary">＋ 쓰기</a>
+      <a href="./write.html" class="action-btn primary">＋ 쓰기</a>
       <button type="button" class="action-btn" id="btn-edit" disabled>편집</button>
       <button type="button" class="action-btn danger" id="btn-delete" disabled>삭제</button>
       <span class="selected-count" id="selected-count"></span>
@@ -628,8 +628,8 @@
         오늘 잇고 · 가입 <span id="life-q-day">--</span>일째
       </div>
       <div id="life-q-text" style="font-family: var(--font-serif); font-size: 17px; line-height: 1.6; margin-bottom: 14px;">불러오는 중…</div>
-      <a href="ask.html" style="display: inline-block; padding: 9px 18px; background: var(--ink); color: #FFF; border-radius: 999px; text-decoration: none; font-size: 13.5px; font-weight: 700;">오늘 잇고 →</a>
-      <a href="questions.html" style="display: inline-block; margin-left: 8px; padding: 9px 18px; color: var(--ink-soft); border-radius: 999px; text-decoration: underline; font-size: 13px;">지난 질문 보기</a>
+      <a href="./ask.html" style="display: inline-block; padding: 9px 18px; background: var(--ink); color: #FFF; border-radius: 999px; text-decoration: none; font-size: 13.5px; font-weight: 700;">오늘 잇고 →</a>
+      <a href="./questions.html" style="display: inline-block; margin-left: 8px; padding: 9px 18px; color: var(--ink-soft); border-radius: 999px; text-decoration: underline; font-size: 13px;">지난 질문 보기</a>
     </div>
 
     <div class="section-head">
@@ -649,10 +649,10 @@
 </footer>
 
 <script type="module">
-  import { requireAuth, signOut, supabase } from 'auth.js';
-  import { renderNav } from 'nav.js';
+  import { requireAuth, signOut, supabase } from './auth.js';
+  import { renderNav } from './nav.js';
 
-  const session = await requireAuth('login.html');
+  const session = await requireAuth('./login.html');
   if (!session) { /* redirected */ }
 
   const user = session.user;
@@ -841,7 +841,7 @@
         <div class="empty-icon">🌿</div>
         <h2>아직 돌봄 대상이 없어요</h2>
         <p>가족과 함께 돌볼 수 있도록<br>첫 대상부터 등록해보세요.</p>
-        <a href="care.html" class="primary-btn">돌봄 시작하기</a>
+        <a href="./care.html" class="primary-btn">돌봄 시작하기</a>
       </div>
     `;
   } else {
@@ -855,7 +855,7 @@
             ? `마지막 기록 ${formatRelative(lastLog.created_at)}`
             : '기록 없음';
           return `
-            <a href="care.html?subject=${s.id}" class="subject-card">
+            <a href="./care.html?subject=${s.id}" class="subject-card">
               <div class="subject-name">${escapeHtml(s.name)}</div>
               <div class="subject-relation">${escapeHtml(s.relation || '')} · ${days}일째</div>
               <div class="subject-meta">
@@ -910,7 +910,7 @@
         <div class="empty-icon">🕯️</div>
         <h2>아직 기록된 이야기가 없어요</h2>
         <p>사진 몇 장과 짧은 메모로 시작해보세요.<br>길게 쓰지 않아도 돼요.</p>
-        <a href="write.html" class="primary-btn">첫 이야기 시작하기</a>
+        <a href="./write.html" class="primary-btn">첫 이야기 시작하기</a>
       </div>
     `;
   } else {
@@ -948,17 +948,17 @@
               <div class="board-check">
                 <input type="checkbox" class="story-check" data-id="${s.id}" aria-label="선택">
               </div>
-              <a href="story.html?id=${s.id}" class="board-cell muted" style="text-decoration:none;color:inherit;">${num}</a>
-              <a href="story.html?id=${s.id}" class="board-cell-title" style="text-decoration:none;color:inherit;">
+              <a href="./story.html?id=${s.id}" class="board-cell muted" style="text-decoration:none;color:inherit;">${num}</a>
+              <a href="./story.html?id=${s.id}" class="board-cell-title" style="text-decoration:none;color:inherit;">
                 ${escapeHtml(s.title || '(제목 없음)')}
                 ${newRem > 0 ? `<span class="new-mark">N</span>` : ''}
               </a>
-              <a href="story.html?id=${s.id}" class="board-cell board-hide-mobile" style="text-decoration:none;color:inherit;">${escapeHtml(s.relation || '-')}</a>
-              <a href="story.html?id=${s.id}" class="board-cell board-hide-mobile" style="text-decoration:none;color:inherit;">${date}</a>
+              <a href="./story.html?id=${s.id}" class="board-cell board-hide-mobile" style="text-decoration:none;color:inherit;">${escapeHtml(s.relation || '-')}</a>
+              <a href="./story.html?id=${s.id}" class="board-cell board-hide-mobile" style="text-decoration:none;color:inherit;">${date}</a>
               <div class="board-cell board-hide-mobile">
                 <span class="visibility-pill">${visText}</span>
               </div>
-              <a href="story.html?id=${s.id}" class="board-cell" style="text-decoration:none;color:inherit;">${remCount > 0 ? remCount : '-'}</a>
+              <a href="./story.html?id=${s.id}" class="board-cell" style="text-decoration:none;color:inherit;">${remCount > 0 ? remCount : '-'}</a>
             </div>
           `;
         }).join('')}
@@ -1068,7 +1068,7 @@
           <div class="empty-icon">🌿</div>
           <h2>아직 남긴 답이 없어요</h2>
           <p>오늘의 한 문장에 짧게 한 줄 남겨보세요.</p>
-          <a href="ask.html" class="primary-btn">첫 답 남기기</a>
+          <a href="./ask.html" class="primary-btn">첫 답 남기기</a>
         </div>
       `;
       return;
@@ -1083,7 +1083,7 @@
             ? `<span style="font-size: 11px; padding: 2px 7px; background: var(--bg); color: var(--ink-muted); border-radius: 999px; margin-left: 6px;">나만 보기</span>`
             : '';
           return `
-            <a href="ask.html" style="display: block; background: var(--bg-alt); border-radius: 14px; padding: 18px 20px; text-decoration: none; color: inherit;">
+            <a href="./ask.html" style="display: block; background: var(--bg-alt); border-radius: 14px; padding: 18px 20px; text-decoration: none; color: inherit;">
               <div style="font-size: 12px; color: var(--ink-muted); margin-bottom: 6px;">
                 Day ${order} · ${formatRelative(a.created_at)}${visTag}
               </div>

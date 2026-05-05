@@ -1,5 +1,5 @@
 // 잇다 — 맨 위로 floating button
-// 사용법: <script src="scroll-top.js" defer></script>
+// 사용법: <script src="./scroll-top.js" defer></script>
 
 (function () {
   if (document.getElementById('scroll-to-top')) return;

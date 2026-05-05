@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>환영합니다 · 잇다</title>
-  <link rel="stylesheet" href="auth-styles.css">
+  <link rel="stylesheet" href="./auth-styles.css">
   <style>
     .shell {
       max-width: 640px;
@@ -334,10 +334,10 @@
     <div class="other-places">
       <span class="other-places-label">다른 자리도 둘러보고 싶으세요?</span>
       <div class="other-places-links">
-        <a href="info.html" class="other-place-link">정보</a>
-        <a href="care.html" class="other-place-link">돌봄</a>
-        <a href="write.html" class="other-place-link">기억</a>
-        <a href="ask.html" class="other-place-link">오늘 잇고</a>
+        <a href="./info.html" class="other-place-link">정보</a>
+        <a href="./care.html" class="other-place-link">돌봄</a>
+        <a href="./write.html" class="other-place-link">기억</a>
+        <a href="./ask.html" class="other-place-link">오늘 잇고</a>
       </div>
     </div>
 
@@ -373,7 +373,7 @@
 </footer>
 
 <script type="module">
-  import { supabase } from 'auth.js';
+  import { supabase } from './auth.js';
 
   const { data: { session } } = await supabase.auth.getSession();
   const currentUser = session?.user || null;
@@ -383,25 +383,25 @@
       icon: '🧭',
       name: '정보 — 미리 챙길 것',
       desc: '사전연명의료의향서, 가족 회의 가이드, 보험·연금 점검부터 시작해보세요.',
-      href: 'info.html',
+      href: './info.html',
     },
     care: {
       icon: '🤝',
       name: '돌봄 — 가족 공동 기록 시작',
       desc: '돌볼 분을 등록하고, 가족을 초대해 일지를 함께 쓰세요. 혼자 떠안지 않아도 돼요.',
-      href: 'care.html',
+      href: './care.html',
     },
     memory: {
       icon: '🌿',
       name: '기억 — 첫 이야기 남기기',
       desc: '사진 한 장과 짧은 메모로 시작해보세요. 함께 기억해주는 사람들이 곁에 있어요.',
-      href: 'write.html',
+      href: './write.html',
     },
     reflect: {
       icon: '🪞',
       name: '오늘 잇고 — 한 문장에 답하기',
       desc: '오늘의 한 문장에 답하며 시작해보세요. 100개의 질문이 매일 차곡차곡 쌓여요.',
-      href: 'ask.html',
+      href: './ask.html',
     },
   };
 
@@ -458,10 +458,10 @@
   document.getElementById('step3-next').addEventListener('click', () => showStep(4));
 
   // ── Step 4: 마무리 → my.html ──
-  document.getElementById('finish-onboarding').addEventListener('click', () => persistAndGo('my.html'));
+  document.getElementById('finish-onboarding').addEventListener('click', () => persistAndGo('./my.html'));
 
   // ── 건너뛰기 ──
-  document.getElementById('skip-onboarding').addEventListener('click', () => persistAndGo('my.html'));
+  document.getElementById('skip-onboarding').addEventListener('click', () => persistAndGo('./my.html'));
 
   // ── 이전 버튼 (모든 pane) ──
   document.querySelectorAll('[data-back]').forEach(btn => {
