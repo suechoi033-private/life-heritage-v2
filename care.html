@@ -536,6 +536,111 @@
 
     .hidden { display: none !important; }
 
+    /* ── Photos ─────────────────────────── */
+    .log-photos {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    .log-photo {
+      width: 80px;
+      height: 80px;
+      border-radius: 10px;
+      object-fit: cover;
+      cursor: zoom-in;
+      border: 1px solid var(--line);
+      transition: opacity 0.15s;
+    }
+    .log-photo:hover { opacity: 0.85; }
+    .photo-preview-strip {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+      min-height: 0;
+    }
+    .photo-thumb-wrap {
+      position: relative;
+      width: 72px;
+      height: 72px;
+      flex-shrink: 0;
+    }
+    .photo-thumb {
+      width: 72px;
+      height: 72px;
+      border-radius: 10px;
+      object-fit: cover;
+      border: 1px solid var(--line);
+    }
+    .photo-thumb-remove {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      width: 20px;
+      height: 20px;
+      background: var(--ink);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      padding: 0;
+    }
+    .photo-add-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 72px;
+      height: 72px;
+      border: 1.5px dashed var(--line);
+      border-radius: 10px;
+      background: var(--bg-alt);
+      cursor: pointer;
+      font-size: 24px;
+      color: var(--ink-muted);
+      transition: border-color 0.15s, color 0.15s;
+      flex-shrink: 0;
+    }
+    .photo-add-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .photo-lightbox {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.92);
+      z-index: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: zoom-out;
+    }
+    .photo-lightbox.hidden { display: none; }
+    .photo-lightbox img {
+      max-width: 95vw;
+      max-height: 92dvh;
+      border-radius: 12px;
+      object-fit: contain;
+    }
+    .lightbox-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 36px;
+      height: 36px;
+      background: rgba(255,255,255,0.15);
+      border: none;
+      border-radius: 50%;
+      color: #fff;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
     /* 4카드 빠른 입력 */
     .quick-card {
       display: flex;
@@ -872,6 +977,15 @@
         <textarea id="l-hospital" name="hospital_visit" placeholder="예: 내과 김ㅇㅇ 선생님. 혈압 안정, 다음 검진 3주 후."></textarea>
       </div>
 
+      <!-- 사진 -->
+      <div class="field" style="margin-top: 4px;">
+        <label style="display:block; font-size:13.5px; font-weight:700; color:var(--ink); margin-bottom:8px;">📷 사진 <span class="optional">(선택, 가족 모두가 봐요)</span></label>
+        <div id="photo-preview-strip" class="photo-preview-strip"></div>
+        <label for="l-photos" class="photo-add-btn" id="photo-add-label" title="사진 추가">＋</label>
+        <input type="file" id="l-photos" multiple accept="image/*" style="display:none;">
+        <div class="hint" style="margin-top: 6px;">JPG·PNG·HEIC 등. 여러 장 동시 선택 가능.</div>
+      </div>
+
       <!-- 더 적기 펼치기 -->
       <button type="button" id="more-fields-btn" style="background:transparent;border:none;color:var(--primary);font-size:13px;font-weight:700;cursor:pointer;padding:4px 0;margin-bottom:4px;">+ 더 적기</button>
       <div id="more-fields" class="hidden">
@@ -986,6 +1100,13 @@ function toggleQuickCard(btn, wrapId) {
     wrap.querySelector('textarea')?.focus();
   }
 }
+function openLightbox(url) {
+  const lb = document.getElementById('photo-lightbox');
+  const img = document.getElementById('lightbox-img');
+  if (!lb || !img) return;
+  img.src = url;
+  lb.classList.remove('hidden');
+}
 </script>
 
 <script type="module">
@@ -1027,6 +1148,9 @@ function toggleQuickCard(btn, wrapId) {
     logs: [],
     editingLogId: null,
     editingSubjectId: null,
+    pendingPhotoFiles: [],
+    existingPhotoUrls: [],
+    removedPhotoUrls: [],
   };
 
   // ── DOM helpers ───────────────────────
@@ -1321,6 +1445,11 @@ function toggleQuickCard(btn, wrapId) {
             `).join('')}
           </div>
         `}
+        ${log.photo_urls && log.photo_urls.length > 0 ? `
+          <div class="log-photos">
+            ${log.photo_urls.map(url => `<img src="${escapeHtml(url)}" class="log-photo" alt="사진" onclick="openLightbox('${url.replace(/'/g,"\\'")}'">`).join('')}
+          </div>
+        ` : ''}
       </div>
     `;
   }
@@ -1760,6 +1889,12 @@ function toggleQuickCard(btn, wrapId) {
     $('log-modal-title').textContent = logId ? '기록 수정' : '오늘 기록 쓰기';
     $('log-form').reset();
 
+    // Reset photo state
+    state.pendingPhotoFiles = [];
+    state.existingPhotoUrls = [];
+    state.removedPhotoUrls = [];
+    renderPhotoPreviews();
+
     // Default date = today
     $('l-date').value = new Date().toISOString().split('T')[0];
 
@@ -1775,6 +1910,8 @@ function toggleQuickCard(btn, wrapId) {
         $('l-nutrition').value = log.nutrition || '';
         $('l-emotion').value = log.emotion || '';
         $('l-memo').value = log.free_memo || '';
+        state.existingPhotoUrls = [...(log.photo_urls || [])];
+        renderPhotoPreviews();
       }
     }
   }
@@ -1796,6 +1933,20 @@ function toggleQuickCard(btn, wrapId) {
     submit.textContent = '저장 중…';
     hideAlert();
 
+    // Upload new photos first
+    let uploadedUrls = [];
+    if (state.pendingPhotoFiles.length > 0) {
+      try {
+        uploadedUrls = await uploadPhotos(state.pendingPhotoFiles);
+      } catch (uploadErr) {
+        showAlert('사진 업로드 실패: ' + (uploadErr.message || uploadErr));
+        submit.disabled = false;
+        submit.textContent = '저장';
+        return;
+      }
+    }
+    const allPhotoUrls = [...state.existingPhotoUrls, ...uploadedUrls];
+
     const val = (id) => $(id).value.trim() || null;
     const payload = {
       subject_id: state.currentSubjectId,
@@ -1809,6 +1960,7 @@ function toggleQuickCard(btn, wrapId) {
       nutrition: val('l-nutrition'),
       emotion: val('l-emotion'),
       free_memo: val('l-memo'),
+      photo_urls: allPhotoUrls,
     };
 
     try {
@@ -1849,8 +2001,93 @@ function toggleQuickCard(btn, wrapId) {
     return div.innerHTML;
   }
 
+  // ── Photos ───────────────────────────
+  async function uploadPhotos(files) {
+    const urls = [];
+    for (const file of files) {
+      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+      const path = `${user.id}/${Date.now()}_${Math.random().toString(36).slice(2,8)}.${ext}`;
+      const { data, error } = await supabase.storage
+        .from('care-photos')
+        .upload(path, file, { contentType: file.type, upsert: false });
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from('care-photos').getPublicUrl(data.path);
+      urls.push(urlData.publicUrl);
+    }
+    return urls;
+  }
+
+  function renderPhotoPreviews() {
+    const strip = document.getElementById('photo-preview-strip');
+    if (!strip) return;
+    strip.innerHTML = '';
+    // Existing photos
+    (state.existingPhotoUrls || []).forEach((url, i) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'photo-thumb-wrap';
+      const img = document.createElement('img');
+      img.src = url;
+      img.className = 'photo-thumb';
+      img.alt = '기존 사진';
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'photo-thumb-remove';
+      btn.textContent = '×';
+      btn.addEventListener('click', () => {
+        state.removedPhotoUrls.push(state.existingPhotoUrls[i]);
+        state.existingPhotoUrls.splice(i, 1);
+        renderPhotoPreviews();
+      });
+      wrap.appendChild(img);
+      wrap.appendChild(btn);
+      strip.appendChild(wrap);
+    });
+    // Pending (new) photos
+    (state.pendingPhotoFiles || []).forEach((file, i) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'photo-thumb-wrap';
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(file);
+      img.className = 'photo-thumb';
+      img.alt = '새 사진';
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'photo-thumb-remove';
+      btn.textContent = '×';
+      btn.addEventListener('click', () => {
+        state.pendingPhotoFiles.splice(i, 1);
+        renderPhotoPreviews();
+      });
+      wrap.appendChild(img);
+      wrap.appendChild(btn);
+      strip.appendChild(wrap);
+    });
+  }
+
+  document.getElementById('l-photos')?.addEventListener('change', (e) => {
+    const files = Array.from(e.target.files || []);
+    state.pendingPhotoFiles = [...(state.pendingPhotoFiles || []), ...files];
+    e.target.value = '';
+    renderPhotoPreviews();
+  });
+
+  document.getElementById('photo-lightbox')?.addEventListener('click', (e) => {
+    if (e.target.id !== 'lightbox-img') {
+      document.getElementById('photo-lightbox').classList.add('hidden');
+    }
+  });
+  document.getElementById('lightbox-close-btn')?.addEventListener('click', () => {
+    document.getElementById('photo-lightbox').classList.add('hidden');
+  });
+
 
 </script>
+
+<!-- Photo lightbox -->
+<div class="photo-lightbox hidden" id="photo-lightbox">
+  <button class="lightbox-close" id="lightbox-close-btn">×</button>
+  <img id="lightbox-img" src="" alt="사진 전체보기">
+</div>
 
 </body>
 </html>
