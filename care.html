@@ -544,15 +544,15 @@
       margin-top: 12px;
     }
     .log-photo {
-      width: 80px;
-      height: 80px;
+      width: 100px;
+      height: 100px;
       border-radius: 10px;
       object-fit: cover;
       cursor: zoom-in;
       border: 1px solid var(--line);
-      transition: opacity 0.15s;
+      transition: transform 0.15s, opacity 0.15s;
     }
-    .log-photo:hover { opacity: 0.85; }
+    .log-photo:hover { opacity: 0.88; transform: scale(1.03); }
     .photo-preview-strip {
       display: flex;
       gap: 8px;
@@ -607,38 +607,71 @@
       flex-shrink: 0;
     }
     .photo-add-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .log-photo {
+      cursor: zoom-in;
+    }
     .photo-lightbox {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.92);
+      background: rgba(0,0,0,0.94);
       z-index: 500;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      cursor: zoom-out;
     }
     .photo-lightbox.hidden { display: none; }
-    .photo-lightbox img {
-      max-width: 95vw;
-      max-height: 92dvh;
-      border-radius: 12px;
-      object-fit: contain;
-    }
-    .lightbox-close {
-      position: absolute;
-      top: 16px;
-      right: 16px;
-      width: 36px;
-      height: 36px;
-      background: rgba(255,255,255,0.15);
-      border: none;
-      border-radius: 50%;
-      color: #fff;
-      font-size: 20px;
-      cursor: pointer;
+    .photo-lightbox-img-wrap {
+      flex: 1;
       display: flex;
       align-items: center;
       justify-content: center;
+      width: 100%;
+      padding: 16px;
+      cursor: zoom-out;
+    }
+    .photo-lightbox img {
+      max-width: 100%;
+      max-height: 80dvh;
+      border-radius: 10px;
+      object-fit: contain;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+    }
+    .lightbox-toolbar {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .lightbox-btn {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 10px 18px;
+      border: none;
+      border-radius: 999px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      text-decoration: none;
+    }
+    .lightbox-btn:hover { opacity: 0.85; }
+    .lightbox-btn-close {
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+    }
+    .lightbox-btn-download {
+      background: #fff;
+      color: #111;
+    }
+    .lightbox-counter {
+      font-size: 13px;
+      color: rgba(255,255,255,0.6);
     }
 
     /* 4카드 빠른 입력 */
@@ -1100,13 +1133,87 @@ function toggleQuickCard(btn, wrapId) {
     wrap.querySelector('textarea')?.focus();
   }
 }
-function openLightbox(url) {
+// Lightbox state
+let _lbUrls = [];
+let _lbIdx = 0;
+
+function openLightbox(url, allUrls) {
   const lb = document.getElementById('photo-lightbox');
   const img = document.getElementById('lightbox-img');
   if (!lb || !img) return;
-  img.src = url;
+  _lbUrls = allUrls || [url];
+  _lbIdx = _lbUrls.indexOf(url);
+  if (_lbIdx < 0) _lbIdx = 0;
+  _lbSetPhoto(_lbIdx);
   lb.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
 }
+
+function _lbSetPhoto(idx) {
+  const img = document.getElementById('lightbox-img');
+  const counter = document.getElementById('lightbox-counter');
+  if (!img) return;
+  img.src = _lbUrls[idx] || '';
+  if (counter) {
+    counter.textContent = _lbUrls.length > 1 ? `${idx + 1} / ${_lbUrls.length}` : '';
+  }
+}
+
+function _lbClose() {
+  document.getElementById('photo-lightbox')?.classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+// Close
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('lightbox-close-btn')?.addEventListener('click', _lbClose);
+  document.getElementById('lightbox-img-wrap')?.addEventListener('click', _lbClose);
+
+  // Download
+  document.getElementById('lightbox-download-btn')?.addEventListener('click', async () => {
+    const url = _lbUrls[_lbIdx];
+    if (!url) return;
+    try {
+      const res = await fetch(url);
+      const blob = await res.blob();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = '잇다_사진_' + Date.now() + '.' + (blob.type.split('/')[1] || 'jpg');
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } catch(e) {
+      // fallback: open in new tab (user can long-press to save)
+      window.open(url, '_blank');
+    }
+  });
+
+  // Swipe left/right (touch)
+  let _tsX = null;
+  document.getElementById('photo-lightbox')?.addEventListener('touchstart', e => {
+    _tsX = e.touches[0].clientX;
+  }, { passive: true });
+  document.getElementById('photo-lightbox')?.addEventListener('touchend', e => {
+    if (_tsX === null || _lbUrls.length < 2) return;
+    const dx = e.changedTouches[0].clientX - _tsX;
+    _tsX = null;
+    if (Math.abs(dx) < 40) return;
+    if (dx < 0) { // swipe left → next
+      _lbIdx = (_lbIdx + 1) % _lbUrls.length;
+    } else {       // swipe right → prev
+      _lbIdx = (_lbIdx - 1 + _lbUrls.length) % _lbUrls.length;
+    }
+    _lbSetPhoto(_lbIdx);
+  }, { passive: true });
+
+  // Keyboard
+  document.addEventListener('keydown', e => {
+    const lb = document.getElementById('photo-lightbox');
+    if (!lb || lb.classList.contains('hidden')) return;
+    if (e.key === 'Escape') _lbClose();
+    if (e.key === 'ArrowRight' && _lbUrls.length > 1) { _lbIdx = (_lbIdx + 1) % _lbUrls.length; _lbSetPhoto(_lbIdx); }
+    if (e.key === 'ArrowLeft' && _lbUrls.length > 1) { _lbIdx = (_lbIdx - 1 + _lbUrls.length) % _lbUrls.length; _lbSetPhoto(_lbIdx); }
+  });
+});
 </script>
 
 <script type="module">
@@ -1445,11 +1552,12 @@ function openLightbox(url) {
             `).join('')}
           </div>
         `}
-        ${log.photo_urls && log.photo_urls.length > 0 ? `
-          <div class="log-photos">
-            ${log.photo_urls.map(url => `<img src="${escapeHtml(url)}" class="log-photo" alt="사진" onclick="openLightbox('${url.replace(/'/g,"\\'")}'">`).join('')}
-          </div>
-        ` : ''}
+        ${log.photo_urls && log.photo_urls.length > 0 ? (() => {
+          const allUrlsJson = JSON.stringify(log.photo_urls).replace(/"/g, '&quot;');
+          return `<div class="log-photos" data-urls="${allUrlsJson}">
+            ${log.photo_urls.map((url, i) => `<img src="${escapeHtml(url)}" class="log-photo" alt="사진 ${i+1}" onclick="openLightbox('${url.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}', JSON.parse(this.closest('[data-urls]').dataset.urls))" loading="lazy">`).join('')}
+          </div>`;
+        })() : ''}
       </div>
     `;
   }
@@ -2085,8 +2193,14 @@ function openLightbox(url) {
 
 <!-- Photo lightbox -->
 <div class="photo-lightbox hidden" id="photo-lightbox">
-  <button class="lightbox-close" id="lightbox-close-btn">×</button>
-  <img id="lightbox-img" src="" alt="사진 전체보기">
+  <div class="lightbox-toolbar">
+    <button class="lightbox-btn lightbox-btn-close" id="lightbox-close-btn">✕ 닫기</button>
+    <span class="lightbox-counter" id="lightbox-counter"></span>
+    <button class="lightbox-btn lightbox-btn-download" id="lightbox-download-btn">⬇ 저장</button>
+  </div>
+  <div class="photo-lightbox-img-wrap" id="lightbox-img-wrap">
+    <img id="lightbox-img" src="" alt="사진 전체보기">
+  </div>
 </div>
 
 </body>
