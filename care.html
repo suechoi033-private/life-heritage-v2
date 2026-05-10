@@ -2011,13 +2011,32 @@ document.addEventListener('DOMContentLoaded', () => {
       if (log) {
         $('l-date').value = log.log_date || '';
         $('l-time').value = log.log_time || '';
-        $('l-daily').value = log.daily_status || '';
-        $('l-meds').value = log.medications || '';
+
+        // 데이터 있는 필드는 wrapper 펼치고 퀵카드 활성화
+        const fieldMap = [
+          { field: 'l-daily',    wrap: 'l-daily-wrap',    val: log.daily_status,   card: '[data-target="l-daily"]' },
+          { field: 'l-meds',     wrap: 'l-meds-wrap',     val: log.medications,    card: '[data-target="l-meds"]' },
+          { field: 'l-emotion',  wrap: 'l-emotion-wrap',  val: log.emotion,        card: '[data-target="l-emotion"]' },
+          { field: 'l-hospital', wrap: 'l-hospital-wrap', val: log.hospital_visit, card: '[data-target="l-hospital"]' },
+        ];
+        fieldMap.forEach(({ field, wrap, val, card }) => {
+          $(field).value = val || '';
+          if (val) {
+            $(wrap).classList.remove('hidden');
+            const cardBtn = document.querySelector(card);
+            if (cardBtn) cardBtn.classList.add('active');
+          }
+        });
+
+        // 더 적기 영역 (cautions, nutrition, free_memo)
         $('l-cautions').value = log.cautions || '';
-        $('l-hospital').value = log.hospital_visit || '';
         $('l-nutrition').value = log.nutrition || '';
-        $('l-emotion').value = log.emotion || '';
         $('l-memo').value = log.free_memo || '';
+        if (log.cautions || log.nutrition || log.free_memo) {
+          $('more-fields').classList.remove('hidden');
+          $('more-fields-btn').textContent = '- 접기';
+        }
+
         state.existingPhotoUrls = [...(log.photo_urls || [])];
         renderPhotoPreviews();
       }
