@@ -826,6 +826,7 @@
       <div class="subjects-section-head">
         <span class="subjects-section-title">돌봄 대상</span>
         <div style="display: flex; align-items: center; gap: 12px;">
+          <button type="button" id="add-subject-top-btn" style="background:none;border:none;color:var(--ink-muted);font-weight:600;cursor:pointer;font-size:13px;font-family:inherit;">＋ 대상 추가</button>
           <button type="button" id="enter-code-top-btn" style="background:none;border:none;color:var(--primary);font-weight:700;cursor:pointer;font-size:13px;font-family:inherit;text-decoration:underline;">＋ 초대 코드 입력</button>
           <span class="subjects-section-count" id="subjects-count"></span>
         </div>
@@ -1422,14 +1423,7 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
     }).join('');
 
-    const addHtml = `
-      <button type="button" class="subject-card subject-add" id="add-subject-card">
-        <div class="subject-add-icon">＋</div>
-        <div>대상 추가</div>
-      </button>
-    `;
-
-    container.innerHTML = cardsHtml + addHtml;
+    container.innerHTML = cardsHtml;
 
     container.querySelectorAll('[data-subject-id]').forEach(btn => {
       btn.addEventListener('click', async () => {
@@ -1441,7 +1435,7 @@ document.addEventListener('DOMContentLoaded', () => {
         await loadLogs();
       });
     });
-    $('add-subject-card')?.addEventListener('click', () => openSubjectModal());
+    $('add-subject-top-btn')?.addEventListener('click', () => openSubjectModal());
   }
 
   function getMyLabel(subjectId) {
