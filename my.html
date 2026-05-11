@@ -676,6 +676,11 @@
   }
   const userName = user.user_metadata?.name || user.email.split('@')[0];
 
+  // 개인 호칭 (care.html과 동일한 localStorage 키)
+  const getMyLabel = (subjectId) =>
+    localStorage.getItem(`itda:mylabel_${user.id}_${subjectId}`) || null;
+  const getSubjectName = (s) => getMyLabel(s.id) || s.name;
+
   await renderNav({ active: 'my', infoIcon: true, title: '마이' });
 
   // ── localStorage: 마지막 마이페이지 방문 시각 ──
@@ -764,10 +769,10 @@
     const todayStr = new Date().toISOString().slice(0, 10);
     const todayLogs = (recentLogs || []).filter(l => l.subject_id === top.id && l.log_date === todayStr);
     if (todayLogs.length > 0) {
-      document.getElementById('dash-care-title').textContent = `${top.name} 오늘 ${todayLogs.length}건 기록됨`;
+      document.getElementById('dash-care-title').textContent = `${getSubjectName(top)} 오늘 ${todayLogs.length}건 기록됨`;
       document.getElementById('dash-care-cta').textContent = '오늘 더 추가 →';
     } else {
-      document.getElementById('dash-care-title').textContent = `${top.name} 오늘 기록을 남겨주세요`;
+      document.getElementById('dash-care-title').textContent = `${getSubjectName(top)} 오늘 기록을 남겨주세요`;
       document.getElementById('dash-care-cta').textContent = '오늘 기록 쓰기 →';
     }
   } else {
@@ -799,7 +804,7 @@
   if (subjects && subjects.length > 0) {
     const oldest = subjects[0];
     const days = Math.max(1, Math.ceil((Date.now() - new Date(oldest.created_at)) / 86400000));
-    greetingSub.innerHTML = `${oldest.name} 돌봄 <span class="care-day-badge">${days}일째</span>예요. 오늘도 함께해요.`;
+    greetingSub.innerHTML = `${getSubjectName(oldest)} 돌봄 <span class="care-day-badge">${days}일째</span>예요. 오늘도 함께해요.`;
   } else if (stories && stories.length > 0) {
     greetingSub.textContent = '오늘도 기억하고 싶은 이야기를 남겨보세요.';
   } else {
@@ -872,7 +877,7 @@
             : '기록 없음';
           return `
             <a href="./care.html?subject=${s.id}" class="subject-card">
-              <div class="subject-name">${escapeHtml(s.name)}</div>
+              <div class="subject-name">${escapeHtml(getSubjectName(s))}</div>
               <div class="subject-relation">${escapeHtml(s.relation || '')} · ${days}일째</div>
               <div class="subject-meta">
                 <span><strong>${myLogsForSubject.length}</strong> 최근 메모</span>
@@ -897,7 +902,7 @@
       </p>
     `;
   } else {
-    const subjectMap = Object.fromEntries((subjects || []).map(s => [s.id, s.name]));
+    const subjectMap = Object.fromEntries((subjects || []).map(s => [s.id, getSubjectName(s)]));
     activityContainer.innerHTML = `
       <div class="activity-list">
         ${familyLogs.map(l => {
