@@ -304,6 +304,24 @@
     .log-action-btn:hover { border-color: var(--primary); color: var(--primary); }
     .log-action-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
 
+    /* 하트 리액션 */
+    .log-heart-btn {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: none; border: none; cursor: pointer;
+      font-size: 13px; color: var(--ink-muted);
+      padding: 4px 2px; line-height: 1;
+      transition: transform 0.15s, color 0.15s;
+    }
+    .log-heart-btn:hover { color: #e05a7a; transform: scale(1.15); }
+    .log-heart-btn.reacted { color: #e05a7a; }
+    .log-heart-btn .heart-icon { font-size: 16px; display: inline-block; }
+    .log-heart-btn.reacted .heart-icon { animation: heartPop 0.3s ease; }
+    @keyframes heartPop {
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.4); }
+      100% { transform: scale(1); }
+    }
+
     .log-fields {
       display: flex;
       flex-direction: column;
@@ -1253,6 +1271,7 @@ document.addEventListener('DOMContentLoaded', () => {
     subjects: [],
     currentSubjectId: null,
     logs: [],
+    reactions: {},      // { [logId]: { count, myReacted } }
     editingLogId: null,
     editingSubjectId: null,
     pendingPhotoFiles: [],
@@ -1472,11 +1491,26 @@ document.addEventListener('DOMContentLoaded', () => {
       .eq('subject_id', state.currentSubjectId)
       .order('log_date', { ascending: false })
       .order('created_at', { ascending: false });
-    if (error) {
-      console.error(error);
-      return;
-    }
+    if (error) { console.error(error); return; }
     state.logs = data || [];
+
+    // 리액션 로딩
+    if (state.logs.length > 0) {
+      const logIds = state.logs.map(l => l.id);
+      const { data: rxData } = await supabase
+        .from('care_log_reactions')
+        .select('log_id, user_id')
+        .in('log_id', logIds);
+      state.reactions = {};
+      (rxData || []).forEach(r => {
+        if (!state.reactions[r.log_id]) state.reactions[r.log_id] = { count: 0, myReacted: false };
+        state.reactions[r.log_id].count++;
+        if (r.user_id === user.id) state.reactions[r.log_id].myReacted = true;
+      });
+    } else {
+      state.reactions = {};
+    }
+
     renderLogs();
   }
 
@@ -1505,6 +1539,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     container.querySelectorAll('[data-delete]').forEach(btn => {
       btn.addEventListener('click', () => deleteLog(btn.dataset.delete));
+    });
+    container.querySelectorAll('[data-heart]').forEach(btn => {
+      btn.addEventListener('click', () => toggleHeart(btn.dataset.heart, btn));
     });
   }
 
@@ -1558,6 +1595,15 @@ document.addEventListener('DOMContentLoaded', () => {
             ${log.photo_urls.map((url, i) => `<img src="${escapeHtml(url)}" class="log-photo" alt="사진 ${i+1}" onclick="openLightbox('${url.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}', JSON.parse(this.closest('[data-urls]').dataset.urls))" loading="lazy">`).join('')}
           </div>`;
         })() : ''}
+        <div style="margin-top: 10px; display: flex; align-items: center;">
+          ${(() => {
+            const rx = state.reactions[log.id] || { count: 0, myReacted: false };
+            return `<button type="button" class="log-heart-btn${rx.myReacted ? ' reacted' : ''}" data-heart="${log.id}">
+              <span class="heart-icon">${rx.myReacted ? '❤️' : '🤍'}</span>
+              ${rx.count > 0 ? `<span>${rx.count}</span>` : ''}
+            </button>`;
+          })()}
+        </div>
       </div>
     `;
   }
@@ -2113,6 +2159,43 @@ document.addEventListener('DOMContentLoaded', () => {
       submit.textContent = '저장';
     }
   });
+
+  async function toggleHeart(logId, btn) {
+    const rx = state.reactions[logId] || { count: 0, myReacted: false };
+    const wasReacted = rx.myReacted;
+
+    // 낙관적 UI 업데이트
+    state.reactions[logId] = {
+      count: wasReacted ? Math.max(0, rx.count - 1) : rx.count + 1,
+      myReacted: !wasReacted,
+    };
+    const icon = btn.querySelector('.heart-icon');
+    const countEl = btn.querySelector('span:not(.heart-icon)');
+    btn.classList.toggle('reacted', !wasReacted);
+    if (icon) icon.textContent = wasReacted ? '🤍' : '❤️';
+    if (!wasReacted) {
+      // 팝 애니메이션 재실행
+      icon?.classList.remove('pop');
+      void icon?.offsetWidth;
+      icon?.classList.add('pop');
+    }
+    const newCount = state.reactions[logId].count;
+    if (newCount > 0) {
+      if (countEl) { countEl.textContent = newCount; }
+      else { btn.insertAdjacentHTML('beforeend', `<span>${newCount}</span>`); }
+    } else {
+      countEl?.remove();
+    }
+
+    // DB 반영
+    if (wasReacted) {
+      await supabase.from('care_log_reactions')
+        .delete().eq('log_id', logId).eq('user_id', user.id);
+    } else {
+      await supabase.from('care_log_reactions')
+        .insert({ log_id: logId, user_id: user.id, reaction: 'heart' });
+    }
+  }
 
   async function deleteLog(id) {
     if (!confirm('이 기록을 삭제하시겠어요?')) return;
