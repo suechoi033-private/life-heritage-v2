@@ -671,7 +671,7 @@
   // 보류된 초대 코드 있으면 care.html로 이동해서 자동 수락
   const _pendingInvite = localStorage.getItem('itda:pending_invite');
   if (_pendingInvite) {
-    window.location.href = `/care.html?accept=${encodeURIComponent(_pendingInvite)}`;
+    window.location.href = `./care.html?accept=${encodeURIComponent(_pendingInvite)}`;
     throw new Error('redirecting to accept invite');
   }
   const userName = user.user_metadata?.name || user.email.split('@')[0];
@@ -1018,7 +1018,7 @@
 
     btnEdit.addEventListener('click', () => {
       const ids = selectedIds();
-      if (ids.length === 1) window.location.href = `/write.html?edit=${ids[0]}`;
+      if (ids.length === 1) window.location.href = `./write.html?edit=${ids[0]}`;
     });
 
     btnDelete.addEventListener('click', async () => {

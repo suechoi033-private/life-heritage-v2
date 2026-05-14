@@ -418,7 +418,7 @@
     if (!currentUser) {
       // 비로그인 시 가입 페이지로
       const msg = encodeURIComponent(`잇다 정보 베타 알림 신청 (주제: ${topic})`);
-      window.location.href = `/signup.html?topic=${msg}`;
+      window.location.href = `./signup.html?topic=${msg}`;
       return;
     }
     // V1 — 단순 토글로 가입자에 표시 메시지

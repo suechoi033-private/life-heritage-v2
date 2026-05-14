@@ -35,7 +35,7 @@ export async function signUp(email, password, name) {
     password,
     options: {
       data: { name },
-      emailRedirectTo: `${window.location.origin}/welcome.html`,
+      emailRedirectTo: `${window.location.origin}${window.location.pathname.replace(//[^/]*$/, '')}/welcome.html`,
     },
   });
   return { data, error };
@@ -53,7 +53,7 @@ export async function signOut() {
 
 export async function resetPassword(email) {
   const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${window.location.origin}/reset.html`,
+    redirectTo: `${window.location.origin}${window.location.pathname.replace(//[^/]*$/, '')}/reset.html`,
   });
   return { data, error };
 }

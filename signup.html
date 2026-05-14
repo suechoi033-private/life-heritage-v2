@@ -72,7 +72,7 @@
     // 이미 로그인된 사용자라면 바로 care.html로 보내서 자동 수락
     const { data } = await supabase.auth.getSession();
     if (data?.session) {
-      window.location.href = `/care.html?accept=${encodeURIComponent(inviteCode)}`;
+      window.location.href = `./care.html?accept=${encodeURIComponent(inviteCode)}`;
       throw new Error('redirecting');
     }
     // 가입/로그인 안내 메시지에 초대 정보 표시
@@ -80,7 +80,7 @@
     if (lead) lead.innerHTML = `<strong style="color: var(--primary);">초대 코드 ${inviteCode}</strong>를 받으셨네요. 가입하시면 자동으로 합류됩니다.`;
     // 로그인 링크에 invite 유지
     const loginLinks = document.querySelectorAll('a[href="./login.html"]');
-    loginLinks.forEach(a => { a.href = `/login.html?invite=${inviteCode}`; });
+    loginLinks.forEach(a => { a.href = `./login.html?invite=${inviteCode}`; });
   } else {
     await redirectIfAuthed('my.html');
   }
@@ -123,7 +123,7 @@
     if (sessData?.session) {
       // 세션 있음 → 초대 코드 있으면 바로 care.html로 (온보딩 건너뜀)
       if (inviteCode) {
-        window.location.href = `/care.html?accept=${encodeURIComponent(inviteCode)}`;
+        window.location.href = `./care.html?accept=${encodeURIComponent(inviteCode)}`;
         return;
       }
       // 신규 가입자 → 환영·온보딩 마법사로
