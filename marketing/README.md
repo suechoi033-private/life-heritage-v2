@@ -3,14 +3,13 @@
 ## 구성
 
 - `shorts/` — 60초 숏츠 대본 (날짜_훅키워드_길이.md)
+- `benchmarks/` — 외부 영상 벤치마크 분석
 - `../scripts/youtube-trends-to-sheets.js` — 매일 오전 7시 인기 영상 수집 → 구글 시트 저장
 
 ## 리서치 시트 (살아있는 문서)
 
-**잇다_삶을되새기는_콘텐츠_리서치_2026-05-15**
-- 인기 콘텐츠 패턴 분석 (최근 6개월)
-- Anti-Vision (피해야 할 톤·비주얼·메시지)
-- 콘텐츠 전략 키워드
+1. **잇다_삶을되새기는_콘텐츠_리서치_2026-05-15** — 최근 6개월 인기 콘텐츠 패턴 + 피해야 할 톤(Anti-톤) + 전략 키워드
+2. **잇다_벤치마크_AntiVision_DanKoe_Spencer_Ferriss_2026-05-15** — Anti-Vision 실천법(Dan Koe / Spencer Robbins / Tim Ferriss) 벤치마크와 잇다 적용안 (`marketing/benchmarks/2026-05-15_anti-vision.md` 참조)
 
 수집 자동화는 `scripts/youtube-trends-to-sheets.js` 참고.
 
