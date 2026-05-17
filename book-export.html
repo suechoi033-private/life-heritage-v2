@@ -479,7 +479,7 @@
     // daily_answers + daily_questions 조인
     let q = supabase
       .from('daily_answers')
-      .select('id, content, body, visibility, created_at, question_id, daily_questions(question_text)')
+      .select('id, content, visibility, created_at, question_id, daily_questions(question_text)')
       .eq('user_id', user.id)
       .order('created_at', { ascending: true });
     if (opts.from) q = q.gte('created_at', `${opts.from}T00:00:00`);
@@ -563,7 +563,7 @@
 
   function renderAnswer(a) {
     const qText = a.daily_questions?.question_text || '오늘의 질문';
-    const body  = a.content || a.body || '';
+    const body  = a.content || '';
     return `
       <div class="book-page">
         <div class="book-entry-head">

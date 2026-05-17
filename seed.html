@@ -123,48 +123,73 @@
     }
     .cal-cell.today.has-entry::after { background: #fff; }
 
-    /* 검색 */
+    /* 검색 — 다이어리 탭 최상단 (눈에 잘 띄게) */
     .diary-search-wrap {
       position: relative;
-      margin-top: 18px;
+      margin-bottom: 16px;
     }
     .diary-search-input {
       width: 100%;
-      padding: 11px 14px 11px 38px;
-      border: 1.5px solid var(--line);
-      border-radius: 999px;
-      font-size: 14px;
+      padding: 13px 90px 13px 44px;
+      border: 1.5px solid var(--primary-soft);
+      border-radius: 14px;
+      font-size: 15px;
       font-family: inherit;
-      background: var(--bg-alt);
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(92,138,111,0.06);
+      transition: border-color 0.15s, box-shadow 0.15s;
     }
+    .diary-search-input::placeholder { color: var(--ink-muted); }
     .diary-search-input:focus {
       outline: none;
       border-color: var(--primary);
-      background: #fff;
+      box-shadow: 0 2px 14px rgba(92,138,111,0.2);
     }
     .diary-search-icon {
       position: absolute;
-      left: 14px; top: 50%;
+      left: 16px; top: 50%;
       transform: translateY(-50%);
-      font-size: 14px;
-      color: var(--ink-muted);
+      font-size: 16px;
+      color: var(--primary);
       pointer-events: none;
     }
     .diary-search-clear {
       position: absolute;
-      right: 8px; top: 50%;
+      right: 12px; top: 50%;
       transform: translateY(-50%);
-      width: 24px; height: 24px;
+      width: 26px; height: 26px;
       border-radius: 50%;
       background: var(--bg-alt);
       border: none;
       color: var(--ink-soft);
-      font-size: 16px;
+      font-size: 14px;
       cursor: pointer;
       font-family: inherit;
       display: none;
     }
     .diary-search-clear.visible { display: inline-flex; align-items: center; justify-content: center; }
+    .diary-search-new-badge {
+      position: absolute;
+      right: 14px; top: 50%;
+      transform: translateY(-50%);
+      font-size: 9.5px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary), #87B59C);
+      padding: 3px 8px;
+      border-radius: 999px;
+      pointer-events: none;
+      animation: badge-bounce 1.8s ease-in-out 0s 3;
+    }
+    .diary-search-input:focus ~ .diary-search-new-badge,
+    .diary-search-wrap.has-text .diary-search-new-badge {
+      display: none;
+    }
+    @keyframes badge-bounce {
+      0%, 100% { transform: translateY(-50%) scale(1); }
+      50% { transform: translateY(-50%) scale(1.15); }
+    }
     .diary-search-hint {
       font-size: 11.5px;
       color: var(--ink-muted);
@@ -419,6 +444,15 @@
   </div>
 
   <div id="diary-pane">
+    <!-- 검색 (최상단, 발견하기 쉽게) -->
+    <div class="diary-search-wrap" id="diary-search-wrap">
+      <span class="diary-search-icon">🔍</span>
+      <input type="search" id="diary-search" class="diary-search-input"
+        placeholder="일기 속 단어·태그로 검색…" autocomplete="off">
+      <button type="button" id="diary-search-clear" class="diary-search-clear" aria-label="지우기">✕</button>
+      <span class="diary-search-new-badge">NEW</span>
+    </div>
+
     <!-- 캘린더 -->
     <div class="calendar-wrap">
       <div class="calendar-head">
@@ -433,14 +467,6 @@
         <div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div>
       </div>
       <div class="calendar-grid" id="cal-grid"></div>
-    </div>
-
-    <!-- 검색 -->
-    <div class="diary-search-wrap">
-      <span class="diary-search-icon">🔍</span>
-      <input type="search" id="diary-search" class="diary-search-input"
-        placeholder="일기 검색 (제목 · 본문 · 태그)" autocomplete="off">
-      <button type="button" id="diary-search-clear" class="diary-search-clear" aria-label="지우기">✕</button>
     </div>
 
     <!-- 타임라인 / 검색 결과 -->
@@ -514,18 +540,31 @@
     if (tab === 'goal') loadGoalDashboard();
   }
 
-  // ── 통계 ──
-  try {
-    const [{ count: diaryCount }, { count: goalCount }] = await Promise.all([
-      supabase.from('diary_entries').select('id', { count: 'exact', head: true }).eq('user_id', session.user.id),
-      supabase.from('goals').select('id', { count: 'exact', head: true }).eq('user_id', session.user.id).eq('status', 'active'),
-    ]);
-    document.getElementById('seed-stat').innerHTML = `
-      일기 <strong>${diaryCount ?? 0}</strong>개 · 진행 중 목표 <strong>${goalCount ?? 0}</strong>개
-    `;
-  } catch (_) {
-    document.getElementById('seed-stat').textContent = '시작해 보세요';
-  }
+  // ── 통계 ── (백그라운드 — 페이지 로드 차단 안 함)
+  (async () => {
+    const stat = document.getElementById('seed-stat');
+    try {
+      // 각 쿼리에 5초 타임아웃 — 하나가 멈춰도 다른 하나 결과는 받음
+      const withTimeout = (p, ms = 5000) => Promise.race([
+        p,
+        new Promise((resolve) => setTimeout(() => resolve({ count: null, error: 'timeout' }), ms)),
+      ]);
+      const [diaryRes, goalRes] = await Promise.all([
+        withTimeout(supabase.from('diary_entries').select('id', { count: 'exact', head: true }).eq('user_id', session.user.id)),
+        withTimeout(supabase.from('goals').select('id', { count: 'exact', head: true }).eq('user_id', session.user.id).eq('status', 'active')),
+      ]);
+      const dc = diaryRes?.count;
+      const gc = goalRes?.count;
+      if (dc == null && gc == null) {
+        stat.textContent = '시작해 보세요';
+      } else {
+        stat.innerHTML = `일기 <strong>${dc ?? '-'}</strong>개 · 진행 중 목표 <strong>${gc ?? '-'}</strong>개`;
+      }
+    } catch (err) {
+      console.warn('[seed] 통계 조회 실패:', err);
+      stat.textContent = '시작해 보세요';
+    }
+  })();
 
   // ── 캘린더 ──
   let calCursor = new Date();
@@ -538,15 +577,19 @@
     document.getElementById('cal-month').textContent = `${year}년 ${month + 1}월`;
 
     try {
-      const entries = await listMyDiariesByMonth(year, month);
+      const entries = await Promise.race([
+        listMyDiariesByMonth(year, month),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('캘린더 쿼리 시간초과 (5초)')), 5000)),
+      ]);
       monthEntries.clear();
-      entries.forEach((e) => {
+      (entries || []).forEach((e) => {
         const key = e.entry_date;
         if (!monthEntries.has(key)) monthEntries.set(key, []);
         monthEntries.get(key).push(e);
       });
     } catch (err) {
-      console.warn(err);
+      console.warn('[seed] 캘린더 조회 실패:', err);
+      monthEntries.clear();
     }
 
     const firstDow = new Date(year, month, 1).getDay();
@@ -623,7 +666,10 @@
     const body = document.getElementById('timeline-body');
     if (!append) body.innerHTML = `<div class="timeline-empty">불러오는 중...</div>`;
     try {
-      const items = await listMyDiariesTimeline(10, timelineCursor);
+      const items = await Promise.race([
+        listMyDiariesTimeline(10, timelineCursor),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('일기 목록 시간초과 (8초) — 네트워크 또는 RLS 문제 가능')), 8000)),
+      ]);
       if (!append) body.innerHTML = '';
       if (!items.length && !append) {
         body.innerHTML = `
@@ -730,9 +776,11 @@
     loadTimeline();
   }
 
+  const searchWrapEl = document.getElementById('diary-search-wrap');
   searchEl.addEventListener('input', () => {
     const v = searchEl.value.trim();
     searchClearEl.classList.toggle('visible', !!v);
+    searchWrapEl?.classList.toggle('has-text', !!v);
     clearTimeout(searchTimer);
     if (!v) { exitSearch(); return; }
     searchTimer = setTimeout(() => runSearch(v), 280);
@@ -740,6 +788,7 @@
   searchClearEl.addEventListener('click', () => {
     searchEl.value = '';
     searchClearEl.classList.remove('visible');
+    searchWrapEl?.classList.remove('has-text');
     exitSearch();
     searchEl.focus();
   });
@@ -764,9 +813,13 @@
     listEl.innerHTML = `<div class="timeline-empty">불러오는 중...</div>`;
 
     try {
+      const withTimeout = (p, ms = 6000, name = '쿼리') => Promise.race([
+        p,
+        new Promise((_, rej) => setTimeout(() => rej(new Error(`${name} 시간초과 (${ms / 1000}초)`)), ms)),
+      ]);
       const [summary, goals] = await Promise.all([
-        getDashboardSummary(),
-        listMyGoals({ status: 'active' }),
+        withTimeout(getDashboardSummary(), 6000, '목표 대시보드'),
+        withTimeout(listMyGoals({ status: 'active' }), 6000, '목표 목록'),
       ]);
 
       // 전체 진척 카드
