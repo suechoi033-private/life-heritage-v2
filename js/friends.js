@@ -89,37 +89,23 @@ export async function fetchInviteByCode(code) {
   return { ...data, inviter };
 }
 
-// 초대 수락
+// 초대 수락 — RLS 우회를 위해 security definer RPC 호출
 export async function acceptFriendInvite(code) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('로그인 필요');
 
-  const invite = await fetchInviteByCode(code);
-  if (!invite) throw new Error('유효하지 않거나 만료된 초대입니다');
-  if (invite.inviter_id === user.id) throw new Error('본인에게 초대할 수 없어요');
-
-  // 양방향 friendships 생성 (이미 있으면 무시)
-  const { error: e1 } = await supabase.from('friendships').upsert({
-    user_id: invite.inviter_id, friend_id: user.id,
-    status: 'accepted', initiated_by: invite.inviter_id,
-    accepted_at: new Date().toISOString(),
-  }, { onConflict: 'user_id,friend_id' });
-  if (e1) throw e1;
-
-  const { error: e2 } = await supabase.from('friendships').upsert({
-    user_id: user.id, friend_id: invite.inviter_id,
-    status: 'accepted', initiated_by: invite.inviter_id,
-    accepted_at: new Date().toISOString(),
-  }, { onConflict: 'user_id,friend_id' });
-  if (e2) throw e2;
-
-  // 초대 상태 갱신
-  const { error: e3 } = await supabase.from('friend_invites')
-    .update({ status: 'accepted', invitee_user_id: user.id, accepted_at: new Date().toISOString() })
-    .eq('id', invite.id);
-  if (e3) throw e3;
-
-  return { inviter: invite.inviter };
+  const { data, error } = await supabase.rpc('accept_friend_invite', { p_code: code.toUpperCase() });
+  if (error) {
+    // 한국어 메시지로 변환
+    const msg = (error.message || '').toLowerCase();
+    if (msg.includes('유효하지') || msg.includes('만료'))  throw new Error('유효하지 않거나 만료된 초대입니다');
+    if (msg.includes('본인'))                               throw new Error('본인에게 초대할 수 없어요');
+    if (msg.includes('로그인'))                             throw new Error('로그인이 필요합니다');
+    throw error;
+  }
+  return {
+    inviter: { id: data?.inviter_id, name: data?.inviter_name },
+  };
 }
 
 // 친구 목록
