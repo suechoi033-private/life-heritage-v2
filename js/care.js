@@ -2,19 +2,37 @@
 import { supabase } from '../auth.js';
 
 // ===== 대상자 =====
+// 본인이 직접 만든 care_subjects(owner) + care_members로 초대받은 대상자 모두 조회
+// 기존 care.html은 owner를 care_subjects.user_id에 저장하므로 두 경로 모두 확인
 export async function listMyCareSubjects() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return [];
-  // care_members로 접근 가능한 대상 조회 (owner + invited)
-  const { data, error } = await supabase
-    .from('care_members')
-    .select('subject_id, role, care_subjects(id, name, relation, created_at)')
-    .eq('user_id', user.id);
-  if (error) throw error;
-  return (data || []).map((m) => ({
-    ...m.care_subjects,
-    role: m.role,
-  })).filter((s) => s.id);
+
+  const [{ data: owned, error: e1 }, { data: invited, error: e2 }] = await Promise.all([
+    supabase.from('care_subjects')
+      .select('id, name, relation, created_at')
+      .eq('user_id', user.id),
+    supabase.from('care_members')
+      .select('subject_id, role, care_subjects(id, name, relation, created_at)')
+      .eq('user_id', user.id),
+  ]);
+  if (e1) throw e1;
+  if (e2) throw e2;
+
+  // 중복 제거 (owner이면서 member에도 있을 수 있음)
+  const map = new Map();
+  (owned || []).forEach((s) => {
+    if (s.id) map.set(s.id, { ...s, role: 'owner' });
+  });
+  (invited || []).forEach((m) => {
+    if (!m.care_subjects?.id) return;
+    if (!map.has(m.subject_id)) {
+      map.set(m.subject_id, { ...m.care_subjects, role: m.role });
+    }
+  });
+  return Array.from(map.values()).sort((a, b) =>
+    (b.created_at || '').localeCompare(a.created_at || '')
+  );
 }
 
 // ===== 대시보드 집계 =====
