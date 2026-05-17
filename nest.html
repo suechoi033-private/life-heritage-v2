@@ -52,7 +52,7 @@
 
     .subject-stats {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-columns: 1fr 1fr;
       gap: 8px;
       margin-bottom: 10px;
     }
@@ -94,12 +94,56 @@
       font-weight: 800;
     }
 
-    .subject-actions {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 6px;
+    /* 나의 발자취 — 미니 잔디 + 대시보드 링크 */
+    .footprint-wrap {
+      display: block;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      text-decoration: none;
+      color: inherit;
+      transition: border-color 0.15s;
     }
+    .footprint-wrap:hover { border-color: var(--warm); }
+    .footprint-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .footprint-label {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--ink-soft);
+      letter-spacing: 0.04em;
+    }
+    .footprint-arrow {
+      font-size: 12px;
+      color: var(--warm);
+      font-weight: 800;
+      transition: transform 0.15s;
+    }
+    .footprint-wrap:hover .footprint-arrow { transform: translateX(2px); }
+    .mini-grass {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 3px;
+    }
+    .mg-cell {
+      aspect-ratio: 1;
+      border-radius: 2px;
+    }
+    .mg-cell.level-0 { background: #EBEDF0; }
+    .mg-cell.level-1 { background: #C7E9C9; }
+    .mg-cell.level-2 { background: #88D094; }
+    .mg-cell.level-3 { background: #4CAE5C; }
+    .mg-cell.level-4 { background: #1F7A3A; }
+    .mg-cell.mg-today { outline: 2px solid #E8732A; outline-offset: -1px; border-radius: 3px; }
+
     .subject-action {
+      display: block;
       padding: 9px 4px;
       border-radius: var(--radius-sm);
       border: 1px solid var(--line);
@@ -214,31 +258,48 @@
       <div class="subject-stats">
         <a class="stat-cell" href="./care.html?subject=${s.id}" aria-label="기록 보러가기">
           <div class="stat-num" data-stat="logs">·</div>
-          <div class="stat-label">최근 28일 중 기록 <span class="stat-arrow">›</span></div>
-        </a>
-        <a class="stat-cell" href="./care.html?subject=${s.id}" aria-label="기록한 날">
-          <div class="stat-num" data-stat="days">·</div>
-          <div class="stat-label">기록한 날 <span class="stat-arrow">›</span></div>
+          <div class="stat-label">28일 중 기록 <span class="stat-arrow">›</span></div>
         </a>
         <a class="stat-cell" href="./care-dashboard.html?subject=${s.id}" aria-label="충실도 대시보드">
           <div class="stat-num" data-stat="completion">·</div>
           <div class="stat-label">충실도 <span class="stat-arrow">›</span></div>
         </a>
       </div>
-      <div class="subject-actions">
-        <a class="subject-action" href="./care.html?subject=${s.id}">📝 기록</a>
-        <a class="subject-action" href="./care-dashboard.html?subject=${s.id}">📊 대시보드</a>
-        <a class="subject-action sos" href="./care-emergency.html?subject=${s.id}">🚨 응급</a>
-      </div>
+      <a class="footprint-wrap" href="./care-dashboard.html?subject=${s.id}" aria-label="나의 발자취 — 대시보드로">
+        <div class="footprint-head">
+          <span class="footprint-label">나의 발자취</span>
+          <span class="footprint-arrow">›</span>
+        </div>
+        <div class="mini-grass" data-grass="${s.id}">
+          <div style="grid-column:1/-1;text-align:center;color:var(--ink-muted);font-size:11px;padding:4px 0;">불러오는 중…</div>
+        </div>
+      </a>
+      <a class="subject-action sos" href="./care-emergency.html?subject=${s.id}">🚨 응급</a>
     </div>
   `).join('') + `<a href="./care.html?action=add" class="add-subject-btn">＋ 돌봄 대상 추가</a>`;
+
+  // 미니 잔디 (28일 × 7열 그리드)
+  function buildMiniGrass(daily) {
+    const today = new Date();
+    const cells = [];
+    for (let i = 27; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      const count = daily[key] || 0;
+      const level = count === 0 ? 0 : count === 1 ? 1 : count <= 3 ? 2 : count <= 5 ? 3 : 4;
+      cells.push(`<div class="mg-cell level-${level}${i === 0 ? ' mg-today' : ''}" title="${key}: ${count}건"></div>`);
+    }
+    return cells.join('');
+  }
 
   // 대시보드 비동기 로딩
   function paintStats(card, dash) {
     if (!card) return;
     card.querySelector('[data-stat="logs"]').textContent       = dash.totalLogs;
-    card.querySelector('[data-stat="days"]').textContent       = dash.daysWithLogs;
     card.querySelector('[data-stat="completion"]').textContent = `${dash.completionPct}%`;
+    const grassEl = card.querySelector('.mini-grass');
+    if (grassEl) grassEl.innerHTML = buildMiniGrass(dash.daily || {});
   }
   for (const s of subjects) {
     getCareDashboard(s.id).then((dash) => {
