@@ -73,6 +73,14 @@ export async function getCareDashboard(subjectId, days = 28) {
     if (l.mood) weekly[key].moods[l.mood] = (weekly[key].moods[l.mood] || 0) + 1;
   });
 
+  // 일별 집계 (GitHub 컨트리뷰션 그래프용) — YYYY-MM-DD → count
+  const daily = {};
+  (logs || []).forEach((l) => {
+    const key = l.log_date || (l.created_at || '').slice(0, 10);
+    if (!key) return;
+    daily[key] = (daily[key] || 0) + 1;
+  });
+
   return {
     period_days: days,
     totalLogs,
@@ -80,6 +88,7 @@ export async function getCareDashboard(subjectId, days = 28) {
     completionPct: Math.round((daysWithLogs / days) * 100),
     moodCounts,
     weekly: Object.values(weekly).sort((a, b) => a.week.localeCompare(b.week)),
+    daily,
     recentLogs: (logs || []).slice(-5).reverse(),
   };
 }
