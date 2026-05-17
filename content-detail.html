@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>콘텐츠 · 잇다</title>
+  <link rel="stylesheet" href="./auth-styles.css">
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#5C8A6F">
+  <style>
+    .content-head { padding: 6px 0 16px; border-bottom: 1px solid var(--line); margin-bottom: 18px; }
+    .content-meta-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 12px; }
+    .content-cat-chip { padding: 3px 10px; background: var(--primary-soft); color: var(--primary); border-radius: 999px; font-weight: 800; }
+    .content-author-chip { padding: 3px 10px; border-radius: 999px; font-weight: 700; }
+    .author-official { background: var(--primary); color: #fff; }
+    .author-user { background: var(--warm-soft); color: var(--warm); }
+    .content-title {
+      font-family: var(--font-serif);
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.4;
+      margin: 12px 0 8px;
+    }
+    .content-meta-sub { font-size: 12px; color: var(--ink-muted); display: flex; gap: 10px; }
+    .content-body {
+      font-size: 15.5px;
+      line-height: 1.85;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .content-body img { max-width: 100%; border-radius: var(--radius-sm); }
+    .related-q {
+      background: var(--primary-soft);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      margin: 20px 0;
+    }
+    .related-q-label { font-size: 11.5px; font-weight: 800; color: var(--primary); letter-spacing: 0.04em; }
+    .related-q-text { font-family: var(--font-serif); font-size: 15px; line-height: 1.55; font-weight: 700; margin-top: 5px; }
+
+    .action-row {
+      display: flex;
+      gap: 10px;
+      margin: 24px 0 18px;
+      padding: 14px 0;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+    .action-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: var(--bg-alt);
+      border: none;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink-soft);
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .action-btn.active { background: var(--primary); color: #fff; }
+    .action-btn.bookmark.active { background: var(--warm); }
+    .action-btn-spacer { margin-left: auto; }
+    .action-report {
+      background: transparent;
+      border: none;
+      color: var(--ink-faint);
+      font-size: 12px;
+      cursor: pointer;
+      padding: 4px 6px;
+    }
+
+    /* 토론 섹션 */
+    .discussion-head { font-size: 14px; font-weight: 800; margin: 20px 0 10px; }
+    .discussion-thread {
+      display: block;
+      padding: 12px 14px;
+      background: var(--bg-alt);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+      text-decoration: none;
+      color: inherit;
+    }
+    .discussion-thread:hover { border-color: var(--primary-soft); }
+    .discussion-thread-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .discussion-thread-meta { font-size: 11.5px; color: var(--ink-muted); display: flex; gap: 8px; }
+
+    /* 신고 모달 */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 200;
+      display: flex; align-items: flex-end; justify-content: center;
+    }
+    .modal-sheet {
+      width: 100%; max-width: 480px;
+      background: var(--bg);
+      border-radius: 20px 20px 0 0;
+      padding: 22px 20px calc(20px + env(safe-area-inset-bottom, 0px));
+    }
+    .modal-title { font-size: 15px; font-weight: 800; margin-bottom: 14px; }
+    .reason-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+    .reason-opt {
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--line);
+      background: #fff;
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      text-align: left;
+    }
+    .reason-opt.active { border-color: var(--danger); background: var(--danger-soft); color: var(--danger); }
+    .modal-actions { display: flex; gap: 10px; }
+    .modal-actions button {
+      flex: 1; padding: 12px; border-radius: var(--radius-sm); border: none;
+      font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit;
+    }
+    .modal-cancel { background: var(--bg-alt); border: 1px solid var(--line); }
+    .modal-submit { background: var(--danger); color: #fff; }
+  </style>
+</head>
+<body>
+
+<main class="page-shell">
+  <div id="content-body"><div class="empty-state"><div class="empty-icon">⏳</div></div></div>
+</main>
+<div id="modal-root"></div>
+
+<script type="module">
+  import { supabase } from './auth.js';
+  import { renderNav } from './nav.js';
+  import { getContent, CATEGORIES, isBookmarked, toggleBookmark } from './js/content.js';
+  import { toggleReaction, getReactionState, reportTarget, REPORT_REASONS, createPost } from './js/community.js';
+  import { getSignedUrl, getPublicUrl } from './js/media-upload.js';
+
+  await renderNav({ active: 'forest', infoIcon: false, title: '콘텐츠' });
+
+  const { data: { session } } = await supabase.auth.getSession();
+  const id = new URLSearchParams(location.search).get('id');
+  if (!id) { window.location.href = './forest.html'; throw new Error('id 누락'); }
+
+  const content = await getContent(id);
+  if (!content) {
+    document.getElementById('content-body').innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🙏</div>
+        <div class="empty-title">콘텐츠를 찾을 수 없어요</div>
+        <div class="cta-block"><a href="./forest.html">숲으로</a></div>
+      </div>`;
+    throw new Error('not found');
+  }
+
+  // 관련 질문 텍스트 조회 (있는 경우)
+  let relatedQuestion = null;
+  if (content.related_question_id) {
+    const { data } = await supabase.from('daily_questions')
+      .select('question_text').eq('id', content.related_question_id).maybeSingle();
+    relatedQuestion = data;
+  }
+
+  // 미디어 URL 생성
+  const mediaUrls = await Promise.all(content.media.map(async (m) => {
+    return getPublicUrl('content-media', m.storage_path);
+  }));
+
+  const cat = CATEGORIES[content.category] || { label: content.category, icon: '·' };
+  const reactionState = await getReactionState('content', id);
+  const bookmarked = await isBookmarked(id);
+  const isOwner = session && content.creator_id === session.user.id;
+
+  document.getElementById('content-body').innerHTML = `
+    <div class="content-head">
+      <div class="content-meta-row">
+        <span class="content-cat-chip">${cat.icon} ${cat.label}</span>
+        <span class="content-author-chip ${content.author_type === 'official' ? 'author-official' : 'author-user'}">
+          ${content.author_type === 'official' ? '공식' : '유저'}
+        </span>
+      </div>
+      <div class="content-title">${escapeHtml(content.title)}</div>
+      <div class="content-meta-sub">
+        ${content.profiles?.name ? `<span>by ${escapeHtml(content.profiles.name)}</span>` : ''}
+        <span>👁 ${content.view_count ?? 0}</span>
+        <span>${formatDate(content.created_at)}</span>
+      </div>
+    </div>
+
+    ${relatedQuestion ? `
+      <div class="related-q">
+        <div class="related-q-label">오늘의 성찰 질문</div>
+        <div class="related-q-text">"${escapeHtml(relatedQuestion.question_text)}"</div>
+      </div>` : ''}
+
+    ${mediaUrls.length ? `
+      <div style="margin-bottom: 16px;">
+        ${mediaUrls.map((u, i) => content.media[i].media_type === 'video'
+          ? `<video src="${u}" controls style="width:100%;border-radius:12px;margin-bottom:8px;"></video>`
+          : `<img src="${u}" alt="첨부" style="width:100%;border-radius:12px;margin-bottom:8px;">`
+        ).join('')}
+      </div>` : ''}
+
+    <div class="content-body">${escapeHtml(content.body || '')}</div>
+
+    ${content.source_url ? `
+      <div style="margin-top:18px;font-size:12.5px;">
+        출처: <a href="${content.source_url}" target="_blank" rel="noopener">${escapeHtml(content.source_url)}</a>
+      </div>` : ''}
+
+    <div class="action-row">
+      <button class="action-btn like ${reactionState.mine ? 'active' : ''}" id="btn-like">
+        ❤ <span id="like-count">${reactionState.count}</span>
+      </button>
+      <button class="action-btn bookmark ${bookmarked ? 'active' : ''}" id="btn-bookmark">
+        🔖 ${bookmarked ? '저장됨' : '저장'}
+      </button>
+      <div class="action-btn-spacer"></div>
+      ${isOwner ? `
+        <a class="action-btn" href="./content-write.html?id=${content.id}">✏ 수정</a>
+      ` : `
+        <button class="action-report" id="btn-report">🚩 신고</button>
+      `}
+    </div>
+
+    <div class="discussion-head">이 콘텐츠에 대한 대화</div>
+    ${content.discussion_posts.length ? content.discussion_posts.map((p) => `
+      <a class="discussion-thread" href="./post-detail.html?id=${p.id}">
+        <div class="discussion-thread-title">${escapeHtml(p.title)}</div>
+        <div class="discussion-thread-meta">
+          ${p.profiles?.name ? `<span>${escapeHtml(p.profiles.name)}</span>` : ''}
+          <span>💬 ${p.comment_count ?? 0}</span>
+          <span>❤ ${p.reaction_count ?? 0}</span>
+          <span>${formatDate(p.created_at)}</span>
+        </div>
+      </a>
+    `).join('') : '<div class="empty-state" style="padding:20px;"><div class="empty-desc">첫 대화를 시작해 보세요.</div></div>'}
+
+    ${session ? `
+      <div class="cta-block" style="margin-top:14px;"><button id="btn-start-thread">＋ 이 콘텐츠로 대화 시작</button></div>
+    ` : ''}
+  `;
+
+  // 좋아요
+  document.getElementById('btn-like').addEventListener('click', async () => {
+    if (!session) { window.location.href = './login.html'; return; }
+    try {
+      const r = await toggleReaction({ target_type: 'content', target_id: id });
+      const cnt = document.getElementById('like-count');
+      cnt.textContent = parseInt(cnt.textContent, 10) + (r.active ? 1 : -1);
+      document.getElementById('btn-like').classList.toggle('active', r.active);
+    } catch (err) { alert(err.message); }
+  });
+
+  // 북마크
+  document.getElementById('btn-bookmark').addEventListener('click', async () => {
+    if (!session) { window.location.href = './login.html'; return; }
+    try {
+      const newState = await toggleBookmark(id);
+      const btn = document.getElementById('btn-bookmark');
+      btn.classList.toggle('active', newState);
+      btn.innerHTML = `🔖 ${newState ? '저장됨' : '저장'}`;
+    } catch (err) { alert(err.message); }
+  });
+
+  // 토론 시작
+  document.getElementById('btn-start-thread')?.addEventListener('click', () => {
+    window.location.href = `./post-write.html?content_id=${id}`;
+  });
+
+  // 신고
+  document.getElementById('btn-report')?.addEventListener('click', () => openReportModal('content', id));
+
+  function openReportModal(target_type, target_id) {
+    if (!session) { window.location.href = './login.html'; return; }
+    const root = document.getElementById('modal-root');
+    let selected = null;
+    root.innerHTML = `
+      <div class="modal-overlay" id="modal-overlay">
+        <div class="modal-sheet">
+          <div class="modal-title">신고 사유</div>
+          <div class="reason-list">
+            ${REPORT_REASONS.map((r) => `<button type="button" class="reason-opt" data-reason="${escapeAttr(r)}">${escapeHtml(r)}</button>`).join('')}
+          </div>
+          <div class="modal-actions">
+            <button class="modal-cancel" id="modal-cancel">취소</button>
+            <button class="modal-submit" id="modal-submit" disabled>신고</button>
+          </div>
+        </div>
+      </div>
+    `;
+    const close = () => { root.innerHTML = ''; };
+    document.getElementById('modal-overlay').addEventListener('click', (e) => { if (e.target.id === 'modal-overlay') close(); });
+    document.getElementById('modal-cancel').addEventListener('click', close);
+    root.querySelectorAll('.reason-opt').forEach((b) => b.addEventListener('click', () => {
+      selected = b.dataset.reason;
+      root.querySelectorAll('.reason-opt').forEach((x) => x.classList.toggle('active', x === b));
+      document.getElementById('modal-submit').disabled = false;
+    }));
+    document.getElementById('modal-submit').addEventListener('click', async () => {
+      try { await reportTarget({ target_type, target_id, reason: selected }); alert('신고가 접수되었어요. 운영자가 확인합니다.'); close(); }
+      catch (err) { alert(err.message); }
+    });
+  }
+
+  function formatDate(d) { return new Date(d).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }); }
+  function escapeHtml(s) { return (s || '').replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+  function escapeAttr(s) { return escapeHtml(s).replace(/`/g, '&#96;'); }
+</script>
+
+</body>
+</html>

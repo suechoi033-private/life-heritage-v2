@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>게시글 쓰기 · 잇다</title>
+  <link rel="stylesheet" href="./auth-styles.css">
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#5C8A6F">
+  <style>
+    .form-group { margin-bottom: 18px; }
+    .form-label {
+      display: block; font-size: 12.5px; font-weight: 800;
+      letter-spacing: 0.02em; color: var(--ink-soft); margin-bottom: 8px;
+    }
+    .title-input, .body-input, .board-select {
+      width: 100%; padding: 12px 14px;
+      border: 1.5px solid var(--line); border-radius: var(--radius-sm);
+      font-family: inherit; background: #fff;
+    }
+    .title-input { font-size: 16px; font-weight: 700; }
+    .body-input { font-size: 15px; line-height: 1.7; min-height: 220px; resize: vertical; }
+    .board-select { font-size: 14px; }
+    .title-input:focus, .body-input:focus, .board-select:focus { outline: none; border-color: var(--primary); }
+
+    .linked-banner {
+      background: var(--primary-soft);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      font-size: 12.5px;
+      color: var(--primary);
+      line-height: 1.55;
+      margin-bottom: 14px;
+    }
+
+    .action-bar {
+      position: sticky; bottom: 0; background: var(--bg);
+      padding: 14px 0 calc(14px + env(safe-area-inset-bottom, 0px));
+      border-top: 1px solid var(--line);
+      display: flex; gap: 10px;
+      margin: 24px -20px -32px; padding-left: 20px; padding-right: 20px;
+    }
+    .action-bar button {
+      flex: 1; padding: 13px 16px; border-radius: var(--radius-sm); border: none;
+      font-size: 14.5px; font-weight: 700; cursor: pointer; font-family: inherit;
+    }
+    .btn-save { background: var(--primary); color: #fff; }
+    .btn-save:disabled { opacity: 0.5; }
+    .btn-cancel { background: var(--bg-alt); color: var(--ink-soft); border: 1px solid var(--line); }
+    .btn-delete { background: var(--danger-soft); color: var(--danger); flex: 0 0 auto; padding: 13px 18px; }
+    body.has-bottom-nav { padding-bottom: 0; }
+    .itda-bottom-nav { display: none !important; }
+  </style>
+</head>
+<body>
+
+<main class="page-shell">
+  <div id="linked-content-banner"></div>
+  <form id="post-form">
+    <div class="form-group">
+      <label class="form-label" for="board">게시판</label>
+      <select id="board" class="board-select" required></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="title">제목</label>
+      <input type="text" class="title-input" id="title" placeholder="게시글 제목" required maxlength="120">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="body">내용</label>
+      <textarea class="body-input" id="body" placeholder="나누고 싶은 이야기를 적어보세요" required></textarea>
+    </div>
+
+    <div class="action-bar">
+      <button type="button" class="btn-cancel" id="btn-cancel">취소</button>
+      <button type="button" class="btn-delete" id="btn-delete" style="display:none;">삭제</button>
+      <button type="submit" class="btn-save" id="btn-save">발행</button>
+    </div>
+  </form>
+</main>
+
+<script type="module">
+  import { supabase } from './auth.js';
+  import { renderNav } from './nav.js';
+  import { listBoards, getPost, createPost, updatePost, deletePost } from './js/community.js';
+
+  await renderNav({ active: 'forest', infoIcon: false, title: '게시글 쓰기' });
+
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) { window.location.href = './login.html'; throw new Error('로그인 필요'); }
+
+  const params = new URLSearchParams(location.search);
+  const editId = params.get('id');
+  const linkedContentId = params.get('content_id');
+  const isEdit = !!editId;
+
+  let state = { board_id: null, title: '', body: '', content_thread_id: linkedContentId || null };
+
+  if (isEdit) {
+    const p = await getPost(editId);
+    if (!p || p.user_id !== session.user.id) {
+      alert('수정 권한이 없습니다');
+      window.location.href = './forest.html?seg=community';
+      throw new Error('not authorized');
+    }
+    state = { board_id: p.board_id, title: p.title, body: p.body || '', content_thread_id: p.content_thread_id };
+    document.getElementById('btn-delete').style.display = '';
+  }
+
+  // 연결된 콘텐츠 표시
+  if (state.content_thread_id) {
+    const { data: c } = await supabase.from('contents').select('title, category').eq('id', state.content_thread_id).maybeSingle();
+    if (c) {
+      document.getElementById('linked-content-banner').innerHTML = `
+        <div class="linked-banner">🔗 콘텐츠 "${escapeHtml(c.title)}"에 연결된 대화로 작성됩니다</div>`;
+    }
+  }
+
+  // 게시판 옵션
+  const boards = await listBoards();
+  const boardEl = document.getElementById('board');
+  boardEl.innerHTML = '<option value="">— 게시판 선택 —</option>' + boards.map((b) =>
+    `<option value="${b.id}" ${b.id === state.board_id ? 'selected' : ''}>${escapeHtml(b.name)}</option>`
+  ).join('');
+
+  document.getElementById('title').value = state.title;
+  document.getElementById('body').value = state.body;
+
+  document.getElementById('btn-cancel').addEventListener('click', () => {
+    if (confirm('작성을 취소하시겠어요?')) window.location.href = './forest.html?seg=community';
+  });
+  document.getElementById('btn-delete').addEventListener('click', async () => {
+    if (!confirm('이 게시글을 삭제하시겠어요?')) return;
+    try { await deletePost(editId); window.location.href = './forest.html?seg=community'; }
+    catch (err) { alert(err.message); }
+  });
+
+  document.getElementById('post-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btn-save');
+    btn.disabled = true; btn.textContent = '저장 중...';
+
+    const board_id = parseInt(boardEl.value, 10);
+    if (!board_id) {
+      alert('게시판을 선택해주세요');
+      btn.disabled = false; btn.textContent = '발행';
+      return;
+    }
+
+    const payload = {
+      board_id,
+      title: document.getElementById('title').value.trim(),
+      body: document.getElementById('body').value,
+    };
+
+    try {
+      let p;
+      if (isEdit) p = await updatePost(editId, payload);
+      else        p = await createPost({ ...payload, content_thread_id: state.content_thread_id });
+      window.location.href = `./post-detail.html?id=${p.id}`;
+    } catch (err) {
+      alert(err.message);
+      btn.disabled = false; btn.textContent = '발행';
+    }
+  });
+
+  function escapeHtml(s) { return (s || '').replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+</script>
+
+</body>
+</html>

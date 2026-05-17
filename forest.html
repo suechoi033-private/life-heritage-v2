@@ -92,6 +92,24 @@
   </div>
 </main>
 
+<button class="fab-forest" id="fab-forest" aria-label="새 글">＋</button>
+<style>
+  .fab-forest {
+    position: fixed; right: 20px;
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    z-index: 90;
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: var(--primary); color: #fff;
+    border: none; font-size: 24px;
+    box-shadow: 0 4px 16px rgba(92,138,111,0.4);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .fab-forest:hover { background: var(--primary-hover); }
+  .fab-forest:active { transform: scale(0.95); }
+</style>
+
 <script type="module">
   import { supabase } from './auth.js';
   import { renderNav } from './nav.js';
@@ -137,6 +155,15 @@
     loadFeed();
   }
 
+  // FAB 분기
+  document.getElementById('fab-forest').addEventListener('click', () => {
+    if (activeSeg === 'community') {
+      window.location.href = './post-write.html';
+    } else {
+      window.location.href = `./content-write.html${activeCat !== 'all' ? `?category=${activeCat}` : ''}`;
+    }
+  });
+
   async function loadFeed() {
     const body = document.getElementById('forest-body');
     body.innerHTML = `<div class="empty-state"><div class="empty-icon">⏳</div><div class="empty-desc">불러오는 중...</div></div>`;
@@ -173,12 +200,12 @@
         <div class="empty-state">
           <div class="empty-icon">🌱</div>
           <div class="empty-title">아직 심긴 콘텐츠가 없어요</div>
-          <div class="empty-desc">첫 콘텐츠를 함께 심어볼까요?</div>
+          <div class="empty-desc">＋ 버튼으로 첫 콘텐츠를 함께 심어볼까요?</div>
         </div>`;
       return;
     }
     body.innerHTML = items.map(c => `
-      <div class="content-card" data-id="${c.id}">
+      <a class="content-card" href="./content-detail.html?id=${c.id}">
         <span class="content-card-badge ${c.author_type === 'official' ? 'badge-official' : 'badge-user'}">
           ${c.author_type === 'official' ? '공식' : '유저'}
         </span>
@@ -189,7 +216,7 @@
           <span>❤ ${c.like_count ?? 0}</span>
           <span>${formatDate(c.created_at)}</span>
         </div>
-      </div>
+      </a>
     `).join('');
   }
 
@@ -200,18 +227,19 @@
         <div class="empty-state">
           <div class="empty-icon">💬</div>
           <div class="empty-title">첫 대화를 시작해 보세요</div>
+          <div class="empty-desc">＋ 버튼으로 게시글을 작성할 수 있어요.</div>
         </div>`;
       return;
     }
     body.innerHTML = items.map(p => `
-      <div class="content-card" data-id="${p.id}">
+      <a class="content-card" href="./post-detail.html?id=${p.id}">
         <div class="content-card-title">${escapeHtml(p.title)}</div>
         <div class="content-card-meta">
           <span>💬 ${p.comment_count ?? 0}</span>
           <span>❤ ${p.reaction_count ?? 0}</span>
           <span>${formatDate(p.created_at)}</span>
         </div>
-      </div>
+      </a>
     `).join('');
   }
 

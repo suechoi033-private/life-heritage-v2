@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>게시글 · 잇다</title>
+  <link rel="stylesheet" href="./auth-styles.css">
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#5C8A6F">
+  <style>
+    .post-head { padding: 6px 0 16px; border-bottom: 1px solid var(--line); margin-bottom: 18px; }
+    .post-board-chip {
+      display: inline-block;
+      padding: 3px 10px; background: var(--primary-soft); color: var(--primary);
+      border-radius: 999px; font-size: 11.5px; font-weight: 800;
+    }
+    .post-title {
+      font-family: var(--font-serif);
+      font-size: 21px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.4;
+      margin: 10px 0 8px;
+    }
+    .post-meta-row {
+      display: flex; gap: 10px; align-items: center;
+      font-size: 12px; color: var(--ink-muted);
+    }
+    .post-avatar {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--primary-soft); color: var(--primary);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 800;
+    }
+    .post-author { font-weight: 700; color: var(--ink-soft); }
+
+    .post-body {
+      font-size: 15.5px; line-height: 1.85;
+      white-space: pre-wrap; word-break: break-word;
+    }
+
+    .post-actions {
+      display: flex; gap: 10px; margin: 22px 0 16px;
+      padding: 14px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+    }
+    .post-action {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 14px; border-radius: 999px; background: var(--bg-alt);
+      border: none; font-size: 13px; font-weight: 700; color: var(--ink-soft);
+      cursor: pointer; font-family: inherit;
+    }
+    .post-action.active { background: var(--primary); color: #fff; }
+    .action-spacer { margin-left: auto; }
+    .action-report {
+      background: transparent; border: none; color: var(--ink-faint);
+      font-size: 12px; cursor: pointer; padding: 4px 6px;
+    }
+
+    /* 댓글 */
+    .comments-head { font-size: 14px; font-weight: 800; margin: 22px 0 10px; }
+    .comment {
+      padding: 12px 14px; background: var(--bg-alt); border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+    }
+    .comment-head {
+      display: flex; gap: 8px; align-items: center;
+      font-size: 12px; color: var(--ink-muted); margin-bottom: 5px;
+    }
+    .comment-author { font-weight: 700; color: var(--ink-soft); }
+    .comment-body { font-size: 14px; line-height: 1.6; white-space: pre-wrap; }
+    .comment-tools { display: flex; gap: 10px; margin-top: 6px; font-size: 11.5px; }
+    .comment-tools button {
+      background: transparent; border: none; cursor: pointer;
+      color: var(--ink-muted); font-weight: 700; padding: 0; font-family: inherit;
+    }
+    .comment-tools button:hover { color: var(--primary); }
+    .comment-replies { margin-top: 8px; margin-left: 16px; padding-left: 10px; border-left: 2px solid var(--line); }
+
+    .comment-form {
+      position: sticky; bottom: 0;
+      background: var(--bg);
+      padding: 14px 0 calc(14px + env(safe-area-inset-bottom, 0px));
+      border-top: 1px solid var(--line);
+      margin: 18px -20px -32px;
+      padding-left: 20px; padding-right: 20px;
+      display: flex; gap: 8px; align-items: flex-end;
+    }
+    .comment-form textarea {
+      flex: 1; padding: 10px 12px;
+      border: 1.5px solid var(--line); border-radius: var(--radius-sm);
+      font-family: inherit; font-size: 14px; line-height: 1.5;
+      min-height: 40px; max-height: 120px; resize: none;
+    }
+    .comment-form button {
+      padding: 10px 16px; background: var(--primary); color: #fff;
+      border: none; border-radius: var(--radius-sm);
+      font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit;
+    }
+    .reply-form-wrap { margin-top: 8px; }
+    .reply-form-wrap textarea {
+      width: 100%; padding: 8px 10px;
+      border: 1.5px solid var(--line); border-radius: var(--radius-sm);
+      font-family: inherit; font-size: 13px;
+      min-height: 36px; resize: none;
+    }
+    .reply-form-actions { display: flex; gap: 6px; margin-top: 6px; justify-content: flex-end; }
+    .reply-form-actions button {
+      padding: 6px 12px; border-radius: 6px; border: none;
+      font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit;
+    }
+    .reply-cancel { background: var(--bg-alt); color: var(--ink-soft); }
+    .reply-submit { background: var(--primary); color: #fff; }
+
+    body.has-bottom-nav { padding-bottom: 0; }
+    .itda-bottom-nav { display: none !important; }
+
+    /* 신고 모달 (재사용) */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+      z-index: 200; display: flex; align-items: flex-end; justify-content: center;
+    }
+    .modal-sheet {
+      width: 100%; max-width: 480px; background: var(--bg);
+      border-radius: 20px 20px 0 0;
+      padding: 22px 20px calc(20px + env(safe-area-inset-bottom, 0px));
+    }
+    .modal-title { font-size: 15px; font-weight: 800; margin-bottom: 14px; }
+    .reason-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+    .reason-opt {
+      padding: 10px 14px; border-radius: var(--radius-sm);
+      border: 1.5px solid var(--line); background: #fff;
+      font-size: 13.5px; font-weight: 600; cursor: pointer; font-family: inherit;
+      text-align: left;
+    }
+    .reason-opt.active { border-color: var(--danger); background: var(--danger-soft); color: var(--danger); }
+    .modal-actions { display: flex; gap: 10px; }
+    .modal-actions button {
+      flex: 1; padding: 12px; border-radius: var(--radius-sm); border: none;
+      font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit;
+    }
+    .modal-cancel { background: var(--bg-alt); border: 1px solid var(--line); }
+    .modal-submit { background: var(--danger); color: #fff; }
+  </style>
+</head>
+<body>
+
+<main class="page-shell">
+  <div id="post-body"><div class="empty-state"><div class="empty-icon">⏳</div></div></div>
+</main>
+<div id="modal-root"></div>
+
+<script type="module">
+  import { supabase } from './auth.js';
+  import { renderNav } from './nav.js';
+  import {
+    getPost, listComments, createComment, deleteComment, deletePost,
+    toggleReaction, getReactionState, reportTarget, REPORT_REASONS,
+  } from './js/community.js';
+
+  await renderNav({ active: 'forest', infoIcon: false, title: '게시글' });
+
+  const { data: { session } } = await supabase.auth.getSession();
+  const id = new URLSearchParams(location.search).get('id');
+  if (!id) { window.location.href = './forest.html'; throw new Error('id 누락'); }
+
+  await render();
+
+  async function render() {
+    const post = await getPost(id);
+    if (!post) {
+      document.getElementById('post-body').innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">🙏</div>
+          <div class="empty-title">게시글을 찾을 수 없어요</div>
+          <div class="cta-block"><a href="./forest.html?seg=community">숲으로</a></div>
+        </div>`;
+      return;
+    }
+
+    const isOwner = session && post.user_id === session.user.id;
+    const reaction = await getReactionState('post', id);
+    const comments = await listComments(id);
+
+    document.getElementById('post-body').innerHTML = `
+      <div class="post-head">
+        <span class="post-board-chip">${post.boards?.name || ''}</span>
+        <div class="post-title">${escapeHtml(post.title)}</div>
+        <div class="post-meta-row">
+          <span class="post-avatar">${(post.profiles?.name?.[0] || '·').toUpperCase()}</span>
+          <span class="post-author">${escapeHtml(post.profiles?.name || '')}</span>
+          <span>${formatDate(post.created_at)}</span>
+          <span style="margin-left:auto;">👁 ${post.view_count || 0}</span>
+        </div>
+      </div>
+
+      <div class="post-body">${escapeHtml(post.body || '')}</div>
+
+      <div class="post-actions">
+        <button class="post-action ${reaction.mine ? 'active' : ''}" id="btn-like">
+          ❤ <span id="like-count">${reaction.count}</span>
+        </button>
+        <button class="post-action" id="btn-comment-focus">💬 ${comments.length}</button>
+        <div class="action-spacer"></div>
+        ${isOwner ? `
+          <a class="post-action" href="./post-write.html?id=${post.id}">✏ 수정</a>
+          <button class="post-action" id="btn-delete-post">삭제</button>
+        ` : `
+          <button class="action-report" id="btn-report">🚩 신고</button>
+        `}
+      </div>
+
+      <div class="comments-head">댓글 ${comments.length}개</div>
+      <div id="comments-list">${comments.map(renderComment).join('')}</div>
+
+      ${session ? `
+        <form class="comment-form" id="comment-form">
+          <textarea id="comment-input" placeholder="댓글을 남겨보세요" required></textarea>
+          <button type="submit">등록</button>
+        </form>
+      ` : `
+        <div class="cta-block" style="margin-top:14px;"><a href="./login.html">댓글은 로그인 후 작성</a></div>
+      `}
+    `;
+
+    // 좋아요
+    document.getElementById('btn-like').addEventListener('click', async () => {
+      if (!session) { window.location.href = './login.html'; return; }
+      try {
+        const r = await toggleReaction({ target_type: 'post', target_id: id });
+        const cnt = document.getElementById('like-count');
+        cnt.textContent = parseInt(cnt.textContent, 10) + (r.active ? 1 : -1);
+        document.getElementById('btn-like').classList.toggle('active', r.active);
+      } catch (err) { alert(err.message); }
+    });
+
+    document.getElementById('btn-comment-focus').addEventListener('click', () => {
+      document.getElementById('comment-input')?.focus();
+    });
+
+    document.getElementById('btn-delete-post')?.addEventListener('click', async () => {
+      if (!confirm('이 게시글을 삭제하시겠어요?')) return;
+      try { await deletePost(id); window.location.href = './forest.html?seg=community'; }
+      catch (err) { alert(err.message); }
+    });
+
+    document.getElementById('btn-report')?.addEventListener('click', () => openReportModal('post', id));
+
+    // 댓글 작성
+    document.getElementById('comment-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const text = document.getElementById('comment-input').value.trim();
+      if (!text) return;
+      try {
+        await createComment({ post_id: id, body: text });
+        await render();
+      } catch (err) { alert(err.message); }
+    });
+
+    // 댓글 위임 (답글/삭제/신고)
+    document.getElementById('comments-list')?.addEventListener('click', async (e) => {
+      const reply = e.target.closest('[data-action="reply"]');
+      const del = e.target.closest('[data-action="delete-comment"]');
+      const rep = e.target.closest('[data-action="report-comment"]');
+      if (reply) {
+        openReplyForm(reply.dataset.parent);
+      } else if (del) {
+        if (!confirm('이 댓글을 삭제하시겠어요?')) return;
+        try { await deleteComment(del.dataset.id, id); await render(); }
+        catch (err) { alert(err.message); }
+      } else if (rep) {
+        openReportModal('comment', rep.dataset.id);
+      }
+    });
+  }
+
+  function renderComment(c, depth = 0) {
+    const isOwner = session && c.user_id === session.user.id;
+    return `
+      <div class="comment">
+        <div class="comment-head">
+          <span class="comment-author">${escapeHtml(c.profiles?.name || '익명')}</span>
+          <span>${formatDate(c.created_at)}</span>
+        </div>
+        <div class="comment-body">${escapeHtml(c.body)}</div>
+        <div class="comment-tools">
+          ${depth === 0 ? `<button data-action="reply" data-parent="${c.id}">답글</button>` : ''}
+          ${isOwner ? `<button data-action="delete-comment" data-id="${c.id}">삭제</button>` : `<button data-action="report-comment" data-id="${c.id}">신고</button>`}
+        </div>
+        ${c.replies?.length ? `<div class="comment-replies">${c.replies.map((r) => renderComment(r, depth + 1)).join('')}</div>` : ''}
+      </div>
+    `;
+  }
+
+  function openReplyForm(parentId) {
+    const existing = document.querySelector(`.reply-form-wrap[data-parent="${parentId}"]`);
+    if (existing) { existing.remove(); return; }
+    const replyBtn = document.querySelector(`button[data-action="reply"][data-parent="${parentId}"]`);
+    if (!replyBtn) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'reply-form-wrap';
+    wrap.dataset.parent = parentId;
+    wrap.innerHTML = `
+      <textarea placeholder="답글 입력..."></textarea>
+      <div class="reply-form-actions">
+        <button class="reply-cancel">취소</button>
+        <button class="reply-submit">등록</button>
+      </div>
+    `;
+    replyBtn.closest('.comment').appendChild(wrap);
+    wrap.querySelector('textarea').focus();
+    wrap.querySelector('.reply-cancel').addEventListener('click', () => wrap.remove());
+    wrap.querySelector('.reply-submit').addEventListener('click', async () => {
+      const text = wrap.querySelector('textarea').value.trim();
+      if (!text) return;
+      try {
+        await createComment({ post_id: id, body: text, parent_comment_id: parentId });
+        await render();
+      } catch (err) { alert(err.message); }
+    });
+  }
+
+  function openReportModal(target_type, target_id) {
+    if (!session) { window.location.href = './login.html'; return; }
+    const root = document.getElementById('modal-root');
+    let selected = null;
+    root.innerHTML = `
+      <div class="modal-overlay" id="modal-overlay">
+        <div class="modal-sheet">
+          <div class="modal-title">신고 사유</div>
+          <div class="reason-list">
+            ${REPORT_REASONS.map((r) => `<button type="button" class="reason-opt" data-reason="${escapeAttr(r)}">${escapeHtml(r)}</button>`).join('')}
+          </div>
+          <div class="modal-actions">
+            <button class="modal-cancel" id="modal-cancel">취소</button>
+            <button class="modal-submit" id="modal-submit" disabled>신고</button>
+          </div>
+        </div>
+      </div>
+    `;
+    const close = () => { root.innerHTML = ''; };
+    document.getElementById('modal-overlay').addEventListener('click', (e) => { if (e.target.id === 'modal-overlay') close(); });
+    document.getElementById('modal-cancel').addEventListener('click', close);
+    root.querySelectorAll('.reason-opt').forEach((b) => b.addEventListener('click', () => {
+      selected = b.dataset.reason;
+      root.querySelectorAll('.reason-opt').forEach((x) => x.classList.toggle('active', x === b));
+      document.getElementById('modal-submit').disabled = false;
+    }));
+    document.getElementById('modal-submit').addEventListener('click', async () => {
+      try { await reportTarget({ target_type, target_id, reason: selected }); alert('신고가 접수되었어요.'); close(); }
+      catch (err) { alert(err.message); }
+    });
+  }
+
+  function formatDate(d) { return new Date(d).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); }
+  function escapeHtml(s) { return (s || '').replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+  function escapeAttr(s) { return escapeHtml(s).replace(/`/g, '&#96;'); }
+</script>
+
+</body>
+</html>
