@@ -44,6 +44,8 @@
     <button type="submit" class="auth-submit">로그인</button>
   </form>
 
+  <div id="social-auth"></div>
+
   <div class="auth-links">
     <a href="./forgot.html">비밀번호를 잊으셨나요?</a>
   </div>
@@ -59,21 +61,38 @@
 
 <script type="module">
   import { signIn, redirectIfAuthed, friendlyError } from './auth.js';
+  import { renderSocialAuthButtons } from './js/social-auth.js';
 
-  // ── 초대 코드 캡처 ────────────────────────
-  const inviteCode = (new URLSearchParams(location.search).get('invite')
-    || localStorage.getItem('itda:pending_invite')
-    || '').toUpperCase();
-  if (inviteCode) {
-    localStorage.setItem('itda:pending_invite', inviteCode);
-    await redirectIfAuthed(`/care.html?accept=${encodeURIComponent(inviteCode)}`);
+  // ── 초대 코드 캡처 (돌봄 초대 + 친구 초대 둘 다) ────────────────────────
+  const params = new URLSearchParams(location.search);
+  const careInvite   = (params.get('invite') || localStorage.getItem('itda:pending_invite') || '').toUpperCase();
+  const friendInvite = (params.get('friend') || localStorage.getItem('itda:pending_friend_invite') || '').toUpperCase();
+
+  let redirectAfterLogin = './index.html';
+
+  if (friendInvite) {
+    localStorage.setItem('itda:pending_friend_invite', friendInvite);
+    redirectAfterLogin = `./invite.html?code=${encodeURIComponent(friendInvite)}`;
+    await redirectIfAuthed(redirectAfterLogin);
     const lead = document.querySelector('.auth-lead');
-    if (lead) lead.innerHTML = `<strong style="color: var(--primary);">초대 코드 ${inviteCode}</strong>를 받으셨네요. 로그인하시면 자동으로 합류됩니다.`;
+    if (lead) lead.innerHTML = `<strong style="color: var(--primary);">친구 초대</strong>를 받으셨네요. 로그인 후 자동으로 연결됩니다.`;
+  } else if (careInvite) {
+    localStorage.setItem('itda:pending_invite', careInvite);
+    redirectAfterLogin = `./care.html?accept=${encodeURIComponent(careInvite)}`;
+    await redirectIfAuthed(redirectAfterLogin);
+    const lead = document.querySelector('.auth-lead');
+    if (lead) lead.innerHTML = `<strong style="color: var(--primary);">초대 코드 ${careInvite}</strong>를 받으셨네요. 로그인하시면 자동으로 합류됩니다.`;
     const signupLinks = document.querySelectorAll('a[href="./signup.html"]');
-    signupLinks.forEach(a => { a.href = `./signup.html?invite=${inviteCode}`; });
+    signupLinks.forEach(a => { a.href = `./signup.html?invite=${careInvite}`; });
   } else {
-    await redirectIfAuthed('my.html');
+    await redirectIfAuthed('./index.html');
   }
+
+  // ── 소셜 로그인 버튼 렌더 ────────────────────────
+  renderSocialAuthButtons(document.getElementById('social-auth'), {
+    redirectAfter: redirectAfterLogin,
+    inviteCode: friendInvite || careInvite,
+  });
 
   const form = document.getElementById('login-form');
   const alertBox = document.getElementById('alert');
@@ -107,12 +126,7 @@
       return;
     }
 
-    // 초대 코드 있으면 care.html?accept=CODE로, 없으면 my.html
-    if (inviteCode) {
-      window.location.href = `./care.html?accept=${encodeURIComponent(inviteCode)}`;
-    } else {
-      window.location.href = 'my.html';
-    }
+    window.location.href = redirectAfterLogin;
   });
 </script>
 

@@ -1,14 +1,22 @@
 {
-  "name": "잇다",
+  "name": "잇다 — 삶 성찰 및 미래 준비",
   "short_name": "잇다",
-  "description": "이따가 하지 말고 지금 — 돌봄, 기억, 내 마무리",
+  "description": "씨앗을 심고, 둥지를 품고, 숲에서 만나고, 뿌리로 돌아오는 곳",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#5C8A6F",
+  "background_color": "#FAFAF7",
   "theme_color": "#5C8A6F",
   "orientation": "portrait",
+  "lang": "ko",
+  "categories": ["lifestyle", "health", "social"],
   "icons": [
     { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
     { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    { "name": "오늘 일기 쓰기", "short_name": "일기", "url": "./seed.html?tab=diary&action=new", "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "돌봄 기록", "short_name": "돌봄", "url": "./nest.html", "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "숲 둘러보기", "short_name": "숲", "url": "./forest.html", "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192" }] }
   ]
 }

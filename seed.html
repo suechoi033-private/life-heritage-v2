@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>씨앗 · 잇다</title>
+  <meta name="description" content="매일의 생각과 미래를 심는 곳 — 일기와 목표 계획">
+  <link rel="stylesheet" href="./auth-styles.css">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png">
+  <meta name="theme-color" content="#5C8A6F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="잇다">
+  <style>
+    .seed-hero {
+      background: linear-gradient(135deg, var(--primary-soft), #F3F8F5);
+      border-radius: var(--radius);
+      padding: 22px;
+      margin-bottom: 18px;
+    }
+    .seed-hero-label { font-size: 12px; font-weight: 700; color: var(--primary); letter-spacing: 0.04em; }
+    .seed-hero-title {
+      font-family: var(--font-serif);
+      font-size: 19px;
+      font-weight: 800;
+      line-height: 1.45;
+      letter-spacing: -0.02em;
+      margin: 6px 0 4px;
+    }
+    .seed-hero-stat { font-size: 13px; color: var(--ink-soft); }
+    .seed-hero-stat strong { color: var(--primary); font-weight: 800; }
+  </style>
+</head>
+<body>
+
+<main class="page-shell" id="main-content">
+  <div class="tab-segment" role="tablist">
+    <button type="button" id="tab-diary" class="active" role="tab" aria-selected="true">일기</button>
+    <button type="button" id="tab-goal" role="tab" aria-selected="false">목표·계획</button>
+  </div>
+
+  <div id="seed-hero" class="seed-hero">
+    <div class="seed-hero-label">씨앗</div>
+    <div class="seed-hero-title">오늘 어떤 생각을<br>심으셨나요?</div>
+    <div class="seed-hero-stat" id="seed-stat">불러오는 중...</div>
+  </div>
+
+  <div id="seed-body">
+    <div class="empty-state">
+      <div class="empty-icon">🌱</div>
+      <div class="empty-title">씨앗 탭 준비 중</div>
+      <div class="empty-desc">일기 작성·캘린더·타임라인·목표 대시보드가<br>다음 단계에서 들어옵니다.</div>
+    </div>
+    <div class="cta-block">
+      <button id="cta-write-diary">일기 쓰기 (준비 중)</button>
+    </div>
+  </div>
+</main>
+
+<script type="module">
+  import { supabase } from './auth.js';
+  import { renderNav } from './nav.js';
+  import { registerPWA } from './js/pwa.js';
+
+  await renderNav({ active: 'seed', infoIcon: true, title: '씨앗' });
+  registerPWA();
+
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) { window.location.href = './login.html'; throw new Error('로그인 필요'); }
+
+  // URL ?tab=diary|goal 처리
+  const params = new URLSearchParams(location.search);
+  const initialTab = params.get('tab') === 'goal' ? 'goal' : 'diary';
+  setActiveTab(initialTab);
+
+  document.getElementById('tab-diary').addEventListener('click', () => setActiveTab('diary'));
+  document.getElementById('tab-goal').addEventListener('click', () => setActiveTab('goal'));
+
+  function setActiveTab(tab) {
+    document.getElementById('tab-diary').classList.toggle('active', tab === 'diary');
+    document.getElementById('tab-goal').classList.toggle('active',  tab === 'goal');
+    document.getElementById('tab-diary').setAttribute('aria-selected', tab === 'diary');
+    document.getElementById('tab-goal').setAttribute('aria-selected', tab === 'goal');
+    const heroTitle = document.querySelector('.seed-hero-title');
+    if (tab === 'diary') {
+      heroTitle.innerHTML = '오늘 어떤 생각을<br>심으셨나요?';
+    } else {
+      heroTitle.innerHTML = '3·6·12·60개월<br>어디까지 자랐나요?';
+    }
+  }
+
+  // 통계 — 일기 N개, 목표 N개
+  try {
+    const [{ count: diaryCount }, { count: goalCount }] = await Promise.all([
+      supabase.from('diary_entries').select('id', { count: 'exact', head: true }).eq('user_id', session.user.id),
+      supabase.from('goals').select('id', { count: 'exact', head: true }).eq('user_id', session.user.id).eq('status', 'active'),
+    ]);
+    document.getElementById('seed-stat').innerHTML = `
+      일기 <strong>${diaryCount ?? 0}</strong>개 · 진행 중 목표 <strong>${goalCount ?? 0}</strong>개
+    `;
+  } catch (err) {
+    document.getElementById('seed-stat').textContent = '시작해 보세요';
+  }
+
+  document.getElementById('cta-write-diary')?.addEventListener('click', () => {
+    alert('일기 작성 화면은 다음 업데이트에서 만나요. 🌱');
+  });
+</script>
+
+</body>
+</html>

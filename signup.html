@@ -53,6 +53,8 @@
     <button type="submit" class="auth-submit">가입하기</button>
   </form>
 
+  <div id="social-auth"></div>
+
   <div class="auth-bottom">
     이미 가입하셨나요? <a href="./login.html">로그인</a>
   </div>
@@ -64,26 +66,42 @@
 
 <script type="module">
   import { signUp, redirectIfAuthed, friendlyError, supabase } from './auth.js';
+  import { renderSocialAuthButtons } from './js/social-auth.js';
 
-  // ── 초대 코드 캡처 ────────────────────────
-  const inviteCode = (new URLSearchParams(location.search).get('invite') || '').toUpperCase();
-  if (inviteCode) {
-    localStorage.setItem('itda:pending_invite', inviteCode);
-    // 이미 로그인된 사용자라면 바로 care.html로 보내서 자동 수락
+  // ── 초대 코드 캡처 (돌봄 + 친구) ────────────────────────
+  const params = new URLSearchParams(location.search);
+  const careInvite   = (params.get('invite') || '').toUpperCase();
+  const friendInvite = (params.get('friend') || '').toUpperCase();
+
+  let redirectAfterSignup = './index.html';
+
+  if (friendInvite) {
+    localStorage.setItem('itda:pending_friend_invite', friendInvite);
+    redirectAfterSignup = `./invite.html?code=${encodeURIComponent(friendInvite)}`;
     const { data } = await supabase.auth.getSession();
-    if (data?.session) {
-      window.location.href = `./care.html?accept=${encodeURIComponent(inviteCode)}`;
-      throw new Error('redirecting');
-    }
-    // 가입/로그인 안내 메시지에 초대 정보 표시
+    if (data?.session) { window.location.href = redirectAfterSignup; throw new Error('redirecting'); }
     const lead = document.querySelector('.auth-lead');
-    if (lead) lead.innerHTML = `<strong style="color: var(--primary);">초대 코드 ${inviteCode}</strong>를 받으셨네요. 가입하시면 자동으로 합류됩니다.`;
-    // 로그인 링크에 invite 유지
+    if (lead) lead.innerHTML = `<strong style="color: var(--primary);">친구 초대</strong>를 받으셨네요. 가입 후 자동으로 연결됩니다.`;
     const loginLinks = document.querySelectorAll('a[href="./login.html"]');
-    loginLinks.forEach(a => { a.href = `./login.html?invite=${inviteCode}`; });
+    loginLinks.forEach(a => { a.href = `./login.html?friend=${friendInvite}`; });
+  } else if (careInvite) {
+    localStorage.setItem('itda:pending_invite', careInvite);
+    redirectAfterSignup = `./care.html?accept=${encodeURIComponent(careInvite)}`;
+    const { data } = await supabase.auth.getSession();
+    if (data?.session) { window.location.href = redirectAfterSignup; throw new Error('redirecting'); }
+    const lead = document.querySelector('.auth-lead');
+    if (lead) lead.innerHTML = `<strong style="color: var(--primary);">초대 코드 ${careInvite}</strong>를 받으셨네요. 가입하시면 자동으로 합류됩니다.`;
+    const loginLinks = document.querySelectorAll('a[href="./login.html"]');
+    loginLinks.forEach(a => { a.href = `./login.html?invite=${careInvite}`; });
   } else {
-    await redirectIfAuthed('my.html');
+    await redirectIfAuthed('./index.html');
   }
+
+  // ── 소셜 로그인 버튼 ────────────────────────
+  renderSocialAuthButtons(document.getElementById('social-auth'), {
+    redirectAfter: redirectAfterSignup,
+    inviteCode: friendInvite || careInvite,
+  });
 
   const form = document.getElementById('signup-form');
   const alertBox = document.getElementById('alert');
@@ -121,20 +139,18 @@
     // 가입 직후 세션이 바로 잡혔는지 (자동 확인 환경) 확인
     const { data: sessData } = await supabase.auth.getSession();
     if (sessData?.session) {
-      // 세션 있음 → 초대 코드 있으면 바로 care.html로 (온보딩 건너뜀)
-      if (inviteCode) {
-        window.location.href = `./care.html?accept=${encodeURIComponent(inviteCode)}`;
+      if (friendInvite || careInvite) {
+        window.location.href = redirectAfterSignup;
         return;
       }
-      // 신규 가입자 → 환영·온보딩 마법사로
       window.location.href = 'welcome.html';
       return;
     }
 
     // 세션 없음 → 이메일 인증 필요
     form.classList.add('hidden');
-    const inviteHint = inviteCode
-      ? '<br>인증 후 로그인하시면 초대 코드가 자동으로 적용됩니다.'
+    const inviteHint = (friendInvite || careInvite)
+      ? '<br>인증 후 로그인하시면 초대가 자동으로 적용됩니다.'
       : '';
     showAlert(
       `🌼 감사합니다. ${email} 으로 인증 링크를 보냈습니다. 받은 편지함을 확인하고 링크를 눌러주세요.${inviteHint}`,

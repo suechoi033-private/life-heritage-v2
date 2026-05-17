@@ -1,21 +1,38 @@
-// 잇다 — 공통 바텀 탭 + 탑바 내비게이션 (모바일 우선 v2)
+// 잇다 v3 — 5탭 하단 네비 (홈 · 씨앗 · 둥지 · 숲 · 뿌리)
 // 사용법: import { renderNav } from './nav.js';
-//          renderNav({ active: 'care' });
-// active: home | care | self | stories | my
-// opts.infoIcon: true → 탑바 우상단에 정보 아이콘 표시
+//          renderNav({ active: 'seed' });
+// active: home | seed | nest | forest | root
+// 하위 호환: 'care'→nest, 'stories'→forest, 'self'→forest, 'my'→root, 'ask'→home, 'note'→seed
 
 import { supabase } from './auth.js';
 
 const TABS = [
-  { key: 'home',    label: '홈',        icon: '🏠', href: './index.html' },
-  { key: 'care',    label: '돌봄',      icon: '🤝', href: './care.html'   },
-  { key: 'self',    label: '삶',        icon: '🕊',  href: './self.html'   },
-  { key: 'stories', label: '기억',      icon: '🌿', href: './stories.html' },
-  { key: 'my',      label: '마이',      icon: '👤', href: './my.html'     },
+  { key: 'home',   label: '홈',   icon: '🏠', href: './index.html'  },
+  { key: 'seed',   label: '씨앗', icon: '🌱', href: './seed.html'   },
+  { key: 'nest',   label: '둥지', icon: '🪺', href: './nest.html'   },
+  { key: 'forest', label: '숲',   icon: '🌳', href: './forest.html' },
+  { key: 'root',   label: '뿌리', icon: '🌿', href: './root.html'   },
 ];
 
+// 기존 키 → 신규 키 매핑 (점진적 마이그레이션 기간 동안)
+const LEGACY_ACTIVE_MAP = {
+  care: 'nest',
+  stories: 'forest',
+  story: 'forest',
+  self: 'forest',
+  my: 'root',
+  ask: 'home',
+  note: 'seed',
+  info: 'forest',
+};
+
+// 로그인 필요 탭
+const PROTECTED_TABS = new Set(['seed', 'nest', 'root']);
+
 export async function renderNav(opts = {}) {
-  const { active = '', infoIcon = true, title = '' } = opts;
+  const rawActive = opts.active || '';
+  const active = LEGACY_ACTIVE_MAP[rawActive] || rawActive;
+  const { infoIcon = true, title = '' } = opts;
 
   const { data: { session } } = await supabase.auth.getSession();
   const loggedIn = !!session;
@@ -26,7 +43,7 @@ export async function renderNav(opts = {}) {
   document.body.classList.add('has-bottom-nav');
 }
 
-// 탑바: 로고 + 우상단 아이콘
+// 탑바
 function _renderTopBar({ loggedIn, infoIcon, title }) {
   if (document.getElementById('itda-top-bar')) return;
 
@@ -40,10 +57,10 @@ function _renderTopBar({ loggedIn, infoIcon, title }) {
 
   const actions = [];
   if (infoIcon) {
-    actions.push(`<a href="./info.html" title="정보" aria-label="정보">📚</a>`);
+    actions.push(`<a href="./forest.html?category=death_prep" title="안내" aria-label="안내">📚</a>`);
   }
   if (loggedIn) {
-    actions.push(`<button id="itda-ask-btn" title="오늘 잇고" aria-label="오늘 잇고">✏️</button>`);
+    actions.push(`<button id="itda-ask-btn" title="오늘 일기" aria-label="오늘 일기">✏️</button>`);
   } else {
     actions.push(`<a href="./login.html" style="font-size:14px;color:var(--ink-soft);text-decoration:none;font-weight:600;padding:4px 2px;">로그인</a>`);
   }
@@ -52,19 +69,15 @@ function _renderTopBar({ loggedIn, infoIcon, title }) {
     ${logoText}
     <div class="itda-top-bar-actions">${actions.join('')}</div>
   `;
-
-  // body 첫 번째 자식으로 삽입
   document.body.insertBefore(bar, document.body.firstChild);
 
-  // "오늘 잇고" 버튼
   const askBtn = document.getElementById('itda-ask-btn');
   if (askBtn) {
     askBtn.addEventListener('click', () => {
-      window.location.href = './ask.html';
+      window.location.href = './seed.html?tab=diary&action=new';
     });
   }
 
-  // 탑바 타이틀 스타일
   if (!document.getElementById('itda-topbar-style')) {
     const st = document.createElement('style');
     st.id = 'itda-topbar-style';
@@ -80,7 +93,7 @@ function _renderTopBar({ loggedIn, infoIcon, title }) {
   }
 }
 
-// 바텀 탭 5개
+// 바텀 탭
 function _renderBottomTabs({ active, loggedIn }) {
   if (document.getElementById('itda-bottom-nav')) return;
 
@@ -91,10 +104,7 @@ function _renderBottomTabs({ active, loggedIn }) {
 
   nav.innerHTML = TABS.map(t => {
     const isActive = t.key === active;
-    // 로그인 필요 탭: self, care, my — 비로그인이면 login으로 이동
-    const href = (!loggedIn && ['self', 'care', 'my'].includes(t.key))
-      ? `./login.html`
-      : t.href;
+    const href = (!loggedIn && PROTECTED_TABS.has(t.key)) ? `./login.html` : t.href;
     return `
       <a href="${href}" class="${isActive ? 'active' : ''}" aria-label="${t.label}" aria-current="${isActive ? 'page' : 'false'}">
         <span class="nav-icon">${t.icon}</span>
@@ -106,7 +116,7 @@ function _renderBottomTabs({ active, loggedIn }) {
   document.body.appendChild(nav);
 }
 
-// ── 하위 호환: 기존 renderTopBar 호출도 동작하도록 ──
+// 하위 호환
 export async function renderTopBar(opts = {}) {
   return renderNav(opts);
 }

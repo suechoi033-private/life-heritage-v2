@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>숲 · 잇다</title>
+  <meta name="description" content="함께 자라며 배우는 곳 — 콘텐츠·커뮤니티·추모">
+  <link rel="stylesheet" href="./auth-styles.css">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  <meta name="theme-color" content="#5C8A6F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="잇다">
+  <style>
+    .forest-segment { margin-bottom: 14px; }
+    .forest-chips {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 4px 0 12px;
+      margin: 0 -4px 16px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .forest-chips::-webkit-scrollbar { display: none; }
+    .forest-chip {
+      flex-shrink: 0;
+      padding: 7px 14px;
+      border-radius: 999px;
+      background: var(--bg-alt);
+      border: 1px solid var(--line);
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--ink-soft);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .forest-chip.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+    .content-card {
+      background: var(--bg-alt);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .content-card:hover { border-color: var(--primary-soft); box-shadow: 0 4px 16px rgba(92,138,111,0.08); }
+    .content-card-badge {
+      display: inline-block;
+      font-size: 10.5px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 999px;
+      letter-spacing: 0.04em;
+      margin-right: 6px;
+    }
+    .badge-official { background: var(--primary-soft); color: var(--primary); }
+    .badge-user     { background: var(--warm-soft); color: var(--warm); }
+    .content-card-title {
+      font-family: var(--font-serif);
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      line-height: 1.45;
+      margin: 8px 0 6px;
+    }
+    .content-card-meta { font-size: 12px; color: var(--ink-muted); display: flex; gap: 10px; }
+  </style>
+</head>
+<body>
+
+<main class="page-shell" id="main-content">
+  <div class="tab-segment forest-segment" role="tablist">
+    <button type="button" id="seg-content"   class="active" role="tab">콘텐츠</button>
+    <button type="button" id="seg-community" role="tab">커뮤니티</button>
+  </div>
+
+  <div class="forest-chips" id="forest-chips"></div>
+
+  <div id="forest-body">
+    <div class="empty-state">
+      <div class="empty-icon">🌳</div>
+      <div class="empty-title">숲을 가꾸는 중</div>
+      <div class="empty-desc">콘텐츠와 커뮤니티가 곧 채워집니다.<br>오늘의 한 걸음, 첫 콘텐츠를 함께 심어보세요.</div>
+    </div>
+  </div>
+</main>
+
+<script type="module">
+  import { supabase } from './auth.js';
+  import { renderNav } from './nav.js';
+  import { registerPWA } from './js/pwa.js';
+
+  await renderNav({ active: 'forest', infoIcon: false, title: '숲' });
+  registerPWA();
+
+  const CATEGORIES = [
+    { key: 'all',        label: '전체' },
+    { key: 'reflection', label: '오늘의 성찰' },
+    { key: 'family',     label: '가족 돌봄' },
+    { key: 'health',     label: '건강' },
+    { key: 'finance',    label: '재정' },
+    { key: 'death_prep', label: '죽음 준비' },
+    { key: 'memorial',   label: '추모' },
+  ];
+
+  const params = new URLSearchParams(location.search);
+  let activeSeg = params.get('seg') === 'community' ? 'community' : 'content';
+  let activeCat = params.get('category') || 'all';
+
+  // 카테고리 칩 렌더
+  const chipsEl = document.getElementById('forest-chips');
+  chipsEl.innerHTML = CATEGORIES.map(c =>
+    `<button class="forest-chip ${c.key === activeCat ? 'active' : ''}" data-cat="${c.key}">${c.label}</button>`
+  ).join('');
+  chipsEl.addEventListener('click', (e) => {
+    const btn = e.target.closest('.forest-chip');
+    if (!btn) return;
+    activeCat = btn.dataset.cat;
+    chipsEl.querySelectorAll('.forest-chip').forEach(b => b.classList.toggle('active', b.dataset.cat === activeCat));
+    loadFeed();
+  });
+
+  document.getElementById('seg-content').addEventListener('click',   () => switchSeg('content'));
+  document.getElementById('seg-community').addEventListener('click', () => switchSeg('community'));
+
+  function switchSeg(seg) {
+    activeSeg = seg;
+    document.getElementById('seg-content').classList.toggle('active',   seg === 'content');
+    document.getElementById('seg-community').classList.toggle('active', seg === 'community');
+    loadFeed();
+  }
+
+  async function loadFeed() {
+    const body = document.getElementById('forest-body');
+    body.innerHTML = `<div class="empty-state"><div class="empty-icon">⏳</div><div class="empty-desc">불러오는 중...</div></div>`;
+
+    try {
+      if (activeSeg === 'content') {
+        let q = supabase.from('contents')
+          .select('id, category, title, body, author_type, view_count, like_count, created_at')
+          .eq('is_published', true)
+          .order('created_at', { ascending: false })
+          .limit(20);
+        if (activeCat !== 'all') q = q.eq('category', activeCat);
+        const { data, error } = await q;
+        if (error) throw error;
+        renderContentList(data || []);
+      } else {
+        const { data, error } = await supabase.from('community_posts')
+          .select('id, board_id, title, body, view_count, comment_count, reaction_count, created_at')
+          .eq('is_deleted', false)
+          .order('created_at', { ascending: false })
+          .limit(20);
+        if (error) throw error;
+        renderPostList(data || []);
+      }
+    } catch (err) {
+      body.innerHTML = `<div class="empty-state"><div class="empty-icon">🌱</div><div class="empty-title">아직 비어있어요</div><div class="empty-desc">${err.message || '곧 채워질 예정입니다'}</div></div>`;
+    }
+  }
+
+  function renderContentList(items) {
+    const body = document.getElementById('forest-body');
+    if (!items.length) {
+      body.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">🌱</div>
+          <div class="empty-title">아직 심긴 콘텐츠가 없어요</div>
+          <div class="empty-desc">첫 콘텐츠를 함께 심어볼까요?</div>
+        </div>`;
+      return;
+    }
+    body.innerHTML = items.map(c => `
+      <div class="content-card" data-id="${c.id}">
+        <span class="content-card-badge ${c.author_type === 'official' ? 'badge-official' : 'badge-user'}">
+          ${c.author_type === 'official' ? '공식' : '유저'}
+        </span>
+        <span style="font-size:11px;color:var(--ink-muted);font-weight:700;">${labelFor(c.category)}</span>
+        <div class="content-card-title">${escapeHtml(c.title)}</div>
+        <div class="content-card-meta">
+          <span>👁 ${c.view_count ?? 0}</span>
+          <span>❤ ${c.like_count ?? 0}</span>
+          <span>${formatDate(c.created_at)}</span>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderPostList(items) {
+    const body = document.getElementById('forest-body');
+    if (!items.length) {
+      body.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">💬</div>
+          <div class="empty-title">첫 대화를 시작해 보세요</div>
+        </div>`;
+      return;
+    }
+    body.innerHTML = items.map(p => `
+      <div class="content-card" data-id="${p.id}">
+        <div class="content-card-title">${escapeHtml(p.title)}</div>
+        <div class="content-card-meta">
+          <span>💬 ${p.comment_count ?? 0}</span>
+          <span>❤ ${p.reaction_count ?? 0}</span>
+          <span>${formatDate(p.created_at)}</span>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function labelFor(cat) {
+    return CATEGORIES.find(c => c.key === cat)?.label || cat;
+  }
+  function escapeHtml(s) {
+    return (s || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+  function formatDate(d) {
+    if (!d) return '';
+    const date = new Date(d);
+    const today = new Date();
+    const diff = Math.floor((today - date) / (1000 * 60 * 60 * 24));
+    if (diff === 0) return '오늘';
+    if (diff < 7) return `${diff}일 전`;
+    return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+  }
+
+  loadFeed();
+</script>
+
+</body>
+</html>

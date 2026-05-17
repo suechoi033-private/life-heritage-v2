@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>둥지 · 잇다</title>
+  <meta name="description" content="사랑하는 이를 품는 곳 — 가족 돌봄 기록">
+  <link rel="stylesheet" href="./auth-styles.css">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  <meta name="theme-color" content="#5C8A6F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="잇다">
+</head>
+<body>
+
+<main class="page-shell">
+  <div class="empty-state">
+    <div class="empty-icon">🪺</div>
+    <div class="empty-title">둥지로 이동 중...</div>
+    <div class="empty-desc">기존 돌봄 페이지로 안내드립니다.</div>
+  </div>
+</main>
+
+<script type="module">
+  import { renderNav } from './nav.js';
+  await renderNav({ active: 'nest', infoIcon: true, title: '둥지' });
+
+  // 임시: 기존 care.html로 리다이렉트. 다음 단계에서 둥지 셸로 통합
+  setTimeout(() => { window.location.replace('./care.html'); }, 200);
+</script>
+
+</body>
+</html>

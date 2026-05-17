@@ -308,8 +308,10 @@
 <script type="module">
 import { supabase } from './auth.js';
 import { renderNav } from './nav.js';
+import { registerPWA } from './js/pwa.js';
 
 await renderNav({ active: 'home', infoIcon: true });
+registerPWA();
 
 const { data: { session } } = await supabase.auth.getSession();
 const user = session?.user ?? null;

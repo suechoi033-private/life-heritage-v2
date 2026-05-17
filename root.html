@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>뿌리 · 잇다</title>
+  <meta name="description" content="나라는 사람의 시작점 — 프로필 · 친구 · 설정">
+  <link rel="stylesheet" href="./auth-styles.css">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  <meta name="theme-color" content="#5C8A6F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="잇다">
+  <style>
+    .root-profile {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 20px 4px 18px;
+      margin-bottom: 6px;
+    }
+    .root-avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--primary-soft);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: 800;
+    }
+    .root-name { font-size: 17px; font-weight: 800; letter-spacing: -0.01em; }
+    .root-email { font-size: 12.5px; color: var(--ink-muted); margin-top: 3px; }
+
+    .root-menu {
+      background: var(--bg-alt);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .root-menu a, .root-menu button {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      padding: 14px 18px;
+      text-decoration: none;
+      color: var(--ink);
+      font-size: 14.5px;
+      font-weight: 600;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--line);
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.12s;
+    }
+    .root-menu a:hover, .root-menu button:hover { background: rgba(0,0,0,0.025); }
+    .root-menu a:last-child, .root-menu button:last-child { border-bottom: none; }
+    .root-menu .menu-icon { font-size: 18px; width: 28px; }
+    .root-menu .menu-arrow { margin-left: auto; color: var(--ink-faint); }
+  </style>
+</head>
+<body>
+
+<main class="page-shell" id="main-content">
+  <div class="root-profile">
+    <div class="root-avatar" id="root-avatar">👤</div>
+    <div>
+      <div class="root-name" id="root-name">불러오는 중...</div>
+      <div class="root-email" id="root-email"></div>
+    </div>
+  </div>
+
+  <div class="root-menu">
+    <a href="./invite.html">
+      <span class="menu-icon">💌</span>
+      <span>친구 초대하기</span>
+      <span class="menu-arrow">›</span>
+    </a>
+    <a href="./my.html">
+      <span class="menu-icon">📂</span>
+      <span>내 활동 (기존 마이페이지)</span>
+      <span class="menu-arrow">›</span>
+    </a>
+    <a href="./self.html">
+      <span class="menu-icon">🕊</span>
+      <span>나의 삶 정리</span>
+      <span class="menu-arrow">›</span>
+    </a>
+  </div>
+
+  <div class="root-menu">
+    <button id="btn-notify-enable" type="button">
+      <span class="menu-icon">🔔</span>
+      <span>알림 권한 설정</span>
+      <span class="menu-arrow" id="notify-status">›</span>
+    </button>
+    <a href="./forest.html?category=death_prep">
+      <span class="menu-icon">📚</span>
+      <span>안내 자료</span>
+      <span class="menu-arrow">›</span>
+    </a>
+  </div>
+
+  <div class="root-menu">
+    <button id="btn-logout" type="button">
+      <span class="menu-icon">↩</span>
+      <span>로그아웃</span>
+      <span class="menu-arrow">›</span>
+    </button>
+  </div>
+</main>
+
+<script type="module">
+  import { supabase, signOut } from './auth.js';
+  import { renderNav } from './nav.js';
+  import { registerPWA, subscribePush } from './js/pwa.js';
+
+  await renderNav({ active: 'root', infoIcon: false, title: '뿌리' });
+  registerPWA();
+
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) { window.location.href = './login.html'; throw new Error('로그인 필요'); }
+
+  const user = session.user;
+  const name = user.user_metadata?.name || user.email?.split('@')[0] || '잇다 사용자';
+
+  document.getElementById('root-name').textContent = name;
+  document.getElementById('root-email').textContent = user.email || '';
+  document.getElementById('root-avatar').textContent = (name[0] || '·').toUpperCase();
+
+  // 알림 권한
+  const notifyBtn = document.getElementById('btn-notify-enable');
+  const notifyStatus = document.getElementById('notify-status');
+  if ('Notification' in window) {
+    notifyStatus.textContent = Notification.permission === 'granted' ? '켜짐' : '꺼짐';
+  } else {
+    notifyStatus.textContent = '미지원';
+  }
+  notifyBtn.addEventListener('click', async () => {
+    const vapidKey = window.__VAPID_PUBLIC_KEY__ || '';
+    if (!vapidKey) {
+      alert('알림 키 설정이 필요합니다. (운영자 설정 대기)');
+      return;
+    }
+    try {
+      const sub = await subscribePush(supabase, vapidKey);
+      notifyStatus.textContent = sub ? '켜짐' : '거부됨';
+    } catch (err) {
+      alert(err.message || '알림 설정 실패');
+    }
+  });
+
+  // 로그아웃
+  document.getElementById('btn-logout').addEventListener('click', async () => {
+    if (!confirm('로그아웃 하시겠어요?')) return;
+    await signOut();
+    window.location.href = './index.html';
+  });
+</script>
+
+</body>
+</html>
