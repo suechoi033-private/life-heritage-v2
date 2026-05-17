@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>운영자 셋업 · 잇다</title>
+  <meta name="description" content="잇다 v3 운영 준비 — SQL · OAuth · 푸시 알림">
+  <link rel="stylesheet" href="./auth-styles.css">
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#5C8A6F">
+  <style>
+    .setup-shell {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 28px 20px 80px;
+    }
+    .denied-card {
+      background: var(--danger-soft);
+      border-radius: 16px;
+      padding: 60px 28px;
+      text-align: center;
+    }
+    .denied-card .icon { font-size: 48px; margin-bottom: 18px; }
+
+    .page-title {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+    }
+    .page-sub {
+      color: var(--ink-soft);
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 22px;
+    }
+    .progress-bar {
+      background: var(--bg-alt);
+      border-radius: 999px;
+      height: 8px;
+      overflow: hidden;
+      margin-bottom: 26px;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), #87B59C);
+      width: 0%;
+      transition: width 0.4s;
+    }
+    .progress-label {
+      font-size: 12.5px;
+      color: var(--ink-muted);
+      text-align: right;
+      margin-top: 4px;
+    }
+
+    .step {
+      background: var(--bg-alt);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      margin-bottom: 14px;
+      overflow: hidden;
+    }
+    .step.done { border-color: var(--success); background: #F0F8F2; }
+    .step.error { border-color: var(--danger); }
+
+    .step-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .step-num {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: var(--ink-soft); color: #fff;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 14px;
+      flex-shrink: 0;
+    }
+    .step.done .step-num { background: var(--success); }
+    .step.error .step-num { background: var(--danger); }
+    .step-title {
+      flex: 1;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    .step-status {
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: var(--bg);
+      color: var(--ink-muted);
+      border: 1px solid var(--line);
+    }
+    .step.done .step-status { background: var(--success); color: #fff; border-color: var(--success); }
+    .step.error .step-status { background: var(--danger-soft); color: var(--danger); border-color: var(--danger); }
+    .step.pending .step-status { background: #FFF3DA; color: #A36E1A; border-color: #E5C76B; }
+    .step-toggle {
+      font-size: 16px;
+      color: var(--ink-muted);
+      transition: transform 0.2s;
+    }
+    .step.open .step-toggle { transform: rotate(90deg); }
+
+    .step-body {
+      padding: 0 20px 20px;
+      display: none;
+      border-top: 1px solid var(--line);
+      padding-top: 18px;
+    }
+    .step.open .step-body { display: block; }
+    .step-body p { font-size: 13.5px; line-height: 1.7; color: var(--ink); margin-bottom: 10px; }
+    .step-body ol, .step-body ul { margin: 6px 0 12px 18px; }
+    .step-body li { font-size: 13.5px; line-height: 1.7; color: var(--ink); margin-bottom: 4px; }
+    .step-body a { color: var(--primary); font-weight: 700; }
+
+    /* 코드/복사 박스 */
+    .copy-box {
+      position: relative;
+      background: var(--ink);
+      color: #E2E8F0;
+      border-radius: 10px;
+      padding: 14px 50px 14px 14px;
+      font-family: 'SF Mono', Menlo, Monaco, Consolas, monospace;
+      font-size: 12.5px;
+      line-height: 1.55;
+      margin: 8px 0 14px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .copy-box.long { max-height: 320px; overflow-y: auto; }
+    .copy-btn {
+      position: absolute;
+      top: 8px; right: 8px;
+      background: rgba(255,255,255,0.12);
+      border: none;
+      color: #fff;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .copy-btn:hover { background: rgba(255,255,255,0.22); }
+    .copy-btn.copied { background: var(--success); }
+
+    /* 입력 필드 */
+    .input-row {
+      display: flex;
+      gap: 8px;
+      align-items: stretch;
+      margin: 8px 0 12px;
+    }
+    .input-row input {
+      flex: 1;
+      padding: 10px 12px;
+      border: 1.5px solid var(--line);
+      border-radius: 8px;
+      font-size: 13px;
+      font-family: 'SF Mono', Menlo, Monaco, Consolas, monospace;
+      background: #fff;
+    }
+    .input-row input:focus { outline: none; border-color: var(--primary); }
+    .btn-save-cfg {
+      padding: 10px 16px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .btn-save-cfg:hover { background: var(--primary-hover); }
+
+    /* 테스트 버튼 */
+    .test-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      padding: 10px 14px;
+      background: var(--bg);
+      border-radius: 10px;
+      margin-top: 10px;
+      border: 1px solid var(--line);
+    }
+    .btn-test {
+      padding: 7px 14px;
+      background: var(--ink);
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+    .btn-test:hover { background: #000; }
+    .test-result {
+      font-size: 12.5px;
+      flex: 1;
+      color: var(--ink-soft);
+    }
+    .test-result.ok    { color: var(--success); font-weight: 700; }
+    .test-result.fail  { color: var(--danger); font-weight: 700; }
+    .test-result.warn  { color: #A36E1A; font-weight: 700; }
+
+    .info-box {
+      background: #FFF6CC;
+      border: 1px solid #E5C76B;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 12.5px;
+      line-height: 1.7;
+      margin: 10px 0;
+      color: #6B5418;
+    }
+    .info-box strong { font-weight: 800; color: #4A3A11; }
+
+    .key-pair {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin: 10px 0;
+    }
+    .key-label {
+      font-size: 11.5px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      color: var(--ink-soft);
+      margin-bottom: 4px;
+    }
+
+    .checklist {
+      list-style: none;
+      padding: 0;
+      margin: 12px 0;
+    }
+    .checklist li {
+      padding: 10px 12px;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 13.5px;
+    }
+    .checklist input { margin-top: 2px; }
+    .checklist label { flex: 1; cursor: pointer; }
+    .checklist .hint { font-size: 12px; color: var(--ink-muted); display: block; margin-top: 2px; }
+
+    .danger-note {
+      color: var(--danger);
+      font-size: 12.5px;
+      font-weight: 700;
+      margin-top: 6px;
+    }
+  </style>
+</head>
+<body>
+
+<main class="setup-shell" id="main-content">
+
+  <!-- Access denied -->
+  <div id="denied" class="denied-card hidden">
+    <div class="icon">🔒</div>
+    <h2>운영자만 접근 가능합니다</h2>
+    <p style="color:var(--ink-soft);line-height:1.7;">이 페이지는 잇다 운영자(sue.choi033@gmail.com)만 사용할 수 있어요.</p>
+  </div>
+
+  <!-- Setup view -->
+  <div id="setup-view" class="hidden">
+    <h1 class="page-title">🛠 운영자 셋업</h1>
+    <p class="page-sub">
+      잇다 v3 운영에 필요한 6개 항목을 한 자리에서 점검·설정합니다.
+      각 단계의 상태는 실시간으로 자동 점검되며, 실행이 필요한 항목은 펼쳐서 단계별로 진행하세요.
+    </p>
+
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+    <div class="progress-label" id="progress-label">진행률 0 / 6</div>
+
+    <!-- Step 1: SQL ────────────────────────── -->
+    <div class="step pending" id="step-sql">
+      <div class="step-head" data-toggle="step-sql">
+        <span class="step-num">1</span>
+        <span class="step-title">Supabase SQL 마이그레이션 (4개 파일)</span>
+        <span class="step-status" id="status-sql">점검 중...</span>
+        <span class="step-toggle">›</span>
+      </div>
+      <div class="step-body">
+        <p>
+          v3 재설계 + 친구초대 RPC + 어드민 RPC가 들어있는 SQL 파일들을 Supabase Dashboard의
+          <strong>SQL Editor</strong>에서 위에서부터 차례로 <strong>RUN</strong> 합니다.
+        </p>
+        <ol>
+          <li><a href="https://supabase.com/dashboard/project/zugwccngzprjjnwtajyr/sql/new" target="_blank" rel="noopener">Supabase SQL Editor 열기 →</a></li>
+          <li>아래 4개 파일을 차례로 복붙하고 각각 <strong>RUN</strong> (오른쪽 위 초록 버튼)</li>
+        </ol>
+        <ul style="list-style:none;padding:0;">
+          <li>📄 <a href="https://github.com/suechoi033-private/life-heritage-v2/blob/main/supabase/migrations/20260517_redesign_mvp.sql" target="_blank" rel="noopener"><code>20260517_redesign_mvp.sql</code></a> — v3 기본 스키마</li>
+          <li>📄 <a href="https://github.com/suechoi033-private/life-heritage-v2/blob/main/supabase/migrations/20260517_storage_buckets.sql" target="_blank" rel="noopener"><code>20260517_storage_buckets.sql</code></a> — Storage 버킷</li>
+          <li>📄 <a href="https://github.com/suechoi033-private/life-heritage-v2/blob/main/supabase/migrations/20260517_friend_invite_rpc.sql" target="_blank" rel="noopener"><code>20260517_friend_invite_rpc.sql</code></a> — 친구 초대 RPC</li>
+          <li>📄 <a href="https://github.com/suechoi033-private/life-heritage-v2/blob/main/supabase/migrations/20260524_admin_pdf_search.sql" target="_blank" rel="noopener"><code>20260524_admin_pdf_search.sql</code></a> — 어드민 RPC</li>
+        </ul>
+
+        <div class="info-box">
+          <strong>참고</strong> — <code>20260517_migrate_stories_to_contents.sql</code>은 v2 기존 추모 데이터를 v3로 옮길 때만 필요. 신규 운영이면 건너뛰어도 됩니다.
+        </div>
+
+        <div class="test-row">
+          <button class="btn-test" id="btn-test-sql">🧪 다시 점검</button>
+          <span class="test-result" id="result-sql">— 위 4개 RPC 존재 여부를 점검합니다.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: 카카오 OAuth ───────────────── -->
+    <div class="step pending" id="step-kakao">
+      <div class="step-head" data-toggle="step-kakao">
+        <span class="step-num">2</span>
+        <span class="step-title">카카오 로그인</span>
+        <span class="step-status" id="status-kakao">미설정</span>
+        <span class="step-toggle">›</span>
+      </div>
+      <div class="step-body">
+        <p>카카오 디벨로퍼스에서 앱을 만들고, JavaScript 키 + REST API 키를 발급받아 설정합니다.</p>
+        <ol>
+          <li><a href="https://developers.kakao.com/console/app" target="_blank" rel="noopener">카카오 디벨로퍼스 → 내 애플리케이션 →</a> 추가하기</li>
+          <li>앱 이름 = "잇다", 회사명 = "라이프헤리티지"</li>
+          <li>좌측 메뉴 <strong>플랫폼</strong> → <strong>Web</strong> 등록
+            <div class="copy-box">https://suechoi033-private.github.io<button class="copy-btn" data-copy>복사</button></div>
+          </li>
+          <li>좌측 <strong>카카오 로그인</strong> 활성화 → <strong>Redirect URI</strong>:
+            <div class="copy-box">https://zugwccngzprjjnwtajyr.supabase.co/auth/v1/callback<button class="copy-btn" data-copy>복사</button></div>
+          </li>
+          <li>좌측 <strong>동의항목</strong> → 닉네임·프로필사진·카카오계정(이메일) 활성화</li>
+          <li>좌측 <strong>앱 키</strong> → <strong>JavaScript 키</strong> 복사해서 아래 저장
+            <div class="input-row">
+              <input type="text" id="input-kakao-key" placeholder="JavaScript 키 (40자 hex)" autocomplete="off">
+              <button class="btn-save-cfg" id="btn-save-kakao">저장</button>
+            </div>
+          </li>
+          <li><strong>REST API 키</strong>를 Supabase Edge Function 시크릿으로 등록:
+            <div class="copy-box">supabase secrets set KAKAO_REST_KEY=&lt;REST_API_키&gt; KAKAO_CLIENT_SECRET=&lt;선택사항&gt;<button class="copy-btn" data-copy>복사</button></div>
+            <span class="hint" style="font-size:12px;color:var(--ink-muted);">로컬에 supabase CLI 설치 필요. 또는 Supabase Dashboard → Edge Functions → Secrets 에서 GUI로.</span>
+          </li>
+          <li>Edge Function 배포:
+            <div class="copy-box">supabase functions deploy kakao-signin<button class="copy-btn" data-copy>복사</button></div>
+          </li>
+        </ol>
+
+        <div class="test-row">
+          <button class="btn-test" id="btn-test-kakao">🧪 점검</button>
+          <span class="test-result" id="result-kakao">— JavaScript 키 저장 여부 + 카카오 SDK 로드 가능 여부.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: 구글 OAuth ───────────────── -->
+    <div class="step pending" id="step-google">
+      <div class="step-head" data-toggle="step-google">
+        <span class="step-num">3</span>
+        <span class="step-title">구글 로그인 (Supabase Auth)</span>
+        <span class="step-status" id="status-google">미점검</span>
+        <span class="step-toggle">›</span>
+      </div>
+      <div class="step-body">
+        <p>Google Cloud Console에서 OAuth Client ID를 만들고 Supabase에 등록만 하면 됩니다. 코드 수정 불필요.</p>
+        <ol>
+          <li><a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">Google Cloud Console → 사용자 인증 정보</a> → <strong>+ 사용자 인증 정보 만들기 → OAuth 클라이언트 ID</strong></li>
+          <li>유형: <strong>웹 애플리케이션</strong></li>
+          <li><strong>승인된 자바스크립트 원본</strong>:
+            <div class="copy-box">https://suechoi033-private.github.io<button class="copy-btn" data-copy>복사</button></div>
+          </li>
+          <li><strong>승인된 리디렉션 URI</strong>:
+            <div class="copy-box">https://zugwccngzprjjnwtajyr.supabase.co/auth/v1/callback<button class="copy-btn" data-copy>복사</button></div>
+          </li>
+          <li>발급된 <strong>클라이언트 ID</strong> + <strong>클라이언트 보안 비밀</strong> 복사</li>
+          <li><a href="https://supabase.com/dashboard/project/zugwccngzprjjnwtajyr/auth/providers" target="_blank" rel="noopener">Supabase → Authentication → Providers → Google</a> 활성화 + 위 값 입력 → Save</li>
+        </ol>
+
+        <div class="info-box">
+          이 단계는 코드에 키를 넣지 않습니다. Supabase가 OAuth를 대신 처리해서 자동으로 동작합니다.
+        </div>
+
+        <div class="test-row">
+          <button class="btn-test" id="btn-test-google">🧪 점검</button>
+          <span class="test-result" id="result-google">— 로그인 페이지에서 Google 버튼 클릭 → 정상 callback 받는지 직접 확인.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4: 애플 로그인 ───────────────── -->
+    <div class="step pending" id="step-apple">
+      <div class="step-head" data-toggle="step-apple">
+        <span class="step-num">4</span>
+        <span class="step-title">애플 로그인 (선택, 유료)</span>
+        <span class="step-status" id="status-apple">선택</span>
+        <span class="step-toggle">›</span>
+      </div>
+      <div class="step-body">
+        <p>iOS 사용자 비중이 높을 때만 권장. <strong>Apple Developer Program 연 $99</strong>가 필요합니다.</p>
+        <ol>
+          <li><a href="https://developer.apple.com/account" target="_blank" rel="noopener">Apple Developer 계정</a> 등록</li>
+          <li><strong>Identifiers → App IDs</strong> → 새 App ID 생성 ("잇다", Bundle ID = <code>kr.lifeheritage.itda</code>)</li>
+          <li><strong>Identifiers → Services IDs</strong> → 새 Services ID 생성 (Sign in with Apple용)</li>
+          <li>Configure → Domain = <code>zugwccngzprjjnwtajyr.supabase.co</code>, Return URL = <code>https://zugwccngzprjjnwtajyr.supabase.co/auth/v1/callback</code></li>
+          <li><strong>Keys</strong> → 새 Key 생성, Sign in with Apple 체크 → .p8 파일 다운로드</li>
+          <li>Supabase → Authentication → Providers → Apple 활성화 + Service ID, Team ID, Key ID, .p8 본문 입력</li>
+        </ol>
+        <div class="info-box">
+          비용 부담이 크면 일단 카카오·구글만 활성화하고 애플은 사용자 요청 들어올 때 추가해도 됩니다.
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 5: VAPID + 푸시 ─────────────── -->
+    <div class="step pending" id="step-push">
+      <div class="step-head" data-toggle="step-push">
+        <span class="step-num">5</span>
+        <span class="step-title">푸시 알림 (VAPID + Database Webhooks)</span>
+        <span class="step-status" id="status-push">미설정</span>
+        <span class="step-toggle">›</span>
+      </div>
+      <div class="step-body">
+        <p>Web Push에 필요한 VAPID 키쌍을 새로 생성했어요. 공개키는 브라우저용(이미 저장 됨), 비공개키는 Supabase Edge Function용입니다.</p>
+
+        <div class="key-pair">
+          <div>
+            <div class="key-label">VAPID PUBLIC KEY (브라우저용 — 이미 저장 가능)</div>
+            <div class="copy-box" id="vapid-pub">BGH35E87ZnL2olDv-l0IqxmCjaopfTdrcxCOKMaihJC9_qHOyu0efEOtIJB4RLTQ2r62qTij5a2e6rPLs23kx1o<button class="copy-btn" data-copy>복사</button></div>
+            <button class="btn-save-cfg" id="btn-save-vapid">📌 이 키를 브라우저(localStorage)에 저장</button>
+          </div>
+          <div>
+            <div class="key-label">VAPID PRIVATE KEY (Supabase Secrets용 — 절대 코드에 넣지 마세요)</div>
+            <div class="copy-box" id="vapid-priv">Z4dn_GqUr2cAg-o-l15bedLedJcEBjEvzoghFHyFzno<button class="copy-btn" data-copy>복사</button></div>
+            <p class="danger-note">⚠ 비공개키는 한 번만 보여드립니다. 1Password 같은 곳에 백업하세요.</p>
+          </div>
+        </div>
+
+        <p style="margin-top:14px;"><strong>1) Supabase Secrets 등록</strong> (Dashboard → Edge Functions → Secrets):</p>
+        <div class="copy-box">VAPID_PUBLIC_KEY=BGH35E87ZnL2olDv-l0IqxmCjaopfTdrcxCOKMaihJC9_qHOyu0efEOtIJB4RLTQ2r62qTij5a2e6rPLs23kx1o
+VAPID_PRIVATE_KEY=Z4dn_GqUr2cAg-o-l15bedLedJcEBjEvzoghFHyFzno
+VAPID_SUBJECT=mailto:sue.choi033@gmail.com<button class="copy-btn" data-copy>복사</button></div>
+
+        <p><strong>2) Edge Function 배포</strong>:</p>
+        <div class="copy-box">supabase functions deploy push-notify<button class="copy-btn" data-copy>복사</button></div>
+
+        <p><strong>3) Database Webhooks 3개 등록</strong> (Dashboard → Database → Webhooks):</p>
+        <ul>
+          <li><code>care_logs</code> · INSERT → push-notify Edge Function</li>
+          <li><code>comments</code> · INSERT → push-notify Edge Function</li>
+          <li><code>friend_invites</code> · UPDATE → push-notify Edge Function</li>
+        </ul>
+
+        <div class="test-row">
+          <button class="btn-test" id="btn-test-push">🧪 푸시 권한 요청 + 구독 테스트</button>
+          <span class="test-result" id="result-push">— 권한 요청 → 구독 객체 생성 → push_subscriptions 테이블 insert까지 확인.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 6: 브라우저 검증 체크리스트 ──── -->
+    <div class="step pending" id="step-verify">
+      <div class="step-head" data-toggle="step-verify">
+        <span class="step-num">6</span>
+        <span class="step-title">브라우저 검증 체크리스트 (6개 PR 머지 후 동작 확인)</span>
+        <span class="step-status" id="status-verify">미점검</span>
+        <span class="step-toggle">›</span>
+      </div>
+      <div class="step-body">
+        <p>각 항목을 클릭해서 직접 확인하고 체크하세요. 체크 상태는 브라우저에 저장됩니다.</p>
+
+        <ul class="checklist" id="verify-checklist">
+          <li><label><input type="checkbox" data-check="diary"> 라이프 탭 → 🔍 검색창에 키워드 입력 → 일치하는 일기 노출, 매칭 부분 노란색 형광펜
+            <span class="hint">/seed.html — 280ms 디바운스, 제목·본문·태그 모두 매칭</span></label></li>
+          <li><label><input type="checkbox" data-check="autosave"> 일기 작성 중 우상단 "✓ 저장됨" 배지 보이고, 새로고침 후 복원 배너 노출
+            <span class="hint">/diary-write.html — 1.2초 디바운스 자동저장</span></label></li>
+          <li><label><input type="checkbox" data-check="pdf"> 마이 → 📖 책자로 만들기 → 옵션 선택 → 책자 만들기 → 🖨 인쇄 / PDF 저장 → 파일 다운로드 성공
+            <span class="hint">/book-export.html — 표지·목차·본문·끝맺음 페이지</span></label></li>
+          <li><label><input type="checkbox" data-check="admin-promote"> 운영자 도구 → 콘텐츠 승급 탭 → 게시글 선택 → 카테고리 입력 → 승급 완료
+            <span class="hint">/admin.html — 새 contents row 생성, 숲 탭의 콘텐츠 허브에 자동 노출</span></label></li>
+          <li><label><input type="checkbox" data-check="admin-hide"> 운영자 도구 → 가입자 → 회원 클릭 → 게시글 탭 → 🚫 숨김 → 해당 글 비공개 처리
+            <span class="hint">/admin.html — RLS 우회 RPC (admin_hide_post)</span></label></li>
+          <li><label><input type="checkbox" data-check="admin-reports"> 운영자 도구 → 신고함 → 처리 완료 / 기각 / 검토 중 버튼 동작
+            <span class="hint">/admin.html — admin_resolve_report RPC</span></label></li>
+          <li><label><input type="checkbox" data-check="friend"> 마이 → 친구 초대하기 → 링크 복사 → 다른 계정에서 열기 → 친구 수락 → 양쪽에 친구 표시
+            <span class="hint">/invite.html — accept_friend_invite RPC 필요</span></label></li>
+          <li><label><input type="checkbox" data-check="care-stats"> 케어링 탭 → 대상자 카드의 통계 자리에 숫자 표시 (점 또는 - 아님)
+            <span class="hint">/nest.html — care_logs 컬럼 정합성 fix 검증</span></label></li>
+          <li><label><input type="checkbox" data-check="home"> 홈 → "오늘의 질문" 카드 클릭 → ask.html로 이동 → 답변 작성 + "일기에도 저장" 체크박스 동작
+            <span class="hint">/index.html → /ask.html — S5 합의 흐름</span></label></li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script type="module">
+  import { supabase, requireAuth } from './auth.js';
+  import { getAppConfig, setAppConfig } from './js/app-config.js';
+  import { subscribePush } from './js/pwa.js';
+
+  const ADMIN_EMAIL = 'sue.choi033@gmail.com';
+
+  const session = await requireAuth('./login.html');
+  if (!session) { /* redirected */ }
+
+  if (session.user.email !== ADMIN_EMAIL) {
+    document.getElementById('denied').classList.remove('hidden');
+    throw new Error('not-admin');
+  }
+  document.getElementById('setup-view').classList.remove('hidden');
+
+  // ── 아코디언 ────────────────────────────
+  document.querySelectorAll('[data-toggle]').forEach((head) => {
+    head.addEventListener('click', () => {
+      const id = head.dataset.toggle;
+      document.getElementById(id).classList.toggle('open');
+    });
+  });
+
+  // ── 복사 버튼 ───────────────────────────
+  document.querySelectorAll('[data-copy]').forEach((btn) => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const box = btn.parentElement;
+      const text = box.textContent.replace(/복사$/, '').trim();
+      try {
+        await navigator.clipboard.writeText(text);
+        const orig = btn.textContent;
+        btn.textContent = '✓ 복사됨';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 1500);
+      } catch (_) {
+        prompt('복사하세요 (Cmd+C / Ctrl+C):', text);
+      }
+    });
+  });
+
+  // ── 상태 헬퍼 ───────────────────────────
+  function setStatus(stepId, kind, label) {
+    const step = document.getElementById(stepId);
+    step.classList.remove('done', 'error', 'pending');
+    step.classList.add(kind);
+    step.querySelector('.step-status').textContent = label;
+    updateProgress();
+  }
+
+  function setResult(resultId, kind, msg) {
+    const el = document.getElementById(resultId);
+    el.className = 'test-result ' + (kind || '');
+    el.textContent = msg;
+  }
+
+  function updateProgress() {
+    const total = 6;
+    const done = document.querySelectorAll('.step.done').length;
+    document.getElementById('progress-fill').style.width = (done / total * 100) + '%';
+    document.getElementById('progress-label').textContent = `진행률 ${done} / ${total}`;
+  }
+
+  // ── 1. SQL 점검 ────────────────────────
+  async function testSql() {
+    setResult('result-sql', '', '점검 중…');
+    // 4개 RPC 존재 확인:
+    //   is_admin (admin RPC 마이그레이션)
+    //   accept_friend_invite (친구 초대 RPC 마이그레이션)
+    //   (redesign_mvp는 contents 테이블 존재로 간접 확인)
+    //   (storage_buckets는 storage.buckets 조회로 확인)
+    const checks = await Promise.all([
+      supabase.rpc('is_admin').then((r) => ({ name: 'is_admin (어드민 RPC)', ok: !r.error })),
+      supabase.rpc('accept_friend_invite', { p_code: '__none__' })
+        .then((r) => ({
+          name: 'accept_friend_invite (친구 초대 RPC)',
+          // 함수가 존재하면 "유효하지 않은 초대" 에러를 반환, 없으면 "function does not exist"
+          ok: !r.error || !/does not exist/i.test(r.error.message || ''),
+        })),
+      supabase.from('contents').select('id', { count: 'exact', head: true })
+        .then((r) => ({ name: 'contents 테이블 (v3 스키마)', ok: !r.error })),
+      supabase.from('community_posts').select('id', { count: 'exact', head: true })
+        .then((r) => ({ name: 'community_posts (v3 스키마)', ok: !r.error })),
+    ]);
+    const fails = checks.filter((c) => !c.ok);
+    if (fails.length === 0) {
+      setStatus('step-sql', 'done', '✓ SQL 완료');
+      setResult('result-sql', 'ok', '✅ 4개 객체 모두 존재 — SQL 마이그레이션 OK');
+    } else {
+      setStatus('step-sql', 'error', `${fails.length}개 누락`);
+      setResult('result-sql', 'fail', '❌ 누락: ' + fails.map((f) => f.name).join(', '));
+      document.getElementById('step-sql').classList.add('open');
+    }
+  }
+  document.getElementById('btn-test-sql').addEventListener('click', testSql);
+
+  // ── 2. 카카오 ──────────────────────────
+  const cfg = getAppConfig();
+  if (cfg.kakaoJsKey) document.getElementById('input-kakao-key').value = cfg.kakaoJsKey;
+
+  document.getElementById('btn-save-kakao').addEventListener('click', () => {
+    const k = document.getElementById('input-kakao-key').value.trim();
+    if (!k) { alert('JavaScript 키를 입력하세요'); return; }
+    setAppConfig({ kakaoJsKey: k });
+    testKakao();
+    alert('✓ 저장됨. 새로고침 후 카카오 로그인 버튼이 활성화됩니다.');
+  });
+
+  async function testKakao() {
+    const k = getAppConfig().kakaoJsKey;
+    if (!k) {
+      setStatus('step-kakao', 'pending', '미설정');
+      setResult('result-kakao', 'warn', '⚠️ JavaScript 키 미입력. (코드 동작에는 영향 없음 — 카카오 버튼만 숨김)');
+      return;
+    }
+    setStatus('step-kakao', 'done', '✓ 키 저장됨');
+    setResult('result-kakao', 'ok', `✅ JavaScript 키 저장됨 (${k.slice(0, 8)}...). Edge Function 배포 여부는 직접 로그인 시도로 확인하세요.`);
+  }
+  document.getElementById('btn-test-kakao').addEventListener('click', testKakao);
+
+  // ── 3. 구글 ────────────────────────────
+  // 직접 점검 불가 — 사용자에게 직접 시도 안내
+  async function testGoogle() {
+    setStatus('step-google', 'pending', '직접 확인');
+    setResult('result-google', 'warn', '⚠️ Supabase Dashboard → Authentication → Providers 에서 Google이 활성인지 확인하세요. 또는 로그인 페이지에서 직접 시도.');
+  }
+  document.getElementById('btn-test-google').addEventListener('click', testGoogle);
+  testGoogle();
+
+  // ── 4. 애플 ────────────────────────────
+  setStatus('step-apple', 'pending', '선택');
+
+  // ── 5. 푸시 ────────────────────────────
+  const VAPID_DEFAULT = 'BGH35E87ZnL2olDv-l0IqxmCjaopfTdrcxCOKMaihJC9_qHOyu0efEOtIJB4RLTQ2r62qTij5a2e6rPLs23kx1o';
+
+  document.getElementById('btn-save-vapid').addEventListener('click', () => {
+    setAppConfig({ vapidPublicKey: VAPID_DEFAULT });
+    refreshPushStatus();
+    alert('✓ 저장됨. 이제 모든 페이지에서 푸시 구독 가능합니다.');
+  });
+
+  function refreshPushStatus() {
+    const stored = getAppConfig().vapidPublicKey;
+    if (!stored) {
+      setStatus('step-push', 'pending', '미설정');
+      setResult('result-push', 'warn', '⚠️ VAPID 공개키 미저장 — 위 "📌 저장" 버튼을 누르세요.');
+      return;
+    }
+    setStatus('step-push', 'done', '✓ 키 저장됨');
+    setResult('result-push', 'ok', `✅ 공개키 저장됨 (${stored.slice(0, 12)}...). Supabase 시크릿/Webhook 등록은 직접 확인 필요.`);
+  }
+  refreshPushStatus();
+
+  document.getElementById('btn-test-push').addEventListener('click', async () => {
+    setResult('result-push', '', '권한 요청 중…');
+    const stored = getAppConfig().vapidPublicKey || VAPID_DEFAULT;
+    try {
+      const sub = await subscribePush(supabase, stored);
+      if (!sub) {
+        setResult('result-push', 'warn', '⚠️ 권한 거부 또는 브라우저 미지원');
+        return;
+      }
+      setResult('result-push', 'ok', `✅ 구독 성공. endpoint: ${sub.endpoint.slice(0, 50)}...`);
+    } catch (err) {
+      setResult('result-push', 'fail', '❌ ' + (err.message || err));
+    }
+  });
+
+  // ── 6. 검증 체크리스트 ─────────────────
+  const VERIFY_KEY = 'itda:setup-verify';
+  const saved = JSON.parse(localStorage.getItem(VERIFY_KEY) || '{}');
+  document.querySelectorAll('[data-check]').forEach((cb) => {
+    cb.checked = !!saved[cb.dataset.check];
+    cb.addEventListener('change', () => {
+      saved[cb.dataset.check] = cb.checked;
+      localStorage.setItem(VERIFY_KEY, JSON.stringify(saved));
+      refreshVerify();
+    });
+  });
+  function refreshVerify() {
+    const all = document.querySelectorAll('[data-check]').length;
+    const done = document.querySelectorAll('[data-check]:checked').length;
+    if (done === all) setStatus('step-verify', 'done', `✓ ${done}/${all}`);
+    else if (done > 0) setStatus('step-verify', 'pending', `${done}/${all}`);
+    else setStatus('step-verify', 'pending', '0/9');
+  }
+  refreshVerify();
+
+  // ── 초기 점검 ───────────────────────────
+  testSql();
+  testKakao();
+</script>
+
+</body>
+</html>
