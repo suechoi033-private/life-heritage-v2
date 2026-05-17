@@ -14,6 +14,36 @@
       margin: 0 auto;
       padding: 28px 20px 80px;
     }
+
+    /* 상단 바 (홈/마이 빠른 이동) */
+    .setup-topbar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .setup-topbar a {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: 999px;
+      background: var(--bg-alt);
+      border: 1px solid var(--line);
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--ink-soft);
+      text-decoration: none;
+      transition: all 0.15s;
+    }
+    .setup-topbar a:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .setup-topbar .home { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .setup-topbar .home:hover { background: var(--primary-hover); color: #fff; }
+    .setup-topbar .spacer { flex: 1; }
     .denied-card {
       background: var(--danger-soft);
       border-radius: 16px;
@@ -281,6 +311,14 @@
 
   <!-- Setup view -->
   <div id="setup-view" class="hidden">
+    <div class="setup-topbar">
+      <a href="./index.html" class="home">🏠 홈</a>
+      <a href="./root.html">← 마이</a>
+      <a href="./admin.html">🛠 운영자 도구</a>
+      <span class="spacer"></span>
+      <a href="./seed.html">라이프</a>
+      <a href="./forest.html">커뮤니티</a>
+    </div>
     <h1 class="page-title">🛠 운영자 셋업</h1>
     <p class="page-sub">
       잇다 v3 운영에 필요한 6개 항목을 한 자리에서 점검·설정합니다.
@@ -510,8 +548,11 @@ VAPID_SUBJECT=mailto:sue.choi033@gmail.com<button class="copy-btn" data-copy>복
 
 <script type="module">
   import { supabase, requireAuth } from './auth.js';
+  import { renderNav } from './nav.js';
   import { getAppConfig, setAppConfig } from './js/app-config.js';
   import { subscribePush } from './js/pwa.js';
+
+  await renderNav({ active: 'root', infoIcon: false, title: '운영자 셋업' });
 
   const ADMIN_EMAIL = 'sue.choi033@gmail.com';
 
@@ -575,31 +616,38 @@ VAPID_SUBJECT=mailto:sue.choi033@gmail.com<button class="copy-btn" data-copy>복
   // ── 1. SQL 점검 ────────────────────────
   async function testSql() {
     setResult('result-sql', '', '점검 중…');
-    // 4개 RPC 존재 확인:
-    //   is_admin (admin RPC 마이그레이션)
-    //   accept_friend_invite (친구 초대 RPC 마이그레이션)
-    //   (redesign_mvp는 contents 테이블 존재로 간접 확인)
-    //   (storage_buckets는 storage.buckets 조회로 확인)
+    // 함수 존재는 RPC 호출 시 "could not find" / "does not exist" 에러로 판단
+    const rpcExists = (r) =>
+      !r.error || !/(does not exist|could not find)/i.test(r.error.message || '');
+    const tableExists = (r) =>
+      !r.error || !/(does not exist|not found)/i.test(r.error.message || '');
+
     const checks = await Promise.all([
-      supabase.rpc('is_admin').then((r) => ({ name: 'is_admin (어드민 RPC)', ok: !r.error })),
-      supabase.rpc('accept_friend_invite', { p_code: '__none__' })
-        .then((r) => ({
-          name: 'accept_friend_invite (친구 초대 RPC)',
-          // 함수가 존재하면 "유효하지 않은 초대" 에러를 반환, 없으면 "function does not exist"
-          ok: !r.error || !/does not exist/i.test(r.error.message || ''),
-        })),
+      // v3 기본 스키마
       supabase.from('contents').select('id', { count: 'exact', head: true })
-        .then((r) => ({ name: 'contents 테이블 (v3 스키마)', ok: !r.error })),
+        .then((r) => ({ name: 'contents 테이블', ok: tableExists(r) })),
       supabase.from('community_posts').select('id', { count: 'exact', head: true })
-        .then((r) => ({ name: 'community_posts (v3 스키마)', ok: !r.error })),
+        .then((r) => ({ name: 'community_posts 테이블', ok: tableExists(r) })),
+      supabase.from('diary_entries').select('id', { count: 'exact', head: true })
+        .then((r) => ({ name: 'diary_entries 테이블', ok: tableExists(r) })),
+      // 친구 초대 RPC
+      supabase.rpc('accept_friend_invite', { p_code: '__none__' })
+        .then((r) => ({ name: 'accept_friend_invite RPC', ok: rpcExists(r) })),
+      // 어드민 RPC 6개 (대표 3개만 점검)
+      supabase.rpc('is_admin')
+        .then((r) => ({ name: 'is_admin RPC', ok: rpcExists(r) })),
+      supabase.rpc('admin_promotion_candidates', { p_limit: 1 })
+        .then((r) => ({ name: 'admin_promotion_candidates RPC', ok: rpcExists(r) })),
+      supabase.rpc('admin_list_reports', { p_status: null })
+        .then((r) => ({ name: 'admin_list_reports RPC', ok: rpcExists(r) })),
     ]);
     const fails = checks.filter((c) => !c.ok);
     if (fails.length === 0) {
       setStatus('step-sql', 'done', '✓ SQL 완료');
-      setResult('result-sql', 'ok', '✅ 4개 객체 모두 존재 — SQL 마이그레이션 OK');
+      setResult('result-sql', 'ok', `✅ ${checks.length}개 객체 모두 존재 — SQL 마이그레이션 OK`);
     } else {
       setStatus('step-sql', 'error', `${fails.length}개 누락`);
-      setResult('result-sql', 'fail', '❌ 누락: ' + fails.map((f) => f.name).join(', '));
+      setResult('result-sql', 'fail', '❌ 누락: ' + fails.map((f) => f.name).join(', ') + ' — 해당 SQL 파일을 다시 RUN 하세요.');
       document.getElementById('step-sql').classList.add('open');
     }
   }
