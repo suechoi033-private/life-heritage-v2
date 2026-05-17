@@ -540,18 +540,31 @@
     if (tab === 'goal') loadGoalDashboard();
   }
 
-  // ── 통계 ──
-  try {
-    const [{ count: diaryCount }, { count: goalCount }] = await Promise.all([
-      supabase.from('diary_entries').select('id', { count: 'exact', head: true }).eq('user_id', session.user.id),
-      supabase.from('goals').select('id', { count: 'exact', head: true }).eq('user_id', session.user.id).eq('status', 'active'),
-    ]);
-    document.getElementById('seed-stat').innerHTML = `
-      일기 <strong>${diaryCount ?? 0}</strong>개 · 진행 중 목표 <strong>${goalCount ?? 0}</strong>개
-    `;
-  } catch (_) {
-    document.getElementById('seed-stat').textContent = '시작해 보세요';
-  }
+  // ── 통계 ── (백그라운드 — 페이지 로드 차단 안 함)
+  (async () => {
+    const stat = document.getElementById('seed-stat');
+    try {
+      // 각 쿼리에 5초 타임아웃 — 하나가 멈춰도 다른 하나 결과는 받음
+      const withTimeout = (p, ms = 5000) => Promise.race([
+        p,
+        new Promise((resolve) => setTimeout(() => resolve({ count: null, error: 'timeout' }), ms)),
+      ]);
+      const [diaryRes, goalRes] = await Promise.all([
+        withTimeout(supabase.from('diary_entries').select('id', { count: 'exact', head: true }).eq('user_id', session.user.id)),
+        withTimeout(supabase.from('goals').select('id', { count: 'exact', head: true }).eq('user_id', session.user.id).eq('status', 'active')),
+      ]);
+      const dc = diaryRes?.count;
+      const gc = goalRes?.count;
+      if (dc == null && gc == null) {
+        stat.textContent = '시작해 보세요';
+      } else {
+        stat.innerHTML = `일기 <strong>${dc ?? '-'}</strong>개 · 진행 중 목표 <strong>${gc ?? '-'}</strong>개`;
+      }
+    } catch (err) {
+      console.warn('[seed] 통계 조회 실패:', err);
+      stat.textContent = '시작해 보세요';
+    }
+  })();
 
   // ── 캘린더 ──
   let calCursor = new Date();
@@ -564,15 +577,19 @@
     document.getElementById('cal-month').textContent = `${year}년 ${month + 1}월`;
 
     try {
-      const entries = await listMyDiariesByMonth(year, month);
+      const entries = await Promise.race([
+        listMyDiariesByMonth(year, month),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('캘린더 쿼리 시간초과 (5초)')), 5000)),
+      ]);
       monthEntries.clear();
-      entries.forEach((e) => {
+      (entries || []).forEach((e) => {
         const key = e.entry_date;
         if (!monthEntries.has(key)) monthEntries.set(key, []);
         monthEntries.get(key).push(e);
       });
     } catch (err) {
-      console.warn(err);
+      console.warn('[seed] 캘린더 조회 실패:', err);
+      monthEntries.clear();
     }
 
     const firstDow = new Date(year, month, 1).getDay();
@@ -649,7 +666,10 @@
     const body = document.getElementById('timeline-body');
     if (!append) body.innerHTML = `<div class="timeline-empty">불러오는 중...</div>`;
     try {
-      const items = await listMyDiariesTimeline(10, timelineCursor);
+      const items = await Promise.race([
+        listMyDiariesTimeline(10, timelineCursor),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('일기 목록 시간초과 (8초) — 네트워크 또는 RLS 문제 가능')), 8000)),
+      ]);
       if (!append) body.innerHTML = '';
       if (!items.length && !append) {
         body.innerHTML = `
@@ -793,9 +813,13 @@
     listEl.innerHTML = `<div class="timeline-empty">불러오는 중...</div>`;
 
     try {
+      const withTimeout = (p, ms = 6000, name = '쿼리') => Promise.race([
+        p,
+        new Promise((_, rej) => setTimeout(() => rej(new Error(`${name} 시간초과 (${ms / 1000}초)`)), ms)),
+      ]);
       const [summary, goals] = await Promise.all([
-        getDashboardSummary(),
-        listMyGoals({ status: 'active' }),
+        withTimeout(getDashboardSummary(), 6000, '목표 대시보드'),
+        withTimeout(listMyGoals({ status: 'active' }), 6000, '목표 목록'),
       ]);
 
       // 전체 진척 카드
