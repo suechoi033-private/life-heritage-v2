@@ -71,6 +71,56 @@
       margin: 8px 0 6px;
     }
     .content-card-meta { font-size: 12px; color: var(--ink-muted); display: flex; gap: 10px; }
+
+    /* 오늘의 성찰 질문 카드 (보라 강조 — 답변카드 시각 구분) */
+    .question-card {
+      display: block;
+      background: linear-gradient(135deg, #9A6BB8, #B58FCB);
+      color: #fff;
+      border-radius: var(--radius);
+      padding: 20px 22px;
+      margin-bottom: 14px;
+      text-decoration: none;
+      transition: opacity 0.15s, transform 0.05s;
+    }
+    .question-card:hover  { opacity: 0.94; color: #fff; }
+    .question-card:active { transform: scale(0.995); }
+    .question-card-eyebrow {
+      font-size: 11.5px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      opacity: 0.9;
+      margin-bottom: 6px;
+    }
+    .question-card-text {
+      font-family: var(--font-serif);
+      font-size: 17px;
+      font-weight: 700;
+      line-height: 1.55;
+      margin-bottom: 12px;
+    }
+    .question-card-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12.5px;
+      font-weight: 700;
+      background: rgba(255,255,255,0.2);
+      border-radius: 999px;
+      padding: 6px 12px;
+    }
+    .question-card-preview {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255,255,255,0.2);
+      font-size: 12.5px;
+      opacity: 0.95;
+      line-height: 1.55;
+    }
+    .question-card-preview-name {
+      font-weight: 800;
+      margin-right: 4px;
+    }
   </style>
 </head>
 <body>
@@ -114,6 +164,7 @@
   import { supabase } from './auth.js';
   import { renderNav } from './nav.js';
   import { registerPWA } from './js/pwa.js';
+  import { getTodaysQuestion, hasAnsweredToday, previewAnswers } from './js/answers.js';
 
   await renderNav({ active: 'forest', infoIcon: false, title: '커뮤니티' });
   registerPWA();
@@ -169,6 +220,12 @@
     body.innerHTML = `<div class="empty-state"><div class="empty-icon">⏳</div><div class="empty-desc">불러오는 중...</div></div>`;
 
     try {
+      // 오늘의 성찰 질문 카드 (콘텐츠 세그먼트 + 전체/오늘의성찰 카테고리)
+      let topHtml = '';
+      if (activeSeg === 'content' && (activeCat === 'all' || activeCat === 'reflection')) {
+        topHtml = await buildTodaysQuestionCard();
+      }
+
       if (activeSeg === 'content') {
         let q = supabase.from('contents')
           .select('id, category, title, body, author_type, view_count, like_count, created_at')
@@ -178,7 +235,7 @@
         if (activeCat !== 'all') q = q.eq('category', activeCat);
         const { data, error } = await q;
         if (error) throw error;
-        renderContentList(data || []);
+        renderContentList(data || [], topHtml);
       } else {
         const { data, error } = await supabase.from('community_posts')
           .select('id, board_id, title, body, view_count, comment_count, reaction_count, created_at')
@@ -193,9 +250,43 @@
     }
   }
 
-  function renderContentList(items) {
+  async function buildTodaysQuestionCard() {
+    try {
+      const q = await getTodaysQuestion();
+      if (!q) return '';
+      const [mine, others] = await Promise.all([
+        hasAnsweredToday(q.id),
+        previewAnswers(q.id, 2),
+      ]);
+      const statusHtml = mine
+        ? `<span class="question-card-status">✓ 오늘 답변 완료</span>`
+        : `<span class="question-card-status">✏ 답변 남기기 →</span>`;
+      const previewHtml = others.length ? `
+        <div class="question-card-preview">
+          ${others.map((a) => `
+            <div>
+              <span class="question-card-preview-name">${escapeHtml(a.profiles?.name || '익명')}</span>
+              ${escapeHtml((a.content || '').replace(/\s+/g, ' ').slice(0, 70))}
+            </div>
+          `).join('')}
+        </div>
+      ` : '';
+      return `
+        <a class="question-card" href="./ask.html">
+          <div class="question-card-eyebrow">🕯 오늘의 성찰</div>
+          <div class="question-card-text">${escapeHtml(q.question_text)}</div>
+          ${statusHtml}
+          ${previewHtml}
+        </a>
+      `;
+    } catch (_) {
+      return '';
+    }
+  }
+
+  function renderContentList(items, topHtml = '') {
     const body = document.getElementById('forest-body');
-    if (!items.length) {
+    if (!items.length && !topHtml) {
       body.innerHTML = `
         <div class="empty-state">
           <div class="empty-icon">🌱</div>
@@ -204,7 +295,7 @@
         </div>`;
       return;
     }
-    body.innerHTML = items.map(c => `
+    body.innerHTML = topHtml + items.map(c => `
       <a class="content-card" href="./content-detail.html?id=${c.id}">
         <span class="content-card-badge ${c.author_type === 'official' ? 'badge-official' : 'badge-user'}">
           ${c.author_type === 'official' ? '공식' : '유저'}
