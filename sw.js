@@ -1,7 +1,7 @@
 // 잇다 PWA Service Worker
 // 전략: 앱 셸 캐시 (네트워크 우선 + 캐시 폴백), 푸시 알림 수신
 
-const CACHE_VERSION = 'itda-v3-2026-05-24-admin-search-pdf';
+const CACHE_VERSION = 'itda-v3-2026-05-24-setup-wizard';
 const APP_SHELL = [
   './',
   './index.html',
@@ -22,6 +22,7 @@ const APP_SHELL = [
   './invite.html',
   './book-export.html',
   './admin.html',
+  './setup.html',
   './auth-styles.css',
   './manifest.json',
   './nav.js',
