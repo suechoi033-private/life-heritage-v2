@@ -51,11 +51,18 @@ export async function previewAnswers(questionId, limit = 3) {
 
 // 답변 → 일기로 저장 (S5-2)
 // 답변 작성 직후 또는 이미 작성된 답변을 일기로 변환할 때 호출
-export async function saveAnswerAsDiary({ questionText, answerContent, entryDate = null, templateType = 'gratitude' }) {
+export async function saveAnswerAsDiary({
+  questionText,
+  answerContent,
+  entryDate = null,
+  templateType = 'gratitude',
+  visibility = 'private',  // 'private' | 'friends' | 'public'
+}) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('로그인 필요');
 
   const today = entryDate || new Date().toISOString().slice(0, 10);
+  const safeVis = ['private', 'friends', 'public'].includes(visibility) ? visibility : 'private';
 
   const { data: entry, error } = await supabase.from('diary_entries').insert({
     user_id: user.id,
@@ -63,7 +70,7 @@ export async function saveAnswerAsDiary({ questionText, answerContent, entryDate
     template_type: templateType,
     title: questionText ? `Q. ${questionText.slice(0, 80)}` : '오늘의 한 문장',
     content: answerContent,
-    visibility: 'private',
+    visibility: safeVis,
   }).select().single();
   if (error) throw error;
   return entry;

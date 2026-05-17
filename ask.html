@@ -422,8 +422,14 @@
       </div>
       <div class="visibility-row" style="margin-top:6px;">
         <label style="font-size:13px;color:var(--ink-soft);">
-          <input type="checkbox" id="save-as-diary"> 📝 이 답변을 내 일기에도 저장 (나만 보기)
+          <input type="checkbox" id="save-as-diary"> 📝 이 답변을 내 일기에도 저장
         </label>
+      </div>
+      <div class="visibility-row" id="diary-vis-row" style="margin-top:6px;display:none;padding-left:24px;">
+        <span style="font-size:12px;color:var(--ink-muted);margin-right:8px;">일기 공개:</span>
+        <label style="font-size:12.5px;"><input type="radio" name="diary-vis" value="private" checked> 🔒 나만</label>
+        <label style="font-size:12.5px;"><input type="radio" name="diary-vis" value="friends"> 👥 친구</label>
+        <label style="font-size:12.5px;"><input type="radio" name="diary-vis" value="public"> 🌍 전체</label>
       </div>
       <div id="autosave-status" style="text-align:center;font-size:13px;color:var(--ink-muted);padding:12px 0 32px;">글을 쓰면 자동으로 저장돼요</div>
     </div>
@@ -722,18 +728,27 @@
     const saveAsDiary = document.getElementById('save-as-diary');
     if (saveAsDiary?.checked && !state.diarySaved) {
       try {
+        const diaryVis = document.querySelector('input[name="diary-vis"]:checked')?.value || 'private';
         const { saveAnswerAsDiary } = await import('./js/answers.js');
         await saveAnswerAsDiary({
           questionText: todaysQ?.question_text || '',
           answerContent: content,
+          visibility: diaryVis,
         });
         state.diarySaved = true;
-        setStatus('저장됨 ✓ · 일기에도 저장됨 📝', 'var(--primary)');
+        const visLabel = diaryVis === 'public' ? '전체공개' : diaryVis === 'friends' ? '친구공개' : '나만보기';
+        setStatus(`저장됨 ✓ · 일기에도 저장됨 📝 (${visLabel})`, 'var(--primary)');
       } catch (e) {
         console.warn('일기 저장 실패:', e);
       }
     }
   }
+
+  // "📝 일기에도 저장" 토글 시 공개범위 선택 노출
+  document.getElementById('save-as-diary')?.addEventListener('change', (e) => {
+    const row = document.getElementById('diary-vis-row');
+    if (row) row.style.display = e.target.checked ? '' : 'none';
+  });
 
   document.getElementById('answer-input').addEventListener('input', () => {
     clearTimeout(autoSaveTimer);
