@@ -31,6 +31,14 @@ create unique index if not exists profiles_provider_uid_uniq
   where provider_user_id is not null;
 
 -- =============================================================
+-- 0c. care_logs 컬럼 보강 (v3 신규 기능 — 대시보드·응급 SOS용)
+-- 기존 데이터는 NULL로 채워짐, 신규 기록부터 값 입력
+-- =============================================================
+alter table public.care_logs
+  add column if not exists mood text,
+  add column if not exists user_id uuid references public.profiles(id);
+
+-- =============================================================
 -- 1. 태그 시스템 (공용: 일기·커뮤니티 양쪽 사용)
 -- =============================================================
 create table if not exists public.tags (
