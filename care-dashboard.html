@@ -230,7 +230,7 @@
         ${dash.recentLogs.map((l) => `
           <div class="recent-log">
             <div class="recent-log-meta">${formatDateTime(l.created_at)}${l.mood ? ' · ' + escapeHtml(l.mood) : ''}</div>
-            <div class="recent-log-body">${escapeHtml(l.body || '')}</div>
+            <div class="recent-log-body">${escapeHtml(l.daily_status || l.medications || '기록 보기 → 케어링')}</div>
           </div>
         `).join('')}
       ` : ''}
