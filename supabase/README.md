@@ -5,9 +5,10 @@
 ```bash
 # Supabase Dashboard → SQL Editor 또는 CLI
 supabase db push
-# 또는 수동 실행:
-#   1) migrations/20260517_redesign_mvp.sql  먼저 실행
-#   2) migrations/20260517_migrate_stories_to_contents.sql  (선택, 기존 데이터 이전 시)
+# 또는 수동 실행 (이 순서대로):
+#   1) migrations/20260517_redesign_mvp.sql                  — 모든 테이블 + RLS
+#   2) migrations/20260517_storage_buckets.sql               — Storage 버킷 + 정책
+#   3) migrations/20260517_migrate_stories_to_contents.sql   — (선택) 기존 추모 데이터 이전
 ```
 
 검증 쿼리:
@@ -59,14 +60,14 @@ npx web-push generate-vapid-keys
 
 ## 4. Storage 버킷
 
-기존:
-- `story-photos` (public read)
-- `care-photos` (private, RLS)
+`20260517_storage_buckets.sql` 실행 시 자동 생성:
+- `diary-media`   (private, RLS — 작성자만 접근, signed URL 사용)
+- `content-media` (public read,  작성자만 쓰기)
+- `post-media`    (public read,  작성자만 쓰기)
 
-신규 추가 권장:
-- `diary-media` (private, RLS)
-- `content-media` (public read)
-- `post-media` (public read)
+기존(유지):
+- `story-photos` (public read)
+- `care-photos`  (private, RLS)
 
 ## 5. RLS 정책 확인
 

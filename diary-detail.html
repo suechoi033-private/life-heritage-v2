@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>일기 · 잇다</title>
+  <link rel="stylesheet" href="./auth-styles.css">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  <meta name="theme-color" content="#5C8A6F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="잇다">
+  <style>
+    .detail-head {
+      padding: 20px 0 16px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 18px;
+    }
+    .detail-meta {
+      display: flex;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--ink-muted);
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .detail-date { font-weight: 800; color: var(--ink-soft); }
+    .meta-chip {
+      padding: 2px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      background: var(--bg-alt);
+    }
+    .vis-private  { color: var(--ink-muted); }
+    .vis-friends  { background: #E3F2FD; color: #1565C0; }
+    .vis-public   { background: var(--success-soft); color: var(--success); }
+    .detail-title {
+      font-family: var(--font-serif);
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-top: 10px;
+      line-height: 1.4;
+    }
+
+    .detail-content {
+      font-size: 15.5px;
+      line-height: 1.85;
+      color: var(--ink);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .detail-tags {
+      margin: 20px 0 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .detail-tag {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      background: var(--bg-alt);
+      color: var(--ink-soft);
+    }
+    .detail-tag.emotion { background: var(--warm-soft); color: var(--warm); }
+
+    .detail-media {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin: 20px 0;
+    }
+    .detail-media img, .detail-media video {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+    }
+
+    .detail-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 28px;
+    }
+    .detail-actions a, .detail-actions button {
+      flex: 1;
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 700;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+      font-family: inherit;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+    }
+    .detail-actions .primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+  </style>
+</head>
+<body>
+
+<main class="page-shell" id="main-content">
+  <div id="detail-body">
+    <div class="empty-state"><div class="empty-icon">⏳</div></div>
+  </div>
+</main>
+
+<script type="module">
+  import { supabase } from './auth.js';
+  import { renderNav } from './nav.js';
+  import { getDiary, TEMPLATES, VISIBILITY } from './js/diary.js';
+  import { getSignedUrl } from './js/media-upload.js';
+  import { emojiFor } from './js/tags.js';
+
+  await renderNav({ active: 'seed', infoIcon: false, title: '일기' });
+
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) { window.location.href = './login.html'; throw new Error('로그인 필요'); }
+
+  const id = new URLSearchParams(location.search).get('id');
+  if (!id) { window.location.href = './seed.html'; throw new Error('id 누락'); }
+
+  const entry = await getDiary(id);
+  if (!entry) {
+    document.getElementById('detail-body').innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🙏</div>
+        <div class="empty-title">일기를 찾을 수 없어요</div>
+        <div class="cta-block"><a href="./seed.html">씨앗으로 돌아가기</a></div>
+      </div>`;
+    throw new Error('not found');
+  }
+
+  const isOwner = entry.user_id === session.user.id;
+
+  // 미디어 URL 비동기 조회
+  const mediaUrls = await Promise.all(
+    entry.media.map((m) => getSignedUrl('diary-media', m.storage_path, 3600))
+  );
+
+  document.getElementById('detail-body').innerHTML = `
+    <div class="detail-head">
+      <div class="detail-meta">
+        <span class="detail-date">${formatDate(entry.entry_date)}</span>
+        <span class="meta-chip">${TEMPLATES[entry.template_type]?.label || ''}</span>
+        <span class="meta-chip vis-${entry.visibility}">${VISIBILITY[entry.visibility].icon} ${VISIBILITY[entry.visibility].label}</span>
+      </div>
+      ${entry.title ? `<div class="detail-title">${escapeHtml(entry.title)}</div>` : ''}
+    </div>
+
+    ${entry.media.length ? `
+      <div class="detail-media">
+        ${entry.media.map((m, i) => m.media_type === 'video'
+          ? `<video src="${mediaUrls[i]}" controls></video>`
+          : `<img src="${mediaUrls[i]}" alt="일기 사진 ${i+1}" data-url="${mediaUrls[i]}">`
+        ).join('')}
+      </div>
+    ` : ''}
+
+    <div class="detail-content">${escapeHtml(entry.content || '')}</div>
+
+    ${entry.tags.length ? `
+      <div class="detail-tags">
+        ${entry.tags.map((t) => `
+          <span class="detail-tag ${t.tag_type === 'emotion' ? 'emotion' : ''}">
+            ${t.tag_type === 'emotion' ? emojiFor(t.name) + ' ' + escapeHtml(t.name) : '#' + escapeHtml(t.name)}
+          </span>
+        `).join('')}
+      </div>` : ''}
+
+    ${isOwner ? `
+      <div class="detail-actions">
+        <a href="./seed.html">목록으로</a>
+        <a href="./diary-write.html?id=${entry.id}" class="primary">수정</a>
+      </div>
+    ` : `
+      <div class="detail-actions">
+        <a href="./seed.html">목록으로</a>
+      </div>
+    `}
+  `;
+
+  // 이미지 클릭 → 새 탭에서 원본 보기 (간단 라이트박스 대용)
+  document.querySelectorAll('.detail-media img').forEach((img) => {
+    img.addEventListener('click', () => window.open(img.dataset.url, '_blank'));
+  });
+
+  function formatDate(d) {
+    const date = new Date(d);
+    return date.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
+  }
+  function escapeHtml(s) {
+    return (s || '').replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+</script>
+
+</body>
+</html>

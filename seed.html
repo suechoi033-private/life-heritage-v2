@@ -16,20 +16,215 @@
     .seed-hero {
       background: linear-gradient(135deg, var(--primary-soft), #F3F8F5);
       border-radius: var(--radius);
-      padding: 22px;
-      margin-bottom: 18px;
+      padding: 18px 20px;
+      margin-bottom: 16px;
     }
-    .seed-hero-label { font-size: 12px; font-weight: 700; color: var(--primary); letter-spacing: 0.04em; }
+    .seed-hero-label { font-size: 11.5px; font-weight: 700; color: var(--primary); letter-spacing: 0.04em; }
     .seed-hero-title {
       font-family: var(--font-serif);
-      font-size: 19px;
+      font-size: 17px;
       font-weight: 800;
       line-height: 1.45;
       letter-spacing: -0.02em;
-      margin: 6px 0 4px;
+      margin: 4px 0 4px;
     }
-    .seed-hero-stat { font-size: 13px; color: var(--ink-soft); }
+    .seed-hero-stat { font-size: 12.5px; color: var(--ink-soft); }
     .seed-hero-stat strong { color: var(--primary); font-weight: 800; }
+
+    /* 캘린더 */
+    .calendar-wrap {
+      background: var(--bg-alt);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 14px;
+      margin-bottom: 18px;
+    }
+    .calendar-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .calendar-month {
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+    .calendar-nav {
+      display: flex;
+      gap: 4px;
+    }
+    .calendar-nav button {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+      background: #fff;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--ink-soft);
+      font-family: inherit;
+    }
+    .calendar-nav button:hover { border-color: var(--primary); color: var(--primary); }
+    .calendar-dow {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 2px;
+      margin-bottom: 4px;
+    }
+    .calendar-dow div {
+      text-align: center;
+      font-size: 10.5px;
+      font-weight: 800;
+      color: var(--ink-muted);
+      letter-spacing: 0.04em;
+      padding: 4px 0;
+    }
+    .calendar-dow div:first-child { color: var(--danger); }
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 2px;
+    }
+    .cal-cell {
+      aspect-ratio: 1 / 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding-top: 4px;
+      border-radius: 6px;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--ink-soft);
+      cursor: pointer;
+      background: transparent;
+      border: none;
+      font-family: inherit;
+      position: relative;
+    }
+    .cal-cell:hover { background: rgba(0,0,0,0.04); }
+    .cal-cell.other { color: var(--ink-faint); }
+    .cal-cell.today {
+      background: var(--primary);
+      color: #fff;
+      font-weight: 800;
+    }
+    .cal-cell.has-entry::after {
+      content: '';
+      position: absolute;
+      bottom: 5px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--primary);
+    }
+    .cal-cell.today.has-entry::after { background: #fff; }
+
+    /* 타임라인 */
+    .timeline-section { margin-top: 22px; }
+    .timeline-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .timeline-title {
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+    .timeline-empty {
+      text-align: center;
+      padding: 30px 20px;
+      color: var(--ink-muted);
+      font-size: 13.5px;
+    }
+    .diary-card {
+      display: block;
+      background: var(--bg-alt);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      text-decoration: none;
+      color: inherit;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .diary-card:hover { border-color: var(--primary-soft); box-shadow: 0 2px 12px rgba(92,138,111,0.06); }
+    .diary-card-meta {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      font-size: 11.5px;
+      color: var(--ink-muted);
+      margin-bottom: 6px;
+    }
+    .diary-card-date { font-weight: 800; color: var(--ink-soft); }
+    .diary-card-template {
+      padding: 1px 8px;
+      border-radius: 999px;
+      background: #fff;
+      font-weight: 700;
+      font-size: 10.5px;
+    }
+    .diary-card-title {
+      font-family: var(--font-serif);
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      margin-bottom: 4px;
+    }
+    .diary-card-excerpt {
+      font-size: 13px;
+      color: var(--ink-soft);
+      line-height: 1.55;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* FAB */
+    .fab {
+      position: fixed;
+      right: 20px;
+      bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+      z-index: 90;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      font-size: 24px;
+      box-shadow: 0 4px 16px rgba(92,138,111,0.4);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.1s;
+    }
+    .fab:hover { background: var(--primary-hover); }
+    .fab:active { transform: scale(0.95); }
+
+    /* 더보기 */
+    .load-more {
+      width: 100%;
+      padding: 11px;
+      background: var(--bg-alt);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink-soft);
+      cursor: pointer;
+      font-family: inherit;
+      margin-top: 8px;
+    }
+    .load-more:hover { border-color: var(--primary); color: var(--primary); }
   </style>
 </head>
 <body>
@@ -42,26 +237,54 @@
 
   <div id="seed-hero" class="seed-hero">
     <div class="seed-hero-label">씨앗</div>
-    <div class="seed-hero-title">오늘 어떤 생각을<br>심으셨나요?</div>
+    <div class="seed-hero-title" id="hero-title">오늘 어떤 생각을<br>심으셨나요?</div>
     <div class="seed-hero-stat" id="seed-stat">불러오는 중...</div>
   </div>
 
-  <div id="seed-body">
-    <div class="empty-state">
-      <div class="empty-icon">🌱</div>
-      <div class="empty-title">씨앗 탭 준비 중</div>
-      <div class="empty-desc">일기 작성·캘린더·타임라인·목표 대시보드가<br>다음 단계에서 들어옵니다.</div>
+  <div id="diary-pane">
+    <!-- 캘린더 -->
+    <div class="calendar-wrap">
+      <div class="calendar-head">
+        <div class="calendar-month" id="cal-month">2026년 5월</div>
+        <div class="calendar-nav">
+          <button id="cal-prev" aria-label="이전 달">‹</button>
+          <button id="cal-today" aria-label="오늘">●</button>
+          <button id="cal-next" aria-label="다음 달">›</button>
+        </div>
+      </div>
+      <div class="calendar-dow">
+        <div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div>
+      </div>
+      <div class="calendar-grid" id="cal-grid"></div>
     </div>
-    <div class="cta-block">
-      <button id="cta-write-diary">일기 쓰기 (준비 중)</button>
+
+    <!-- 타임라인 -->
+    <div class="timeline-section">
+      <div class="timeline-head">
+        <div class="timeline-title">최근 일기</div>
+      </div>
+      <div id="timeline-body">
+        <div class="timeline-empty">불러오는 중...</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="goal-pane" style="display:none;">
+    <div class="empty-state">
+      <div class="empty-icon">🎯</div>
+      <div class="empty-title">목표·계획 준비 중</div>
+      <div class="empty-desc">3·6·12·60개월 목표 대시보드가<br>다음 단계에서 들어옵니다.</div>
     </div>
   </div>
 </main>
+
+<button class="fab" id="fab-write" aria-label="일기 쓰기">＋</button>
 
 <script type="module">
   import { supabase } from './auth.js';
   import { renderNav } from './nav.js';
   import { registerPWA } from './js/pwa.js';
+  import { listMyDiariesByMonth, listMyDiariesTimeline, TEMPLATES } from './js/diary.js';
 
   await renderNav({ active: 'seed', infoIcon: true, title: '씨앗' });
   registerPWA();
@@ -69,28 +292,32 @@
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) { window.location.href = './login.html'; throw new Error('로그인 필요'); }
 
-  // URL ?tab=diary|goal 처리
+  // URL ?tab=diary|goal
   const params = new URLSearchParams(location.search);
+  if (params.get('action') === 'new') {
+    window.location.href = './diary-write.html';
+  }
   const initialTab = params.get('tab') === 'goal' ? 'goal' : 'diary';
   setActiveTab(initialTab);
 
   document.getElementById('tab-diary').addEventListener('click', () => setActiveTab('diary'));
   document.getElementById('tab-goal').addEventListener('click', () => setActiveTab('goal'));
+  document.getElementById('fab-write').addEventListener('click', () => {
+    window.location.href = './diary-write.html';
+  });
 
   function setActiveTab(tab) {
     document.getElementById('tab-diary').classList.toggle('active', tab === 'diary');
     document.getElementById('tab-goal').classList.toggle('active',  tab === 'goal');
-    document.getElementById('tab-diary').setAttribute('aria-selected', tab === 'diary');
-    document.getElementById('tab-goal').setAttribute('aria-selected', tab === 'goal');
-    const heroTitle = document.querySelector('.seed-hero-title');
-    if (tab === 'diary') {
-      heroTitle.innerHTML = '오늘 어떤 생각을<br>심으셨나요?';
-    } else {
-      heroTitle.innerHTML = '3·6·12·60개월<br>어디까지 자랐나요?';
-    }
+    document.getElementById('diary-pane').style.display = tab === 'diary' ? '' : 'none';
+    document.getElementById('goal-pane').style.display  = tab === 'goal'  ? '' : 'none';
+    document.getElementById('fab-write').style.display  = tab === 'diary' ? '' : 'none';
+    document.getElementById('hero-title').innerHTML = tab === 'diary'
+      ? '오늘 어떤 생각을<br>심으셨나요?'
+      : '3·6·12·60개월<br>어디까지 자랐나요?';
   }
 
-  // 통계 — 일기 N개, 목표 N개
+  // ── 통계 ──
   try {
     const [{ count: diaryCount }, { count: goalCount }] = await Promise.all([
       supabase.from('diary_entries').select('id', { count: 'exact', head: true }).eq('user_id', session.user.id),
@@ -99,13 +326,160 @@
     document.getElementById('seed-stat').innerHTML = `
       일기 <strong>${diaryCount ?? 0}</strong>개 · 진행 중 목표 <strong>${goalCount ?? 0}</strong>개
     `;
-  } catch (err) {
+  } catch (_) {
     document.getElementById('seed-stat').textContent = '시작해 보세요';
   }
 
-  document.getElementById('cta-write-diary')?.addEventListener('click', () => {
-    alert('일기 작성 화면은 다음 업데이트에서 만나요. 🌱');
+  // ── 캘린더 ──
+  let calCursor = new Date();
+  calCursor.setDate(1);
+  let monthEntries = new Map();
+
+  async function renderCalendar() {
+    const year = calCursor.getFullYear();
+    const month = calCursor.getMonth();
+    document.getElementById('cal-month').textContent = `${year}년 ${month + 1}월`;
+
+    try {
+      const entries = await listMyDiariesByMonth(year, month);
+      monthEntries.clear();
+      entries.forEach((e) => {
+        const key = e.entry_date;
+        if (!monthEntries.has(key)) monthEntries.set(key, []);
+        monthEntries.get(key).push(e);
+      });
+    } catch (err) {
+      console.warn(err);
+    }
+
+    const firstDow = new Date(year, month, 1).getDay();
+    const lastDate = new Date(year, month + 1, 0).getDate();
+    const prevLastDate = new Date(year, month, 0).getDate();
+    const today = new Date().toISOString().slice(0, 10);
+
+    const cells = [];
+    // 앞쪽 빈칸
+    for (let i = firstDow - 1; i >= 0; i--) {
+      const d = prevLastDate - i;
+      cells.push({ day: d, other: true, date: null });
+    }
+    for (let d = 1; d <= lastDate; d++) {
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      cells.push({ day: d, other: false, date: dateStr });
+    }
+    // 뒷쪽: 6행 채우기
+    const total = Math.ceil(cells.length / 7) * 7;
+    for (let d = 1; cells.length < total; d++) {
+      cells.push({ day: d, other: true, date: null });
+    }
+
+    const grid = document.getElementById('cal-grid');
+    grid.innerHTML = cells.map((c) => {
+      const cls = [
+        'cal-cell',
+        c.other ? 'other' : '',
+        c.date === today ? 'today' : '',
+        c.date && monthEntries.has(c.date) ? 'has-entry' : '',
+      ].filter(Boolean).join(' ');
+      return `<button type="button" class="${cls}" data-date="${c.date || ''}">${c.day}</button>`;
+    }).join('');
+
+    grid.querySelectorAll('.cal-cell').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const date = btn.dataset.date;
+        if (!date) return;
+        const list = monthEntries.get(date);
+        if (list && list.length === 1) {
+          window.location.href = `./diary-detail.html?id=${list[0].id}`;
+        } else if (list && list.length > 1) {
+          // 여러 개 있으면 타임라인에서 보여줄 수도, 우선 첫 번째로
+          window.location.href = `./diary-detail.html?id=${list[0].id}`;
+        } else {
+          // 새 일기 쓰기
+          window.location.href = `./diary-write.html?date=${date}`;
+        }
+      });
+    });
+  }
+
+  document.getElementById('cal-prev').addEventListener('click', () => {
+    calCursor = new Date(calCursor.getFullYear(), calCursor.getMonth() - 1, 1);
+    renderCalendar();
   });
+  document.getElementById('cal-next').addEventListener('click', () => {
+    calCursor = new Date(calCursor.getFullYear(), calCursor.getMonth() + 1, 1);
+    renderCalendar();
+  });
+  document.getElementById('cal-today').addEventListener('click', () => {
+    calCursor = new Date();
+    calCursor.setDate(1);
+    renderCalendar();
+  });
+
+  renderCalendar();
+
+  // ── 타임라인 ──
+  let timelineCursor = null;
+  let timelineExhausted = false;
+
+  async function loadTimeline(append = false) {
+    const body = document.getElementById('timeline-body');
+    if (!append) body.innerHTML = `<div class="timeline-empty">불러오는 중...</div>`;
+    try {
+      const items = await listMyDiariesTimeline(10, timelineCursor);
+      if (!append) body.innerHTML = '';
+      if (!items.length && !append) {
+        body.innerHTML = `
+          <div class="timeline-empty">
+            아직 일기가 없어요.<br>오른쪽 아래 ＋ 버튼으로 첫 일기를 심어보세요.
+          </div>`;
+        return;
+      }
+      if (!items.length) {
+        timelineExhausted = true;
+        document.getElementById('btn-more')?.remove();
+        return;
+      }
+
+      const html = items.map((d) => {
+        const excerpt = (d.content || '').replace(/\s+/g, ' ').slice(0, 120);
+        return `
+          <a class="diary-card" href="./diary-detail.html?id=${d.id}">
+            <div class="diary-card-meta">
+              <span class="diary-card-date">${formatDate(d.entry_date)}</span>
+              <span class="diary-card-template">${TEMPLATES[d.template_type]?.label || ''}</span>
+            </div>
+            ${d.title ? `<div class="diary-card-title">${escapeHtml(d.title)}</div>` : ''}
+            ${excerpt ? `<div class="diary-card-excerpt">${escapeHtml(excerpt)}</div>` : ''}
+          </a>`;
+      }).join('');
+
+      body.insertAdjacentHTML('beforeend', html);
+      timelineCursor = items[items.length - 1].entry_date;
+
+      document.getElementById('btn-more')?.remove();
+      if (items.length === 10) {
+        const btn = document.createElement('button');
+        btn.id = 'btn-more';
+        btn.className = 'load-more';
+        btn.textContent = '더보기';
+        btn.addEventListener('click', () => loadTimeline(true));
+        body.appendChild(btn);
+      }
+    } catch (err) {
+      body.innerHTML = `<div class="timeline-empty">불러오기 실패: ${err.message || err}</div>`;
+    }
+  }
+
+  loadTimeline();
+
+  function formatDate(d) {
+    const date = new Date(d);
+    return date.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' });
+  }
+  function escapeHtml(s) {
+    return (s || '').replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
 </script>
 
 </body>
