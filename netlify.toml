@@ -1,0 +1,46 @@
+# Netlify 배포 설정 — 잇다 v3
+# 정적 사이트 (빌드 없음), 루트 디렉토리 그대로 서빙
+
+[build]
+  publish = "."
+
+[build.environment]
+  # 빌드 단계 없음 — 정적 HTML/JS만 서빙
+
+# ── 기본 헤더 (보안 + 캐시) ──
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
+# Service Worker는 절대 캐시되면 안 됨 (PWA 업데이트 보장)
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# manifest, JS 모듈 — 짧은 캐시
+[[headers]]
+  for = "/manifest.json"
+  [headers.values]
+    Cache-Control = "public, max-age=300"
+
+[[headers]]
+  for = "/js/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
+
+# 아이콘·이미지 — 긴 캐시
+[[headers]]
+  for = "/icons/*"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000, immutable"
+
+# ── SPA 폴백 없음 (멀티페이지 정적 사이트) ──
+# 모든 .html 파일은 그대로 매핑됨
+
+# ── /info, /note 등 디렉토리 별칭 ──
+# GitHub Pages와 동일하게 디렉토리/index 매핑 자동 동작
