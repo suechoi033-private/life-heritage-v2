@@ -542,6 +542,91 @@
     }
     .item-vis-chip.public { background: #E4F2EA; color: var(--success); }
     .item-vis-chip.private { background: var(--bg-alt); color: var(--ink-muted); }
+    .item-vis-chip.deleted { background: var(--danger-soft); color: var(--danger); }
+
+    /* ── 콘텐츠 승급 큐 ──────────────────── */
+    .promote-row {
+      display: flex; gap: 14px; align-items: flex-start;
+      padding: 14px 16px; background: var(--bg);
+      border: 1px solid var(--line); border-radius: 12px;
+      margin-bottom: 10px;
+    }
+    .promote-row.is-promoted { background: var(--primary-soft); border-color: var(--primary); }
+    .promote-row.is-promoted .promote-badge {
+      display: inline-block; padding: 2px 8px;
+      background: var(--primary); color: #fff;
+      border-radius: 999px; font-size: 10.5px; font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .promote-meta { font-size: 11.5px; color: var(--ink-muted); margin-bottom: 4px; display: flex; gap: 8px; flex-wrap: wrap; }
+    .promote-meta .author { font-weight: 700; color: var(--ink-soft); }
+    .promote-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; line-height: 1.4; }
+    .promote-body { font-size: 13px; color: var(--ink-soft); line-height: 1.55;
+      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+    .promote-stats { font-size: 11.5px; color: var(--ink-muted); margin-top: 6px; }
+    .promote-actions { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+    .btn-promote {
+      padding: 8px 14px; border-radius: 999px;
+      background: var(--primary); color: #fff; border: none;
+      font-family: inherit; font-size: 12.5px; font-weight: 700;
+      cursor: pointer; white-space: nowrap;
+    }
+    .btn-promote:hover { background: var(--primary-hover); }
+    .btn-promote:disabled { opacity: 0.5; cursor: wait; }
+
+    /* ── 신고함 ───────────────────────────── */
+    .report-row {
+      padding: 14px 16px; background: var(--bg);
+      border: 1px solid var(--line); border-radius: 12px;
+      margin-bottom: 10px;
+    }
+    .report-row.status-pending { border-left: 4px solid var(--danger); }
+    .report-row.status-reviewing { border-left: 4px solid var(--warm); }
+    .report-row.status-resolved { opacity: 0.7; border-left: 4px solid var(--success); }
+    .report-row.status-dismissed { opacity: 0.5; }
+    .report-head { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+    .report-target {
+      font-size: 11.5px; padding: 2px 8px; border-radius: 999px;
+      background: var(--bg-alt); color: var(--ink-soft); font-weight: 700;
+    }
+    .report-status-pill { font-size: 11.5px; font-weight: 800; padding: 2px 10px; border-radius: 999px; }
+    .report-status-pill.pending { background: var(--danger-soft); color: var(--danger); }
+    .report-status-pill.reviewing { background: #FFF3DA; color: #A36E1A; }
+    .report-status-pill.resolved { background: #E4F2EA; color: var(--success); }
+    .report-status-pill.dismissed { background: var(--bg-alt); color: var(--ink-muted); }
+    .report-reason { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .report-detail { font-size: 13px; color: var(--ink-soft); line-height: 1.55; margin-bottom: 6px; }
+    .report-preview { font-size: 12.5px; color: var(--ink-muted); padding: 8px 10px; background: var(--bg-alt); border-radius: 8px; margin-bottom: 8px; }
+    .report-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .report-actions button, .report-actions a {
+      padding: 6px 12px; border-radius: 999px;
+      font-size: 12px; font-weight: 700;
+      border: 1px solid var(--line); background: #fff;
+      cursor: pointer; font-family: inherit;
+      text-decoration: none; color: var(--ink-soft);
+    }
+    .report-actions button:hover, .report-actions a:hover { border-color: var(--primary); color: var(--primary); }
+    .report-actions .btn-resolve { background: var(--success); color: #fff; border-color: var(--success); }
+    .report-actions .btn-dismiss { background: var(--bg-alt); }
+    .report-actions .btn-hide-target { background: var(--danger-soft); color: var(--danger); border-color: var(--danger-soft); }
+
+    /* ── 회원 상세 (게시글/댓글 탭) ──────── */
+    .item-row .item-admin-actions {
+      display: flex; gap: 4px;
+      margin-top: 6px;
+    }
+    .item-row .item-admin-actions button {
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 11px; font-weight: 700;
+      border: 1px solid var(--line);
+      background: #fff;
+      cursor: pointer;
+      font-family: inherit;
+      color: var(--ink-soft);
+    }
+    .item-row .item-admin-actions button:hover { border-color: var(--danger); color: var(--danger); }
+    .item-row .item-admin-actions button.btn-unhide { color: var(--success); border-color: var(--success); }
   </style>
   <link rel="manifest" href="./manifest.json">
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
@@ -591,6 +676,8 @@
     <!-- Section tabs -->
     <div class="section-tabs">
       <button type="button" class="section-tab active" data-section="stories">기록 큐레이션 <span class="count-badge" id="tab-count-stories">—</span></button>
+      <button type="button" class="section-tab" data-section="promote">콘텐츠 승급 <span class="count-badge" id="tab-count-promote">—</span></button>
+      <button type="button" class="section-tab" data-section="reports">신고함 <span class="count-badge" id="tab-count-reports">—</span></button>
       <button type="button" class="section-tab" data-section="users">가입자 <span class="count-badge" id="tab-count-users">—</span></button>
     </div>
 
@@ -616,6 +703,43 @@
       </div>
 
       <div id="story-list"></div>
+    </div>
+
+    <!-- Section: promote (커뮤니티 글 → 공식 콘텐츠 승급) -->
+    <div class="admin-section hidden" data-section-content="promote">
+      <p class="page-sub">
+        커뮤니티에 올라온 글 중 다른 회원에게도 도움이 될 만한 글을 <strong>공식 콘텐츠로 승급</strong>하세요.
+        승급된 글은 숲 탭의 콘텐츠 허브에 노출됩니다. (반응·댓글 많은 순으로 정렬)
+      </p>
+
+      <div class="filter-tabs" style="margin-bottom:14px;">
+        <button type="button" class="filter-tab active" data-pfilter="pending">승급 대기</button>
+        <button type="button" class="filter-tab" data-pfilter="promoted">📌 승급됨</button>
+        <button type="button" class="filter-tab" data-pfilter="all">전체</button>
+      </div>
+
+      <div id="promote-list">
+        <div class="empty"><div class="empty-icon">📰</div><p>불러오는 중…</p></div>
+      </div>
+    </div>
+
+    <!-- Section: reports (신고함) -->
+    <div class="admin-section hidden" data-section-content="reports">
+      <p class="page-sub">
+        회원이 신고한 게시글·댓글·콘텐츠·프로필을 처리합니다. 처리 후에는 자동으로 처리자·시각이 기록됩니다.
+      </p>
+
+      <div class="filter-tabs" style="margin-bottom:14px;">
+        <button type="button" class="filter-tab active" data-rfilter="pending">신규</button>
+        <button type="button" class="filter-tab" data-rfilter="reviewing">검토 중</button>
+        <button type="button" class="filter-tab" data-rfilter="resolved">처리됨</button>
+        <button type="button" class="filter-tab" data-rfilter="dismissed">기각</button>
+        <button type="button" class="filter-tab" data-rfilter="all">전체</button>
+      </div>
+
+      <div id="report-list">
+        <div class="empty"><div class="empty-icon">🛎</div><p>불러오는 중…</p></div>
+      </div>
     </div>
 
     <!-- Section: users -->
@@ -664,8 +788,15 @@
 
 <script type="module">
   import { requireAuth, supabase } from './auth.js';
-
-  const ADMIN_EMAIL = 'sue.choi033@gmail.com';
+  import {
+    fetchPromotionCandidates, promotePostToContent,
+    adminHidePost, adminUnhidePost,
+    adminHideComment, adminUnhideComment,
+    fetchReports, resolveReport,
+    fetchUserPostsWithDeleted, fetchUserCommentsWithDeleted,
+    CONTENT_CATEGORIES, REPORT_STATUS_LABEL, REPORT_TARGET_LABEL,
+    ADMIN_EMAIL,
+  } from './js/admin.js';
 
   const session = await requireAuth('./login.html');
   if (!session) { /* redirected */ }
@@ -690,6 +821,14 @@
     userDetailTab: 'stories',
     questionTextMap: {},
     questionCategoryMap: {},
+    promoteCandidates: [],
+    promoteLoaded: false,
+    promoteFilter: 'pending',
+    reports: [],
+    reportsLoaded: false,
+    reportFilter: 'pending',
+    userPostsCache: {},     // userId → posts (with deleted)
+    userCommentsCache: {},  // userId → comments (with deleted)
   };
 
   const ANSWER_CATEGORY_LABEL = {
@@ -711,9 +850,9 @@
         el.classList.toggle('hidden', el.dataset.sectionContent !== section);
       });
       state.section = section;
-      if (section === 'users' && !state.usersLoaded) {
-        loadUsers();
-      }
+      if (section === 'users'   && !state.usersLoaded)   loadUsers();
+      if (section === 'promote' && !state.promoteLoaded) loadPromote();
+      if (section === 'reports' && !state.reportsLoaded) loadReports();
     });
   });
 
@@ -894,8 +1033,13 @@
     });
     area.querySelectorAll('.user-detail-tab').forEach(t => {
       t.addEventListener('click', () => {
-        state.userDetailTab = t.dataset.detailTab;
-        renderUsers();
+        const newTab = t.dataset.detailTab;
+        state.userDetailTab = newTab;
+        const u = state.allUsers.find((x) => x.id === state.selectedUserId);
+        if (!u) return;
+        if (newTab === 'posts')         renderUserPostsTab(u);
+        else if (newTab === 'comments') renderUserCommentsTab(u);
+        else                            renderUsers();
       });
     });
   }
@@ -935,6 +1079,9 @@
               </a>
             `;
           }).join('')}</div>`;
+    } else if (tab === 'posts' || tab === 'comments') {
+      // 게시글/댓글 탭은 비동기 로드 후 별도 함수가 채움
+      body = `<div style="padding:24px 0;text-align:center;color:var(--ink-muted);font-size:13.5px;">불러오는 중…</div>`;
     } else {
       body = u.answers.length === 0
         ? `<div style="padding:24px 0;text-align:center;color:var(--ink-muted);font-size:13.5px;">아직 작성한 답변이 없어요.</div>`
@@ -976,12 +1123,150 @@
           <button type="button" class="user-detail-close">닫기 ✕</button>
         </div>
         <div class="user-detail-tabs">
-          <button type="button" class="user-detail-tab ${tab === 'stories' ? 'active' : ''}" data-detail-tab="stories">기록 ${u.story_count}</button>
-          <button type="button" class="user-detail-tab ${tab === 'answers' ? 'active' : ''}" data-detail-tab="answers">답변 ${u.answer_count}</button>
+          <button type="button" class="user-detail-tab ${tab === 'stories'  ? 'active' : ''}" data-detail-tab="stories">기록 ${u.story_count}</button>
+          <button type="button" class="user-detail-tab ${tab === 'answers'  ? 'active' : ''}" data-detail-tab="answers">답변 ${u.answer_count}</button>
+          <button type="button" class="user-detail-tab ${tab === 'posts'    ? 'active' : ''}" data-detail-tab="posts">게시글</button>
+          <button type="button" class="user-detail-tab ${tab === 'comments' ? 'active' : ''}" data-detail-tab="comments">댓글</button>
         </div>
         ${body}
       </div>
     `;
+  }
+
+  // ── 회원의 게시글 탭 ─────────────────
+  async function renderUserPostsTab(u) {
+    const detailContainer = document.querySelector('.user-detail');
+    if (!detailContainer) return;
+    const bodyContainer = detailContainer.querySelector('.item-list, .empty, [data-tab-body]') || detailContainer;
+    // 캐시 확인
+    if (!state.userPostsCache[u.id]) {
+      try { state.userPostsCache[u.id] = await fetchUserPostsWithDeleted(u.id); }
+      catch (err) { bodyContainer.innerHTML = `<div style="padding:24px 0;text-align:center;color:var(--danger);">불러오기 실패: ${escapeHtml(err.message || '')}</div>`; return; }
+    }
+    const posts = state.userPostsCache[u.id];
+    if (!posts.length) {
+      renderUsers(); // re-render with empty
+      return;
+    }
+    renderUsers(); // re-render to refresh tab buttons; then patch body
+    // patch body content
+    const detail = document.querySelector('.user-detail');
+    const tabsEl = detail?.querySelector('.user-detail-tabs');
+    if (!tabsEl) return;
+    // remove anything after the tabs
+    let next = tabsEl.nextElementSibling;
+    while (next) { const n = next.nextElementSibling; next.remove(); next = n; }
+    const html = `<div class="item-list">${posts.map((p) => {
+      const date = new Date(p.created_at).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+      const preview = (p.body || '').slice(0, 100).replace(/\n+/g, ' ');
+      return `
+        <div class="item-row" style="display:block;">
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;gap:6px;margin-bottom:4px;">
+                <span class="story-tag primary" style="font-size:10.5px;padding:1px 7px;">${escapeHtml(p.boards?.name || '게시판')}</span>
+                ${p.is_deleted ? '<span class="item-vis-chip deleted">🚫 숨김</span>' : ''}
+              </div>
+              <div class="item-title">${escapeHtml(p.title || '(제목 없음)')}</div>
+              ${preview ? `<div class="item-preview">${escapeHtml(preview)}</div>` : ''}
+              <div class="item-admin-actions">
+                <a href="./post-detail.html?id=${p.id}" target="_blank" style="padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;background:#fff;border:1px solid var(--line);color:var(--ink-soft);text-decoration:none;">상세 →</a>
+                ${p.is_deleted
+                  ? `<button type="button" class="btn-unhide" data-unhide-post="${p.id}">↩ 복구</button>`
+                  : `<button type="button" data-hide-post="${p.id}">🚫 숨김</button>`}
+              </div>
+            </div>
+            <div class="item-meta">
+              ${date}<br>
+              ❤ ${p.reaction_count ?? 0} · 💬 ${p.comment_count ?? 0}
+            </div>
+          </div>
+        </div>`;
+    }).join('')}</div>`;
+    tabsEl.insertAdjacentHTML('afterend', html);
+    detail.querySelectorAll('[data-hide-post]').forEach((b) => {
+      b.addEventListener('click', async () => {
+        if (!confirm('이 게시글을 숨김 처리할까요?')) return;
+        b.disabled = true;
+        try { await adminHidePost(b.dataset.hidePost);
+          const p = posts.find((x) => x.id === b.dataset.hidePost); if (p) p.is_deleted = true;
+          state.userDetailTab = 'posts'; renderUserPostsTab(u);
+        } catch (err) { alert('실패: ' + (err.message || err)); b.disabled = false; }
+      });
+    });
+    detail.querySelectorAll('[data-unhide-post]').forEach((b) => {
+      b.addEventListener('click', async () => {
+        b.disabled = true;
+        try { await adminUnhidePost(b.dataset.unhidePost);
+          const p = posts.find((x) => x.id === b.dataset.unhidePost); if (p) p.is_deleted = false;
+          state.userDetailTab = 'posts'; renderUserPostsTab(u);
+        } catch (err) { alert('실패: ' + (err.message || err)); b.disabled = false; }
+      });
+    });
+  }
+
+  // ── 회원의 댓글 탭 ───────────────────
+  async function renderUserCommentsTab(u) {
+    if (!state.userCommentsCache[u.id]) {
+      try { state.userCommentsCache[u.id] = await fetchUserCommentsWithDeleted(u.id); }
+      catch (err) { alert('불러오기 실패: ' + (err.message || '')); return; }
+    }
+    const comments = state.userCommentsCache[u.id];
+    renderUsers(); // refresh tabs
+    const detail = document.querySelector('.user-detail');
+    const tabsEl = detail?.querySelector('.user-detail-tabs');
+    if (!tabsEl) return;
+    let next = tabsEl.nextElementSibling;
+    while (next) { const n = next.nextElementSibling; next.remove(); next = n; }
+    if (!comments.length) {
+      tabsEl.insertAdjacentHTML('afterend',
+        `<div style="padding:24px 0;text-align:center;color:var(--ink-muted);font-size:13.5px;">아직 작성한 댓글이 없어요.</div>`);
+      return;
+    }
+    const html = `<div class="item-list">${comments.map((c) => {
+      const date = new Date(c.created_at).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+      const preview = (c.body || '').slice(0, 120).replace(/\n+/g, ' ');
+      return `
+        <div class="item-row" style="display:block;">
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;gap:6px;margin-bottom:4px;">
+                <span class="story-tag" style="font-size:10.5px;padding:1px 7px;">💬 댓글</span>
+                ${c.is_deleted ? '<span class="item-vis-chip deleted">🚫 숨김</span>' : ''}
+              </div>
+              ${c.community_posts?.title ? `<div class="item-title" style="font-size:13px;color:var(--ink-soft);">→ ${escapeHtml(c.community_posts.title)}</div>` : ''}
+              ${preview ? `<div class="item-preview">${escapeHtml(preview)}</div>` : ''}
+              <div class="item-admin-actions">
+                <a href="./post-detail.html?id=${c.post_id}" target="_blank" style="padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;background:#fff;border:1px solid var(--line);color:var(--ink-soft);text-decoration:none;">원본 →</a>
+                ${c.is_deleted
+                  ? `<button type="button" class="btn-unhide" data-unhide-comment="${c.id}">↩ 복구</button>`
+                  : `<button type="button" data-hide-comment="${c.id}">🚫 숨김</button>`}
+              </div>
+            </div>
+            <div class="item-meta">${date}</div>
+          </div>
+        </div>`;
+    }).join('')}</div>`;
+    tabsEl.insertAdjacentHTML('afterend', html);
+    detail.querySelectorAll('[data-hide-comment]').forEach((b) => {
+      b.addEventListener('click', async () => {
+        if (!confirm('이 댓글을 숨김 처리할까요?')) return;
+        b.disabled = true;
+        try { await adminHideComment(b.dataset.hideComment);
+          const c = comments.find((x) => x.id === b.dataset.hideComment); if (c) c.is_deleted = true;
+          state.userDetailTab = 'comments'; renderUserCommentsTab(u);
+        } catch (err) { alert('실패: ' + (err.message || err)); b.disabled = false; }
+      });
+    });
+    detail.querySelectorAll('[data-unhide-comment]').forEach((b) => {
+      b.addEventListener('click', async () => {
+        b.disabled = true;
+        try { await adminUnhideComment(b.dataset.unhideComment);
+          const c = comments.find((x) => x.id === b.dataset.unhideComment); if (c) c.is_deleted = false;
+          state.userDetailTab = 'comments'; renderUserCommentsTab(u);
+        } catch (err) { alert('실패: ' + (err.message || err)); b.disabled = false; }
+      });
+    });
   }
 
   // ── Filter tabs ───────────────────────
@@ -1121,6 +1406,206 @@
     updateStats();
     renderList();
   }
+
+  // ── 콘텐츠 승급 큐 ─────────────────────
+  async function loadPromote() {
+    state.promoteLoaded = true;
+    try {
+      state.promoteCandidates = await fetchPromotionCandidates(60);
+      const pendingCount = state.promoteCandidates.filter((p) => !p.is_promoted).length;
+      document.getElementById('tab-count-promote').textContent = pendingCount;
+      renderPromote();
+    } catch (err) {
+      document.getElementById('promote-list').innerHTML =
+        `<div class="empty"><div class="empty-icon">⚠️</div><p>불러오기 실패: ${escapeHtml(err.message || '')}</p></div>`;
+    }
+  }
+
+  function renderPromote() {
+    const container = document.getElementById('promote-list');
+    const list = state.promoteCandidates.filter((p) => {
+      if (state.promoteFilter === 'pending')  return !p.is_promoted;
+      if (state.promoteFilter === 'promoted') return p.is_promoted;
+      return true;
+    });
+    if (!list.length) {
+      container.innerHTML = `<div class="empty"><div class="empty-icon">📰</div><p>해당하는 글이 없어요.</p></div>`;
+      return;
+    }
+    container.innerHTML = list.map((p) => {
+      const date = new Date(p.created_at).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+      const previewBody = (p.body || '').slice(0, 160).replace(/\n+/g, ' ');
+      const cls = p.is_promoted ? 'promote-row is-promoted' : 'promote-row';
+      const badge = p.is_promoted ? `<div class="promote-badge">✓ 공식 콘텐츠로 승급됨</div>` : '';
+      const actionBtn = p.is_promoted
+        ? `<a href="./content-detail.html?promoted_from=${p.id}" target="_blank" class="btn-link">콘텐츠 보기 →</a>`
+        : `<button type="button" class="btn-promote" data-promote="${p.id}">⬆ 콘텐츠로 승급</button>`;
+      return `
+        <div class="${cls}">
+          <div style="flex:1;min-width:0;">
+            ${badge}
+            <div class="promote-meta">
+              <span class="story-tag primary">${escapeHtml(p.board_name || '')}</span>
+              <span class="author">${escapeHtml(p.user_name || '익명')}</span>
+              <span>${date}</span>
+            </div>
+            <div class="promote-title">${escapeHtml(p.title || '(제목 없음)')}</div>
+            ${previewBody ? `<div class="promote-body">${escapeHtml(previewBody)}</div>` : ''}
+            <div class="promote-stats">
+              ❤ ${p.reaction_count ?? 0} · 💬 ${p.comment_count ?? 0} · 👁 ${p.view_count ?? 0}
+            </div>
+          </div>
+          <div class="promote-actions">
+            <a href="./post-detail.html?id=${p.id}" target="_blank" class="btn-link">원본 →</a>
+            ${actionBtn}
+          </div>
+        </div>`;
+    }).join('');
+
+    container.querySelectorAll('[data-promote]').forEach((btn) => {
+      btn.addEventListener('click', () => promotePost(btn.dataset.promote, btn));
+    });
+  }
+
+  async function promotePost(postId, btn) {
+    const p = state.promoteCandidates.find((x) => x.id === postId);
+    if (!p) return;
+    // 카테고리 선택
+    const catOptions = Object.entries(CONTENT_CATEGORIES).map(([k, v]) => `${k}: ${v}`).join('\n');
+    const cat = prompt(`이 글을 어느 카테고리로 승급할까요?\n\n${catOptions}\n\n비워두면 게시판에 따라 자동 매핑됩니다.`, '');
+    if (cat === null) return;  // cancelled
+    const categoryKey = cat.trim() || null;
+    if (categoryKey && !CONTENT_CATEGORIES[categoryKey]) {
+      alert('알 수 없는 카테고리입니다.');
+      return;
+    }
+    btn.disabled = true; btn.textContent = '승급 중…';
+    try {
+      const newId = await promotePostToContent(postId, { category: categoryKey });
+      p.is_promoted = true;
+      document.getElementById('tab-count-promote').textContent =
+        state.promoteCandidates.filter((x) => !x.is_promoted).length;
+      renderPromote();
+      if (confirm(`승급 완료. 콘텐츠 상세를 새 탭에서 열까요?`)) {
+        window.open(`./content-detail.html?id=${newId}`, '_blank');
+      }
+    } catch (err) {
+      alert('승급 실패: ' + (err.message || err));
+      btn.disabled = false; btn.textContent = '⬆ 콘텐츠로 승급';
+    }
+  }
+
+  // promote 필터 탭
+  document.querySelectorAll('[data-pfilter]').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('[data-pfilter]').forEach((t) => t.classList.toggle('active', t === tab));
+      state.promoteFilter = tab.dataset.pfilter;
+      renderPromote();
+    });
+  });
+
+  // ── 신고함 ─────────────────────────────
+  async function loadReports() {
+    state.reportsLoaded = true;
+    try {
+      state.reports = await fetchReports(null);
+      const pendingCount = state.reports.filter((r) => r.status === 'pending').length;
+      document.getElementById('tab-count-reports').textContent = pendingCount;
+      renderReports();
+    } catch (err) {
+      document.getElementById('report-list').innerHTML =
+        `<div class="empty"><div class="empty-icon">⚠️</div><p>불러오기 실패: ${escapeHtml(err.message || '')}</p></div>`;
+    }
+  }
+
+  function renderReports() {
+    const container = document.getElementById('report-list');
+    const list = state.reports.filter((r) => state.reportFilter === 'all' ? true : r.status === state.reportFilter);
+    if (!list.length) {
+      container.innerHTML = `<div class="empty"><div class="empty-icon">🛎</div><p>해당하는 신고가 없어요.</p></div>`;
+      return;
+    }
+    container.innerHTML = list.map((r) => {
+      const date = new Date(r.created_at).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      const targetLabel = REPORT_TARGET_LABEL[r.target_type] || r.target_type;
+      const statusLabel = REPORT_STATUS_LABEL[r.status] || r.status;
+      const targetLink = (() => {
+        if (r.target_type === 'post')    return `./post-detail.html?id=${r.target_id}`;
+        if (r.target_type === 'comment') return `./post-detail.html?id=${r.target_id}#comment-${r.target_id}`;
+        if (r.target_type === 'content') return `./content-detail.html?id=${r.target_id}`;
+        return null;
+      })();
+      const targetBtn = targetLink ? `<a href="${targetLink}" target="_blank">원본 보기 →</a>` : '';
+      const hideBtn = (r.target_type === 'post' || r.target_type === 'comment')
+        ? `<button type="button" class="btn-hide-target" data-hide-target="${r.target_type}:${r.target_id}">🚫 ${targetLabel} 숨김</button>`
+        : '';
+      const resolveActions = (r.status === 'pending' || r.status === 'reviewing')
+        ? `<button type="button" class="btn-resolve" data-resolve="${r.id}:resolved">✓ 처리 완료</button>
+           <button type="button" class="btn-dismiss" data-resolve="${r.id}:dismissed">기각</button>
+           ${r.status === 'pending' ? `<button type="button" data-resolve="${r.id}:reviewing">검토 중</button>` : ''}`
+        : `<button type="button" data-resolve="${r.id}:pending">↩ 다시 열기</button>`;
+
+      return `
+        <div class="report-row status-${r.status}">
+          <div class="report-head">
+            <div>
+              <span class="report-target">${escapeHtml(targetLabel)}</span>
+              <span style="font-size:11.5px;color:var(--ink-muted);margin-left:6px;">
+                신고자: ${escapeHtml(r.reporter_name || r.reporter_email || '익명')} · ${date}
+              </span>
+            </div>
+            <span class="report-status-pill ${r.status}">${escapeHtml(statusLabel)}</span>
+          </div>
+          <div class="report-reason">사유: ${escapeHtml(r.reason || '(미입력)')}</div>
+          ${r.detail ? `<div class="report-detail">${escapeHtml(r.detail)}</div>` : ''}
+          ${r.target_preview ? `<div class="report-preview">📄 ${escapeHtml(r.target_preview)}…</div>` : ''}
+          <div class="report-actions">
+            ${targetBtn}
+            ${hideBtn}
+            ${resolveActions}
+          </div>
+        </div>`;
+    }).join('');
+
+    container.querySelectorAll('[data-resolve]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const [id, status] = btn.dataset.resolve.split(':');
+        btn.disabled = true;
+        try {
+          await resolveReport(id, status);
+          const r = state.reports.find((x) => x.id === id);
+          if (r) { r.status = status; r.handled_at = new Date().toISOString(); }
+          document.getElementById('tab-count-reports').textContent =
+            state.reports.filter((x) => x.status === 'pending').length;
+          renderReports();
+        } catch (err) { alert('처리 실패: ' + (err.message || err)); btn.disabled = false; }
+      });
+    });
+
+    container.querySelectorAll('[data-hide-target]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const [type, id] = btn.dataset.hideTarget.split(':');
+        const what = type === 'post' ? '게시글' : '댓글';
+        if (!confirm(`이 ${what}을 숨김 처리할까요? 작성자에게는 보이지 않습니다.`)) return;
+        btn.disabled = true;
+        try {
+          if (type === 'post')    await adminHidePost(id);
+          if (type === 'comment') await adminHideComment(id);
+          alert(`${what} 숨김 처리됨.`);
+          btn.textContent = `✓ 숨김됨`;
+        } catch (err) { alert('실패: ' + (err.message || err)); btn.disabled = false; }
+      });
+    });
+  }
+
+  // 신고 필터 탭
+  document.querySelectorAll('[data-rfilter]').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('[data-rfilter]').forEach((t) => t.classList.toggle('active', t === tab));
+      state.reportFilter = tab.dataset.rfilter;
+      renderReports();
+    });
+  });
 
   // ── Utils ─────────────────────────────
   function showAlert(msg) {

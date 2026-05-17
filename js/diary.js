@@ -100,6 +100,60 @@ export async function deleteDiary(id) {
   if (error) throw error;
 }
 
+// 일기 검색 — 제목/본문 키워드 + 태그명 모두 매칭
+// RLS가 user_id를 강제하므로 본인 일기만 조회됨.
+export async function searchDiaries(query, { limit = 30 } = {}) {
+  const q = (query || '').trim();
+  if (!q) return [];
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const like = `%${q.replace(/[%_]/g, (m) => '\\' + m)}%`;
+
+  // 1) 제목/본문 매칭
+  const { data: textHits, error: e1 } = await supabase
+    .from('diary_entries')
+    .select('id, entry_date, template_type, title, content, visibility, created_at')
+    .eq('user_id', user.id)
+    .or(`title.ilike.${like},content.ilike.${like}`)
+    .order('entry_date', { ascending: false })
+    .limit(limit);
+  if (e1) throw e1;
+
+  // 2) 태그명 매칭 → entry_id 모음
+  const { data: tagRows } = await supabase
+    .from('tags')
+    .select('id')
+    .eq('user_id', user.id)
+    .ilike('name', like);
+  const tagIds = (tagRows || []).map((t) => t.id);
+
+  let tagHits = [];
+  if (tagIds.length) {
+    const { data: links } = await supabase
+      .from('diary_entry_tags')
+      .select('entry_id')
+      .in('tag_id', tagIds);
+    const entryIds = [...new Set((links || []).map((l) => l.entry_id))];
+    if (entryIds.length) {
+      const { data: tagged } = await supabase
+        .from('diary_entries')
+        .select('id, entry_date, template_type, title, content, visibility, created_at')
+        .eq('user_id', user.id)
+        .in('id', entryIds)
+        .order('entry_date', { ascending: false })
+        .limit(limit);
+      tagHits = tagged || [];
+    }
+  }
+
+  // 합치고 id 중복 제거 (텍스트 매칭 우선)
+  const map = new Map();
+  for (const e of textHits || []) map.set(e.id, e);
+  for (const e of tagHits)       if (!map.has(e.id)) map.set(e.id, e);
+  return [...map.values()].slice(0, limit);
+}
+
 // 일기-태그 동기화
 export async function syncDiaryTags(entryId, tagIds) {
   const { data: existing } = await supabase

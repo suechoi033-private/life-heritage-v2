@@ -251,6 +251,11 @@
       <span>나의 삶 정리</span>
       <span class="menu-arrow">›</span>
     </a>
+    <a href="./book-export.html">
+      <span class="menu-icon">📖</span>
+      <span>책자로 만들기 (PDF)</span>
+      <span class="menu-arrow">›</span>
+    </a>
   </div>
 
   <div class="my-menu">
@@ -262,6 +267,15 @@
     <a href="./forest.html?category=death_prep">
       <span class="menu-icon">📚</span>
       <span>안내 자료</span>
+      <span class="menu-arrow">›</span>
+    </a>
+  </div>
+
+  <!-- 관리자 메뉴 (sue.choi033@gmail.com 만 표시) -->
+  <div class="my-menu" id="admin-menu" style="display:none;">
+    <a href="./admin.html" style="background:linear-gradient(90deg, #FFF4DD, #FFFCF5);">
+      <span class="menu-icon">🛠</span>
+      <span>운영자 도구 <span style="font-size:10.5px;font-weight:800;color:var(--primary);background:var(--primary-soft);padding:1px 7px;border-radius:999px;margin-left:6px;">ADMIN</span></span>
       <span class="menu-arrow">›</span>
     </a>
   </div>
@@ -296,6 +310,11 @@
   document.getElementById('my-name').textContent  = name;
   document.getElementById('my-email').textContent = user.email || '';
   document.getElementById('my-avatar').textContent = (name[0] || '·').toUpperCase();
+
+  // 운영자 메뉴
+  if (user.email === 'sue.choi033@gmail.com') {
+    document.getElementById('admin-menu').style.display = '';
+  }
 
   // 통계
   try {
