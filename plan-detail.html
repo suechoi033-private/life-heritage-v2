@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>목표 상세 · 잇다</title>
+  <link rel="stylesheet" href="./auth-styles.css">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  <meta name="theme-color" content="#5C8A6F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="잇다">
+  <style>
+    /* 헤더 */
+    .goal-head {
+      padding: 4px 0 18px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 18px;
+    }
+    .goal-area-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .goal-title {
+      font-family: var(--font-serif);
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.4;
+      margin: 10px 0 8px;
+    }
+    .goal-desc { color: var(--ink-soft); font-size: 14px; line-height: 1.65; }
+    .goal-meta {
+      display: flex;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--ink-muted);
+      margin-top: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .goal-meta-item { display: inline-flex; align-items: center; gap: 4px; }
+
+    /* 진척도 */
+    .progress-card {
+      background: var(--bg-alt);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      margin-bottom: 20px;
+    }
+    .progress-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .progress-label { font-size: 12.5px; font-weight: 800; color: var(--ink-soft); letter-spacing: 0.02em; }
+    .progress-pct { font-size: 22px; font-weight: 800; font-family: var(--font-serif); color: var(--primary); }
+    .progress-track {
+      height: 8px;
+      background: rgba(0,0,0,0.06);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), #87B59C);
+      border-radius: 999px;
+      transition: width 0.5s ease;
+    }
+    .progress-note { font-size: 12px; color: var(--ink-muted); margin-top: 10px; }
+
+    /* 섹션 */
+    .section { margin-bottom: 24px; }
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .section-title { font-size: 14px; font-weight: 800; letter-spacing: -0.01em; }
+    .section-add {
+      padding: 6px 12px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      border: none;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .section-add:hover { background: var(--primary); color: #fff; }
+
+    /* 세부 계획 카드 */
+    .plan-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 14px;
+      background: var(--bg-alt);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+    }
+    .plan-check {
+      flex-shrink: 0;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 1.5px solid var(--line);
+      background: #fff;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      transition: all 0.15s;
+    }
+    .plan-check.done {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+    .plan-check.doing {
+      border-color: var(--warm);
+      background: var(--warm-soft);
+      color: var(--warm);
+    }
+    .plan-body { flex: 1; min-width: 0; }
+    .plan-title { font-size: 14px; font-weight: 600; line-height: 1.45; }
+    .plan-item.done .plan-title { color: var(--ink-muted); text-decoration: line-through; }
+    .plan-meta {
+      display: flex;
+      gap: 8px;
+      font-size: 11.5px;
+      color: var(--ink-muted);
+      margin-top: 3px;
+      align-items: center;
+    }
+    .plan-type-tag {
+      padding: 1px 7px;
+      border-radius: 4px;
+      background: #fff;
+      font-weight: 700;
+      font-size: 10.5px;
+    }
+    .plan-delete {
+      background: transparent;
+      border: none;
+      color: var(--ink-faint);
+      font-size: 16px;
+      cursor: pointer;
+      padding: 0 2px;
+    }
+    .plan-delete:hover { color: var(--danger); }
+
+    /* 일기 링크 카드 */
+    .linked-diary-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: var(--bg-alt);
+      border-radius: var(--radius-sm);
+      margin-bottom: 6px;
+      text-decoration: none;
+      color: inherit;
+      font-size: 13.5px;
+    }
+    .linked-diary-item:hover { background: var(--primary-soft); }
+    .linked-diary-date { font-weight: 800; color: var(--ink-soft); font-size: 12px; }
+
+    .detail-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 28px;
+    }
+    .detail-actions a {
+      flex: 1;
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 700;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+      font-family: inherit;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+    }
+    .detail-actions .primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+    /* 새 계획 모달 */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 200;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .modal-sheet {
+      width: 100%;
+      max-width: 480px;
+      background: var(--bg);
+      border-radius: 20px 20px 0 0;
+      padding: 22px 20px calc(20px + env(safe-area-inset-bottom, 0px));
+    }
+    .modal-title { font-size: 15px; font-weight: 800; margin-bottom: 14px; }
+    .plan-type-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+    .plan-type-opt {
+      padding: 10px;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--line);
+      background: #fff;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      text-align: center;
+      color: var(--ink-soft);
+    }
+    .plan-type-opt.active { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); }
+    .modal-form input[type="text"], .modal-form input[type="date"] {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1.5px solid var(--line);
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-family: inherit;
+      margin-bottom: 10px;
+    }
+    .modal-actions { display: flex; gap: 10px; margin-top: 8px; }
+    .modal-actions button {
+      flex: 1;
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      border: none;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .modal-cancel { background: var(--bg-alt); color: var(--ink-soft); border: 1px solid var(--line); }
+    .modal-save { background: var(--primary); color: #fff; }
+  </style>
+</head>
+<body>
+
+<main class="page-shell">
+  <div id="detail-body">
+    <div class="empty-state"><div class="empty-icon">⏳</div></div>
+  </div>
+</main>
+
+<div id="modal-root"></div>
+
+<script type="module">
+  import { supabase } from './auth.js';
+  import { renderNav } from './nav.js';
+  import {
+    AREAS, PERIODS, PLAN_TYPES, PRIORITY_LABELS,
+    getGoal, createPlan, updatePlanStatus, deletePlan,
+  } from './js/goals.js';
+
+  await renderNav({ active: 'seed', infoIcon: false, title: '목표' });
+
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) { window.location.href = './login.html'; throw new Error('로그인 필요'); }
+
+  const id = new URLSearchParams(location.search).get('id');
+  if (!id) { window.location.href = './seed.html?tab=goal'; throw new Error('id 누락'); }
+
+  async function render() {
+    const goal = await getGoal(id);
+    if (!goal || goal.user_id !== session.user.id) {
+      document.getElementById('detail-body').innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">🙏</div>
+          <div class="empty-title">목표를 찾을 수 없어요</div>
+          <div class="cta-block"><a href="./seed.html?tab=goal">목록으로</a></div>
+        </div>`;
+      return;
+    }
+
+    const area = AREAS[goal.area];
+    const period = PERIODS.find((p) => p.months === goal.period_months);
+    const doneCount = goal.plans.filter((p) => p.status === 'done').length;
+
+    document.getElementById('detail-body').innerHTML = `
+      <div class="goal-head">
+        <span class="goal-area-chip" style="background:${area.bg};color:${area.color};">
+          ${area.icon} ${area.label}
+        </span>
+        <div class="goal-title">${escapeHtml(goal.title)}</div>
+        ${goal.description ? `<div class="goal-desc">${escapeHtml(goal.description)}</div>` : ''}
+        <div class="goal-meta">
+          <span class="goal-meta-item">📆 ${period?.label || ''}</span>
+          ${goal.due_date ? `<span class="goal-meta-item">⏳ ${formatDate(goal.due_date)} 까지</span>` : ''}
+          <span class="goal-meta-item">⭐ 우선순위 ${PRIORITY_LABELS[goal.priority]}</span>
+          ${goal.status === 'completed' ? `<span class="goal-meta-item" style="color:var(--success);font-weight:800;">✓ 달성</span>` : ''}
+        </div>
+      </div>
+
+      <div class="progress-card">
+        <div class="progress-row">
+          <span class="progress-label">진척도</span>
+          <span class="progress-pct">${goal.progress_pct}%</span>
+        </div>
+        <div class="progress-track"><div class="progress-fill" style="width:${goal.progress_pct}%;"></div></div>
+        <div class="progress-note">${doneCount} / ${goal.plans.length} 세부 계획 완료</div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">
+          <div class="section-title">세부 계획</div>
+          <button class="section-add" id="btn-add-plan">＋ 추가</button>
+        </div>
+        <div id="plans-list">
+          ${goal.plans.length ? goal.plans.map(planHtml).join('') : `
+            <div class="empty-state" style="padding:20px;">
+              <div class="empty-desc">아직 세부 계획이 없어요.<br>＋ 버튼으로 첫 한 걸음을 추가하세요.</div>
+            </div>`}
+        </div>
+      </div>
+
+      ${goal.linked_diaries.length ? `
+        <div class="section">
+          <div class="section-head">
+            <div class="section-title">연결된 일기</div>
+          </div>
+          ${goal.linked_diaries.map((d) => `
+            <a class="linked-diary-item" href="./diary-detail.html?id=${d.id}">
+              <span class="linked-diary-date">${formatDate(d.entry_date)}</span>
+              <span>${escapeHtml(d.title || '제목 없음')}</span>
+            </a>
+          `).join('')}
+        </div>
+      ` : ''}
+
+      <div class="detail-actions">
+        <a href="./seed.html?tab=goal">목록으로</a>
+        <a href="./plan-write.html?id=${goal.id}" class="primary">수정</a>
+      </div>
+    `;
+
+    // 세부계획 이벤트
+    document.getElementById('plans-list')?.addEventListener('click', async (e) => {
+      const check = e.target.closest('.plan-check');
+      const del = e.target.closest('.plan-delete');
+      if (check) {
+        const planId = check.dataset.id;
+        const current = check.dataset.status;
+        const next = current === 'todo' ? 'doing' : current === 'doing' ? 'done' : 'todo';
+        try { await updatePlanStatus(planId, next); render(); }
+        catch (err) { alert(err.message || '상태 변경 실패'); }
+      } else if (del) {
+        if (!confirm('이 계획을 삭제하시겠어요?')) return;
+        try { await deletePlan(del.dataset.id); render(); }
+        catch (err) { alert(err.message || '삭제 실패'); }
+      }
+    });
+
+    document.getElementById('btn-add-plan').addEventListener('click', () => openPlanModal(goal.id));
+  }
+
+  function planHtml(p) {
+    const typeMeta = PLAN_TYPES[p.plan_type] || PLAN_TYPES.custom;
+    return `
+      <div class="plan-item ${p.status === 'done' ? 'done' : ''}">
+        <button class="plan-check ${p.status}" data-id="${p.id}" data-status="${p.status}" aria-label="상태 변경">
+          ${p.status === 'done' ? '✓' : p.status === 'doing' ? '·' : ''}
+        </button>
+        <div class="plan-body">
+          <div class="plan-title">${escapeHtml(p.title)}</div>
+          <div class="plan-meta">
+            <span class="plan-type-tag">${typeMeta.icon} ${typeMeta.label}</span>
+            ${p.due_date ? `<span>📆 ${formatDate(p.due_date)}</span>` : ''}
+          </div>
+        </div>
+        <button class="plan-delete" data-id="${p.id}" aria-label="삭제">×</button>
+      </div>
+    `;
+  }
+
+  function openPlanModal(goalId) {
+    const root = document.getElementById('modal-root');
+    let selectedType = 'custom';
+    root.innerHTML = `
+      <div class="modal-overlay" id="modal-overlay">
+        <div class="modal-sheet">
+          <div class="modal-title">세부 계획 추가</div>
+          <div class="plan-type-options" id="type-opts">
+            ${Object.entries(PLAN_TYPES).map(([key, v]) =>
+              `<button type="button" class="plan-type-opt ${key === selectedType ? 'active' : ''}" data-key="${key}">${v.icon} ${v.label}</button>`
+            ).join('')}
+          </div>
+          <form class="modal-form" id="plan-form">
+            <input type="text" id="plan-title" placeholder="예: 주 3회 30분 걷기" required maxlength="120">
+            <input type="date" id="plan-due">
+            <div class="modal-actions">
+              <button type="button" class="modal-cancel" id="modal-cancel">취소</button>
+              <button type="submit" class="modal-save">추가</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+
+    const close = () => { root.innerHTML = ''; };
+    document.getElementById('modal-overlay').addEventListener('click', (e) => {
+      if (e.target.id === 'modal-overlay') close();
+    });
+    document.getElementById('modal-cancel').addEventListener('click', close);
+
+    document.getElementById('type-opts').addEventListener('click', (e) => {
+      const btn = e.target.closest('.plan-type-opt');
+      if (!btn) return;
+      selectedType = btn.dataset.key;
+      document.getElementById('type-opts').querySelectorAll('.plan-type-opt').forEach((b) =>
+        b.classList.toggle('active', b.dataset.key === selectedType)
+      );
+    });
+
+    document.getElementById('plan-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const title = document.getElementById('plan-title').value.trim();
+      const due = document.getElementById('plan-due').value || null;
+      if (!title) return;
+      try {
+        await createPlan(goalId, { title, plan_type: selectedType, due_date: due });
+        close();
+        render();
+      } catch (err) { alert(err.message || '추가 실패'); }
+    });
+  }
+
+  function formatDate(d) {
+    return new Date(d).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' });
+  }
+  function escapeHtml(s) {
+    return (s || '').replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+
+  render();
+</script>
+
+</body>
+</html>

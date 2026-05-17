@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>친구 초대 · 잇다</title>
+  <meta name="description" content="잇다 친구를 초대하거나 초대를 수락하세요">
+  <link rel="stylesheet" href="./auth-styles.css">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  <meta name="theme-color" content="#5C8A6F">
+  <meta property="og:title" content="잇다 친구 초대">
+  <meta property="og:description" content="잇다에서 함께 기록하고 성찰해요">
+  <style>
+    .invite-card {
+      background: var(--bg-alt);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+    .invite-card-title {
+      font-family: var(--font-serif);
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+    .invite-card-desc {
+      font-size: 13.5px;
+      color: var(--ink-soft);
+      line-height: 1.65;
+      margin-bottom: 14px;
+    }
+    .invite-share-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .share-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 16px 12px;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--line);
+      background: #fff;
+      cursor: pointer;
+      font-family: inherit;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .share-btn:hover { border-color: var(--primary); background: var(--primary-soft); }
+    .share-btn-icon { font-size: 26px; }
+    .share-btn-label { font-size: 13px; font-weight: 700; }
+
+    .invite-link-box {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      padding: 10px 14px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      font-family: 'SF Mono', Menlo, monospace;
+      font-size: 12px;
+      color: var(--ink-soft);
+      margin-top: 12px;
+      overflow: hidden;
+    }
+    .invite-link-url { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .invite-link-copy {
+      flex-shrink: 0;
+      padding: 6px 12px;
+      border-radius: 8px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .invite-inviter {
+      text-align: center;
+      padding: 32px 20px 20px;
+    }
+    .invite-inviter-avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: var(--primary-soft);
+      color: var(--primary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      font-weight: 800;
+      margin-bottom: 14px;
+    }
+    .invite-inviter-name {
+      font-family: var(--font-serif);
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .invite-inviter-sub { font-size: 13.5px; color: var(--ink-soft); }
+
+    .invite-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .invite-actions button {
+      flex: 1;
+      padding: 13px 16px;
+      border-radius: var(--radius-sm);
+      border: none;
+      font-size: 14.5px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .btn-accept { background: var(--primary); color: #fff; }
+    .btn-accept:hover { background: var(--primary-hover); }
+    .btn-reject { background: var(--bg-alt); color: var(--ink-soft); border: 1px solid var(--line); }
+  </style>
+</head>
+<body>
+
+<main class="page-shell" id="main-content">
+  <div id="invite-body">
+    <div class="empty-state">
+      <div class="empty-icon">⏳</div>
+      <div class="empty-desc">불러오는 중...</div>
+    </div>
+  </div>
+</main>
+
+<script type="module">
+  import { supabase } from './auth.js';
+  import { renderNav } from './nav.js';
+  import { createFriendInvite, shareViaKakao, shareViaWebShare, fetchInviteByCode, acceptFriendInvite } from './js/friends.js';
+
+  await renderNav({ active: 'root', infoIcon: false, title: '친구 초대' });
+
+  const params = new URLSearchParams(location.search);
+  const code = (params.get('code') || '').toUpperCase();
+
+  // 코드가 있으면 수락 모드, 없으면 발급 모드
+  if (code) {
+    await renderAcceptMode(code);
+  } else {
+    await renderInviteMode();
+  }
+
+  // ===== 수락 모드 =====
+  async function renderAcceptMode(code) {
+    const body = document.getElementById('invite-body');
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (!session) {
+      localStorage.setItem('itda:pending_friend_invite', code);
+      body.innerHTML = `
+        <div class="invite-card">
+          <div class="invite-card-title">잇다에 초대받으셨어요</div>
+          <div class="invite-card-desc">로그인 또는 가입하시면 자동으로 친구가 됩니다.</div>
+          <div style="display:flex;gap:10px;">
+            <a href="./login.html?friend=${encodeURIComponent(code)}" style="flex:1;padding:13px;background:var(--primary);color:#fff;text-align:center;border-radius:12px;font-weight:700;text-decoration:none;">로그인</a>
+            <a href="./signup.html?friend=${encodeURIComponent(code)}" style="flex:1;padding:13px;background:#fff;color:var(--primary);text-align:center;border-radius:12px;font-weight:700;border:1.5px solid var(--primary);text-decoration:none;">가입하기</a>
+          </div>
+        </div>`;
+      return;
+    }
+
+    let invite;
+    try {
+      invite = await fetchInviteByCode(code);
+    } catch (err) {
+      body.innerHTML = errorCard(err.message || '초대를 불러올 수 없어요');
+      return;
+    }
+
+    if (!invite) {
+      body.innerHTML = errorCard('유효하지 않거나 만료된 초대입니다.');
+      return;
+    }
+
+    const inviter = invite.inviter || {};
+    const initial = (inviter.name?.[0] || '·').toUpperCase();
+
+    body.innerHTML = `
+      <div class="invite-inviter">
+        <div class="invite-inviter-avatar">${initial}</div>
+        <div class="invite-inviter-name">${escapeHtml(inviter.name || '잇다 사용자')}</div>
+        <div class="invite-inviter-sub">님이 친구로 초대했어요</div>
+      </div>
+      ${invite.message ? `<div class="invite-card"><div class="invite-card-desc" style="margin:0;">"${escapeHtml(invite.message)}"</div></div>` : ''}
+      <div class="invite-actions">
+        <button class="btn-reject" id="btn-reject">다음에</button>
+        <button class="btn-accept" id="btn-accept">친구 수락</button>
+      </div>
+    `;
+
+    document.getElementById('btn-accept').addEventListener('click', async () => {
+      try {
+        await acceptFriendInvite(code);
+        localStorage.removeItem('itda:pending_friend_invite');
+        body.innerHTML = `
+          <div class="invite-inviter">
+            <div class="invite-inviter-avatar" style="background:var(--success-soft);color:var(--success);">✓</div>
+            <div class="invite-inviter-name">친구가 되었습니다</div>
+            <div class="invite-inviter-sub">이제 함께 잇다에서 기록을 나눠보세요</div>
+            <div class="cta-block"><a href="./index.html">홈으로</a></div>
+          </div>`;
+      } catch (err) {
+        alert(err.message || '수락 실패');
+      }
+    });
+    document.getElementById('btn-reject').addEventListener('click', () => {
+      window.location.href = './index.html';
+    });
+  }
+
+  // ===== 발급 모드 =====
+  async function renderInviteMode() {
+    const body = document.getElementById('invite-body');
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { window.location.href = './login.html'; return; }
+
+    body.innerHTML = `
+      <div class="invite-card">
+        <div class="invite-card-title">친구를 잇다로 초대해요</div>
+        <div class="invite-card-desc">초대 링크를 카카오톡이나 다른 메신저로 공유하세요. 받은 분이 가입·로그인하면 자동으로 친구가 됩니다.</div>
+        <div class="invite-share-grid">
+          <button class="share-btn" id="share-kakao">
+            <span class="share-btn-icon">💬</span>
+            <span class="share-btn-label">카카오톡</span>
+          </button>
+          <button class="share-btn" id="share-other">
+            <span class="share-btn-icon">📤</span>
+            <span class="share-btn-label">다른 앱</span>
+          </button>
+        </div>
+        <div class="invite-link-box" id="link-box" style="display:none;">
+          <span class="invite-link-url" id="invite-url"></span>
+          <button class="invite-link-copy" id="copy-btn">복사</button>
+        </div>
+      </div>
+    `;
+
+    let currentInvite = null;
+
+    async function ensureInvite(channel) {
+      if (currentInvite) return currentInvite;
+      currentInvite = await createFriendInvite({ channel });
+      const box = document.getElementById('link-box');
+      box.style.display = 'flex';
+      document.getElementById('invite-url').textContent = currentInvite.url;
+      return currentInvite;
+    }
+
+    document.getElementById('share-kakao').addEventListener('click', async () => {
+      try {
+        const invite = await ensureInvite('kakao');
+        const name = session.user.user_metadata?.name || '';
+        await shareViaKakao({ url: invite.url, inviterName: name });
+      } catch (err) {
+        alert(err.message?.includes('Kakao') ? '카카오 SDK 설정이 필요해요. 운영자에게 문의하세요.' : (err.message || '공유 실패'));
+      }
+    });
+
+    document.getElementById('share-other').addEventListener('click', async () => {
+      try {
+        const invite = await ensureInvite('web_share');
+        const r = await shareViaWebShare({ url: invite.url, text: '잇다에서 함께 기록해요' });
+        if (r.fallback === 'clipboard') alert('링크가 클립보드에 복사되었어요.');
+      } catch (err) {
+        if (err.name !== 'AbortError') alert(err.message || '공유 실패');
+      }
+    });
+
+    document.getElementById('copy-btn').addEventListener('click', async () => {
+      const invite = await ensureInvite('link');
+      try {
+        await navigator.clipboard.writeText(invite.url);
+        const btn = document.getElementById('copy-btn');
+        const orig = btn.textContent;
+        btn.textContent = '복사됨!';
+        setTimeout(() => { btn.textContent = orig; }, 1500);
+      } catch {
+        alert('복사 실패');
+      }
+    });
+  }
+
+  function errorCard(msg) {
+    return `
+      <div class="empty-state">
+        <div class="empty-icon">🙏</div>
+        <div class="empty-title">초대를 처리할 수 없어요</div>
+        <div class="empty-desc">${escapeHtml(msg)}</div>
+        <div class="cta-block"><a href="./index.html">홈으로</a></div>
+      </div>`;
+  }
+
+  function escapeHtml(s) {
+    return (s || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+</script>
+
+</body>
+</html>

@@ -3,173 +3,118 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>잇다 — 이따가 하지 말고 지금</title>
-  <meta name="description" content="부모님의 돌봄, 나의 마무리, 함께한 기억 — 한 자리에서 한 발씩.">
-  <meta property="og:title" content="잇다 — 이따가 하지 말고 지금">
-  <meta property="og:description" content="미루지 말고 지금. 잇다는 인생의 마무리를 미리 준비하는 일을 조금 더 가볍게 만듭니다.">
+  <title>잇다 — 삶 성찰 및 미래 준비</title>
+  <meta name="description" content="라이프 · 케어링 · 커뮤니티 — 삶의 전주기를 한 곳에서.">
+  <meta property="og:title" content="잇다 — 삶 성찰 및 미래 준비">
+  <meta property="og:description" content="라이프 · 케어링 · 커뮤니티, 삶의 전주기를 한 곳에서.">
   <link rel="stylesheet" href="./auth-styles.css">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png">
+  <meta name="theme-color" content="#5C8A6F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="잇다">
   <style>
     body { background: var(--bg); }
 
-    /* 인사말 */
-    .greeting-block {
-      padding: 24px 0 8px;
-    }
+    .greeting-block { padding: 22px 0 6px; }
     .greeting-label {
-      font-size: 12.5px;
-      font-weight: 700;
-      color: var(--primary);
-      letter-spacing: 0.04em;
+      font-size: 12.5px; font-weight: 700;
+      color: var(--primary); letter-spacing: 0.04em;
       margin-bottom: 6px;
     }
     .greeting-text {
       font-family: var(--font-serif);
-      font-size: 22px;
-      font-weight: 800;
-      line-height: 1.45;
-      letter-spacing: -0.02em;
+      font-size: 22px; font-weight: 800;
+      line-height: 1.45; letter-spacing: -0.02em;
       color: var(--ink);
     }
 
-    /* 홈 카드 그리드 */
     .home-cards {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      margin-top: 22px;
+      display: flex; flex-direction: column;
+      gap: 12px; margin-top: 22px;
     }
 
-    /* 오늘 잇고 카드 (세이지 강조) */
-    .card-today {
-      background: var(--primary);
-      border-radius: var(--radius);
-      padding: 22px 22px 20px;
-      color: #fff;
-      cursor: pointer;
-      text-decoration: none;
-      display: block;
-      transition: opacity 0.15s;
-    }
-    .card-today:hover { opacity: 0.92; }
-    .card-today .card-eyebrow {
-      font-size: 11.5px;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      opacity: 0.8;
-      margin-bottom: 8px;
-    }
-    .card-today .card-question {
-      font-family: var(--font-serif);
-      font-size: 17px;
-      font-weight: 700;
-      line-height: 1.55;
-      margin-bottom: 14px;
-    }
-    .card-today .card-cta {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 13.5px;
-      font-weight: 700;
-      background: rgba(255,255,255,0.18);
-      border-radius: 999px;
-      padding: 7px 14px;
-    }
-
-    /* 돌봄 카드 */
-    .card-care {
-      background: var(--bg-alt);
+    /* 씨앗 카드 (오늘 일기) */
+    .card-seed {
+      background: linear-gradient(135deg, var(--primary), #87B59C);
       border-radius: var(--radius);
       padding: 20px 22px;
-      text-decoration: none;
-      color: inherit;
-      display: flex;
-      align-items: center;
-      gap: 16px;
+      color: #fff; cursor: pointer; text-decoration: none; display: block;
+      transition: opacity 0.15s;
+    }
+    .card-seed:hover { opacity: 0.93; color: #fff; }
+    .card-eyebrow {
+      font-size: 11.5px; font-weight: 700;
+      letter-spacing: 0.06em; opacity: 0.85; margin-bottom: 6px;
+    }
+    .card-seed-title {
+      font-family: var(--font-serif);
+      font-size: 17px; font-weight: 700;
+      line-height: 1.55; margin-bottom: 14px;
+    }
+    .card-cta {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 13.5px; font-weight: 700;
+      background: rgba(255,255,255,0.2);
+      border-radius: 999px; padding: 7px 14px;
+    }
+
+    /* 둥지 카드 */
+    .card-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .card-mini {
+      background: var(--bg-alt);
       border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px 16px;
+      text-decoration: none; color: inherit;
       transition: border-color 0.15s, box-shadow 0.15s;
     }
-    .card-care:hover {
-      border-color: var(--primary-soft);
-      box-shadow: 0 4px 16px rgba(92,138,111,0.08);
-    }
-    .card-care .card-icon-wrap {
-      width: 48px;
-      height: 48px;
-      border-radius: 14px;
+    .card-mini:hover { border-color: var(--primary-soft); box-shadow: 0 4px 16px rgba(92,138,111,0.06); }
+    .card-mini-icon {
+      width: 36px; height: 36px;
+      border-radius: 10px;
       background: var(--primary-soft);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 22px;
-      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; margin-bottom: 10px;
     }
-    .card-care .card-body { flex: 1; min-width: 0; }
-    .card-care .card-title {
-      font-size: 15px;
-      font-weight: 800;
-      letter-spacing: -0.01em;
-      margin-bottom: 3px;
+    .card-mini-icon.nest { background: var(--warm-soft); }
+    .card-mini-title {
+      font-size: 14.5px; font-weight: 800;
+      letter-spacing: -0.01em; margin-bottom: 3px;
     }
-    .card-care .card-desc {
-      font-size: 13px;
-      color: var(--ink-muted);
-      line-height: 1.5;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .card-care .card-arrow {
-      color: var(--ink-faint);
-      font-size: 18px;
-      flex-shrink: 0;
+    .card-mini-desc {
+      font-size: 12px; color: var(--ink-muted); line-height: 1.5;
     }
 
-    /* 미루지 마요 카드 (warm, 비로그인/데이터 없을 때) */
-    .card-nudge {
-      background: var(--warm-soft);
-      border: 1px solid rgba(176,112,67,0.18);
+    /* 숲 카드 (가로형) */
+    .card-forest {
+      background: var(--bg-alt);
+      border: 1px solid var(--line);
       border-radius: var(--radius);
       padding: 18px 20px;
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      cursor: pointer;
+      display: flex; align-items: center; gap: 14px;
+      text-decoration: none; color: inherit;
+      transition: border-color 0.15s;
     }
-    .card-nudge-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
-    .card-nudge-body { flex: 1; }
-    .card-nudge-title {
-      font-size: 14px;
-      font-weight: 800;
-      color: var(--warm);
-      margin-bottom: 4px;
+    .card-forest:hover { border-color: var(--primary-soft); }
+    .card-forest-icon {
+      width: 42px; height: 42px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #E8F0EE, #D5E5DD);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0;
     }
-    .card-nudge-desc {
-      font-size: 13px;
-      color: var(--ink-soft);
-      line-height: 1.6;
-    }
-    .card-nudge-action {
-      display: inline-block;
-      margin-top: 10px;
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--warm);
-      text-decoration: none;
-      border-bottom: 1.5px solid var(--warm);
-      padding-bottom: 1px;
-    }
-    .nudge-dismiss {
-      background: transparent;
-      border: none;
-      color: var(--ink-faint);
-      font-size: 18px;
-      cursor: pointer;
-      padding: 0;
-      flex-shrink: 0;
-    }
+    .card-forest-body { flex: 1; min-width: 0; }
+    .card-forest-title { font-size: 14.5px; font-weight: 800; margin-bottom: 3px; }
+    .card-forest-desc { font-size: 12.5px; color: var(--ink-muted); }
+    .card-arrow { color: var(--ink-faint); font-size: 18px; flex-shrink: 0; }
 
-    /* 온보딩 카드 (비로그인) */
+    /* 온보딩 (비로그인) */
     .card-onboard {
       background: var(--bg-alt);
       border-radius: var(--radius);
@@ -178,103 +123,44 @@
     }
     .card-onboard-title {
       font-family: var(--font-serif);
-      font-size: 18px;
-      font-weight: 800;
-      letter-spacing: -0.02em;
-      margin-bottom: 6px;
+      font-size: 19px; font-weight: 800;
+      letter-spacing: -0.02em; margin-bottom: 8px; line-height: 1.4;
     }
     .card-onboard-desc {
-      font-size: 14px;
-      color: var(--ink-soft);
-      line-height: 1.7;
-      margin-bottom: 18px;
+      font-size: 13.5px; color: var(--ink-soft);
+      line-height: 1.7; margin-bottom: 18px;
     }
-    .onboard-options {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
+    .onboard-options { display: flex; flex-direction: column; gap: 10px; }
     .onboard-opt {
-      display: flex;
-      align-items: center;
-      gap: 12px;
+      display: flex; align-items: center; gap: 12px;
       padding: 14px 16px;
       background: var(--bg);
       border: 1.5px solid var(--line);
       border-radius: var(--radius-sm);
-      cursor: pointer;
-      text-decoration: none;
-      color: inherit;
-      font-size: 14.5px;
-      font-weight: 700;
+      cursor: pointer; text-decoration: none; color: inherit;
+      font-size: 14px; font-weight: 700;
       transition: border-color 0.15s, background 0.15s;
     }
-    .onboard-opt:hover {
-      border-color: var(--primary);
-      background: var(--primary-soft);
-    }
-    .onboard-opt-icon {
-      font-size: 24px;
-      width: 40px;
-      text-align: center;
-      flex-shrink: 0;
-    }
+    .onboard-opt:hover { border-color: var(--primary); background: var(--primary-soft); }
+    .onboard-opt-icon { font-size: 22px; width: 36px; text-align: center; flex-shrink: 0; }
     .onboard-opt-text { line-height: 1.4; }
     .onboard-opt-sub {
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--ink-muted);
-      margin-top: 2px;
-      display: block;
+      font-size: 11.5px; font-weight: 500;
+      color: var(--ink-muted); margin-top: 2px; display: block;
     }
     .onboard-note {
       margin-top: 14px;
-      font-size: 12.5px;
-      color: var(--ink-muted);
+      font-size: 12.5px; color: var(--ink-muted);
       text-align: center;
     }
 
-    /* 빠른 링크 그리드 */
-    .quick-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 24px;
-    }
-    .quick-item {
-      background: var(--bg-alt);
-      border-radius: var(--radius-sm);
-      padding: 16px;
-      text-decoration: none;
-      color: inherit;
-      border: 1px solid var(--line);
-      transition: border-color 0.15s;
-    }
-    .quick-item:hover { border-color: var(--primary-soft); }
-    .quick-item-icon { font-size: 22px; margin-bottom: 8px; }
-    .quick-item-label {
-      font-size: 13.5px;
-      font-weight: 800;
-      letter-spacing: -0.01em;
-      display: block;
-      margin-bottom: 3px;
-    }
-    .quick-item-desc {
-      font-size: 12px;
-      color: var(--ink-muted);
-      line-height: 1.5;
-    }
-
     .section-label {
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      color: var(--ink-muted);
+      font-size: 12px; font-weight: 700;
+      letter-spacing: 0.06em; color: var(--ink-muted);
       text-transform: uppercase;
       margin: 28px 0 12px;
     }
 
-    /* 로딩 스켈레톤 */
     .skeleton {
       background: linear-gradient(90deg, var(--bg-alt) 25%, var(--line) 50%, var(--bg-alt) 75%);
       background-size: 200% 100%;
@@ -283,18 +169,10 @@
     }
     @keyframes shimmer { to { background-position: -200% 0; } }
   </style>
-  <link rel="manifest" href="./manifest.json">
-  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png">
-  <meta name="theme-color" content="#5C8A6F">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="잇다">
 </head>
 <body>
 
 <main class="page-shell" id="main-content">
-  <!-- JS로 렌더 -->
   <div class="greeting-block">
     <div class="greeting-label" id="greeting-label">잇다</div>
     <div class="greeting-text" id="greeting-text">잠시만요…</div>
@@ -308,8 +186,10 @@
 <script type="module">
 import { supabase } from './auth.js';
 import { renderNav } from './nav.js';
+import { registerPWA } from './js/pwa.js';
 
 await renderNav({ active: 'home', infoIcon: true });
+registerPWA();
 
 const { data: { session } } = await supabase.auth.getSession();
 const user = session?.user ?? null;
@@ -318,20 +198,22 @@ const user = session?.user ?? null;
 const greetingLabel = document.getElementById('greeting-label');
 const greetingText  = document.getElementById('greeting-text');
 const hour = new Date().getHours();
-const timeLabel = hour < 12 ? '좋은 아침이에요' : hour < 18 ? '안녕하세요' : '오늘 하루 수고하셨어요';
+const timeLabel = hour < 12 ? '좋은 아침이에요'
+              : hour < 18 ? '안녕하세요'
+              : '오늘 하루 수고하셨어요';
 
 if (user) {
   const name = user.user_metadata?.name || user.email?.split('@')[0] || '';
   greetingLabel.textContent = timeLabel;
   greetingText.innerHTML = name
-    ? `${name}님,<br>오늘도 한 발씩.`
+    ? `${escapeHtml(name)}님,<br>오늘도 한 발씩.`
     : `이따가 하지 말고,<br>오늘 한 발씩.`;
 } else {
   greetingLabel.textContent = '잇다';
-  greetingText.innerHTML = `이따가 하지 말고,<br>지금 시작해요.`;
+  greetingText.innerHTML = `라이프 · 케어링 · 커뮤니티,<br>한 곳에서.`;
 }
 
-// ── 오늘의 질문 로딩 ──
+// ── 오늘의 질문(있으면) ──
 let todayQ = null;
 try {
   const { data } = await supabase.rpc('get_todays_question');
@@ -341,139 +223,101 @@ try {
 // ── 카드 렌더 ──
 const cardsEl = document.getElementById('home-cards');
 
-// nudge 숨김 여부 (localStorage)
-const nudgeDismissed = localStorage.getItem('nudge_dismissed_until');
-const nudgeHidden = nudgeDismissed && new Date(nudgeDismissed) > new Date();
-
 if (user) {
-  // 로그인 상태
-  let html = '';
+  // 진행 중 목표·일기 카운트
+  const [diaryStats, goalStats, careStats] = await Promise.all([
+    supabase.from('diary_entries').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+    supabase.from('goals').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('status', 'active'),
+    supabase.from('care_members').select('subject_id', { count: 'exact', head: true }).eq('user_id', user.id),
+  ]);
+  const diaryCount = diaryStats?.count ?? 0;
+  const goalCount  = goalStats?.count ?? 0;
+  const careCount  = careStats?.count ?? 0;
 
-  // 1. 오늘 잇고 카드
-  html += `
-    <a href="./ask.html" class="card-today" aria-label="오늘 잇고">
-      <div class="card-eyebrow">✨ 오늘 잇고</div>
-      <div class="card-question">${todayQ?.question_text || '오늘 당신은 어떤 하루를 보냈나요?'}</div>
-      <div class="card-cta">답변 남기기 <span>→</span></div>
+  cardsEl.innerHTML = `
+    <a href="./seed.html?action=new" class="card-seed">
+      <div class="card-eyebrow">🌱 라이프 — 오늘의 일기</div>
+      <div class="card-seed-title">${todayQ?.question_text || '오늘 하루, 어떻게 보내셨나요?'}</div>
+      <div class="card-cta">한 줄 적기 <span>→</span></div>
     </a>
-  `;
 
-  // 2. 돌봄 카드
-  html += `
-    <a href="./care.html" class="card-care" aria-label="돌봄 일지">
-      <div class="card-icon-wrap">🤝</div>
-      <div class="card-body">
-        <div class="card-title">오늘 한 칸 · 돌봄</div>
-        <div class="card-desc">부모님 오늘 어떠셨어요?</div>
+    <div class="card-row">
+      <a href="./seed.html?tab=goal" class="card-mini">
+        <div class="card-mini-icon">🎯</div>
+        <div class="card-mini-title">목표 · 계획</div>
+        <div class="card-mini-desc">진행 중 ${goalCount}개</div>
+      </a>
+      <a href="./nest.html" class="card-mini">
+        <div class="card-mini-icon nest">🪺</div>
+        <div class="card-mini-title">케어링</div>
+        <div class="card-mini-desc">돌봄 대상 ${careCount}분</div>
+      </a>
+    </div>
+
+    <a href="./forest.html" class="card-forest">
+      <div class="card-forest-icon">🌳</div>
+      <div class="card-forest-body">
+        <div class="card-forest-title">커뮤니티</div>
+        <div class="card-forest-desc">콘텐츠 · 게시판 · 추모</div>
+      </div>
+      <span class="card-arrow">›</span>
+    </a>
+
+    <a href="./root.html" class="card-forest">
+      <div class="card-forest-icon" style="background:linear-gradient(135deg,#F5EFE3,#FAF6EC);">🌿</div>
+      <div class="card-forest-body">
+        <div class="card-forest-title">마이</div>
+        <div class="card-forest-desc">기록 ${diaryCount}개 · 친구 초대 · 알림 설정</div>
       </div>
       <span class="card-arrow">›</span>
     </a>
   `;
-
-  // 3. 내 마무리 카드
-  html += `
-    <a href="./self.html" class="card-care" aria-label="내 마무리">
-      <div class="card-icon-wrap" style="background:var(--warm-soft)">🕊</div>
-      <div class="card-body">
-        <div class="card-title">나의 삶</div>
-        <div class="card-desc">미리 정리해두면 가족이 편해요</div>
-      </div>
-      <span class="card-arrow">›</span>
-    </a>
-  `;
-
-  // 4. nudge 카드 (7일 숨김 아니면 표시)
-  if (!nudgeHidden) {
-    html += `
-      <div class="card-nudge" id="nudge-card">
-        <div class="card-nudge-icon">⏰</div>
-        <div class="card-nudge-body">
-          <div class="card-nudge-title">미루지 마요</div>
-          <div class="card-nudge-desc">사전연명의료의향서, 아직 작성 전이시죠?<br>5분이면 충분해요.</div>
-          <a href="./self.html" class="card-nudge-action">지금 시작하기</a>
-        </div>
-        <button class="nudge-dismiss" id="nudge-dismiss-btn" aria-label="닫기">✕</button>
-      </div>
-    `;
-  }
-
-  cardsEl.innerHTML = html;
-
-  // nudge 카드 전체 클릭 → self.html
-  document.getElementById('nudge-card')?.addEventListener('click', (e) => {
-    if (e.target.closest('.nudge-dismiss')) return; // X 버튼은 제외
-    window.location.href = './self.html';
-  });
-  // nudge 닫기
-  document.getElementById('nudge-dismiss-btn')?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    const d = new Date();
-    d.setDate(d.getDate() + 7);
-    localStorage.setItem('nudge_dismissed_until', d.toISOString());
-    document.getElementById('nudge-card')?.remove();
-  });
-
 } else {
-  // 비로그인 — 온보딩 카드
+  // 비로그인 온보딩
   cardsEl.innerHTML = `
     <div class="card-onboard">
-      <div class="card-onboard-title">오늘 어떤 마음으로<br>오셨어요?</div>
-      <div class="card-onboard-desc">잇다는 두 가지 모두 함께 하실 수 있어요.</div>
+      <div class="card-onboard-title">라이프 · 케어링 · 커뮤니티<br>한 곳에서</div>
+      <div class="card-onboard-desc">잇다는 삶을 성찰하고 미래를 준비하는 통합 플랫폼입니다.</div>
       <div class="onboard-options">
-        <a href="./signup.html?mode=care" class="onboard-opt">
-          <div class="onboard-opt-icon">🤝</div>
+        <a href="./signup.html?mode=seed" class="onboard-opt">
+          <div class="onboard-opt-icon">🌱</div>
           <div class="onboard-opt-text">
-            부모님 안부를 함께 기록하고 싶어요
-            <span class="onboard-opt-sub">돌봄 일지 · 가족 초대 · 안심 정보</span>
+            매일 기록하고 목표를 세우고 싶어요
+            <span class="onboard-opt-sub">라이프 — 일기 · 3·6·12·60개월 계획</span>
           </div>
         </a>
-        <a href="./signup.html?mode=self" class="onboard-opt">
-          <div class="onboard-opt-icon">🕊</div>
+        <a href="./signup.html?mode=nest" class="onboard-opt">
+          <div class="onboard-opt-icon">🪺</div>
           <div class="onboard-opt-text">
-            나의 의향을 미리 정리하려고요
-            <span class="onboard-opt-sub">나의 삶 · 디지털 자산 · 가족 메시지</span>
+            가족 돌봄을 함께 기록하고 싶어요
+            <span class="onboard-opt-sub">케어링 — 돌봄 일지 · 가족 초대 · 응급</span>
           </div>
         </a>
-        <a href="./stories.html" class="onboard-opt" style="border-style:dashed;">
-          <div class="onboard-opt-icon">🌿</div>
+        <a href="./signup.html?mode=forest" class="onboard-opt">
+          <div class="onboard-opt-icon">🌳</div>
           <div class="onboard-opt-text">
-            먼저 둘러볼게요
-            <span class="onboard-opt-sub">가입 없이 기억·정보 탐색 가능</span>
+            먼저 둘러보고 싶어요
+            <span class="onboard-opt-sub">커뮤니티 — 콘텐츠 · 게시판 · 추모</span>
           </div>
         </a>
       </div>
       <div class="onboard-note">이미 계정이 있으시면 <a href="./login.html" style="color:var(--primary);font-weight:700;">로그인</a></div>
     </div>
+
+    <a href="./forest.html" class="card-forest" style="margin-top:14px;">
+      <div class="card-forest-icon">🌳</div>
+      <div class="card-forest-body">
+        <div class="card-forest-title">커뮤니티 둘러보기</div>
+        <div class="card-forest-desc">가입 없이 콘텐츠와 대화 탐색</div>
+      </div>
+      <span class="card-arrow">›</span>
+    </a>
   `;
 }
 
-// ── 빠른 링크 ──
-const quickHtml = `
-  <div class="section-label">바로가기</div>
-  <div class="quick-grid">
-    <a href="./stories.html" class="quick-item">
-      <div class="quick-item-icon">🌿</div>
-      <span class="quick-item-label">기억</span>
-      <div class="quick-item-desc">함께한 시간의 이야기</div>
-    </a>
-    <a href="./info.html" class="quick-item">
-      <div class="quick-item-icon">📚</div>
-      <span class="quick-item-label">정보</span>
-      <div class="quick-item-desc">미리·곁에·떠난 뒤</div>
-    </a>
-    <a href="./info/advance-directive.html" class="quick-item">
-      <div class="quick-item-icon">🩺</div>
-      <span class="quick-item-label">사전연명의향서</span>
-      <div class="quick-item-desc">가까운 등록기관 찾기</div>
-    </a>
-    <a href="./info/long-term-care.html" class="quick-item">
-      <div class="quick-item-icon">🏥</div>
-      <span class="quick-item-label">장기요양보험</span>
-      <div class="quick-item-desc">등급·신청 안내</div>
-    </a>
-  </div>
-`;
-document.getElementById('main-content').insertAdjacentHTML('beforeend', quickHtml);
+function escapeHtml(s) {
+  return (s || '').replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
 </script>
 
 <script src="./scroll-top.js" defer></script>

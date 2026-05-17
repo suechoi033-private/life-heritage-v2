@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>일기 쓰기 · 잇다</title>
+  <link rel="stylesheet" href="./auth-styles.css">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  <meta name="theme-color" content="#5C8A6F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="잇다">
+  <style>
+    .form-group { margin-bottom: 18px; }
+    .form-label {
+      display: block;
+      font-size: 12.5px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      color: var(--ink-soft);
+      margin-bottom: 8px;
+    }
+
+    /* 템플릿 선택 */
+    .template-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+    .template-opt {
+      padding: 12px 8px;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--line);
+      background: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink-soft);
+      cursor: pointer;
+      font-family: inherit;
+      text-align: center;
+      transition: all 0.15s;
+    }
+    .template-opt.active {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+      color: var(--primary);
+    }
+    .template-prompt {
+      margin-top: 10px;
+      padding: 12px 14px;
+      background: var(--primary-soft);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      color: var(--primary);
+      line-height: 1.55;
+    }
+
+    /* 날짜 */
+    .date-input {
+      padding: 11px 14px;
+      border: 1.5px solid var(--line);
+      border-radius: var(--radius-sm);
+      font-size: 14.5px;
+      font-family: inherit;
+      width: 100%;
+      background: #fff;
+    }
+
+    /* 제목·본문 */
+    .title-input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid var(--line);
+      border-radius: var(--radius-sm);
+      font-size: 16px;
+      font-weight: 700;
+      font-family: inherit;
+      background: #fff;
+    }
+    .title-input:focus { outline: none; border-color: var(--primary); }
+    .body-input {
+      width: 100%;
+      min-height: 200px;
+      padding: 14px;
+      border: 1.5px solid var(--line);
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+      line-height: 1.7;
+      font-family: inherit;
+      resize: vertical;
+      background: #fff;
+    }
+    .body-input:focus { outline: none; border-color: var(--primary); }
+
+    /* 태그 컴포넌트 */
+    .tag-input-wrap { display: flex; flex-direction: column; gap: 10px; }
+    .tag-chips { display: flex; flex-wrap: wrap; gap: 6px; min-height: 24px; }
+    .tag-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      border-radius: 999px;
+      font-size: 12.5px;
+      font-weight: 700;
+    }
+    .tag-chip-x {
+      background: transparent;
+      border: none;
+      color: var(--primary);
+      font-size: 16px;
+      cursor: pointer;
+      padding: 0 0 0 4px;
+      line-height: 1;
+    }
+    .tag-input-row { display: flex; gap: 6px; }
+    .tag-input {
+      flex: 1;
+      padding: 9px 12px;
+      border: 1.5px solid var(--line);
+      border-radius: var(--radius-sm);
+      font-size: 13.5px;
+      font-family: inherit;
+    }
+    .tag-suggestions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .tag-sug-label { font-size: 11.5px; color: var(--ink-muted); }
+    .tag-sug {
+      background: #fff;
+      border: 1px solid var(--line);
+      color: var(--ink-soft);
+      padding: 4px 9px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .tag-sug:hover { border-color: var(--primary); color: var(--primary); }
+
+    .emotion-presets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .emotion-preset {
+      background: #fff;
+      border: 1.5px solid var(--line);
+      padding: 7px 12px;
+      border-radius: 999px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .emotion-preset:hover { border-color: var(--warm); color: var(--warm); }
+
+    /* 미디어 업로더 */
+    .media-uploader { display: flex; flex-direction: column; gap: 10px; }
+    .media-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .media-cell {
+      position: relative;
+      aspect-ratio: 1 / 1;
+      border-radius: 10px;
+      overflow: hidden;
+      background: var(--bg-alt);
+      border: 1px solid var(--line);
+    }
+    .media-cell img, .media-cell video {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+    .media-cell.media-pending { opacity: 0.6; }
+    .media-pending-tag {
+      position: absolute;
+      bottom: 6px; left: 6px;
+      background: rgba(0,0,0,0.7);
+      color: #fff;
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+    }
+    .media-remove {
+      position: absolute;
+      top: 6px; right: 6px;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.65);
+      color: #fff;
+      border: none;
+      font-size: 14px;
+      line-height: 1;
+      cursor: pointer;
+    }
+    .media-add {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px;
+      background: var(--bg-alt);
+      border: 1.5px dashed var(--line);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--ink-soft);
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .media-add:hover { border-color: var(--primary); color: var(--primary); }
+    .media-add-icon { font-size: 20px; line-height: 1; }
+    .media-progress {
+      font-size: 12px;
+      color: var(--ink-muted);
+      text-align: center;
+    }
+
+    /* 공개범위 */
+    .visibility-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+    .vis-opt {
+      padding: 12px 8px;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--line);
+      background: #fff;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+      text-align: center;
+    }
+    .vis-opt.active { border-color: var(--primary); background: var(--primary-soft); }
+    .vis-opt-icon { font-size: 20px; }
+    .vis-opt-label { font-size: 12.5px; font-weight: 700; color: var(--ink-soft); margin-top: 4px; }
+    .vis-opt.active .vis-opt-label { color: var(--primary); }
+
+    /* 액션바 */
+    .action-bar {
+      position: sticky;
+      bottom: 0;
+      background: var(--bg);
+      padding: 14px 0 calc(14px + env(safe-area-inset-bottom, 0px));
+      border-top: 1px solid var(--line);
+      display: flex;
+      gap: 10px;
+      margin: 24px -20px -32px;
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+    .action-bar button {
+      flex: 1;
+      padding: 13px 16px;
+      border-radius: var(--radius-sm);
+      border: none;
+      font-size: 14.5px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .btn-save  { background: var(--primary); color: #fff; }
+    .btn-save:hover  { background: var(--primary-hover); }
+    .btn-save:disabled { opacity: 0.5; cursor: wait; }
+    .btn-cancel { background: var(--bg-alt); color: var(--ink-soft); border: 1px solid var(--line); }
+    .btn-delete { background: var(--danger-soft); color: var(--danger); border: 1px solid var(--danger-soft); flex: 0 0 auto; padding: 13px 18px; }
+
+    body.has-bottom-nav { padding-bottom: 0; }
+    .itda-bottom-nav { display: none !important; }
+  </style>
+</head>
+<body>
+
+<main class="page-shell" id="main-content">
+  <form id="diary-form">
+    <div class="form-group">
+      <label class="form-label">날짜</label>
+      <input type="date" class="date-input" id="entry-date" required>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">템플릿</label>
+      <div class="template-options" id="template-options"></div>
+      <div class="template-prompt" id="template-prompt"></div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="title">제목 (선택)</label>
+      <input type="text" class="title-input" id="title" placeholder="짧은 제목">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="content">내용</label>
+      <textarea class="body-input" id="content" placeholder="떠오르는 대로 적어보세요"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">감정 태그</label>
+      <div id="emotion-tags"></div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">키워드 태그</label>
+      <div id="keyword-tags"></div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">사진·동영상</label>
+      <div id="media-uploader"></div>
+    </div>
+
+    <div class="form-group" id="link-goal-group" style="display:none;">
+      <label class="form-label">관련 목표 (선택)</label>
+      <select id="link-goal" class="date-input"></select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">공개 범위</label>
+      <div class="visibility-options" id="visibility-options"></div>
+    </div>
+
+    <div class="action-bar">
+      <button type="button" class="btn-cancel" id="btn-cancel">취소</button>
+      <button type="button" class="btn-delete" id="btn-delete" style="display:none;">삭제</button>
+      <button type="submit" class="btn-save" id="btn-save">저장</button>
+    </div>
+  </form>
+</main>
+
+<script type="module">
+  import { supabase } from './auth.js';
+  import { renderNav } from './nav.js';
+  import {
+    TEMPLATES, VISIBILITY,
+    getDiary, createDiary, updateDiary, deleteDiary, syncDiaryTags,
+  } from './js/diary.js';
+  import { createTagInput, listMyTags, ensureTags } from './js/tags.js';
+  import { createMediaUploader } from './js/media-upload.js';
+  import { listMyGoals, linkDiaryToGoal, unlinkDiaryFromGoal, AREAS } from './js/goals.js';
+
+  await renderNav({ active: 'seed', infoIcon: false, title: '일기 쓰기' });
+
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) { window.location.href = './login.html'; throw new Error('로그인 필요'); }
+
+  const params = new URLSearchParams(location.search);
+  const editId = params.get('id');
+  const queryDate = params.get('date');
+  const isEdit = !!editId;
+
+  let state = {
+    entry_date: queryDate || new Date().toISOString().slice(0, 10),
+    template_type: 'daily',
+    title: '',
+    content: '',
+    visibility: 'private',
+    mediaInitial: [],
+    emotionInitial: [],
+    keywordInitial: [],
+  };
+
+  if (isEdit) {
+    const existing = await getDiary(editId);
+    if (!existing || existing.user_id !== session.user.id) {
+      alert('일기를 불러올 수 없습니다');
+      window.location.href = './seed.html';
+      throw new Error('not found');
+    }
+    state = {
+      ...state,
+      entry_date: existing.entry_date,
+      template_type: existing.template_type,
+      title: existing.title || '',
+      content: existing.content || '',
+      visibility: existing.visibility,
+      mediaInitial: existing.media,
+      emotionInitial: existing.tags.filter((t) => t.tag_type === 'emotion'),
+      keywordInitial: existing.tags.filter((t) => t.tag_type === 'keyword'),
+    };
+    document.getElementById('btn-delete').style.display = '';
+  }
+
+  // ── 폼 초기 렌더 ──
+  document.getElementById('entry-date').value = state.entry_date;
+  document.getElementById('title').value = state.title;
+  document.getElementById('content').value = state.content;
+
+  // 템플릿
+  const tplEl = document.getElementById('template-options');
+  const tplPromptEl = document.getElementById('template-prompt');
+  tplEl.innerHTML = Object.entries(TEMPLATES).map(([key, v]) =>
+    `<button type="button" class="template-opt ${key === state.template_type ? 'active' : ''}" data-key="${key}">${v.label}</button>`
+  ).join('');
+  function refreshTplPrompt() {
+    tplPromptEl.textContent = TEMPLATES[state.template_type].prompt;
+  }
+  refreshTplPrompt();
+  tplEl.addEventListener('click', (e) => {
+    const btn = e.target.closest('.template-opt');
+    if (!btn) return;
+    state.template_type = btn.dataset.key;
+    tplEl.querySelectorAll('.template-opt').forEach((b) => b.classList.toggle('active', b.dataset.key === state.template_type));
+    refreshTplPrompt();
+  });
+
+  // 공개범위
+  const visEl = document.getElementById('visibility-options');
+  visEl.innerHTML = Object.entries(VISIBILITY).map(([key, v]) => `
+    <button type="button" class="vis-opt ${key === state.visibility ? 'active' : ''}" data-key="${key}">
+      <div class="vis-opt-icon">${v.icon}</div>
+      <div class="vis-opt-label">${v.label}</div>
+    </button>
+  `).join('');
+  visEl.addEventListener('click', (e) => {
+    const btn = e.target.closest('.vis-opt');
+    if (!btn) return;
+    state.visibility = btn.dataset.key;
+    visEl.querySelectorAll('.vis-opt').forEach((b) => b.classList.toggle('active', b.dataset.key === state.visibility));
+  });
+
+  // 태그
+  const [keywordSugs, emotionSugs] = await Promise.all([
+    listMyTags('keyword'),
+    listMyTags('emotion'),
+  ]);
+  const emotionTagInput = createTagInput(document.getElementById('emotion-tags'), {
+    tagType: 'emotion',
+    initial: state.emotionInitial,
+    suggestions: emotionSugs,
+  });
+  const keywordTagInput = createTagInput(document.getElementById('keyword-tags'), {
+    tagType: 'keyword',
+    initial: state.keywordInitial,
+    suggestions: keywordSugs,
+  });
+
+  // 미디어
+  const uploader = createMediaUploader(document.getElementById('media-uploader'), {
+    bucket: 'diary-media',
+    scope: 'diary',
+    maxFiles: 6,
+    initial: state.mediaInitial,
+  });
+
+  // 관련 목표 (있을 때만 표시)
+  const myGoals = await listMyGoals({ status: 'active' });
+  let linkedGoalIds = [];
+  if (isEdit) {
+    // 기존 연결된 목표 조회
+    const { data: links } = await supabase.from('diary_goal_links')
+      .select('goal_id').eq('diary_id', editId);
+    linkedGoalIds = (links || []).map((l) => l.goal_id);
+  }
+  if (myGoals.length) {
+    const grp = document.getElementById('link-goal-group');
+    grp.style.display = '';
+    const sel = document.getElementById('link-goal');
+    sel.innerHTML = `<option value="">— 선택 안 함 —</option>` + myGoals.map((g) =>
+      `<option value="${g.id}" ${linkedGoalIds.includes(g.id) ? 'selected' : ''}>${AREAS[g.area].icon} ${escapeHtml(g.title)}</option>`
+    ).join('');
+  }
+  function escapeHtml(s) {
+    return (s || '').replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+
+  // 액션
+  document.getElementById('btn-cancel').addEventListener('click', () => {
+    if (confirm('작성을 취소하시겠어요?')) window.location.href = './seed.html';
+  });
+
+  document.getElementById('btn-delete').addEventListener('click', async () => {
+    if (!confirm('이 일기를 삭제하시겠어요? 되돌릴 수 없어요.')) return;
+    try {
+      await deleteDiary(editId);
+      window.location.href = './seed.html';
+    } catch (err) { alert(err.message || '삭제 실패'); }
+  });
+
+  document.getElementById('diary-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btn-save');
+    btn.disabled = true; btn.textContent = '저장 중...';
+
+    try {
+      if (uploader.isUploading()) {
+        alert('업로드가 끝날 때까지 기다려주세요');
+        btn.disabled = false; btn.textContent = '저장'; return;
+      }
+
+      const payload = {
+        entry_date: document.getElementById('entry-date').value,
+        template_type: state.template_type,
+        title: document.getElementById('title').value.trim() || null,
+        content: document.getElementById('content').value,
+        visibility: state.visibility,
+      };
+
+      let entry;
+      if (isEdit) {
+        entry = await updateDiary(editId, payload);
+      } else {
+        entry = await createDiary(payload);
+      }
+
+      // 태그 ensure + 동기화
+      const allTagsInput = [...emotionTagInput.getValue(), ...keywordTagInput.getValue()];
+      const ensuredTags = await ensureTags(allTagsInput);
+      await syncDiaryTags(entry.id, ensuredTags.map((t) => t.id));
+
+      // 미디어 동기화 — 이번 PR에선 단순화: 신규는 모두 insert, 기존도 그대로 둠
+      const mediaItems = uploader.getValue();
+      if (isEdit) {
+        await supabase.from('diary_media').delete().eq('entry_id', entry.id);
+      }
+      if (mediaItems.length) {
+        await supabase.from('diary_media').insert(
+          mediaItems.map((m) => ({ entry_id: entry.id, storage_path: m.storage_path, media_type: m.media_type, sort_order: m.sort_order }))
+        );
+      }
+
+      // 관련 목표 연결 동기화 (단일 선택 단순화)
+      const newGoalId = document.getElementById('link-goal')?.value || '';
+      const wasLinked = linkedGoalIds[0];
+      if (wasLinked && wasLinked !== newGoalId) {
+        await unlinkDiaryFromGoal(entry.id, wasLinked);
+      }
+      if (newGoalId && newGoalId !== wasLinked) {
+        await linkDiaryToGoal(entry.id, newGoalId);
+      }
+
+      window.location.href = `./diary-detail.html?id=${entry.id}`;
+    } catch (err) {
+      alert(err.message || '저장 실패');
+      btn.disabled = false; btn.textContent = '저장';
+    }
+  });
+</script>
+
+</body>
+</html>

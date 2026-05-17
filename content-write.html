@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>콘텐츠 쓰기 · 잇다</title>
+  <link rel="stylesheet" href="./auth-styles.css">
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#5C8A6F">
+  <style>
+    .form-group { margin-bottom: 18px; }
+    .form-label {
+      display: block; font-size: 12.5px; font-weight: 800;
+      letter-spacing: 0.02em; color: var(--ink-soft); margin-bottom: 8px;
+    }
+    .title-input, .body-input {
+      width: 100%; padding: 12px 14px;
+      border: 1.5px solid var(--line); border-radius: var(--radius-sm);
+      font-family: inherit; background: #fff;
+    }
+    .title-input { font-size: 17px; font-weight: 800; }
+    .body-input { font-size: 15px; line-height: 1.75; min-height: 240px; resize: vertical; }
+    .title-input:focus, .body-input:focus { outline: none; border-color: var(--primary); }
+
+    .cat-options { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+    .cat-opt {
+      padding: 11px 4px;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--line);
+      background: #fff;
+      font-size: 12.5px; font-weight: 700;
+      color: var(--ink-soft); cursor: pointer; font-family: inherit;
+      text-align: center;
+    }
+    .cat-opt.active { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); }
+
+    .info-banner {
+      background: var(--warm-soft);
+      border: 1px solid rgba(176,112,67,0.18);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      font-size: 12.5px;
+      color: var(--warm);
+      line-height: 1.6;
+      margin-bottom: 18px;
+    }
+
+    .action-bar {
+      position: sticky; bottom: 0; background: var(--bg);
+      padding: 14px 0 calc(14px + env(safe-area-inset-bottom, 0px));
+      border-top: 1px solid var(--line);
+      display: flex; gap: 10px;
+      margin: 24px -20px -32px; padding-left: 20px; padding-right: 20px;
+    }
+    .action-bar button {
+      flex: 1; padding: 13px 16px; border-radius: var(--radius-sm); border: none;
+      font-size: 14.5px; font-weight: 700; cursor: pointer; font-family: inherit;
+    }
+    .btn-save { background: var(--primary); color: #fff; }
+    .btn-save:disabled { opacity: 0.5; }
+    .btn-cancel { background: var(--bg-alt); color: var(--ink-soft); border: 1px solid var(--line); }
+    .btn-delete { background: var(--danger-soft); color: var(--danger); flex: 0 0 auto; padding: 13px 18px; }
+    body.has-bottom-nav { padding-bottom: 0; }
+    .itda-bottom-nav { display: none !important; }
+  </style>
+</head>
+<body>
+
+<main class="page-shell">
+  <div class="info-banner">
+    🌿 좋은 콘텐츠는 운영자가 검토 후 <strong>공식 콘텐츠</strong>로 격상될 수 있어요. 그 경우 작가 뱃지와 별도 베네핏을 안내드립니다.
+  </div>
+  <form id="content-form">
+    <div class="form-group">
+      <label class="form-label">카테고리</label>
+      <div class="cat-options" id="cat-options"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="title">제목</label>
+      <input type="text" class="title-input" id="title" placeholder="콘텐츠 제목" required maxlength="120">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="body">본문</label>
+      <textarea class="body-input" id="body" placeholder="경험·정보·통찰을 자유롭게 나눠보세요" required></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="source_url">참고 출처 (선택)</label>
+      <input type="url" class="title-input" id="source_url" placeholder="https://" style="font-size:13px;font-weight:600;">
+    </div>
+
+    <div class="action-bar">
+      <button type="button" class="btn-cancel" id="btn-cancel">취소</button>
+      <button type="button" class="btn-delete" id="btn-delete" style="display:none;">삭제</button>
+      <button type="submit" class="btn-save" id="btn-save">발행</button>
+    </div>
+  </form>
+</main>
+
+<script type="module">
+  import { supabase } from './auth.js';
+  import { renderNav } from './nav.js';
+  import { CATEGORIES, getContent, createContent, updateContent, deleteContent } from './js/content.js';
+
+  await renderNav({ active: 'forest', infoIcon: false, title: '콘텐츠 쓰기' });
+
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) { window.location.href = './login.html'; throw new Error('로그인 필요'); }
+
+  const params = new URLSearchParams(location.search);
+  const editId = params.get('id');
+  const isEdit = !!editId;
+
+  let state = { category: params.get('category') || 'reflection', title: '', body: '', source_url: '' };
+
+  if (isEdit) {
+    const c = await getContent(editId);
+    if (!c || c.creator_id !== session.user.id) {
+      alert('수정 권한이 없거나 콘텐츠를 찾을 수 없습니다');
+      window.location.href = './forest.html';
+      throw new Error('not authorized');
+    }
+    state = { category: c.category, title: c.title, body: c.body, source_url: c.source_url || '' };
+    document.getElementById('btn-delete').style.display = '';
+  }
+
+  // 카테고리 (memorial 제외 — 별도 추모 작성 흐름 권장)
+  const optsWithoutMemorial = Object.entries(CATEGORIES).filter(([k]) => k !== 'memorial');
+  const catEl = document.getElementById('cat-options');
+  catEl.innerHTML = optsWithoutMemorial.map(([key, v]) =>
+    `<button type="button" class="cat-opt ${key === state.category ? 'active' : ''}" data-key="${key}">${v.icon} ${v.label}</button>`
+  ).join('');
+  catEl.addEventListener('click', (e) => {
+    const btn = e.target.closest('.cat-opt');
+    if (!btn) return;
+    state.category = btn.dataset.key;
+    catEl.querySelectorAll('.cat-opt').forEach((b) => b.classList.toggle('active', b.dataset.key === state.category));
+  });
+
+  document.getElementById('title').value = state.title;
+  document.getElementById('body').value = state.body;
+  document.getElementById('source_url').value = state.source_url || '';
+
+  document.getElementById('btn-cancel').addEventListener('click', () => {
+    if (confirm('작성을 취소하시겠어요?')) window.location.href = './forest.html';
+  });
+  document.getElementById('btn-delete').addEventListener('click', async () => {
+    if (!confirm('이 콘텐츠를 삭제하시겠어요?')) return;
+    try { await deleteContent(editId); window.location.href = './forest.html'; }
+    catch (err) { alert(err.message); }
+  });
+
+  document.getElementById('content-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btn-save');
+    btn.disabled = true; btn.textContent = '저장 중...';
+
+    const payload = {
+      category: state.category,
+      title: document.getElementById('title').value.trim(),
+      body: document.getElementById('body').value,
+      source_url: document.getElementById('source_url').value.trim() || null,
+    };
+
+    try {
+      let c;
+      if (isEdit) c = await updateContent(editId, payload);
+      else c = await createContent(payload);
+      window.location.href = `./content-detail.html?id=${c.id}`;
+    } catch (err) {
+      alert(err.message);
+      btn.disabled = false; btn.textContent = '발행';
+    }
+  });
+</script>
+
+</body>
+</html>
