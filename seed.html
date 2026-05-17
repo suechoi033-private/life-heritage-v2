@@ -518,9 +518,8 @@
     window.location.href = './diary-write.html';
   }
   const initialTab = params.get('tab') === 'goal' ? 'goal' : 'diary';
-  setActiveTab(initialTab);
-
   let currentTab = 'diary';
+  setActiveTab(initialTab);
 
   document.getElementById('tab-diary').addEventListener('click', () => setActiveTab('diary'));
   document.getElementById('tab-goal').addEventListener('click', () => setActiveTab('goal'));
