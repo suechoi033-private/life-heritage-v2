@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>마이 · 잇다</title>
-  <meta name="description" content="프로필 · 친구 · 알림 · 설정">
+  <meta name="description" content="프로필 · 활동 · 친구 · 알림 · 설정">
   <link rel="stylesheet" href="./auth-styles.css">
   <link rel="manifest" href="./manifest.json">
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
@@ -12,77 +12,238 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="잇다">
   <style>
-    .root-profile {
+    /* 프로필 */
+    .my-profile {
       display: flex;
       align-items: center;
       gap: 14px;
-      padding: 20px 4px 18px;
-      margin-bottom: 6px;
+      padding: 18px 4px 16px;
     }
-    .root-avatar {
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
-      background: var(--primary-soft);
-      color: var(--primary);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-      font-weight: 800;
+    .my-avatar {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: var(--primary-soft); color: var(--primary);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 24px; font-weight: 800;
+      flex-shrink: 0;
     }
-    .root-name { font-size: 17px; font-weight: 800; letter-spacing: -0.01em; }
-    .root-email { font-size: 12.5px; color: var(--ink-muted); margin-top: 3px; }
+    .my-name { font-size: 17px; font-weight: 800; letter-spacing: -0.01em; }
+    .my-email { font-size: 12.5px; color: var(--ink-muted); margin-top: 3px; }
+    .my-edit-btn {
+      margin-left: auto;
+      background: transparent; border: 1px solid var(--line);
+      padding: 6px 12px; border-radius: 999px;
+      font-size: 12px; font-weight: 700; color: var(--ink-soft);
+      cursor: pointer; font-family: inherit;
+    }
+    .my-edit-btn:hover { border-color: var(--primary); color: var(--primary); }
 
-    .root-menu {
+    /* 통계 그리드 */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+    .stat-cell {
+      background: var(--bg-alt);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 6px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s;
+      text-decoration: none; color: inherit;
+    }
+    .stat-cell:hover { border-color: var(--primary-soft); }
+    .stat-num {
+      font-family: var(--font-serif);
+      font-size: 20px; font-weight: 800;
+      color: var(--primary); line-height: 1;
+    }
+    .stat-label { font-size: 11px; color: var(--ink-muted); margin-top: 4px; }
+
+    /* 활동 탭 */
+    .activity-tabs {
+      display: flex; gap: 6px;
+      overflow-x: auto;
+      padding: 4px 0 14px;
+      margin: 0 -4px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .activity-tabs::-webkit-scrollbar { display: none; }
+    .activity-tab {
+      flex-shrink: 0;
+      padding: 7px 14px;
+      border-radius: 999px;
+      background: var(--bg-alt);
+      border: 1px solid var(--line);
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--ink-soft);
+      cursor: pointer;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+    .activity-tab.active {
+      background: var(--primary); color: #fff; border-color: var(--primary);
+    }
+
+    /* 활동 카드 (일관) */
+    .activity-card {
+      display: block;
+      background: var(--bg-alt);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      margin-bottom: 8px;
+      text-decoration: none; color: inherit;
+      transition: border-color 0.15s;
+    }
+    .activity-card:hover { border-color: var(--primary-soft); }
+    .activity-meta {
+      display: flex; gap: 8px;
+      font-size: 11.5px; color: var(--ink-muted);
+      margin-bottom: 4px; align-items: center;
+      flex-wrap: wrap;
+    }
+    .activity-meta-chip {
+      padding: 1px 7px;
+      border-radius: 999px;
+      background: #fff;
+      font-weight: 700;
+      font-size: 10.5px;
+    }
+    .activity-chip-answer { background: linear-gradient(135deg, #9A6BB8, #B58FCB); color: #fff; }
+    .activity-chip-diary  { background: var(--primary-soft); color: var(--primary); }
+    .activity-chip-post   { background: var(--bg-alt); color: var(--ink-soft); }
+    .activity-title {
+      font-size: 14px; font-weight: 700;
+      letter-spacing: -0.01em;
+      line-height: 1.4;
+      margin-bottom: 3px;
+    }
+    .activity-excerpt {
+      font-size: 12.5px; color: var(--ink-soft);
+      line-height: 1.55;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* 친구 그리드 */
+    .friend-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+    .friend-cell {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 6px;
+      padding: 12px 4px;
+      background: var(--bg-alt);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      text-decoration: none; color: inherit;
+    }
+    .friend-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--primary-soft); color: var(--primary);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 17px; font-weight: 800;
+    }
+    .friend-name {
+      font-size: 12px; font-weight: 700;
+      text-align: center;
+      max-width: 100%;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+
+    /* 메뉴 박스 */
+    .my-menu {
       background: var(--bg-alt);
       border: 1px solid var(--line);
       border-radius: var(--radius);
       overflow: hidden;
       margin-bottom: 12px;
+      margin-top: 14px;
     }
-    .root-menu a, .root-menu button {
-      display: flex;
-      align-items: center;
-      width: 100%;
-      padding: 14px 18px;
-      text-decoration: none;
-      color: var(--ink);
-      font-size: 14.5px;
-      font-weight: 600;
-      background: transparent;
-      border: none;
+    .my-menu a, .my-menu button {
+      display: flex; align-items: center;
+      width: 100%; padding: 14px 18px;
+      text-decoration: none; color: var(--ink);
+      font-size: 14px; font-weight: 600;
+      background: transparent; border: none;
       border-bottom: 1px solid var(--line);
-      cursor: pointer;
-      font-family: inherit;
+      cursor: pointer; font-family: inherit;
       transition: background 0.12s;
     }
-    .root-menu a:hover, .root-menu button:hover { background: rgba(0,0,0,0.025); }
-    .root-menu a:last-child, .root-menu button:last-child { border-bottom: none; }
-    .root-menu .menu-icon { font-size: 18px; width: 28px; }
-    .root-menu .menu-arrow { margin-left: auto; color: var(--ink-faint); }
+    .my-menu a:hover, .my-menu button:hover { background: rgba(0,0,0,0.025); }
+    .my-menu a:last-child, .my-menu button:last-child { border-bottom: none; }
+    .my-menu .menu-icon { font-size: 18px; width: 28px; }
+    .my-menu .menu-arrow { margin-left: auto; color: var(--ink-faint); }
+
+    .section-head {
+      display: flex; align-items: baseline; justify-content: space-between;
+      margin: 18px 0 10px;
+    }
+    .section-title { font-size: 14px; font-weight: 800; }
+    .section-more {
+      font-size: 12px; font-weight: 700;
+      color: var(--primary); text-decoration: none;
+    }
+
+    .empty-activity {
+      padding: 24px 12px;
+      text-align: center;
+      color: var(--ink-muted);
+      font-size: 13px;
+      background: var(--bg-alt);
+      border-radius: var(--radius-sm);
+    }
   </style>
 </head>
 <body>
 
 <main class="page-shell" id="main-content">
-  <div class="root-profile">
-    <div class="root-avatar" id="root-avatar">👤</div>
+  <!-- 프로필 -->
+  <div class="my-profile">
+    <div class="my-avatar" id="my-avatar">·</div>
     <div>
-      <div class="root-name" id="root-name">불러오는 중...</div>
-      <div class="root-email" id="root-email"></div>
+      <div class="my-name" id="my-name">불러오는 중...</div>
+      <div class="my-email" id="my-email"></div>
     </div>
   </div>
 
-  <div class="root-menu">
+  <!-- 통계 4칸 -->
+  <div class="stat-grid" id="stat-grid">
+    <a class="stat-cell" href="./seed.html"><div class="stat-num" id="stat-diary">·</div><div class="stat-label">일기</div></a>
+    <a class="stat-cell" href="#" data-tab="answers"><div class="stat-num" id="stat-answers">·</div><div class="stat-label">답변</div></a>
+    <a class="stat-cell" href="#" data-tab="posts"><div class="stat-num" id="stat-posts">·</div><div class="stat-label">게시글</div></a>
+    <a class="stat-cell" href="#" data-tab="friends"><div class="stat-num" id="stat-friends">·</div><div class="stat-label">친구</div></a>
+  </div>
+
+  <!-- 활동 -->
+  <div class="section-head">
+    <div class="section-title">내 활동</div>
+  </div>
+  <div class="activity-tabs" role="tablist">
+    <button class="activity-tab active" data-tab="diary">일기</button>
+    <button class="activity-tab" data-tab="answers">답변</button>
+    <button class="activity-tab" data-tab="posts">게시글</button>
+    <button class="activity-tab" data-tab="comments">댓글</button>
+    <button class="activity-tab" data-tab="friends">친구</button>
+  </div>
+  <div id="activity-body">
+    <div class="empty-activity">불러오는 중...</div>
+  </div>
+
+  <!-- 메뉴 -->
+  <div class="my-menu">
     <a href="./invite.html">
       <span class="menu-icon">💌</span>
       <span>친구 초대하기</span>
-      <span class="menu-arrow">›</span>
-    </a>
-    <a href="./my.html">
-      <span class="menu-icon">📂</span>
-      <span>내 활동 (기존 마이페이지)</span>
       <span class="menu-arrow">›</span>
     </a>
     <a href="./self.html">
@@ -90,9 +251,14 @@
       <span>나의 삶 정리</span>
       <span class="menu-arrow">›</span>
     </a>
+    <a href="./my.html">
+      <span class="menu-icon">📂</span>
+      <span>예전 마이페이지 (구버전)</span>
+      <span class="menu-arrow">›</span>
+    </a>
   </div>
 
-  <div class="root-menu">
+  <div class="my-menu">
     <button id="btn-notify-enable" type="button">
       <span class="menu-icon">🔔</span>
       <span>알림 권한 설정</span>
@@ -105,7 +271,7 @@
     </a>
   </div>
 
-  <div class="root-menu">
+  <div class="my-menu">
     <button id="btn-logout" type="button">
       <span class="menu-icon">↩</span>
       <span>로그아웃</span>
@@ -118,6 +284,10 @@
   import { supabase, signOut } from './auth.js';
   import { renderNav } from './nav.js';
   import { registerPWA, subscribePush } from './js/pwa.js';
+  import {
+    getMyCounts, listMyDiary, listMyPosts, listMyComments, listMyFriends,
+  } from './js/my-activity.js';
+  import { listMyAnswers } from './js/answers.js';
 
   await renderNav({ active: 'root', infoIcon: false, title: '마이' });
   registerPWA();
@@ -128,9 +298,150 @@
   const user = session.user;
   const name = user.user_metadata?.name || user.email?.split('@')[0] || '잇다 사용자';
 
-  document.getElementById('root-name').textContent = name;
-  document.getElementById('root-email').textContent = user.email || '';
-  document.getElementById('root-avatar').textContent = (name[0] || '·').toUpperCase();
+  document.getElementById('my-name').textContent  = name;
+  document.getElementById('my-email').textContent = user.email || '';
+  document.getElementById('my-avatar').textContent = (name[0] || '·').toUpperCase();
+
+  // 통계
+  try {
+    const c = await getMyCounts();
+    document.getElementById('stat-diary').textContent   = c.diary;
+    document.getElementById('stat-answers').textContent = c.answers;
+    document.getElementById('stat-posts').textContent   = c.posts;
+    document.getElementById('stat-friends').textContent = c.friends;
+  } catch (_) {}
+
+  // stat-cell 클릭 → 해당 탭으로
+  document.querySelectorAll('.stat-cell[data-tab]').forEach((el) => {
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      switchTab(el.dataset.tab);
+      document.getElementById('activity-body').scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+
+  // 활동 탭
+  let activeTab = 'diary';
+  document.querySelectorAll('.activity-tab').forEach((b) => {
+    b.addEventListener('click', () => switchTab(b.dataset.tab));
+  });
+
+  function switchTab(tab) {
+    activeTab = tab;
+    document.querySelectorAll('.activity-tab').forEach((b) => b.classList.toggle('active', b.dataset.tab === tab));
+    loadActivity();
+  }
+
+  async function loadActivity() {
+    const body = document.getElementById('activity-body');
+    body.innerHTML = `<div class="empty-activity">불러오는 중...</div>`;
+    try {
+      if (activeTab === 'diary')    return renderDiary(await listMyDiary({ limit: 15 }));
+      if (activeTab === 'answers')  return renderAnswers(await listMyAnswers({ limit: 15 }));
+      if (activeTab === 'posts')    return renderPosts(await listMyPosts({ limit: 15 }));
+      if (activeTab === 'comments') return renderComments(await listMyComments({ limit: 15 }));
+      if (activeTab === 'friends')  return renderFriends(await listMyFriends());
+    } catch (err) {
+      body.innerHTML = `<div class="empty-activity">불러오기 실패: ${err.message || err}</div>`;
+    }
+  }
+
+  function renderDiary(items) {
+    if (!items.length) return setEmpty('아직 작성한 일기가 없어요', '라이프 탭에서 시작해 보세요', './seed.html');
+    document.getElementById('activity-body').innerHTML = items.map((d) => `
+      <a class="activity-card" href="./diary-detail.html?id=${d.id}">
+        <div class="activity-meta">
+          <span class="activity-meta-chip activity-chip-diary">📝 일기</span>
+          <span>${formatDate(d.entry_date)}</span>
+          <span>${visLabel(d.visibility)}</span>
+        </div>
+        ${d.title ? `<div class="activity-title">${escapeHtml(d.title)}</div>` : ''}
+        ${d.content ? `<div class="activity-excerpt">${escapeHtml(d.content.slice(0, 120))}</div>` : ''}
+      </a>
+    `).join('');
+  }
+
+  function renderAnswers(items) {
+    if (!items.length) return setEmpty('아직 답변한 질문이 없어요', '커뮤니티에서 오늘의 질문에 답해보세요', './forest.html');
+    document.getElementById('activity-body').innerHTML = items.map((a) => `
+      <a class="activity-card" href="./ask.html">
+        <div class="activity-meta">
+          <span class="activity-meta-chip activity-chip-answer">💜 답변</span>
+          <span>${formatDate(a.created_at)}</span>
+          <span>${visLabel(a.visibility)}</span>
+        </div>
+        ${a.daily_questions?.question_text ? `<div class="activity-title">Q. ${escapeHtml(a.daily_questions.question_text)}</div>` : ''}
+        <div class="activity-excerpt">${escapeHtml((a.content || '').slice(0, 120))}</div>
+      </a>
+    `).join('');
+  }
+
+  function renderPosts(items) {
+    if (!items.length) return setEmpty('아직 작성한 게시글이 없어요', '커뮤니티에서 시작해 보세요', './forest.html?seg=community');
+    document.getElementById('activity-body').innerHTML = items.map((p) => `
+      <a class="activity-card" href="./post-detail.html?id=${p.id}">
+        <div class="activity-meta">
+          <span class="activity-meta-chip activity-chip-post">💬 ${escapeHtml(p.boards?.name || '게시판')}</span>
+          <span>${formatDate(p.created_at)}</span>
+          <span>❤ ${p.reaction_count ?? 0}</span>
+          <span>💬 ${p.comment_count ?? 0}</span>
+        </div>
+        <div class="activity-title">${escapeHtml(p.title)}</div>
+      </a>
+    `).join('');
+  }
+
+  function renderComments(items) {
+    if (!items.length) return setEmpty('아직 작성한 댓글이 없어요', '');
+    document.getElementById('activity-body').innerHTML = items.map((c) => `
+      <a class="activity-card" href="./post-detail.html?id=${c.post_id}">
+        <div class="activity-meta">
+          <span class="activity-meta-chip">💬 댓글</span>
+          <span>${formatDate(c.created_at)}</span>
+        </div>
+        ${c.community_posts?.title ? `<div class="activity-title">${escapeHtml(c.community_posts.title)}</div>` : ''}
+        <div class="activity-excerpt">${escapeHtml((c.body || '').slice(0, 100))}</div>
+      </a>
+    `).join('');
+  }
+
+  function renderFriends(items) {
+    if (!items.length) return setEmpty('아직 친구가 없어요', '잇다 친구를 초대해 보세요', './invite.html');
+    document.getElementById('activity-body').innerHTML = `
+      <div class="friend-grid">
+        ${items.map((f) => `
+          <a class="friend-cell" href="#">
+            <div class="friend-avatar">${escapeHtml((f.name?.[0] || '·').toUpperCase())}</div>
+            <div class="friend-name">${escapeHtml(f.name || '친구')}</div>
+          </a>
+        `).join('')}
+      </div>`;
+  }
+
+  function setEmpty(title, desc, link) {
+    document.getElementById('activity-body').innerHTML = `
+      <div class="empty-activity">
+        <div style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:4px;">${escapeHtml(title)}</div>
+        ${desc ? `<div>${escapeHtml(desc)}</div>` : ''}
+        ${link ? `<div style="margin-top:10px;"><a href="${link}" style="color:var(--primary);font-weight:700;">바로가기 →</a></div>` : ''}
+      </div>`;
+  }
+
+  function formatDate(d) {
+    if (!d) return '';
+    return new Date(d).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+  }
+  function visLabel(v) {
+    if (v === 'private') return '🔒 나만';
+    if (v === 'friends') return '👥 친구';
+    return '🌍 전체';
+  }
+  function escapeHtml(s) {
+    return (s || '').replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+
+  // 초기 로드
+  loadActivity();
 
   // 알림 권한
   const notifyBtn = document.getElementById('btn-notify-enable');
@@ -142,16 +453,11 @@
   }
   notifyBtn.addEventListener('click', async () => {
     const vapidKey = window.__VAPID_PUBLIC_KEY__ || '';
-    if (!vapidKey) {
-      alert('알림 키 설정이 필요합니다. (운영자 설정 대기)');
-      return;
-    }
+    if (!vapidKey) { alert('알림 키 설정이 필요합니다. (운영자 설정 대기)'); return; }
     try {
       const sub = await subscribePush(supabase, vapidKey);
       notifyStatus.textContent = sub ? '켜짐' : '거부됨';
-    } catch (err) {
-      alert(err.message || '알림 설정 실패');
-    }
+    } catch (err) { alert(err.message || '알림 설정 실패'); }
   });
 
   // 로그아웃

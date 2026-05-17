@@ -420,6 +420,11 @@
         <label><input type="radio" name="vis" value="public" checked> 모두에게 공개</label>
         <label><input type="radio" name="vis" value="private"> 나만 보기</label>
       </div>
+      <div class="visibility-row" style="margin-top:6px;">
+        <label style="font-size:13px;color:var(--ink-soft);">
+          <input type="checkbox" id="save-as-diary"> 📝 이 답변을 내 일기에도 저장 (나만 보기)
+        </label>
+      </div>
       <div id="autosave-status" style="text-align:center;font-size:13px;color:var(--ink-muted);padding:12px 0 32px;">글을 쓰면 자동으로 저장돼요</div>
     </div>
   </div>
@@ -712,6 +717,22 @@
     lastSavedContent = content;
     setStatus('저장됨 ✓', 'var(--primary)');
     await loadAnswers();
+
+    // 일기로도 저장 옵션 (체크되어 있고 아직 일기 미생성 시 한 번만)
+    const saveAsDiary = document.getElementById('save-as-diary');
+    if (saveAsDiary?.checked && !state.diarySaved) {
+      try {
+        const { saveAnswerAsDiary } = await import('./js/answers.js');
+        await saveAnswerAsDiary({
+          questionText: todaysQ?.question_text || '',
+          answerContent: content,
+        });
+        state.diarySaved = true;
+        setStatus('저장됨 ✓ · 일기에도 저장됨 📝', 'var(--primary)');
+      } catch (e) {
+        console.warn('일기 저장 실패:', e);
+      }
+    }
   }
 
   document.getElementById('answer-input').addEventListener('input', () => {
