@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>목표 설정 · 잇다</title>
+  <link rel="stylesheet" href="./auth-styles.css">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  <meta name="theme-color" content="#5C8A6F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="잇다">
+  <style>
+    .form-group { margin-bottom: 18px; }
+    .form-label {
+      display: block;
+      font-size: 12.5px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      color: var(--ink-soft);
+      margin-bottom: 8px;
+    }
+    .title-input, .body-input, .date-input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid var(--line);
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+      font-family: inherit;
+      background: #fff;
+    }
+    .title-input { font-weight: 700; font-size: 16px; }
+    .body-input { min-height: 80px; line-height: 1.6; font-size: 14px; resize: vertical; }
+    .title-input:focus, .body-input:focus, .date-input:focus { outline: none; border-color: var(--primary); }
+
+    /* 영역 선택 */
+    .area-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .area-opt {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 14px;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--line);
+      background: #fff;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+    .area-opt.active {
+      border-width: 2px;
+    }
+    .area-opt-icon { font-size: 22px; }
+    .area-opt-label { font-size: 14px; font-weight: 700; color: var(--ink); }
+
+    /* 기간 선택 */
+    .period-options {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+    .period-opt {
+      padding: 11px 4px;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--line);
+      background: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink-soft);
+      cursor: pointer;
+      font-family: inherit;
+      text-align: center;
+    }
+    .period-opt.active { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); }
+
+    /* 우선순위 슬라이더 */
+    .priority-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .priority-row input[type="range"] {
+      flex: 1;
+      accent-color: var(--primary);
+    }
+    .priority-label {
+      min-width: 50px;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--primary);
+      padding: 4px 8px;
+      background: var(--primary-soft);
+      border-radius: 6px;
+    }
+
+    /* 액션바 */
+    .action-bar {
+      position: sticky;
+      bottom: 0;
+      background: var(--bg);
+      padding: 14px 0 calc(14px + env(safe-area-inset-bottom, 0px));
+      border-top: 1px solid var(--line);
+      display: flex;
+      gap: 10px;
+      margin: 24px -20px -32px;
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+    .action-bar button {
+      flex: 1;
+      padding: 13px 16px;
+      border-radius: var(--radius-sm);
+      border: none;
+      font-size: 14.5px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .btn-save  { background: var(--primary); color: #fff; }
+    .btn-save:hover { background: var(--primary-hover); }
+    .btn-save:disabled { opacity: 0.5; cursor: wait; }
+    .btn-cancel { background: var(--bg-alt); color: var(--ink-soft); border: 1px solid var(--line); }
+    .btn-delete { background: var(--danger-soft); color: var(--danger); flex: 0 0 auto; padding: 13px 18px; }
+
+    body.has-bottom-nav { padding-bottom: 0; }
+    .itda-bottom-nav { display: none !important; }
+  </style>
+</head>
+<body>
+
+<main class="page-shell">
+  <form id="plan-form">
+    <div class="form-group">
+      <label class="form-label">영역</label>
+      <div class="area-options" id="area-options"></div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="title">목표</label>
+      <input type="text" class="title-input" id="title" placeholder="예: 매일 30분 산책" required>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="description">설명 (선택)</label>
+      <textarea class="body-input" id="description" placeholder="왜 이 목표를 정하셨는지, 어떤 모습이 되고 싶은지"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">기간</label>
+      <div class="period-options" id="period-options"></div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="due_date">달성 기한</label>
+      <input type="date" class="date-input" id="due_date">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">우선순위</label>
+      <div class="priority-row">
+        <input type="range" id="priority" min="1" max="5" value="3" step="1">
+        <span class="priority-label" id="priority-label">보통</span>
+      </div>
+    </div>
+
+    <div class="action-bar">
+      <button type="button" class="btn-cancel" id="btn-cancel">취소</button>
+      <button type="button" class="btn-delete" id="btn-delete" style="display:none;">삭제</button>
+      <button type="submit" class="btn-save" id="btn-save">저장</button>
+    </div>
+  </form>
+</main>
+
+<script type="module">
+  import { supabase } from './auth.js';
+  import { renderNav } from './nav.js';
+  import {
+    AREAS, PERIODS, PRIORITY_LABELS, defaultDueDate,
+    getGoal, createGoal, updateGoal, deleteGoal,
+  } from './js/goals.js';
+
+  await renderNav({ active: 'seed', infoIcon: false, title: '목표 설정' });
+
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) { window.location.href = './login.html'; throw new Error('로그인 필요'); }
+
+  const params = new URLSearchParams(location.search);
+  const editId = params.get('id');
+  const isEdit = !!editId;
+
+  let state = {
+    area: params.get('area') || 'health',
+    title: '',
+    description: '',
+    period_months: 3,
+    start_date: new Date().toISOString().slice(0, 10),
+    due_date: defaultDueDate(3),
+    priority: 3,
+  };
+
+  if (isEdit) {
+    const g = await getGoal(editId);
+    if (!g || g.user_id !== session.user.id) {
+      alert('목표를 불러올 수 없습니다');
+      window.location.href = './seed.html?tab=goal';
+      throw new Error('not found');
+    }
+    state = { ...state, ...g };
+    document.getElementById('btn-delete').style.display = '';
+  }
+
+  // ── 영역 ──
+  const areaEl = document.getElementById('area-options');
+  areaEl.innerHTML = Object.entries(AREAS).map(([key, a]) => `
+    <button type="button" class="area-opt ${key === state.area ? 'active' : ''}" data-key="${key}"
+      style="${key === state.area ? `border-color:${a.color};background:${a.bg};` : ''}">
+      <span class="area-opt-icon">${a.icon}</span>
+      <span class="area-opt-label">${a.label}</span>
+    </button>
+  `).join('');
+  areaEl.addEventListener('click', (e) => {
+    const btn = e.target.closest('.area-opt');
+    if (!btn) return;
+    state.area = btn.dataset.key;
+    areaEl.querySelectorAll('.area-opt').forEach((b) => {
+      const k = b.dataset.key;
+      const a = AREAS[k];
+      b.classList.toggle('active', k === state.area);
+      b.style.cssText = k === state.area ? `border-color:${a.color};background:${a.bg};` : '';
+    });
+  });
+
+  // ── 기간 ──
+  const perEl = document.getElementById('period-options');
+  perEl.innerHTML = PERIODS.map((p) =>
+    `<button type="button" class="period-opt ${p.months === state.period_months ? 'active' : ''}" data-months="${p.months}">${p.label}</button>`
+  ).join('');
+  perEl.addEventListener('click', (e) => {
+    const btn = e.target.closest('.period-opt');
+    if (!btn) return;
+    state.period_months = parseInt(btn.dataset.months, 10);
+    perEl.querySelectorAll('.period-opt').forEach((b) =>
+      b.classList.toggle('active', parseInt(b.dataset.months, 10) === state.period_months)
+    );
+    // 기한 자동 갱신 (사용자가 직접 변경 안 한 경우만)
+    document.getElementById('due_date').value = defaultDueDate(state.period_months, new Date(state.start_date));
+  });
+
+  // ── 초기 값 채우기 ──
+  document.getElementById('title').value = state.title;
+  document.getElementById('description').value = state.description || '';
+  document.getElementById('due_date').value = state.due_date || defaultDueDate(state.period_months);
+  document.getElementById('priority').value = state.priority;
+  document.getElementById('priority-label').textContent = PRIORITY_LABELS[state.priority];
+
+  document.getElementById('priority').addEventListener('input', (e) => {
+    const v = parseInt(e.target.value, 10);
+    state.priority = v;
+    document.getElementById('priority-label').textContent = PRIORITY_LABELS[v];
+  });
+
+  // ── 액션 ──
+  document.getElementById('btn-cancel').addEventListener('click', () => {
+    if (confirm('작성을 취소하시겠어요?')) window.location.href = './seed.html?tab=goal';
+  });
+
+  document.getElementById('btn-delete').addEventListener('click', async () => {
+    if (!confirm('이 목표를 삭제하시겠어요? 세부 계획과 진척 기록도 함께 삭제됩니다.')) return;
+    try {
+      await deleteGoal(editId);
+      window.location.href = './seed.html?tab=goal';
+    } catch (err) { alert(err.message || '삭제 실패'); }
+  });
+
+  document.getElementById('plan-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btn-save');
+    btn.disabled = true; btn.textContent = '저장 중...';
+
+    const payload = {
+      area: state.area,
+      title: document.getElementById('title').value.trim(),
+      description: document.getElementById('description').value.trim() || null,
+      period_months: state.period_months,
+      due_date: document.getElementById('due_date').value || null,
+      priority: state.priority,
+    };
+
+    try {
+      let goal;
+      if (isEdit) {
+        goal = await updateGoal(editId, payload);
+      } else {
+        goal = await createGoal({ ...payload, start_date: state.start_date });
+      }
+      window.location.href = `./plan-detail.html?id=${goal.id}`;
+    } catch (err) {
+      alert(err.message || '저장 실패');
+      btn.disabled = false; btn.textContent = '저장';
+    }
+  });
+</script>
+
+</body>
+</html>

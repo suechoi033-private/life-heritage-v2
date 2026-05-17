@@ -225,6 +225,135 @@
       margin-top: 8px;
     }
     .load-more:hover { border-color: var(--primary); color: var(--primary); }
+
+    /* 목표 대시보드 */
+    .goal-summary {
+      background: linear-gradient(135deg, var(--primary), #87B59C);
+      color: #fff;
+      border-radius: var(--radius);
+      padding: 20px 22px;
+      margin-bottom: 14px;
+    }
+    .goal-summary-label { font-size: 11.5px; font-weight: 700; letter-spacing: 0.04em; opacity: 0.85; }
+    .goal-summary-pct {
+      font-family: var(--font-serif);
+      font-size: 36px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-top: 2px;
+      line-height: 1;
+    }
+    .goal-summary-track {
+      height: 6px;
+      background: rgba(255,255,255,0.25);
+      border-radius: 999px;
+      margin: 14px 0 10px;
+      overflow: hidden;
+    }
+    .goal-summary-fill {
+      height: 100%;
+      background: #fff;
+      border-radius: 999px;
+      transition: width 0.5s ease;
+    }
+    .goal-summary-stats { font-size: 12.5px; opacity: 0.92; }
+    .goal-summary-stats strong { font-weight: 800; }
+
+    .area-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 22px;
+    }
+    .area-card {
+      background: var(--bg-alt);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 14px;
+      cursor: pointer;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      text-decoration: none;
+      color: inherit;
+    }
+    .area-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.05); }
+    .area-card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .area-card-icon { font-size: 22px; }
+    .area-card-pct { font-size: 16px; font-weight: 800; font-family: var(--font-serif); }
+    .area-card-label { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
+    .area-card-stat { font-size: 11.5px; color: var(--ink-muted); }
+    .area-card-track {
+      height: 4px;
+      background: rgba(0,0,0,0.07);
+      border-radius: 999px;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+    .area-card-fill { height: 100%; border-radius: 999px; transition: width 0.4s ease; }
+
+    .goal-card {
+      display: block;
+      background: var(--bg-alt);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      text-decoration: none;
+      color: inherit;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .goal-card:hover { border-color: var(--primary-soft); box-shadow: 0 2px 12px rgba(92,138,111,0.06); }
+    .goal-card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+    .goal-card-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 10.5px;
+      font-weight: 800;
+    }
+    .goal-card-priority {
+      font-size: 10.5px;
+      color: var(--ink-muted);
+      font-weight: 700;
+    }
+    .goal-card-title {
+      font-size: 14.5px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      margin: 8px 0 4px;
+    }
+    .goal-card-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11.5px;
+      color: var(--ink-muted);
+      margin-top: 6px;
+    }
+    .goal-card-track {
+      height: 4px;
+      background: rgba(0,0,0,0.07);
+      border-radius: 999px;
+      margin-top: 4px;
+      overflow: hidden;
+    }
+    .goal-card-fill {
+      height: 100%;
+      background: var(--primary);
+      border-radius: 999px;
+      transition: width 0.4s ease;
+    }
   </style>
 </head>
 <body>
@@ -270,21 +399,30 @@
   </div>
 
   <div id="goal-pane" style="display:none;">
-    <div class="empty-state">
-      <div class="empty-icon">🎯</div>
-      <div class="empty-title">목표·계획 준비 중</div>
-      <div class="empty-desc">3·6·12·60개월 목표 대시보드가<br>다음 단계에서 들어옵니다.</div>
+    <!-- 전체 진척 카드 -->
+    <div class="goal-summary" id="goal-summary"></div>
+    <!-- 영역별 카드 -->
+    <div class="area-grid" id="area-grid"></div>
+    <!-- 목표 리스트 -->
+    <div class="timeline-section">
+      <div class="timeline-head">
+        <div class="timeline-title">진행 중 목표</div>
+      </div>
+      <div id="goal-list-body">
+        <div class="timeline-empty">불러오는 중...</div>
+      </div>
     </div>
   </div>
 </main>
 
-<button class="fab" id="fab-write" aria-label="일기 쓰기">＋</button>
+<button class="fab" id="fab-write" aria-label="작성">＋</button>
 
 <script type="module">
   import { supabase } from './auth.js';
   import { renderNav } from './nav.js';
   import { registerPWA } from './js/pwa.js';
   import { listMyDiariesByMonth, listMyDiariesTimeline, TEMPLATES } from './js/diary.js';
+  import { AREAS, PRIORITY_LABELS, listMyGoals, getDashboardSummary } from './js/goals.js';
 
   await renderNav({ active: 'seed', infoIcon: true, title: '씨앗' });
   registerPWA();
@@ -300,21 +438,24 @@
   const initialTab = params.get('tab') === 'goal' ? 'goal' : 'diary';
   setActiveTab(initialTab);
 
+  let currentTab = 'diary';
+
   document.getElementById('tab-diary').addEventListener('click', () => setActiveTab('diary'));
   document.getElementById('tab-goal').addEventListener('click', () => setActiveTab('goal'));
   document.getElementById('fab-write').addEventListener('click', () => {
-    window.location.href = './diary-write.html';
+    window.location.href = currentTab === 'goal' ? './plan-write.html' : './diary-write.html';
   });
 
   function setActiveTab(tab) {
+    currentTab = tab;
     document.getElementById('tab-diary').classList.toggle('active', tab === 'diary');
     document.getElementById('tab-goal').classList.toggle('active',  tab === 'goal');
     document.getElementById('diary-pane').style.display = tab === 'diary' ? '' : 'none';
     document.getElementById('goal-pane').style.display  = tab === 'goal'  ? '' : 'none';
-    document.getElementById('fab-write').style.display  = tab === 'diary' ? '' : 'none';
     document.getElementById('hero-title').innerHTML = tab === 'diary'
       ? '오늘 어떤 생각을<br>심으셨나요?'
       : '3·6·12·60개월<br>어디까지 자랐나요?';
+    if (tab === 'goal') loadGoalDashboard();
   }
 
   // ── 통계 ──
@@ -472,6 +613,99 @@
   }
 
   loadTimeline();
+
+  // 초기 탭이 goal이면 대시보드 로드
+  if (initialTab === 'goal') loadGoalDashboard();
+
+  // ── 목표 대시보드 ──
+  let goalDashboardLoaded = false;
+  async function loadGoalDashboard(force = false) {
+    if (goalDashboardLoaded && !force) return;
+    goalDashboardLoaded = true;
+
+    const summaryEl = document.getElementById('goal-summary');
+    const gridEl    = document.getElementById('area-grid');
+    const listEl    = document.getElementById('goal-list-body');
+
+    summaryEl.innerHTML = `<div class="goal-summary-label">전체 진척</div><div class="goal-summary-pct">…</div>`;
+    listEl.innerHTML = `<div class="timeline-empty">불러오는 중...</div>`;
+
+    try {
+      const [summary, goals] = await Promise.all([
+        getDashboardSummary(),
+        listMyGoals({ status: 'active' }),
+      ]);
+
+      // 전체 진척 카드
+      summaryEl.innerHTML = `
+        <div class="goal-summary-label">전체 진척</div>
+        <div class="goal-summary-pct">${summary.overallProgress}%</div>
+        <div class="goal-summary-track"><div class="goal-summary-fill" style="width:${summary.overallProgress}%;"></div></div>
+        <div class="goal-summary-stats">
+          진행 중 <strong>${summary.totalActive}</strong>개
+          ${summary.upcomingDeadlines > 0 ? ` · 한 달 내 마감 <strong>${summary.upcomingDeadlines}</strong>개` : ''}
+        </div>
+      `;
+
+      // 영역별 카드
+      gridEl.innerHTML = Object.entries(AREAS).map(([key, a]) => {
+        const stat = summary.byArea[key];
+        return `
+          <a class="area-card" href="./seed.html?tab=goal&area=${key}" data-area="${key}"
+             style="border-color:${a.color}33;">
+            <div class="area-card-head">
+              <span class="area-card-icon">${a.icon}</span>
+              <span class="area-card-pct" style="color:${a.color};">${stat.avgProgress}%</span>
+            </div>
+            <div class="area-card-label">${a.label}</div>
+            <div class="area-card-stat">진행 ${stat.active} · 달성 ${stat.completed}</div>
+            <div class="area-card-track"><div class="area-card-fill" style="width:${stat.avgProgress}%;background:${a.color};"></div></div>
+          </a>
+        `;
+      }).join('');
+
+      // 영역 필터 (?area=...)
+      const areaFilter = params.get('area');
+      const filtered = areaFilter ? goals.filter((g) => g.area === areaFilter) : goals;
+
+      if (!filtered.length) {
+        listEl.innerHTML = `
+          <div class="timeline-empty">
+            ${areaFilter ? `${AREAS[areaFilter]?.label} 영역에 ` : ''}아직 목표가 없어요.<br>
+            오른쪽 아래 ＋ 버튼으로 첫 목표를 심어보세요.
+          </div>`;
+        return;
+      }
+
+      listEl.innerHTML = filtered.map(goalCardHtml).join('');
+    } catch (err) {
+      listEl.innerHTML = `<div class="timeline-empty">불러오기 실패: ${err.message || err}</div>`;
+    }
+  }
+
+  function goalCardHtml(g) {
+    const a = AREAS[g.area];
+    const daysLeft = g.due_date
+      ? Math.ceil((new Date(g.due_date) - new Date()) / (1000 * 60 * 60 * 24))
+      : null;
+    const dueText = daysLeft != null
+      ? (daysLeft < 0 ? `⏰ ${-daysLeft}일 지남` : daysLeft === 0 ? '오늘 마감' : `D-${daysLeft}`)
+      : '';
+    return `
+      <a class="goal-card" href="./plan-detail.html?id=${g.id}">
+        <div class="goal-card-head">
+          <span class="goal-card-chip" style="background:${a.bg};color:${a.color};">${a.icon} ${a.label}</span>
+          <span class="goal-card-priority">⭐ ${PRIORITY_LABELS[g.priority]}</span>
+        </div>
+        <div class="goal-card-title">${escapeHtml(g.title)}</div>
+        <div class="goal-card-track"><div class="goal-card-fill" style="width:${g.progress_pct}%;background:${a.color};"></div></div>
+        <div class="goal-card-meta">
+          <span>${g.progress_pct}%</span>
+          <span>${dueText}</span>
+        </div>
+      </a>
+    `;
+  }
 
   function formatDate(d) {
     const date = new Date(d);

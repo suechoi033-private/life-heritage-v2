@@ -314,6 +314,11 @@
       <div id="media-uploader"></div>
     </div>
 
+    <div class="form-group" id="link-goal-group" style="display:none;">
+      <label class="form-label">관련 목표 (선택)</label>
+      <select id="link-goal" class="date-input"></select>
+    </div>
+
     <div class="form-group">
       <label class="form-label">공개 범위</label>
       <div class="visibility-options" id="visibility-options"></div>
@@ -336,6 +341,7 @@
   } from './js/diary.js';
   import { createTagInput, listMyTags, ensureTags } from './js/tags.js';
   import { createMediaUploader } from './js/media-upload.js';
+  import { listMyGoals, linkDiaryToGoal, unlinkDiaryFromGoal, AREAS } from './js/goals.js';
 
   await renderNav({ active: 'seed', infoIcon: false, title: '일기 쓰기' });
 
@@ -441,6 +447,27 @@
     initial: state.mediaInitial,
   });
 
+  // 관련 목표 (있을 때만 표시)
+  const myGoals = await listMyGoals({ status: 'active' });
+  let linkedGoalIds = [];
+  if (isEdit) {
+    // 기존 연결된 목표 조회
+    const { data: links } = await supabase.from('diary_goal_links')
+      .select('goal_id').eq('diary_id', editId);
+    linkedGoalIds = (links || []).map((l) => l.goal_id);
+  }
+  if (myGoals.length) {
+    const grp = document.getElementById('link-goal-group');
+    grp.style.display = '';
+    const sel = document.getElementById('link-goal');
+    sel.innerHTML = `<option value="">— 선택 안 함 —</option>` + myGoals.map((g) =>
+      `<option value="${g.id}" ${linkedGoalIds.includes(g.id) ? 'selected' : ''}>${AREAS[g.area].icon} ${escapeHtml(g.title)}</option>`
+    ).join('');
+  }
+  function escapeHtml(s) {
+    return (s || '').replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+
   // 액션
   document.getElementById('btn-cancel').addEventListener('click', () => {
     if (confirm('작성을 취소하시겠어요?')) window.location.href = './seed.html';
@@ -494,6 +521,16 @@
         await supabase.from('diary_media').insert(
           mediaItems.map((m) => ({ entry_id: entry.id, storage_path: m.storage_path, media_type: m.media_type, sort_order: m.sort_order }))
         );
+      }
+
+      // 관련 목표 연결 동기화 (단일 선택 단순화)
+      const newGoalId = document.getElementById('link-goal')?.value || '';
+      const wasLinked = linkedGoalIds[0];
+      if (wasLinked && wasLinked !== newGoalId) {
+        await unlinkDiaryFromGoal(entry.id, wasLinked);
+      }
+      if (newGoalId && newGoalId !== wasLinked) {
+        await linkDiaryToGoal(entry.id, newGoalId);
       }
 
       window.location.href = `./diary-detail.html?id=${entry.id}`;
