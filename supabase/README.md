@@ -53,10 +53,26 @@ npx web-push generate-vapid-keys
 # Private Key → Edge Function 환경변수 VAPID_PRIVATE_KEY
 ```
 
-### 푸시 발송 Edge Function (별도 작성 필요)
-- 트리거: `care_logs` INSERT/UPDATE, `friend_invites` 수락, `comments` INSERT
-- Supabase Database Webhooks → Edge Function 호출
-- Edge Function이 `push_subscriptions` 조회 → web-push로 발송
+### 푸시 발송 Edge Function
+배포된 함수: `functions/push-notify/index.ts`
+
+```bash
+supabase functions deploy push-notify
+supabase secrets set VAPID_PUBLIC_KEY=<public>
+supabase secrets set VAPID_PRIVATE_KEY=<private>
+supabase secrets set VAPID_SUBJECT="mailto:admin@example.com"
+```
+
+### Database Webhook 설정 (Supabase Dashboard)
+Database → Webhooks에서 3개 설정 — 모두 `push-notify` Edge Function으로:
+
+| 테이블 | 이벤트 | 결과 |
+|---|---|---|
+| `care_logs`      | INSERT | 협력자들에게 알림 (SOS 마커면 긴급 알림) |
+| `comments`       | INSERT | 게시글 작성자에게 알림 |
+| `friend_invites` | UPDATE | status=accepted 시 초대자에게 알림 |
+
+Edge Function이 webhook payload를 자동 감지하여 알림 내용 생성·발송합니다.
 
 ## 4. Storage 버킷
 

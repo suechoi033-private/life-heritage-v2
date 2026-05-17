@@ -4,30 +4,231 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>둥지 · 잇다</title>
-  <meta name="description" content="사랑하는 이를 품는 곳 — 가족 돌봄 기록">
+  <meta name="description" content="사랑하는 이를 품는 곳 — 가족 돌봄 기록과 협력">
   <link rel="stylesheet" href="./auth-styles.css">
   <link rel="manifest" href="./manifest.json">
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
   <meta name="theme-color" content="#5C8A6F">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="잇다">
+  <style>
+    .nest-hero {
+      background: linear-gradient(135deg, #F5EFE3, #FAF6EC);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      margin-bottom: 16px;
+    }
+    .nest-hero-label { font-size: 11.5px; font-weight: 700; color: var(--warm); letter-spacing: 0.04em; }
+    .nest-hero-title {
+      font-family: var(--font-serif);
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin: 4px 0 4px;
+    }
+    .nest-hero-stat { font-size: 12.5px; color: var(--ink-soft); }
+
+    .subject-card {
+      background: var(--bg-alt);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      margin-bottom: 10px;
+    }
+    .subject-card-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .subject-avatar {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--warm-soft); color: var(--warm);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 800; flex-shrink: 0;
+    }
+    .subject-name { font-size: 15px; font-weight: 800; }
+    .subject-relation { font-size: 12px; color: var(--ink-muted); }
+
+    .subject-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .stat-cell {
+      background: #fff;
+      border-radius: 10px;
+      padding: 10px 6px;
+      text-align: center;
+    }
+    .stat-num {
+      font-family: var(--font-serif);
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--warm);
+    }
+    .stat-label { font-size: 10.5px; color: var(--ink-muted); margin-top: 2px; }
+
+    .subject-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+    }
+    .subject-action {
+      padding: 9px 4px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--line);
+      background: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink-soft);
+      cursor: pointer;
+      text-decoration: none;
+      text-align: center;
+      font-family: inherit;
+      transition: border-color 0.15s;
+    }
+    .subject-action:hover { border-color: var(--primary); color: var(--primary); }
+    .subject-action.sos { color: var(--danger); border-color: var(--danger-soft); }
+    .subject-action.sos:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
+
+    .add-subject-btn {
+      width: 100%;
+      padding: 16px;
+      background: var(--bg-alt);
+      border: 1.5px dashed var(--line);
+      border-radius: var(--radius);
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ink-soft);
+      cursor: pointer;
+      font-family: inherit;
+      text-decoration: none;
+      display: block;
+      text-align: center;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .add-subject-btn:hover { border-color: var(--warm); color: var(--warm); }
+
+    .live-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--success);
+      margin-left: auto;
+    }
+    .live-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--success);
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+  </style>
 </head>
 <body>
 
-<main class="page-shell">
-  <div class="empty-state">
-    <div class="empty-icon">🪺</div>
-    <div class="empty-title">둥지로 이동 중...</div>
-    <div class="empty-desc">기존 돌봄 페이지로 안내드립니다.</div>
+<main class="page-shell" id="main-content">
+  <div class="nest-hero">
+    <div class="nest-hero-label">둥지</div>
+    <div class="nest-hero-title" id="hero-title">사랑하는 이를<br>품는 곳</div>
+    <div class="nest-hero-stat" id="hero-stat">불러오는 중...</div>
+  </div>
+
+  <div id="subjects-list">
+    <div class="empty-state"><div class="empty-icon">⏳</div></div>
   </div>
 </main>
 
 <script type="module">
+  import { supabase } from './auth.js';
   import { renderNav } from './nav.js';
-  await renderNav({ active: 'nest', infoIcon: true, title: '둥지' });
+  import { registerPWA } from './js/pwa.js';
+  import { listMyCareSubjects, getCareDashboard, subscribeCareLogs } from './js/care.js';
 
-  // 임시: 기존 care.html로 리다이렉트. 다음 단계에서 둥지 셸로 통합
-  setTimeout(() => { window.location.replace('./care.html'); }, 200);
+  await renderNav({ active: 'nest', infoIcon: true, title: '둥지' });
+  registerPWA();
+
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) { window.location.href = './login.html'; throw new Error('로그인 필요'); }
+
+  const subjects = await listMyCareSubjects();
+
+  document.getElementById('hero-stat').textContent = subjects.length
+    ? `${subjects.length}분을 함께 보살피고 있어요`
+    : '돌볼 분을 추가해 시작해보세요';
+
+  const listEl = document.getElementById('subjects-list');
+  if (!subjects.length) {
+    listEl.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🪺</div>
+        <div class="empty-title">첫 둥지를 만들어요</div>
+        <div class="empty-desc">돌봄 대상을 추가하면 가족과 함께 기록·공유할 수 있어요.</div>
+      </div>
+      <a href="./care.html?action=add" class="add-subject-btn">＋ 돌봄 대상 추가</a>`;
+    throw new Error('no subjects');
+  }
+
+  // 대상자별 카드 렌더 + 비동기 대시보드 로딩
+  listEl.innerHTML = subjects.map((s) => `
+    <div class="subject-card" data-id="${s.id}">
+      <div class="subject-card-head">
+        <div class="subject-avatar">${(s.name?.[0] || '·').toUpperCase()}</div>
+        <div>
+          <div class="subject-name">${escapeHtml(s.name || '돌봄 대상')}</div>
+          <div class="subject-relation">${escapeHtml(s.relation || '')} · ${s.role === 'owner' ? '내가 추가' : '초대받음'}</div>
+        </div>
+        <span class="live-indicator"><span class="live-dot"></span>실시간</span>
+      </div>
+      <div class="subject-stats">
+        <div class="stat-cell"><div class="stat-num" data-stat="logs">·</div><div class="stat-label">최근 28일 기록</div></div>
+        <div class="stat-cell"><div class="stat-num" data-stat="days">·</div><div class="stat-label">기록한 날</div></div>
+        <div class="stat-cell"><div class="stat-num" data-stat="completion">·</div><div class="stat-label">충실도</div></div>
+      </div>
+      <div class="subject-actions">
+        <a class="subject-action" href="./care.html?subject=${s.id}">📝 기록</a>
+        <a class="subject-action" href="./care-dashboard.html?subject=${s.id}">📊 대시보드</a>
+        <a class="subject-action sos" href="./care-emergency.html?subject=${s.id}">🚨 응급</a>
+      </div>
+    </div>
+  `).join('') + `<a href="./care.html?action=add" class="add-subject-btn">＋ 돌봄 대상 추가</a>`;
+
+  // 대시보드 비동기 로딩
+  for (const s of subjects) {
+    getCareDashboard(s.id).then((dash) => {
+      const card = listEl.querySelector(`.subject-card[data-id="${s.id}"]`);
+      if (!card) return;
+      card.querySelector('[data-stat="logs"]').textContent       = dash.totalLogs;
+      card.querySelector('[data-stat="days"]').textContent       = dash.daysWithLogs;
+      card.querySelector('[data-stat="completion"]').textContent = `${dash.completionPct}%`;
+    }).catch(() => {});
+  }
+
+  // 실시간 구독 — 새 기록 들어오면 카운트 갱신
+  const unsubscribers = subjects.map((s) =>
+    subscribeCareLogs(s.id, () => {
+      getCareDashboard(s.id).then((dash) => {
+        const card = listEl.querySelector(`.subject-card[data-id="${s.id}"]`);
+        if (!card) return;
+        card.querySelector('[data-stat="logs"]').textContent       = dash.totalLogs;
+        card.querySelector('[data-stat="days"]').textContent       = dash.daysWithLogs;
+        card.querySelector('[data-stat="completion"]').textContent = `${dash.completionPct}%`;
+      }).catch(() => {});
+    })
+  );
+
+  window.addEventListener('beforeunload', () => unsubscribers.forEach((un) => un()));
+
+  function escapeHtml(s) {
+    return (s || '').replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
 </script>
 
 </body>

@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>돌봄 대시보드 · 잇다</title>
+  <link rel="stylesheet" href="./auth-styles.css">
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#5C8A6F">
+  <style>
+    .dash-head { display: flex; gap: 12px; align-items: center; padding: 6px 0 18px; }
+    .dash-avatar {
+      width: 48px; height: 48px; border-radius: 50%;
+      background: var(--warm-soft); color: var(--warm);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 22px; font-weight: 800;
+    }
+    .dash-subject-name { font-size: 17px; font-weight: 800; }
+    .dash-subject-rel { font-size: 12px; color: var(--ink-muted); }
+
+    .period-tabs {
+      display: flex; gap: 6px; margin-bottom: 16px;
+      background: var(--bg-alt); border-radius: 10px; padding: 4px;
+    }
+    .period-tab {
+      flex: 1; padding: 8px 4px;
+      background: transparent; border: none; border-radius: 8px;
+      font-size: 12.5px; font-weight: 700; color: var(--ink-muted);
+      cursor: pointer; font-family: inherit;
+    }
+    .period-tab.active { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+
+    /* 충실도 카드 */
+    .completion-card {
+      background: linear-gradient(135deg, var(--warm), #D49775);
+      color: #fff;
+      border-radius: var(--radius);
+      padding: 20px 22px;
+      margin-bottom: 14px;
+    }
+    .completion-label { font-size: 11.5px; font-weight: 700; opacity: 0.85; letter-spacing: 0.04em; }
+    .completion-pct {
+      font-family: var(--font-serif);
+      font-size: 38px; font-weight: 800;
+      line-height: 1; margin-top: 2px;
+    }
+    .completion-stats { font-size: 12.5px; margin-top: 10px; opacity: 0.92; }
+    .completion-stats strong { font-weight: 800; }
+
+    /* 주별 차트 */
+    .weekly-chart {
+      background: var(--bg-alt);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+    .weekly-chart-title { font-size: 13px; font-weight: 800; margin-bottom: 12px; }
+    .weekly-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 6px;
+      height: 100px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid var(--line);
+    }
+    .week-bar-wrap {
+      flex: 1;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 4px;
+      height: 100%;
+      justify-content: flex-end;
+    }
+    .week-bar {
+      width: 100%; max-width: 32px;
+      background: var(--warm);
+      border-radius: 4px 4px 0 0;
+      min-height: 2px;
+      transition: height 0.4s ease;
+    }
+    .week-bar-label { font-size: 9.5px; color: var(--ink-muted); margin-top: 4px; }
+    .week-bar-value { font-size: 10.5px; font-weight: 700; color: var(--ink-soft); }
+
+    /* 기분 분포 */
+    .mood-chart {
+      background: var(--bg-alt);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+    .mood-chart-title { font-size: 13px; font-weight: 800; margin-bottom: 12px; }
+    .mood-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .mood-name { width: 60px; font-size: 12.5px; font-weight: 700; }
+    .mood-bar-track {
+      flex: 1; height: 8px;
+      background: rgba(0,0,0,0.06);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .mood-bar-fill { height: 100%; background: var(--primary); border-radius: 999px; }
+    .mood-count { font-size: 11.5px; color: var(--ink-muted); width: 30px; text-align: right; }
+
+    /* 최근 기록 */
+    .recent-head { font-size: 13px; font-weight: 800; margin: 18px 0 10px; }
+    .recent-log {
+      padding: 12px 14px;
+      background: var(--bg-alt);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+      font-size: 13.5px;
+      line-height: 1.55;
+    }
+    .recent-log-meta {
+      font-size: 11px; color: var(--ink-muted);
+      margin-bottom: 4px;
+    }
+    .recent-log-body { white-space: pre-wrap; word-break: break-word; }
+
+    .detail-actions {
+      display: flex; gap: 10px; margin-top: 24px;
+    }
+    .detail-actions a {
+      flex: 1; padding: 12px;
+      border-radius: var(--radius-sm);
+      font-size: 14px; font-weight: 700;
+      text-align: center; text-decoration: none;
+      border: 1px solid var(--line); background: #fff; color: var(--ink);
+    }
+    .detail-actions .primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+  </style>
+</head>
+<body>
+
+<main class="page-shell" id="main-content">
+  <div id="dash-body"><div class="empty-state"><div class="empty-icon">⏳</div></div></div>
+</main>
+
+<script type="module">
+  import { supabase } from './auth.js';
+  import { renderNav } from './nav.js';
+  import { getCareDashboard, subscribeCareLogs } from './js/care.js';
+
+  await renderNav({ active: 'nest', infoIcon: false, title: '돌봄 대시보드' });
+
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) { window.location.href = './login.html'; throw new Error('로그인 필요'); }
+
+  const subjectId = new URLSearchParams(location.search).get('subject');
+  if (!subjectId) { window.location.href = './nest.html'; throw new Error('subject 누락'); }
+
+  // 대상자 조회
+  const { data: subject } = await supabase.from('care_subjects')
+    .select('id, name, relation').eq('id', subjectId).maybeSingle();
+  if (!subject) {
+    document.getElementById('dash-body').innerHTML = `
+      <div class="empty-state"><div class="empty-icon">🙏</div>
+      <div class="empty-title">대상자를 찾을 수 없어요</div>
+      <div class="cta-block"><a href="./nest.html">둥지로</a></div></div>`;
+    throw new Error('not found');
+  }
+
+  let period = 28;
+
+  async function render() {
+    const dash = await getCareDashboard(subjectId, period);
+    const maxWeekly = Math.max(1, ...dash.weekly.map((w) => w.count));
+
+    document.getElementById('dash-body').innerHTML = `
+      <div class="dash-head">
+        <div class="dash-avatar">${(subject.name?.[0] || '·').toUpperCase()}</div>
+        <div>
+          <div class="dash-subject-name">${escapeHtml(subject.name || '')}</div>
+          <div class="dash-subject-rel">${escapeHtml(subject.relation || '')}</div>
+        </div>
+      </div>
+
+      <div class="period-tabs" role="tablist">
+        <button class="period-tab ${period === 7  ? 'active' : ''}" data-period="7">7일</button>
+        <button class="period-tab ${period === 28 ? 'active' : ''}" data-period="28">4주</button>
+        <button class="period-tab ${period === 84 ? 'active' : ''}" data-period="84">3개월</button>
+      </div>
+
+      <div class="completion-card">
+        <div class="completion-label">기록 충실도</div>
+        <div class="completion-pct">${dash.completionPct}%</div>
+        <div class="completion-stats">
+          <strong>${dash.daysWithLogs}</strong>일 기록 · 총 <strong>${dash.totalLogs}</strong>개 기록 · ${dash.period_days}일 중
+        </div>
+      </div>
+
+      <div class="weekly-chart">
+        <div class="weekly-chart-title">주별 기록 추이</div>
+        ${dash.weekly.length ? `
+          <div class="weekly-bars">
+            ${dash.weekly.map((w) => `
+              <div class="week-bar-wrap">
+                <div class="week-bar-value">${w.count}</div>
+                <div class="week-bar" style="height:${(w.count / maxWeekly) * 80}%;"></div>
+                <div class="week-bar-label">${formatWeek(w.week)}</div>
+              </div>
+            `).join('')}
+          </div>
+        ` : `<div style="font-size:12.5px;color:var(--ink-muted);text-align:center;padding:20px 0;">기록이 없어요</div>`}
+      </div>
+
+      ${Object.keys(dash.moodCounts).length ? `
+        <div class="mood-chart">
+          <div class="mood-chart-title">기분 분포</div>
+          ${Object.entries(dash.moodCounts).sort((a, b) => b[1] - a[1]).map(([mood, count]) => {
+            const pct = (count / dash.totalLogs) * 100;
+            return `
+              <div class="mood-row">
+                <span class="mood-name">${escapeHtml(mood)}</span>
+                <div class="mood-bar-track"><div class="mood-bar-fill" style="width:${pct}%;"></div></div>
+                <span class="mood-count">${count}</span>
+              </div>`;
+          }).join('')}
+        </div>
+      ` : ''}
+
+      ${dash.recentLogs.length ? `
+        <div class="recent-head">최근 기록</div>
+        ${dash.recentLogs.map((l) => `
+          <div class="recent-log">
+            <div class="recent-log-meta">${formatDateTime(l.created_at)}${l.mood ? ' · ' + escapeHtml(l.mood) : ''}</div>
+            <div class="recent-log-body">${escapeHtml(l.body || '')}</div>
+          </div>
+        `).join('')}
+      ` : ''}
+
+      <div class="detail-actions">
+        <a href="./nest.html">목록으로</a>
+        <a href="./care.html?subject=${subjectId}" class="primary">기록 추가</a>
+      </div>
+    `;
+
+    document.querySelectorAll('.period-tab').forEach((b) => b.addEventListener('click', () => {
+      period = parseInt(b.dataset.period, 10);
+      render();
+    }));
+  }
+
+  // 실시간 — 새 기록 시 자동 갱신
+  subscribeCareLogs(subjectId, () => { render(); });
+
+  render();
+
+  function formatWeek(d) {
+    const date = new Date(d);
+    return `${date.getMonth() + 1}/${date.getDate()}`;
+  }
+  function formatDateTime(d) {
+    return new Date(d).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  }
+  function escapeHtml(s) {
+    return (s || '').replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>응급 상황 · 잇다</title>
+  <link rel="stylesheet" href="./auth-styles.css">
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#C94F4F">
+  <style>
+    .sos-banner {
+      background: linear-gradient(135deg, #C94F4F, #E07474);
+      color: #fff;
+      border-radius: var(--radius);
+      padding: 20px 22px;
+      margin-bottom: 18px;
+    }
+    .sos-label { font-size: 11.5px; font-weight: 700; opacity: 0.9; letter-spacing: 0.06em; }
+    .sos-title {
+      font-family: var(--font-serif);
+      font-size: 22px;
+      font-weight: 800;
+      line-height: 1.4;
+      margin-top: 4px;
+    }
+    .sos-sub { font-size: 13px; margin-top: 6px; opacity: 0.92; line-height: 1.55; }
+
+    .quick-call {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .quick-call a {
+      padding: 14px;
+      background: var(--danger-soft);
+      color: var(--danger);
+      border-radius: var(--radius);
+      text-decoration: none;
+      text-align: center;
+      font-weight: 800;
+      font-size: 14px;
+      border: 1.5px solid rgba(201,79,79,0.2);
+    }
+    .quick-call a:hover { background: var(--danger); color: #fff; }
+    .quick-call .icon { display: block; font-size: 22px; margin-bottom: 4px; }
+
+    .section-head {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 10px;
+    }
+    .section-title { font-size: 14px; font-weight: 800; }
+    .section-add {
+      padding: 6px 12px;
+      background: var(--primary-soft); color: var(--primary);
+      border: none; border-radius: 8px;
+      font-size: 12.5px; font-weight: 700;
+      cursor: pointer; font-family: inherit;
+    }
+
+    .contact-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      background: var(--bg-alt);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+    }
+    .contact-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--warm-soft); color: var(--warm);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 800; flex-shrink: 0;
+    }
+    .contact-body { flex: 1; min-width: 0; }
+    .contact-name { font-size: 14px; font-weight: 700; }
+    .contact-meta { font-size: 11.5px; color: var(--ink-muted); }
+    .contact-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .contact-call {
+      padding: 8px 14px;
+      background: var(--primary); color: #fff;
+      border-radius: 999px;
+      text-decoration: none;
+      font-size: 12.5px;
+      font-weight: 700;
+    }
+    .contact-call:hover { background: var(--primary-hover); color: #fff; }
+    .contact-delete {
+      background: transparent; border: none;
+      color: var(--ink-faint); font-size: 16px;
+      cursor: pointer; padding: 4px 6px;
+    }
+
+    .broadcast-section {
+      background: var(--warm-soft);
+      border: 1px solid rgba(176,112,67,0.18);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      margin-top: 20px;
+    }
+    .broadcast-title { font-size: 14px; font-weight: 800; color: var(--warm); margin-bottom: 8px; }
+    .broadcast-desc { font-size: 12.5px; color: var(--ink-soft); line-height: 1.6; margin-bottom: 12px; }
+    .broadcast-input {
+      width: 100%; padding: 11px 14px;
+      border: 1.5px solid var(--line);
+      border-radius: var(--radius-sm);
+      font-family: inherit; font-size: 14px;
+      background: #fff;
+      margin-bottom: 10px;
+      min-height: 60px;
+      resize: vertical;
+    }
+    .broadcast-btn {
+      width: 100%; padding: 13px;
+      background: var(--warm); color: #fff;
+      border: none; border-radius: var(--radius-sm);
+      font-size: 14px; font-weight: 800;
+      cursor: pointer; font-family: inherit;
+    }
+    .broadcast-btn:hover { background: var(--warm-hover); }
+
+    /* 모달 (연락처 추가) */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200;
+      display: flex; align-items: flex-end; justify-content: center;
+    }
+    .modal-sheet {
+      width: 100%; max-width: 480px; background: var(--bg);
+      border-radius: 20px 20px 0 0;
+      padding: 22px 20px calc(20px + env(safe-area-inset-bottom, 0px));
+    }
+    .modal-title { font-size: 15px; font-weight: 800; margin-bottom: 14px; }
+    .modal-form input {
+      width: 100%; padding: 11px 14px;
+      border: 1.5px solid var(--line); border-radius: var(--radius-sm);
+      font-size: 14px; font-family: inherit;
+      margin-bottom: 10px;
+    }
+    .modal-actions { display: flex; gap: 10px; }
+    .modal-actions button {
+      flex: 1; padding: 12px; border-radius: var(--radius-sm); border: none;
+      font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit;
+    }
+    .modal-cancel { background: var(--bg-alt); border: 1px solid var(--line); }
+    .modal-save { background: var(--primary); color: #fff; }
+  </style>
+</head>
+<body>
+
+<main class="page-shell" id="main-content">
+  <div id="emerg-body"><div class="empty-state"><div class="empty-icon">⏳</div></div></div>
+</main>
+<div id="modal-root"></div>
+
+<script type="module">
+  import { supabase } from './auth.js';
+  import { renderNav } from './nav.js';
+  import { listEmergencyContacts, createEmergencyContact, deleteEmergencyContact, broadcastEmergency } from './js/care.js';
+
+  await renderNav({ active: 'nest', infoIcon: false, title: '응급 상황' });
+
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) { window.location.href = './login.html'; throw new Error('로그인 필요'); }
+
+  const subjectId = new URLSearchParams(location.search).get('subject');
+  if (!subjectId) { window.location.href = './nest.html'; throw new Error('subject 누락'); }
+
+  const { data: subject } = await supabase.from('care_subjects')
+    .select('id, name').eq('id', subjectId).maybeSingle();
+
+  await render();
+
+  async function render() {
+    const contacts = await listEmergencyContacts(subjectId);
+
+    document.getElementById('emerg-body').innerHTML = `
+      <div class="sos-banner">
+        <div class="sos-label">긴급 상황</div>
+        <div class="sos-title">${escapeHtml(subject?.name || '대상자')}님께 도움이 필요해요</div>
+        <div class="sos-sub">아래 119/112는 바로 전화 연결됩니다. 사전 등록한 연락처도 한 번에 호출하세요.</div>
+      </div>
+
+      <div class="quick-call">
+        <a href="tel:119"><span class="icon">🚑</span>119<br><span style="font-size:11px;font-weight:600;opacity:0.7;">응급의료</span></a>
+        <a href="tel:112"><span class="icon">🚓</span>112<br><span style="font-size:11px;font-weight:600;opacity:0.7;">경찰</span></a>
+      </div>
+
+      <div class="section-head">
+        <div class="section-title">사전 등록 연락처</div>
+        <button class="section-add" id="btn-add-contact">＋ 추가</button>
+      </div>
+
+      ${contacts.length ? contacts.map(contactCardHtml).join('') : `
+        <div class="empty-state" style="padding:20px;">
+          <div class="empty-desc">자주 연락하는 분(주치의·요양보호사·가족)을 등록해두면 빠르게 호출할 수 있어요.</div>
+        </div>
+      `}
+
+      <div class="broadcast-section">
+        <div class="broadcast-title">📢 협력자들에게 상황 공유</div>
+        <div class="broadcast-desc">현재 상황을 한 줄로 알려주면, 이 둥지에 함께 있는 가족·돌봄 제공자에게 실시간으로 전달됩니다.</div>
+        <textarea class="broadcast-input" id="broadcast-note" placeholder="예: 어머니 호흡 곤란, 119 부름. 강남세브란스로 이송 중"></textarea>
+        <button class="broadcast-btn" id="btn-broadcast">상황 공유</button>
+      </div>
+    `;
+
+    document.getElementById('btn-add-contact').addEventListener('click', openAddModal);
+    document.getElementById('btn-broadcast').addEventListener('click', async () => {
+      const note = document.getElementById('broadcast-note').value.trim();
+      if (!note) { alert('상황을 적어주세요'); return; }
+      if (!confirm('이 둥지의 모든 협력자에게 즉시 공유됩니다. 진행할까요?')) return;
+      try {
+        await broadcastEmergency(subjectId, { note });
+        alert('공유되었습니다. 협력자에게 실시간으로 전달됩니다.');
+        document.getElementById('broadcast-note').value = '';
+      } catch (err) { alert(err.message || '공유 실패'); }
+    });
+
+    document.querySelectorAll('.contact-delete').forEach((b) => b.addEventListener('click', async () => {
+      if (!confirm('이 연락처를 삭제하시겠어요?')) return;
+      try { await deleteEmergencyContact(b.dataset.id); await render(); }
+      catch (err) { alert(err.message); }
+    }));
+  }
+
+  function contactCardHtml(c) {
+    return `
+      <div class="contact-card">
+        <div class="contact-avatar">${(c.name?.[0] || '·').toUpperCase()}</div>
+        <div class="contact-body">
+          <div class="contact-name">${escapeHtml(c.name)}</div>
+          <div class="contact-meta">${escapeHtml(c.relation || '')} · ${escapeHtml(c.phone)}</div>
+        </div>
+        <div class="contact-actions">
+          <a class="contact-call" href="tel:${encodeURIComponent(c.phone)}">전화</a>
+          <button class="contact-delete" data-id="${c.id}" aria-label="삭제">×</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function openAddModal() {
+    const root = document.getElementById('modal-root');
+    root.innerHTML = `
+      <div class="modal-overlay" id="modal-overlay">
+        <div class="modal-sheet">
+          <div class="modal-title">응급 연락처 추가</div>
+          <form class="modal-form" id="contact-form">
+            <input type="text" id="c-name" placeholder="이름 (예: 박주치의)" required maxlength="50">
+            <input type="tel" id="c-phone" placeholder="전화번호 (예: 010-1234-5678)" required>
+            <input type="text" id="c-relation" placeholder="관계 (예: 주치의, 요양보호사)" maxlength="50">
+            <div class="modal-actions">
+              <button type="button" class="modal-cancel" id="modal-cancel">취소</button>
+              <button type="submit" class="modal-save">추가</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+    const close = () => { root.innerHTML = ''; };
+    document.getElementById('modal-overlay').addEventListener('click', (e) => { if (e.target.id === 'modal-overlay') close(); });
+    document.getElementById('modal-cancel').addEventListener('click', close);
+    document.getElementById('contact-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        await createEmergencyContact(subjectId, {
+          name: document.getElementById('c-name').value.trim(),
+          phone: document.getElementById('c-phone').value.trim(),
+          relation: document.getElementById('c-relation').value.trim() || null,
+        });
+        close();
+        await render();
+      } catch (err) { alert(err.message); }
+    });
+  }
+
+  function escapeHtml(s) {
+    return (s || '').replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+</script>
+
+</body>
+</html>
