@@ -9,7 +9,13 @@
 -- =============================================================
 
 -- =============================================================
--- 0. profiles 확장 (소셜 로그인 + 프로필)
+-- 0a. 필수 확장 (다른 모든 객체보다 먼저)
+-- =============================================================
+create extension if not exists pg_trgm;
+create extension if not exists pgcrypto;  -- gen_random_uuid()
+
+-- =============================================================
+-- 0b. profiles 확장 (소셜 로그인 + 프로필)
 -- =============================================================
 alter table public.profiles
   add column if not exists auth_provider text default 'email'
@@ -603,12 +609,7 @@ begin
 end $$;
 
 -- =============================================================
--- 10. pg_trgm 확장 (검색용)
--- =============================================================
-create extension if not exists pg_trgm;
-
--- =============================================================
--- 11. 카운터 RPC (race condition 안전)
+-- 10. 카운터 RPC (race condition 안전)
 -- =============================================================
 create or replace function public.increment_post_comment_count(p_post_id uuid)
 returns void language sql security definer as $$
