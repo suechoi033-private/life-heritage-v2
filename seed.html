@@ -757,14 +757,18 @@
     titleEl.textContent = `'${q}' 검색 중…`;
     document.getElementById('timeline-body').innerHTML = `<div class="timeline-empty">검색 중...</div>`;
     try {
-      const items = await searchDiaries(q, { limit: 40 });
+      const items = await Promise.race([
+        searchDiaries(q, { limit: 40 }),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('검색 시간초과 (8초) — 네트워크 또는 DB가 느립니다')), 8000)),
+      ]);
       if (my !== searchToken) return;
       titleEl.textContent = `'${q}' 검색 결과 ${items.length}건`;
       renderSearchResults(items, q);
     } catch (err) {
       if (my !== searchToken) return;
+      console.warn('[seed] 검색 실패:', err);
       document.getElementById('timeline-body').innerHTML =
-        `<div class="timeline-empty">검색 실패: ${err.message || err}</div>`;
+        `<div class="timeline-empty">검색 실패: ${err.message || err}<br><span style="font-size:12px;color:var(--ink-muted);">다시 시도하거나 키워드를 짧게 해보세요.</span></div>`;
     }
   }
 

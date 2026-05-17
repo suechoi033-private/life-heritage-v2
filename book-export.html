@@ -173,13 +173,39 @@
     }
     .book-toc-list { list-style: none; padding: 0; margin: 0; }
     .book-toc-item {
-      display: flex; justify-content: space-between; gap: 12px;
-      padding: 8px 0;
+      padding: 0;
       font-size: 13.5px;
       border-bottom: 1px dotted var(--line);
     }
-    .book-toc-item .toc-title { color: var(--ink); flex: 1; min-width: 0; }
+    .book-toc-link {
+      display: flex; justify-content: space-between; gap: 12px;
+      padding: 9px 6px;
+      color: var(--ink);
+      text-decoration: none;
+      border-radius: 4px;
+      transition: background 0.1s;
+    }
+    .book-toc-link:hover { background: var(--primary-soft); color: var(--primary); }
+    .book-toc-item .toc-title { color: inherit; flex: 1; min-width: 0; }
     .book-toc-item .toc-date { color: var(--ink-muted); flex-shrink: 0; font-size: 12.5px; }
+    .book-toc-link:hover .toc-date { color: var(--primary); }
+
+    /* 목차로 복귀 링크 (각 본문 페이지 우상단) */
+    .book-back-toc {
+      float: right;
+      font-size: 11px;
+      color: var(--primary);
+      text-decoration: none;
+      padding: 4px 10px;
+      border: 1px solid var(--primary-soft);
+      border-radius: 999px;
+      font-weight: 700;
+      margin-top: -8px;
+    }
+    .book-back-toc:hover { background: var(--primary-soft); }
+    @media print {
+      .book-back-toc { display: none; }
+    }
 
     .book-entry {
       font-size: 14.5px;
@@ -447,13 +473,37 @@
         });
       }
 
+      // 빈 본문 필터: 답변/일기 내용이 진짜 있는 것만
+      const filtered = combined.filter((c) => {
+        const txt = (c.data?.content || '').trim();
+        if (c.kind === 'diary') return !!(txt || (c.data?.title || '').trim());
+        return !!txt;
+      });
+      const skipped = combined.length - filtered.length;
+
+      if (!filtered.length) {
+        bookEl.innerHTML = `
+          <div class="preview-empty">
+            <div class="icon">🕯️</div>
+            기간 안에는 ${combined.length}개 글이 있지만<br>
+            <strong>실제 내용이 적힌 글은 없어요.</strong><br>
+            <span style="font-size:12.5px;color:var(--ink-muted);">기록을 남기신 뒤 다시 시도해보세요.</span>
+          </div>`;
+        document.getElementById('post-actions').style.display = 'none';
+        infoEl.style.display = 'block';
+        infoEl.textContent = `포함된 글 0개 (빈 답변 ${skipped}개 제외)`;
+        btn.disabled = false; btn.textContent = '📚 책자 만들기';
+        return;
+      }
+
       // 책자 렌더
-      bookEl.innerHTML = renderBook(combined, tagMap);
+      bookEl.innerHTML = renderBook(filtered, tagMap);
       document.getElementById('post-actions').style.display = '';
       infoEl.style.display = 'block';
-      const diaryN = combined.filter((c) => c.kind === 'diary').length;
-      const ansN   = combined.filter((c) => c.kind === 'answer').length;
-      infoEl.innerHTML = `📚 총 <strong>${combined.length}개</strong> 글 (일기 ${diaryN} · 답변 ${ansN}) — 미리보기 아래에서 <strong>🖨 인쇄 / PDF 저장</strong> 버튼을 누르세요.`;
+      const diaryN = filtered.filter((c) => c.kind === 'diary').length;
+      const ansN   = filtered.filter((c) => c.kind === 'answer').length;
+      const skipNote = skipped > 0 ? ` <span style="color:var(--ink-muted);">· 빈 답변 ${skipped}개 제외</span>` : '';
+      infoEl.innerHTML = `📚 총 <strong>${filtered.length}개</strong> 글 (일기 ${diaryN} · 답변 ${ansN})${skipNote} — 미리보기 아래에서 <strong>🖨 인쇄 / PDF 저장</strong> 버튼을 누르세요.`;
 
       btn.disabled = false; btn.textContent = '📚 다시 만들기';
     } catch (err) {
@@ -490,7 +540,10 @@
   }
 
   // ── 렌더링 ──────────────────────────────
-  function renderBook(items, tagMap) {
+  function renderBook(rawItems, tagMap) {
+    // 외부에서 이미 빈 본문 필터링됨 — 여기서는 ID·번호만 부여
+    const items = (rawItems || []).map((c, idx) => ({ ...c, _id: `entry-${idx + 1}`, _num: idx + 1 }));
+
     const title = (document.getElementById('book-title').value || '나의 기록 책자').trim();
     const fromLbl = opts.from ? formatLong(opts.from) : '시작';
     const toLbl   = opts.to   ? formatLong(opts.to)   : '오늘';
@@ -506,27 +559,31 @@
         <div class="book-cover-mark">잇다와 함께</div>
       </div>`;
 
-    // 목차
+    // 목차 — 각 항목 → 본문 #entry-N로 점프
     const tocItems = items.map((c) => {
       const t = c.kind === 'diary'
         ? (c.data.title || TEMPLATES[c.data.template_type]?.label || '일기')
-        : `답변: ${(c.data.daily_questions?.question_text || '오늘의 질문').slice(0, 36)}${(c.data.daily_questions?.question_text || '').length > 36 ? '…' : ''}`;
+        : (c.data.daily_questions?.question_text || '오늘의 질문');
+      const display = t.length > 60 ? `${t.slice(0, 60)}…` : t;
+      const icon = c.kind === 'answer' ? '💜' : '📝';
       return `
         <li class="book-toc-item">
-          <span class="toc-title">${c.kind === 'answer' ? '💜 ' : '📝 '}${escapeHtml(t)}</span>
-          <span class="toc-date">${formatShort(c.dateKey)}</span>
+          <a class="book-toc-link" href="#${c._id}">
+            <span class="toc-title">${icon} ${escapeHtml(display)}</span>
+            <span class="toc-date">${formatShort(c.dateKey)}</span>
+          </a>
         </li>`;
     }).join('');
-    const toc = items.length <= 200 ? `
-      <div class="book-page">
-        <div class="book-toc-title">목차</div>
+    const toc = items.length <= 300 ? `
+      <div class="book-page" id="toc">
+        <div class="book-toc-title">목차 — ${items.length}개</div>
         <ul class="book-toc-list">${tocItems}</ul>
-      </div>` : '';  // 200개 넘으면 목차 생략 (성능)
+      </div>` : '';  // 300개 넘으면 목차 생략 (성능)
 
-    // 본문
+    // 본문 — 각 페이지마다 우상단에 ↑ 목차로 링크
     const pages = items.map((c) => {
-      if (c.kind === 'diary') return renderDiary(c.data, tagMap[c.data.id] || []);
-      return renderAnswer(c.data);
+      if (c.kind === 'diary') return renderDiary(c.data, tagMap[c.data.id] || [], c._id, c._num);
+      return renderAnswer(c.data, c._id, c._num);
     }).join('');
 
     const end = `
@@ -540,7 +597,7 @@
     return cover + toc + pages + end;
   }
 
-  function renderDiary(d, tags) {
+  function renderDiary(d, tags, anchorId, num) {
     const tplLabel = TEMPLATES[d.template_type]?.label || '';
     const visIcon = d.visibility === 'public' ? '🌍' : d.visibility === 'friends' ? '👥' : '🔒';
     const tagsHtml = tags.length ? `
@@ -548,9 +605,10 @@
         ${tags.map((t) => `<span>${t.tag_type === 'emotion' ? '· ' : '#'}${escapeHtml(t.name)}</span>`).join('')}
       </div>` : '';
     return `
-      <div class="book-page">
+      <div class="book-page" id="${anchorId}">
+        <a class="book-back-toc" href="#toc">↑ 목차로</a>
         <div class="book-entry-head">
-          <div class="book-entry-date">${formatLong(d.entry_date)}</div>
+          <div class="book-entry-date">${formatLong(d.entry_date)} · #${num}</div>
           <div class="book-entry-title">${escapeHtml(d.title || tplLabel || '일기')}</div>
           <div class="book-entry-meta">${tplLabel} · ${visIcon} ${visText(d.visibility)}</div>
         </div>
@@ -561,13 +619,14 @@
       </div>`;
   }
 
-  function renderAnswer(a) {
+  function renderAnswer(a, anchorId, num) {
     const qText = a.daily_questions?.question_text || '오늘의 질문';
     const body  = a.content || '';
     return `
-      <div class="book-page">
+      <div class="book-page" id="${anchorId}">
+        <a class="book-back-toc" href="#toc">↑ 목차로</a>
         <div class="book-entry-head">
-          <div class="book-entry-date">${formatLong(a.created_at.slice(0, 10))}</div>
+          <div class="book-entry-date">${formatLong(a.created_at.slice(0, 10))} · #${num}</div>
           <div class="book-entry-title">오늘의 답변</div>
         </div>
         <div class="book-entry">
