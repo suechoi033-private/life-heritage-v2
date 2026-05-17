@@ -123,78 +123,31 @@
     }
     .cal-cell.today.has-entry::after { background: #fff; }
 
-    /* 검색 — 다이어리 탭 최상단 (눈에 잘 띄게) */
-    .diary-search-wrap {
-      position: relative;
-      margin-bottom: 16px;
-    }
-    .diary-search-input {
+    /* 일기 쓰기 CTA — 캘린더 위 */
+    .write-cta {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
       width: 100%;
-      padding: 13px 90px 13px 44px;
-      border: 1.5px solid var(--primary-soft);
+      padding: 14px 18px;
+      margin-bottom: 16px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
       border-radius: 14px;
       font-size: 15px;
-      font-family: inherit;
-      background: #fff;
-      box-shadow: 0 2px 8px rgba(92,138,111,0.06);
-      transition: border-color 0.15s, box-shadow 0.15s;
-    }
-    .diary-search-input::placeholder { color: var(--ink-muted); }
-    .diary-search-input:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 2px 14px rgba(92,138,111,0.2);
-    }
-    .diary-search-icon {
-      position: absolute;
-      left: 16px; top: 50%;
-      transform: translateY(-50%);
-      font-size: 16px;
-      color: var(--primary);
-      pointer-events: none;
-    }
-    .diary-search-clear {
-      position: absolute;
-      right: 12px; top: 50%;
-      transform: translateY(-50%);
-      width: 26px; height: 26px;
-      border-radius: 50%;
-      background: var(--bg-alt);
-      border: none;
-      color: var(--ink-soft);
-      font-size: 14px;
-      cursor: pointer;
-      font-family: inherit;
-      display: none;
-    }
-    .diary-search-clear.visible { display: inline-flex; align-items: center; justify-content: center; }
-    .diary-search-new-badge {
-      position: absolute;
-      right: 14px; top: 50%;
-      transform: translateY(-50%);
-      font-size: 9.5px;
       font-weight: 800;
-      letter-spacing: 0.08em;
-      color: #fff;
-      background: linear-gradient(135deg, var(--primary), #87B59C);
-      padding: 3px 8px;
-      border-radius: 999px;
-      pointer-events: none;
-      animation: badge-bounce 1.8s ease-in-out 0s 3;
+      letter-spacing: -0.01em;
+      font-family: inherit;
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(92,138,111,0.18);
+      text-decoration: none;
+      transition: background 0.15s, transform 0.05s;
     }
-    .diary-search-input:focus ~ .diary-search-new-badge,
-    .diary-search-wrap.has-text .diary-search-new-badge {
-      display: none;
-    }
-    @keyframes badge-bounce {
-      0%, 100% { transform: translateY(-50%) scale(1); }
-      50% { transform: translateY(-50%) scale(1.15); }
-    }
-    .diary-search-hint {
-      font-size: 11.5px;
-      color: var(--ink-muted);
-      padding: 6px 14px 0;
-    }
+    .write-cta:hover { background: var(--primary-hover); }
+    .write-cta:active { transform: scale(0.99); }
+    .write-cta-plus { font-size: 18px; line-height: 1; font-weight: 800; }
 
     /* 타임라인 */
     .timeline-section { margin-top: 22px; }
@@ -444,14 +397,11 @@
   </div>
 
   <div id="diary-pane">
-    <!-- 검색 (최상단, 발견하기 쉽게) -->
-    <div class="diary-search-wrap" id="diary-search-wrap">
-      <span class="diary-search-icon">🔍</span>
-      <input type="search" id="diary-search" class="diary-search-input"
-        placeholder="일기 속 단어·태그로 검색…" autocomplete="off">
-      <button type="button" id="diary-search-clear" class="diary-search-clear" aria-label="지우기">✕</button>
-      <span class="diary-search-new-badge">NEW</span>
-    </div>
+    <!-- 일기 쓰기 CTA (캘린더는 조회용이라 액션 진입점을 명확히) -->
+    <a href="./diary-write.html" class="write-cta" id="write-cta">
+      <span class="write-cta-plus">＋</span>
+      <span>일기 쓰기</span>
+    </a>
 
     <!-- 캘린더 -->
     <div class="calendar-wrap">
@@ -503,7 +453,7 @@
   import { supabase } from './auth.js';
   import { renderNav } from './nav.js';
   import { registerPWA } from './js/pwa.js';
-  import { listMyDiariesByMonth, listMyDiariesTimeline, searchDiaries, TEMPLATES } from './js/diary.js';
+  import { listMyDiariesByMonth, listMyDiariesTimeline, TEMPLATES } from './js/diary.js';
   import { AREAS, PRIORITY_LABELS, listMyGoals, getDashboardSummary } from './js/goals.js';
 
   await renderNav({ active: 'seed', infoIcon: true, title: '라이프' });
@@ -714,90 +664,6 @@
   }
 
   loadTimeline();
-
-  // ── 검색 ──
-  const searchEl = document.getElementById('diary-search');
-  const searchClearEl = document.getElementById('diary-search-clear');
-  const titleEl = document.getElementById('timeline-title');
-  let searchTimer = null;
-  let searchToken = 0;
-
-  function renderSearchResults(items, q) {
-    const body = document.getElementById('timeline-body');
-    document.getElementById('btn-more')?.remove();
-    if (!items.length) {
-      body.innerHTML = `<div class="timeline-empty">'${escapeHtml(q)}'에 해당하는 일기가 없어요.</div>`;
-      return;
-    }
-    body.innerHTML = items.map((d) => {
-      const excerpt = (d.content || '').replace(/\s+/g, ' ').slice(0, 120);
-      return `
-        <a class="diary-card" href="./diary-detail.html?id=${d.id}">
-          <div class="diary-card-meta">
-            <span class="diary-card-date">${formatDate(d.entry_date)}</span>
-            <span class="diary-card-template">${TEMPLATES[d.template_type]?.label || ''}</span>
-          </div>
-          ${d.title ? `<div class="diary-card-title">${highlightHtml(d.title, q)}</div>` : ''}
-          ${excerpt ? `<div class="diary-card-excerpt">${highlightHtml(excerpt, q)}</div>` : ''}
-        </a>`;
-    }).join('');
-  }
-
-  function highlightHtml(text, q) {
-    const safe = escapeHtml(text);
-    if (!q) return safe;
-    const safeQ = escapeHtml(q);
-    return safe.replace(new RegExp(safeQ.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'),
-      (m) => `<mark style="background:#FFF4B8;padding:0 2px;border-radius:2px;">${m}</mark>`);
-  }
-
-  async function runSearch(q) {
-    const my = ++searchToken;
-    titleEl.textContent = `'${q}' 검색 중…`;
-    document.getElementById('timeline-body').innerHTML = `<div class="timeline-empty">검색 중...</div>`;
-    try {
-      const items = await Promise.race([
-        searchDiaries(q, { limit: 40 }),
-        new Promise((_, rej) => setTimeout(() => rej(new Error('검색 시간초과 (8초) — 네트워크 또는 DB가 느립니다')), 8000)),
-      ]);
-      if (my !== searchToken) return;
-      titleEl.textContent = `'${q}' 검색 결과 ${items.length}건`;
-      renderSearchResults(items, q);
-    } catch (err) {
-      if (my !== searchToken) return;
-      console.warn('[seed] 검색 실패:', err);
-      document.getElementById('timeline-body').innerHTML =
-        `<div class="timeline-empty">검색 실패: ${err.message || err}<br><span style="font-size:12px;color:var(--ink-muted);">다시 시도하거나 키워드를 짧게 해보세요.</span></div>`;
-    }
-  }
-
-  function exitSearch() {
-    searchToken++;
-    titleEl.textContent = '최근 일기';
-    timelineCursor = null;
-    timelineExhausted = false;
-    loadTimeline();
-  }
-
-  const searchWrapEl = document.getElementById('diary-search-wrap');
-  searchEl.addEventListener('input', () => {
-    const v = searchEl.value.trim();
-    searchClearEl.classList.toggle('visible', !!v);
-    searchWrapEl?.classList.toggle('has-text', !!v);
-    clearTimeout(searchTimer);
-    if (!v) { exitSearch(); return; }
-    searchTimer = setTimeout(() => runSearch(v), 280);
-  });
-  searchClearEl.addEventListener('click', () => {
-    searchEl.value = '';
-    searchClearEl.classList.remove('visible');
-    searchWrapEl?.classList.remove('has-text');
-    exitSearch();
-    searchEl.focus();
-  });
-  searchEl.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') { searchEl.value = ''; searchClearEl.classList.remove('visible'); exitSearch(); }
-  });
 
   // 초기 탭이 goal이면 대시보드 로드
   if (initialTab === 'goal') loadGoalDashboard();

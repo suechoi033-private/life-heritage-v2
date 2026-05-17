@@ -21,39 +21,24 @@
       margin-bottom: 8px;
     }
 
-    /* 템플릿 선택 */
-    .template-options {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 8px;
-    }
-    .template-opt {
-      padding: 12px 8px;
-      border-radius: var(--radius-sm);
+    /* 일기 종류 선택 */
+    .type-select {
+      width: 100%;
+      padding: 11px 14px;
       border: 1.5px solid var(--line);
-      background: #fff;
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--ink-soft);
-      cursor: pointer;
-      font-family: inherit;
-      text-align: center;
-      transition: all 0.15s;
-    }
-    .template-opt.active {
-      border-color: var(--primary);
-      background: var(--primary-soft);
-      color: var(--primary);
-    }
-    .template-prompt {
-      margin-top: 10px;
-      padding: 12px 14px;
-      background: var(--primary-soft);
       border-radius: var(--radius-sm);
-      font-size: 13px;
-      color: var(--primary);
-      line-height: 1.55;
+      font-size: 14.5px;
+      font-family: inherit;
+      background: #fff;
+      color: var(--ink);
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3e%3cpath fill='%235C8A6F' d='M6 8L0 0h12z'/%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 36px;
     }
+    .type-select:focus { outline: none; border-color: var(--primary); }
 
     /* 날짜 */
     .date-input {
@@ -334,9 +319,8 @@
     </div>
 
     <div class="form-group">
-      <label class="form-label">템플릿</label>
-      <div class="template-options" id="template-options"></div>
-      <div class="template-prompt" id="template-prompt"></div>
+      <label class="form-label" for="diary-type">일기 종류</label>
+      <select id="diary-type" class="type-select"></select>
     </div>
 
     <div class="form-group">
@@ -440,23 +424,12 @@
   document.getElementById('title').value = state.title;
   document.getElementById('content').value = state.content;
 
-  // 템플릿
-  const tplEl = document.getElementById('template-options');
-  const tplPromptEl = document.getElementById('template-prompt');
-  tplEl.innerHTML = Object.entries(TEMPLATES).map(([key, v]) =>
-    `<button type="button" class="template-opt ${key === state.template_type ? 'active' : ''}" data-key="${key}">${v.label}</button>`
+  // 일기 종류 (드롭다운)
+  const typeEl = document.getElementById('diary-type');
+  typeEl.innerHTML = Object.entries(TEMPLATES).map(([key, v]) =>
+    `<option value="${key}" ${key === state.template_type ? 'selected' : ''}>${v.label}</option>`
   ).join('');
-  function refreshTplPrompt() {
-    tplPromptEl.textContent = TEMPLATES[state.template_type].prompt;
-  }
-  refreshTplPrompt();
-  tplEl.addEventListener('click', (e) => {
-    const btn = e.target.closest('.template-opt');
-    if (!btn) return;
-    state.template_type = btn.dataset.key;
-    tplEl.querySelectorAll('.template-opt').forEach((b) => b.classList.toggle('active', b.dataset.key === state.template_type));
-    refreshTplPrompt();
-  });
+  typeEl.addEventListener('change', () => { state.template_type = typeEl.value; });
 
   // 공개범위
   const visEl = document.getElementById('visibility-options');
@@ -578,8 +551,8 @@
   ['title', 'content', 'entry-date'].forEach((id) => {
     document.getElementById(id).addEventListener('input', scheduleAutosave);
   });
-  // 템플릿/공개범위/태그 클릭도 트리거
-  document.getElementById('template-options').addEventListener('click', scheduleAutosave);
+  // 종류/공개범위/태그 변경도 트리거
+  document.getElementById('diary-type').addEventListener('change', scheduleAutosave);
   document.getElementById('visibility-options').addEventListener('click', scheduleAutosave);
   document.getElementById('emotion-tags').addEventListener('input', scheduleAutosave);
   document.getElementById('keyword-tags').addEventListener('input', scheduleAutosave);
@@ -615,8 +588,7 @@
           if (draft.content)    document.getElementById('content').value = draft.content;
           if (draft.template_type) {
             state.template_type = draft.template_type;
-            tplEl.querySelectorAll('.template-opt').forEach((b) => b.classList.toggle('active', b.dataset.key === state.template_type));
-            refreshTplPrompt();
+            typeEl.value = state.template_type;
           }
           if (draft.visibility) {
             state.visibility = draft.visibility;
