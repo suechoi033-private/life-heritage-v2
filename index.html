@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>잇다 — 삶 성찰 및 미래 준비</title>
-  <meta name="description" content="씨앗을 심고, 둥지를 품고, 숲에서 만나고, 뿌리로 돌아오는 곳.">
+  <meta name="description" content="라이프 · 케어링 · 커뮤니티 — 삶의 전주기를 한 곳에서.">
   <meta property="og:title" content="잇다 — 삶 성찰 및 미래 준비">
-  <meta property="og:description" content="일기로 오늘을 심고, 목표로 미래를 가꾸고, 가족을 둥지에 품고, 함께 자라는 숲.">
+  <meta property="og:description" content="라이프 · 케어링 · 커뮤니티, 삶의 전주기를 한 곳에서.">
   <link rel="stylesheet" href="./auth-styles.css">
   <link rel="manifest" href="./manifest.json">
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
@@ -210,7 +210,7 @@ if (user) {
     : `이따가 하지 말고,<br>오늘 한 발씩.`;
 } else {
   greetingLabel.textContent = '잇다';
-  greetingText.innerHTML = `삶을 성찰하고<br>미래를 준비하는 곳.`;
+  greetingText.innerHTML = `라이프 · 케어링 · 커뮤니티,<br>한 곳에서.`;
 }
 
 // ── 오늘의 질문(있으면) ──
@@ -236,9 +236,9 @@ if (user) {
 
   cardsEl.innerHTML = `
     <a href="./seed.html?action=new" class="card-seed">
-      <div class="card-eyebrow">🌱 씨앗 — 오늘의 일기</div>
-      <div class="card-seed-title">${todayQ?.question_text || '오늘 어떤 생각을 심으셨나요?'}</div>
-      <div class="card-cta">한 줄 심기 <span>→</span></div>
+      <div class="card-eyebrow">🌱 라이프 — 오늘의 일기</div>
+      <div class="card-seed-title">${todayQ?.question_text || '오늘 하루, 어떻게 보내셨나요?'}</div>
+      <div class="card-cta">한 줄 적기 <span>→</span></div>
     </a>
 
     <div class="card-row">
@@ -249,7 +249,7 @@ if (user) {
       </a>
       <a href="./nest.html" class="card-mini">
         <div class="card-mini-icon nest">🪺</div>
-        <div class="card-mini-title">둥지</div>
+        <div class="card-mini-title">케어링</div>
         <div class="card-mini-desc">돌봄 대상 ${careCount}분</div>
       </a>
     </div>
@@ -257,8 +257,8 @@ if (user) {
     <a href="./forest.html" class="card-forest">
       <div class="card-forest-icon">🌳</div>
       <div class="card-forest-body">
-        <div class="card-forest-title">숲 — 함께 자라는 곳</div>
-        <div class="card-forest-desc">콘텐츠 · 커뮤니티 · 추모</div>
+        <div class="card-forest-title">커뮤니티</div>
+        <div class="card-forest-desc">콘텐츠 · 게시판 · 추모</div>
       </div>
       <span class="card-arrow">›</span>
     </a>
@@ -266,7 +266,7 @@ if (user) {
     <a href="./root.html" class="card-forest">
       <div class="card-forest-icon" style="background:linear-gradient(135deg,#F5EFE3,#FAF6EC);">🌿</div>
       <div class="card-forest-body">
-        <div class="card-forest-title">뿌리 — 나의 시작점</div>
+        <div class="card-forest-title">마이</div>
         <div class="card-forest-desc">기록 ${diaryCount}개 · 친구 초대 · 알림 설정</div>
       </div>
       <span class="card-arrow">›</span>
@@ -276,28 +276,28 @@ if (user) {
   // 비로그인 온보딩
   cardsEl.innerHTML = `
     <div class="card-onboard">
-      <div class="card-onboard-title">씨앗 · 둥지 · 숲 · 뿌리<br>한 곳에서 가꿔요</div>
+      <div class="card-onboard-title">라이프 · 케어링 · 커뮤니티<br>한 곳에서</div>
       <div class="card-onboard-desc">잇다는 삶을 성찰하고 미래를 준비하는 통합 플랫폼입니다.</div>
       <div class="onboard-options">
         <a href="./signup.html?mode=seed" class="onboard-opt">
           <div class="onboard-opt-icon">🌱</div>
           <div class="onboard-opt-text">
             매일 기록하고 목표를 세우고 싶어요
-            <span class="onboard-opt-sub">씨앗 — 일기 · 3·6·12·60개월 계획</span>
+            <span class="onboard-opt-sub">라이프 — 일기 · 3·6·12·60개월 계획</span>
           </div>
         </a>
         <a href="./signup.html?mode=nest" class="onboard-opt">
           <div class="onboard-opt-icon">🪺</div>
           <div class="onboard-opt-text">
             가족 돌봄을 함께 기록하고 싶어요
-            <span class="onboard-opt-sub">둥지 — 돌봄 일지 · 가족 초대 · 응급</span>
+            <span class="onboard-opt-sub">케어링 — 돌봄 일지 · 가족 초대 · 응급</span>
           </div>
         </a>
         <a href="./signup.html?mode=forest" class="onboard-opt">
           <div class="onboard-opt-icon">🌳</div>
           <div class="onboard-opt-text">
             먼저 둘러보고 싶어요
-            <span class="onboard-opt-sub">숲 — 콘텐츠 · 커뮤니티 · 추모</span>
+            <span class="onboard-opt-sub">커뮤니티 — 콘텐츠 · 게시판 · 추모</span>
           </div>
         </a>
       </div>
@@ -307,8 +307,8 @@ if (user) {
     <a href="./forest.html" class="card-forest" style="margin-top:14px;">
       <div class="card-forest-icon">🌳</div>
       <div class="card-forest-body">
-        <div class="card-forest-title">숲 둘러보기</div>
-        <div class="card-forest-desc">가입 없이 콘텐츠와 커뮤니티 탐색</div>
+        <div class="card-forest-title">커뮤니티 둘러보기</div>
+        <div class="card-forest-desc">가입 없이 콘텐츠와 대화 탐색</div>
       </div>
       <span class="card-arrow">›</span>
     </a>

@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>뿌리 · 잇다</title>
-  <meta name="description" content="나라는 사람의 시작점 — 프로필 · 친구 · 설정">
+  <title>마이 · 잇다</title>
+  <meta name="description" content="프로필 · 친구 · 알림 · 설정">
   <link rel="stylesheet" href="./auth-styles.css">
   <link rel="manifest" href="./manifest.json">
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
@@ -119,7 +119,7 @@
   import { renderNav } from './nav.js';
   import { registerPWA, subscribePush } from './js/pwa.js';
 
-  await renderNav({ active: 'root', infoIcon: false, title: '뿌리' });
+  await renderNav({ active: 'root', infoIcon: false, title: '마이' });
   registerPWA();
 
   const { data: { session } } = await supabase.auth.getSession();

@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>둥지 · 잇다</title>
-  <meta name="description" content="사랑하는 이를 품는 곳 — 가족 돌봄 기록과 협력">
+  <title>케어링 · 잇다</title>
+  <meta name="description" content="가족 돌봄 기록과 협력">
   <link rel="stylesheet" href="./auth-styles.css">
   <link rel="manifest" href="./manifest.json">
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
@@ -136,8 +136,8 @@
 
 <main class="page-shell" id="main-content">
   <div class="nest-hero">
-    <div class="nest-hero-label">둥지</div>
-    <div class="nest-hero-title" id="hero-title">사랑하는 이를<br>품는 곳</div>
+    <div class="nest-hero-label">케어링</div>
+    <div class="nest-hero-title" id="hero-title">가족과 함께<br>곁을 지켜요</div>
     <div class="nest-hero-stat" id="hero-stat">불러오는 중...</div>
   </div>
 
@@ -152,7 +152,7 @@
   import { registerPWA } from './js/pwa.js';
   import { listMyCareSubjects, getCareDashboard, subscribeCareLogs } from './js/care.js';
 
-  await renderNav({ active: 'nest', infoIcon: true, title: '둥지' });
+  await renderNav({ active: 'nest', infoIcon: true, title: '케어링' });
   registerPWA();
 
   const { data: { session } } = await supabase.auth.getSession();
@@ -169,7 +169,7 @@
     listEl.innerHTML = `
       <div class="empty-state">
         <div class="empty-icon">🪺</div>
-        <div class="empty-title">첫 둥지를 만들어요</div>
+        <div class="empty-title">첫 돌봄을 시작해요</div>
         <div class="empty-desc">돌봄 대상을 추가하면 가족과 함께 기록·공유할 수 있어요.</div>
       </div>
       <a href="./care.html?action=add" class="add-subject-btn">＋ 돌봄 대상 추가</a>`;

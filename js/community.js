@@ -116,12 +116,13 @@ export async function createComment({ post_id, body, parent_comment_id = null })
 export async function deleteComment(id, postId) {
   const { error } = await supabase.from('comments').update({ is_deleted: true }).eq('id', id);
   if (error) throw error;
-  // count 감소 시도
   if (postId) {
-    const { data: p } = await supabase.from('community_posts').select('comment_count').eq('id', postId).maybeSingle();
-    if (p && p.comment_count > 0) {
-      await supabase.from('community_posts').update({ comment_count: p.comment_count - 1 }).eq('id', postId);
-    }
+    await supabase.rpc('decrement_post_comment_count', { p_post_id: postId }).then(() => {}, async () => {
+      const { data: p } = await supabase.from('community_posts').select('comment_count').eq('id', postId).maybeSingle();
+      if (p && p.comment_count > 0) {
+        await supabase.from('community_posts').update({ comment_count: p.comment_count - 1 }).eq('id', postId);
+      }
+    });
   }
 }
 

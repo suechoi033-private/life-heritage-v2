@@ -1,4 +1,4 @@
-// 잇다 v3 — 5탭 하단 네비 (홈 · 씨앗 · 둥지 · 숲 · 뿌리)
+// 잇다 v3 — 5탭 하단 네비 (홈 · 라이프 · 케어링 · 커뮤니티 · 마이)
 // 사용법: import { renderNav } from './nav.js';
 //          renderNav({ active: 'seed' });
 // active: home | seed | nest | forest | root
@@ -7,11 +7,11 @@
 import { supabase } from './auth.js';
 
 const TABS = [
-  { key: 'home',   label: '홈',   icon: '🏠', href: './index.html'  },
-  { key: 'seed',   label: '씨앗', icon: '🌱', href: './seed.html'   },
-  { key: 'nest',   label: '둥지', icon: '🪺', href: './nest.html'   },
-  { key: 'forest', label: '숲',   icon: '🌳', href: './forest.html' },
-  { key: 'root',   label: '뿌리', icon: '🌿', href: './root.html'   },
+  { key: 'home',   label: '홈',       icon: '🏠', href: './index.html'  },
+  { key: 'seed',   label: '라이프',   icon: '🌱', href: './seed.html'   },
+  { key: 'nest',   label: '케어링',   icon: '🪺', href: './nest.html'   },
+  { key: 'forest', label: '커뮤니티', icon: '🌳', href: './forest.html' },
+  { key: 'root',   label: '마이',     icon: '🌿', href: './root.html'   },
 ];
 
 // 기존 키 → 신규 키 매핑 (점진적 마이그레이션 기간 동안)

@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>씨앗 · 잇다</title>
-  <meta name="description" content="매일의 생각과 미래를 심는 곳 — 일기와 목표 계획">
+  <title>라이프 · 잇다</title>
+  <meta name="description" content="매일의 기록과 미래 계획 — 일기와 목표">
   <link rel="stylesheet" href="./auth-styles.css">
   <link rel="manifest" href="./manifest.json">
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
@@ -365,8 +365,8 @@
   </div>
 
   <div id="seed-hero" class="seed-hero">
-    <div class="seed-hero-label">씨앗</div>
-    <div class="seed-hero-title" id="hero-title">오늘 어떤 생각을<br>심으셨나요?</div>
+    <div class="seed-hero-label">라이프</div>
+    <div class="seed-hero-title" id="hero-title">오늘 하루,<br>어떻게 보내셨나요?</div>
     <div class="seed-hero-stat" id="seed-stat">불러오는 중...</div>
   </div>
 
@@ -424,7 +424,7 @@
   import { listMyDiariesByMonth, listMyDiariesTimeline, TEMPLATES } from './js/diary.js';
   import { AREAS, PRIORITY_LABELS, listMyGoals, getDashboardSummary } from './js/goals.js';
 
-  await renderNav({ active: 'seed', infoIcon: true, title: '씨앗' });
+  await renderNav({ active: 'seed', infoIcon: true, title: '라이프' });
   registerPWA();
 
   const { data: { session } } = await supabase.auth.getSession();
@@ -453,8 +453,8 @@
     document.getElementById('diary-pane').style.display = tab === 'diary' ? '' : 'none';
     document.getElementById('goal-pane').style.display  = tab === 'goal'  ? '' : 'none';
     document.getElementById('hero-title').innerHTML = tab === 'diary'
-      ? '오늘 어떤 생각을<br>심으셨나요?'
-      : '3·6·12·60개월<br>어디까지 자랐나요?';
+      ? '오늘 하루,<br>어떻게 보내셨나요?'
+      : '3·6·12·60개월<br>목표 진척은요?';
     if (tab === 'goal') loadGoalDashboard();
   }
 

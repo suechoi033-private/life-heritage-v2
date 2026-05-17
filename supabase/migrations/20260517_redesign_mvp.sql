@@ -606,3 +606,20 @@ end $$;
 -- 10. pg_trgm 확장 (검색용)
 -- =============================================================
 create extension if not exists pg_trgm;
+
+-- =============================================================
+-- 11. 카운터 RPC (race condition 안전)
+-- =============================================================
+create or replace function public.increment_post_comment_count(p_post_id uuid)
+returns void language sql security definer as $$
+  update public.community_posts
+  set comment_count = coalesce(comment_count, 0) + 1
+  where id = p_post_id;
+$$;
+
+create or replace function public.decrement_post_comment_count(p_post_id uuid)
+returns void language sql security definer as $$
+  update public.community_posts
+  set comment_count = greatest(coalesce(comment_count, 0) - 1, 0)
+  where id = p_post_id;
+$$;
