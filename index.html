@@ -235,10 +235,10 @@ if (user) {
   const careCount  = careStats?.count ?? 0;
 
   cardsEl.innerHTML = `
-    <a href="./seed.html?action=new" class="card-seed">
-      <div class="card-eyebrow">🌱 라이프 — 오늘의 일기</div>
+    <a href="./ask.html" class="card-seed">
+      <div class="card-eyebrow">🕯 오늘의 질문</div>
       <div class="card-seed-title">${todayQ?.question_text || '오늘 하루, 어떻게 보내셨나요?'}</div>
-      <div class="card-cta">한 줄 적기 <span>→</span></div>
+      <div class="card-cta">답변 남기기 <span>→</span></div>
     </a>
 
     <div class="card-row">
