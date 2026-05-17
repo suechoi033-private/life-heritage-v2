@@ -2,9 +2,9 @@
 import { supabase } from '../auth.js';
 
 export const TEMPLATES = {
-  daily:          { label: '일상 일기',  prompt: '오늘 하루는 어땠나요? 떠오르는 대로 적어보세요.' },
-  gratitude:      { label: '감사 일기',  prompt: '오늘 감사했던 일 세 가지를 떠올려보세요.' },
-  future_mission: { label: '미래 미션',  prompt: '미래의 나에게 어떤 한 걸음을 남기고 싶나요?' },
+  daily:          { label: '일상' },
+  gratitude:      { label: '감사' },
+  future_mission: { label: '기타' },
 };
 
 export const VISIBILITY = {
