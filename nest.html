@@ -201,26 +201,30 @@
   `).join('') + `<a href="./care.html?action=add" class="add-subject-btn">＋ 돌봄 대상 추가</a>`;
 
   // 대시보드 비동기 로딩
+  function paintStats(card, dash) {
+    if (!card) return;
+    card.querySelector('[data-stat="logs"]').textContent       = dash.totalLogs;
+    card.querySelector('[data-stat="days"]').textContent       = dash.daysWithLogs;
+    card.querySelector('[data-stat="completion"]').textContent = `${dash.completionPct}%`;
+  }
   for (const s of subjects) {
     getCareDashboard(s.id).then((dash) => {
+      paintStats(listEl.querySelector(`.subject-card[data-id="${s.id}"]`), dash);
+    }).catch((err) => {
+      console.warn('[케어링] 통계 조회 실패:', s.id, err);
       const card = listEl.querySelector(`.subject-card[data-id="${s.id}"]`);
-      if (!card) return;
-      card.querySelector('[data-stat="logs"]').textContent       = dash.totalLogs;
-      card.querySelector('[data-stat="days"]').textContent       = dash.daysWithLogs;
-      card.querySelector('[data-stat="completion"]').textContent = `${dash.completionPct}%`;
-    }).catch(() => {});
+      if (card) {
+        card.querySelectorAll('[data-stat]').forEach((el) => { el.textContent = '-'; });
+      }
+    });
   }
 
   // 실시간 구독 — 새 기록 들어오면 카운트 갱신
   const unsubscribers = subjects.map((s) =>
     subscribeCareLogs(s.id, () => {
-      getCareDashboard(s.id).then((dash) => {
-        const card = listEl.querySelector(`.subject-card[data-id="${s.id}"]`);
-        if (!card) return;
-        card.querySelector('[data-stat="logs"]').textContent       = dash.totalLogs;
-        card.querySelector('[data-stat="days"]').textContent       = dash.daysWithLogs;
-        card.querySelector('[data-stat="completion"]').textContent = `${dash.completionPct}%`;
-      }).catch(() => {});
+      getCareDashboard(s.id)
+        .then((dash) => paintStats(listEl.querySelector(`.subject-card[data-id="${s.id}"]`), dash))
+        .catch((err) => console.warn('[케어링] 실시간 갱신 실패:', s.id, err));
     })
   );
 

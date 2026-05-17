@@ -36,20 +36,25 @@ export async function listMyCareSubjects() {
 }
 
 // ===== 대시보드 집계 =====
+// care_logs 실제 컬럼: id, subject_id, author_id, log_date, log_time,
+//                      daily_status, medications, mood(v3 신규), created_at
 export async function getCareDashboard(subjectId, days = 28) {
   const since = new Date();
   since.setDate(since.getDate() - days);
 
   const { data: logs, error } = await supabase
     .from('care_logs')
-    .select('id, body, mood, created_at')
+    .select('id, mood, log_date, daily_status, medications, created_at')
     .eq('subject_id', subjectId)
     .gte('created_at', since.toISOString())
     .order('created_at', { ascending: true });
   if (error) throw error;
 
   const totalLogs = logs?.length || 0;
-  const daysWithLogs = new Set((logs || []).map((l) => l.created_at.slice(0, 10))).size;
+  // log_date 우선, 없으면 created_at의 날짜 부분 사용
+  const dayKeys = new Set((logs || []).map((l) => l.log_date || (l.created_at || '').slice(0, 10)));
+  const daysWithLogs = dayKeys.size;
+
   const moodCounts = {};
   (logs || []).forEach((l) => {
     if (l.mood) moodCounts[l.mood] = (moodCounts[l.mood] || 0) + 1;
@@ -108,15 +113,18 @@ export async function deleteEmergencyContact(id) {
 }
 
 // 응급 상황 공유 — care_logs에 [SOS] 마커로 기록
+// 기존 스키마: author_id, daily_status 사용
 export async function broadcastEmergency(subjectId, { note = '', contactsCalled = [] } = {}) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('로그인 필요');
   const body = `[SOS] ${note || '응급 상황 공유'}`
     + (contactsCalled.length ? `\n연락: ${contactsCalled.join(', ')}` : '');
+  const today = new Date().toISOString().slice(0, 10);
   const { data, error } = await supabase.from('care_logs').insert({
     subject_id: subjectId,
-    user_id: user.id,
-    body,
+    author_id: user.id,
+    log_date: today,
+    daily_status: body,
     mood: 'urgent',
   }).select().single();
   if (error) throw error;
