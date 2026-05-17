@@ -61,14 +61,38 @@
       border-radius: 10px;
       padding: 10px 6px;
       text-align: center;
+      text-decoration: none;
+      color: inherit;
+      border: 1px solid transparent;
+      transition: border-color 0.15s, background 0.15s;
+      cursor: pointer;
+      display: block;
     }
+    .stat-cell:hover { border-color: var(--warm); background: var(--warm-soft); }
+    .stat-cell:hover .stat-num { color: var(--warm); }
+    .stat-cell:hover .stat-arrow { opacity: 1; transform: translateX(2px); }
     .stat-num {
       font-family: var(--font-serif);
       font-size: 18px;
       font-weight: 800;
       color: var(--warm);
     }
-    .stat-label { font-size: 10.5px; color: var(--ink-muted); margin-top: 2px; }
+    .stat-label {
+      font-size: 10.5px;
+      color: var(--ink-muted);
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+    }
+    .stat-arrow {
+      font-size: 11px;
+      opacity: 0;
+      transition: opacity 0.15s, transform 0.15s;
+      color: var(--warm);
+      font-weight: 800;
+    }
 
     .subject-actions {
       display: grid;
@@ -188,9 +212,18 @@
         <span class="live-indicator"><span class="live-dot"></span>실시간</span>
       </div>
       <div class="subject-stats">
-        <div class="stat-cell"><div class="stat-num" data-stat="logs">·</div><div class="stat-label">최근 28일 기록</div></div>
-        <div class="stat-cell"><div class="stat-num" data-stat="days">·</div><div class="stat-label">기록한 날</div></div>
-        <div class="stat-cell"><div class="stat-num" data-stat="completion">·</div><div class="stat-label">충실도</div></div>
+        <a class="stat-cell" href="./care.html?subject=${s.id}" aria-label="기록 보러가기">
+          <div class="stat-num" data-stat="logs">·</div>
+          <div class="stat-label">최근 28일 중 기록 <span class="stat-arrow">›</span></div>
+        </a>
+        <a class="stat-cell" href="./care.html?subject=${s.id}" aria-label="기록한 날">
+          <div class="stat-num" data-stat="days">·</div>
+          <div class="stat-label">기록한 날 <span class="stat-arrow">›</span></div>
+        </a>
+        <a class="stat-cell" href="./care-dashboard.html?subject=${s.id}" aria-label="충실도 대시보드">
+          <div class="stat-num" data-stat="completion">·</div>
+          <div class="stat-label">충실도 <span class="stat-arrow">›</span></div>
+        </a>
       </div>
       <div class="subject-actions">
         <a class="subject-action" href="./care.html?subject=${s.id}">📝 기록</a>
