@@ -359,6 +359,17 @@
       letter-spacing: -0.01em;
       margin: 8px 0 4px;
     }
+    .goal-card-why {
+      font-size: 12.5px;
+      color: var(--ink-muted);
+      line-height: 1.5;
+      font-style: italic;
+      margin: 2px 0 8px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
     .goal-card-meta {
       display: flex;
       justify-content: space-between;
@@ -387,7 +398,7 @@
 <main class="page-shell" id="main-content">
   <div class="tab-segment" role="tablist">
     <button type="button" id="tab-diary" class="active" role="tab" aria-selected="true">일기</button>
-    <button type="button" id="tab-goal" role="tab" aria-selected="false">목표·계획</button>
+    <button type="button" id="tab-goal" role="tab" aria-selected="false">버킷리스트</button>
   </div>
 
   <div id="seed-hero" class="seed-hero">
@@ -438,7 +449,7 @@
     <!-- 목표 리스트 -->
     <div class="timeline-section">
       <div class="timeline-head">
-        <div class="timeline-title">진행 중 목표</div>
+        <div class="timeline-title">가꾸고 있는 일</div>
       </div>
       <div id="goal-list-body">
         <div class="timeline-empty">불러오는 중...</div>
@@ -454,7 +465,7 @@
   import { renderNav } from './nav.js';
   import { registerPWA } from './js/pwa.js';
   import { listMyDiariesByMonth, listMyDiariesTimeline, TEMPLATES } from './js/diary.js';
-  import { AREAS, PRIORITY_LABELS, listMyGoals, getDashboardSummary } from './js/goals.js';
+  import { AREAS, listMyGoals, getDashboardSummary } from './js/goals.js';
 
   await renderNav({ active: 'seed', infoIcon: true, title: '라이프' });
   registerPWA();
@@ -485,7 +496,7 @@
     document.getElementById('goal-pane').style.display  = tab === 'goal'  ? '' : 'none';
     document.getElementById('hero-title').innerHTML = tab === 'diary'
       ? '오늘 하루,<br>어떻게 보내셨나요?'
-      : '3·6·12·60개월<br>목표 진척은요?';
+      : '꼭 해보고 싶은 일,<br>잘 가꾸고 계신가요?';
     if (tab === 'goal') loadGoalDashboard();
   }
 
@@ -507,7 +518,7 @@
       if (dc == null && gc == null) {
         stat.textContent = '시작해 보세요';
       } else {
-        stat.innerHTML = `일기 <strong>${dc ?? '-'}</strong>개 · 진행 중 목표 <strong>${gc ?? '-'}</strong>개`;
+        stat.innerHTML = `일기 <strong>${dc ?? '-'}</strong>개 · 버킷리스트 <strong>${gc ?? '-'}</strong>개`;
       }
     } catch (err) {
       console.warn('[seed] 통계 조회 실패:', err);
@@ -706,7 +717,7 @@
           </span>
         </div>`;
       gridEl.innerHTML = '';
-      listEl.innerHTML = `<div class="timeline-empty">목표 목록을 불러오지 못했어요.<br><a href="./plan-write.html" style="color:var(--primary);font-weight:700;">+ 새 목표 만들기</a></div>`;
+      listEl.innerHTML = `<div class="timeline-empty">버킷리스트를 불러오지 못했어요.<br><a href="./plan-write.html" style="color:var(--primary);font-weight:700;">＋ 버킷에 담기</a></div>`;
       goalDashboardLoaded = false; // 다시 시도 가능
       return;
     }
@@ -748,11 +759,11 @@
       if (!filtered.length) {
         listEl.innerHTML = `
           <div class="timeline-empty" style="padding:36px 20px;">
-            <div style="font-size:32px;margin-bottom:10px;">🌱</div>
-            ${areaFilter ? `<strong>${AREAS[areaFilter]?.label}</strong> 영역에 ` : ''}아직 목표가 없어요.<br>
-            <span style="font-size:12.5px;color:var(--ink-muted);">3개월·6개월·1년·5년 단위로 삶의 방향을 그려보세요.</span>
+            <div style="font-size:32px;margin-bottom:10px;">🌿</div>
+            ${areaFilter ? `<strong>${AREAS[areaFilter]?.label}</strong> 영역에 ` : ''}아직 담은 일이 없어요.<br>
+            <span style="font-size:12.5px;color:var(--ink-muted);">꼭 해보고 싶은 일, 꾸준히 가꾸고 싶은 일을<br>한 줄로 적어보세요.</span>
             <br><br>
-            <a href="./plan-write.html" style="display:inline-block;padding:9px 18px;background:var(--primary);color:#fff;border-radius:999px;text-decoration:none;font-weight:700;font-size:13.5px;">＋ 첫 목표 만들기</a>
+            <a href="./plan-write.html" style="display:inline-block;padding:9px 18px;background:var(--primary);color:#fff;border-radius:999px;text-decoration:none;font-weight:700;font-size:13.5px;">＋ 버킷에 담기</a>
           </div>`;
         return;
       }
@@ -772,16 +783,17 @@
     const dueText = daysLeft != null
       ? (daysLeft < 0 ? `⏰ ${-daysLeft}일 지남` : daysLeft === 0 ? '오늘 마감' : `D-${daysLeft}`)
       : '';
+    const why = (g.description || '').replace(/\s+/g, ' ').trim();
     return `
       <a class="goal-card" href="./plan-detail.html?id=${g.id}">
         <div class="goal-card-head">
           <span class="goal-card-chip" style="background:${a.bg};color:${a.color};">${a.icon} ${a.label}</span>
-          <span class="goal-card-priority">⭐ ${PRIORITY_LABELS[g.priority]}</span>
         </div>
         <div class="goal-card-title">${escapeHtml(g.title)}</div>
+        ${why ? `<div class="goal-card-why">"${escapeHtml(why)}"</div>` : ''}
         <div class="goal-card-track"><div class="goal-card-fill" style="width:${g.progress_pct}%;background:${a.color};"></div></div>
         <div class="goal-card-meta">
-          <span>${g.progress_pct}%</span>
+          <span>${g.progress_pct}% 가꾸는 중</span>
           <span>${dueText}</span>
         </div>
       </a>
