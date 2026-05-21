@@ -341,10 +341,10 @@
     <div class="other-places">
       <span class="other-places-label">다른 자리도 둘러보고 싶으세요?</span>
       <div class="other-places-links">
-        <a href="./info.html" class="other-place-link">정보</a>
-        <a href="./care.html" class="other-place-link">돌봄</a>
-        <a href="./write.html" class="other-place-link">기억</a>
-        <a href="./ask.html" class="other-place-link">오늘 잇고</a>
+        <a href="./forest.html" class="other-place-link">커뮤니티</a>
+        <a href="./nest.html" class="other-place-link">돌봄</a>
+        <a href="./self.html" class="other-place-link">나의 삶</a>
+        <a href="./seed.html" class="other-place-link">오늘 잇고</a>
       </div>
     </div>
 
@@ -400,9 +400,9 @@
     },
     memory: {
       icon: '🌿',
-      name: '기억 — 첫 이야기 남기기',
-      desc: '사진 한 장과 짧은 메모로 시작해보세요. 함께 기억해주는 사람들이 곁에 있어요.',
-      href: './write.html',
+      name: '커뮤니티 — 먼저 겪은 사람들의 이야기',
+      desc: '같은 길을 먼저 지난 사람들의 글과 경험을 만나보세요. 혼자가 아니에요.',
+      href: './forest.html',
     },
     reflect: {
       icon: '🪞',
@@ -465,10 +465,10 @@
   document.getElementById('step3-next').addEventListener('click', () => showStep(4));
 
   // ── Step 4: 마무리 → my.html ──
-  document.getElementById('finish-onboarding').addEventListener('click', () => persistAndGo('./my.html'));
+  document.getElementById('finish-onboarding').addEventListener('click', () => persistAndGo('./index.html'));
 
   // ── 건너뛰기 ──
-  document.getElementById('skip-onboarding').addEventListener('click', () => persistAndGo('./my.html'));
+  document.getElementById('skip-onboarding').addEventListener('click', () => persistAndGo('./index.html'));
 
   // ── 이전 버튼 (모든 pane) ──
   document.querySelectorAll('[data-back]').forEach(btn => {

@@ -74,7 +74,7 @@ export async function requireAuth(redirectTo = 'login.html') {
 }
 
 // Redirect if already logged in (use on signup/login pages)
-export async function redirectIfAuthed(redirectTo = './my.html') {
+export async function redirectIfAuthed(redirectTo = './index.html') {
   const session = await getCurrentSession();
   if (session) {
     window.location.href = redirectTo;
