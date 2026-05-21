@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>701호카페 — 엄마의 영수증 만들기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&family=Nanum+Gothic+Coding:wght@400;700&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  :root {
+    --paper: #fcfaf6;
+    --ink: #1c1c1c;
+    --grey: #6e6e6e;
+    --line: #b4b4b4;
+    --red: #d23237;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #e9e7e2;
+    font-family: 'Nanum Gothic', sans-serif;
+    color: var(--ink);
+    padding: 24px 12px 80px;
+  }
+
+  /* ── 상단 도구막대 ── */
+  .toolbar {
+    max-width: 460px;
+    margin: 0 auto 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+  .toolbar button {
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 999px;
+    background: #fff;
+    color: var(--ink);
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0,0,0,.12);
+    transition: transform .05s ease, background .15s ease;
+  }
+  .toolbar button:hover { background: #f1efe9; }
+  .toolbar button:active { transform: translateY(1px); }
+  .toolbar button.primary { background: var(--red); color: #fff; }
+  .toolbar button.primary:hover { background: #b8282d; }
+  .hint {
+    max-width: 460px;
+    margin: 0 auto 18px;
+    text-align: center;
+    font-size: 13px;
+    color: #555;
+    line-height: 1.6;
+  }
+
+  /* ── 영수증 본체 ── */
+  .receipt {
+    width: 460px;
+    max-width: 100%;
+    margin: 0 auto;
+    background: var(--paper);
+    padding: 40px 34px 44px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.18);
+  }
+  .logo-dot {
+    width: 34px; height: 34px;
+    background: var(--red);
+    border-radius: 50%;
+    margin: 0 auto 12px;
+  }
+  .brand {
+    font-family: 'Nanum Gothic', sans-serif;
+    font-weight: 800;
+    font-size: 32px;
+    text-align: center;
+    letter-spacing: -.5px;
+    margin: 0;
+  }
+  .subtitle {
+    text-align: center;
+    color: var(--grey);
+    font-size: 13px;
+    margin: 6px 0 16px;
+    letter-spacing: 1px;
+  }
+  .banner {
+    background: var(--ink);
+    color: var(--paper);
+    text-align: center;
+    font-weight: 800;
+    font-size: 16px;
+    letter-spacing: 4px;
+    padding: 11px 0;
+    margin-bottom: 18px;
+  }
+
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    font-family: 'Nanum Gothic Coding', monospace;
+    font-weight: 700;
+    font-size: 13px;
+    text-align: left;
+    padding: 0 0 6px;
+    border-bottom: 1px solid var(--line);
+  }
+  thead th.amt { text-align: right; }
+  tbody td {
+    font-size: 15px;
+    padding: 7px 4px;
+    vertical-align: top;
+    line-height: 1.4;
+  }
+  td.qty {
+    font-family: 'Nanum Gothic Coding', monospace;
+    font-weight: 700;
+    width: 74px;
+    white-space: nowrap;
+  }
+  td.amt {
+    font-family: 'Nanum Gothic Coding', monospace;
+    text-align: right;
+    width: 52px;
+    white-space: nowrap;
+  }
+  td.desc { width: auto; }
+
+  /* 편집 가능한 칸 표시 (인쇄/저장 시 숨김) */
+  [contenteditable]:focus { outline: 2px solid rgba(210,50,55,.4); border-radius: 3px; }
+  .editing [contenteditable] { background: rgba(210,50,55,.05); border-radius: 3px; }
+
+  /* 행 삭제 버튼 */
+  td.del {
+    width: 22px;
+    text-align: center;
+    color: var(--red);
+    cursor: pointer;
+    font-weight: 700;
+    user-select: none;
+    opacity: 0;
+    transition: opacity .15s;
+  }
+  tbody tr:hover td.del { opacity: 1; }
+
+  .total-line { border-top: 2px solid var(--ink); margin-top: 8px; }
+  .total {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Nanum Gothic Coding', monospace;
+    font-weight: 700;
+    font-size: 21px;
+    padding: 12px 4px;
+    border-bottom: 2px solid var(--ink);
+  }
+  .message {
+    text-align: center;
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 1.7;
+    margin: 26px 0 18px;
+  }
+  .heart { text-align: center; color: var(--red); font-size: 24px; margin-bottom: 10px; }
+  .signoff { text-align: center; color: var(--grey); font-size: 13px; }
+
+  /* 편집/내보내기용 상태 토글 */
+  .del-col-hidden td.del, .del-col-hidden th.del { display: none; }
+
+  @media print {
+    body { background: #fff; padding: 0; }
+    .toolbar, .hint { display: none !important; }
+    .receipt { box-shadow: none; margin: 0 auto; }
+    td.del, th.del { display: none !important; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="toolbar">
+    <button onclick="addRow()">+ 행 추가</button>
+    <button onclick="toggleEditHint()" id="editBtn">편집 영역 표시</button>
+    <button class="primary" onclick="savePNG()">PNG로 저장</button>
+    <button onclick="window.print()">인쇄 / PDF</button>
+  </div>
+  <p class="hint">
+    영수증의 <b>글자를 클릭</b>하면 바로 수정돼요. 행 위에 마우스를 올리면 왼쪽에 <b style="color:#d23237">✕</b>(삭제)가 나타납니다.<br />
+    다 만들었으면 <b>PNG로 저장</b>해서 인쇄하거나, <b>인쇄/PDF</b>로 바로 출력하세요.
+  </p>
+
+  <div class="receipt" id="receipt">
+    <div class="logo-dot"></div>
+    <h1 class="brand" contenteditable="true">701호카페</h1>
+    <div class="subtitle" contenteditable="true">RECEIPT &nbsp;|&nbsp; 701HO CAFE</div>
+    <div class="banner" contenteditable="true">담당 : 엄마</div>
+
+    <table id="receiptTable">
+      <thead>
+        <tr>
+          <th class="del"></th>
+          <th class="qty">수량</th>
+          <th class="desc">내역</th>
+          <th class="amt">금액</th>
+        </tr>
+      </thead>
+      <tbody id="rows"><!-- JS가 채움 --></tbody>
+    </table>
+
+    <div class="total-line"></div>
+    <div class="total">
+      <span contenteditable="true">합계 TOTAL</span>
+      <span contenteditable="true">₩0</span>
+    </div>
+
+    <div class="message" contenteditable="true">이 영수증은 평생 갚을 수 없습니다.<br />오늘, 엄마에게 "고마워"라고 말해주세요.</div>
+    <div class="heart">♥</div>
+    <div class="signoff" contenteditable="true">사랑하는 아들에게 ― 엄마가</div>
+  </div>
+
+<script>
+  const ITEMS = [
+    ["9개월",   "너를 품에 안고 지냈어요"],
+    ["1번",     "너를 세상에 데려왔어요"],
+    ["1,248번", "눈물을 닦아줬어요"],
+    ["5,785번", "엉덩이를 닦아줬어요"],
+    ["516번",   "새벽 3시에 젖을 물렸어요"],
+    ["432번",   "호 — 하고 불어줬어요"],
+    ["907번",   "혼자 서도록 손을 잡아줬어요"],
+    ["312번",   "넘어지는 걸 마음 졸이며 봤어요"],
+    ["312번",   "다시 일으켜 세웠어요"],
+    ["15번",    "침대 밑을 확인해줬어요"],
+    ["20번",    "이빨요정이 되어줬어요"],
+    ["46번",    "네 대신 침착함을 지켰어요"],
+    ["149번",   "아플 때 죽을 끓여줬어요"],
+    ["32번",    "쓰지만 필요한 말을 해줬어요"],
+    ["1,278번", "겉옷 챙기라고 말해줬어요"],
+    ["467번",   "묵묵히 응원해줬어요"],
+    ["15번",    "아빠한테는 말 안 했어요"],
+    ["58번",    "잠들지 않고 너를 기다렸어요"],
+    ["8,765번", "그냥 들어줬어요"],
+    ["1,023번", "용서해줬어요"],
+    ["178번",   "모르는 척 넘어가줬어요"],
+    ["24번",    "한밤중에 데리러 갔어요"],
+    ["3,456번", "괜찮냐고 물어봤어요"],
+    ["1,742번", "안 괜찮은 걸 알아챘어요"],
+    ["4,813번", "잘 다녀오라고 안아줬어요"],
+    ["2,796번", "너무 꽉 안아버렸어요"],
+    ["7,398번", "언제나 너를 먼저 생각했어요"],
+    ["∞",       "끝없이 사랑했어요"],
+  ];
+
+  const rows = document.getElementById('rows');
+
+  function makeRow(qty, desc, amount) {
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td class="del" title="이 행 삭제" onclick="this.parentNode.remove()">✕</td>' +
+      '<td class="qty" contenteditable="true">' + qty + '</td>' +
+      '<td class="desc" contenteditable="true">' + desc + '</td>' +
+      '<td class="amt" contenteditable="true">' + (amount || '₩0') + '</td>';
+    return tr;
+  }
+
+  function addRow() {
+    const tr = makeRow('1번', '내용을 입력하세요', '₩0');
+    rows.appendChild(tr);
+    tr.querySelector('.desc').focus();
+  }
+
+  ITEMS.forEach(([q, d]) => rows.appendChild(makeRow(q, d)));
+
+  let editing = false;
+  function toggleEditHint() {
+    editing = !editing;
+    document.getElementById('receipt').classList.toggle('editing', editing);
+    document.getElementById('editBtn').textContent = editing ? '편집 영역 숨김' : '편집 영역 표시';
+  }
+
+  function savePNG() {
+    const node = document.getElementById('receipt');
+    node.classList.add('del-col-hidden');
+    const wasEditing = editing;
+    if (wasEditing) toggleEditHint();
+    html2canvas(node, { backgroundColor: '#fcfaf6', scale: 3, useCORS: true }).then(canvas => {
+      node.classList.remove('del-col-hidden');
+      const link = document.createElement('a');
+      link.download = '701호카페-엄마영수증.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }).catch(err => {
+      node.classList.remove('del-col-hidden');
+      alert('PNG 저장 중 문제가 발생했어요. 인터넷 연결을 확인하거나, "인쇄 / PDF"로 저장해 보세요.\n\n' + err);
+    });
+  }
+</script>
+</body>
+</html>

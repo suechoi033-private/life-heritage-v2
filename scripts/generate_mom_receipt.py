@@ -90,11 +90,11 @@ draw.ellipse((cx - dot_r, y - 2, cx + dot_r, y - 2 + dot_r * 2), fill=RED)
 y += dot_r * 2 + 14
 
 # 브랜드명
-draw.text((cx, y), "엄마의 식탁", font=f_title, fill=BLACK, anchor="mm")
+draw.text((cx, y), "701호카페", font=f_title, fill=BLACK, anchor="mm")
 y += 50
 
 # 부제
-draw.text((cx, y), "RECEIPT  |  MOM'S TABLE", font=f_subtitle, fill=GREY, anchor="mm")
+draw.text((cx, y), "RECEIPT  |  701HO CAFE", font=f_subtitle, fill=GREY, anchor="mm")
 y += 36
 
 # 검은 배너
