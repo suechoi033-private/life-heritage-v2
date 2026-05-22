@@ -84,6 +84,7 @@ export const CONTENT_CATEGORIES = {
   finance:    '재정',
   health:     '건강',
   family:     '가족',
+  grief:      '사별',
   death_prep: '죽음 준비',
   memorial:   '추모',
   reflection: '성찰',

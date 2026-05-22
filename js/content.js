@@ -4,6 +4,7 @@ import { supabase } from '../auth.js';
 export const CATEGORIES = {
   reflection: { label: '오늘의 성찰', icon: '🕯' },
   family:     { label: '가족 돌봄',   icon: '🏡' },
+  grief:      { label: '사별',         icon: '🤍' },
   health:     { label: '건강',         icon: '💪' },
   finance:    { label: '재정',         icon: '💰' },
   death_prep: { label: '죽음 준비',    icon: '🕊' },
