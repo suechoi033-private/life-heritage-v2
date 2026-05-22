@@ -1,30 +1,31 @@
 /* Life Heritage · 잇다 — Auth pages shared styles
-   Matches landing-v2 terracotta palette */
+   v3 — 화이트 베이스 + 딥 에버그린 + 나눔명조 */
 
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css');
+@import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap');
 
 :root {
-  /* === 잇다 디자인 토큰 v2 (모바일 우선) === */
-  --bg: #FAFAF7;          /* 오프화이트 기본 배경 */
-  --bg-alt: #F0F4F2;      /* 카드·섹션 배경 */
-  --bg-dark: #1A1F1C;
-  --ink: #2A2D2B;         /* 진회색-그린 본문 */
-  --ink-soft: #4A5248;
-  --ink-muted: #6F7A6D;
-  --ink-faint: #B8C4B5;
-  --primary: #5C8A6F;          /* 잇다 세이지 — 주요 CTA·강조 */
-  --primary-hover: #4A7059;
-  --primary-soft: #E8F0EE;     /* 옅은 세이지 */
-  --warm: #B07043;             /* 테라코타 — nudge 강조 */
+  /* === 잇다 디자인 토큰 v3 — 화이트 베이스 + 딥 에버그린 (모바일 우선) === */
+  --bg: #FFFFFF;          /* 화이트 기본 배경 */
+  --bg-alt: #F4F6F4;      /* 카드·섹션 — whisper 쿨그레이 */
+  --bg-dark: #16201A;
+  --ink: #1C2620;         /* 딥 쿨 차콜그린 본문 */
+  --ink-soft: #3E4A43;
+  --ink-muted: #6B756E;
+  --ink-faint: #AFB8B2;
+  --primary: #1F6E4E;          /* 딥 에버그린 — 주요 CTA·강조 */
+  --primary-hover: #185A40;
+  --primary-soft: #E7F1EC;     /* 옅은 에버그린 틴트 */
+  --warm: #B07043;             /* 클레이 — 돌봄 미세 악센트 */
   --warm-hover: #8F5A35;
-  --warm-soft: #F5EFE3;        /* 아이보리 — warm 카드 배경 */
-  --line: #DDE5E0;
+  --warm-soft: #F6EEE7;        /* 따뜻한 카드 배경 */
+  --line: #E5EAE6;             /* 쿨 그레이 라인 */
   --danger: #C94F4F;
   --danger-soft: #F5E4E4;
-  --success: #4F8A67;
+  --success: #2E8A5E;
   --success-soft: #E4F2EA;
   --font-sans: 'Pretendard Variable', 'Noto Sans KR', 'Apple SD Gothic Neo', '맑은 고딕', 'Malgun Gothic', sans-serif;
-  --font-serif: 'Pretendard Variable', 'Noto Sans KR', 'Apple SD Gothic Neo', '맑은 고딕', 'Malgun Gothic', sans-serif;
+  --font-serif: 'Nanum Myeongjo', 'Noto Serif KR', 'Apple SD Gothic Neo', serif;
   --radius: 16px;
   --radius-sm: 12px;
 }
@@ -158,7 +159,7 @@ nav {
 .field input:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 4px rgba(92, 138, 111, 0.12);
+  box-shadow: 0 0 0 4px rgba(31,110,78, 0.12);
 }
 
 .field-hint {
@@ -419,7 +420,7 @@ body.has-bottom-nav {
 
 .card:hover {
   border-color: var(--primary-soft);
-  box-shadow: 0 4px 16px rgba(92,138,111,0.08);
+  box-shadow: 0 4px 16px rgba(31,110,78,0.08);
 }
 
 .card + .card { margin-top: 12px; }

@@ -3,7 +3,7 @@ import { supabase } from '../auth.js';
 
 export const AREAS = {
   finance: { label: '재정',     icon: '💰', color: '#D4A645', bg: '#FBF5E6' },
-  health:  { label: '건강',     icon: '🌿', color: '#5C8A6F', bg: '#E8F0EE' },
+  health:  { label: '건강',     icon: '🌿', color: '#1F6E4E', bg: '#E7F1EC' },
   family:  { label: '가족',     icon: '🏡', color: '#4A7FA8', bg: '#E3EEF7' },
   growth:  { label: '개인 성장', icon: '🌱', color: '#9A6BB8', bg: '#F0E7F6' },
 };
