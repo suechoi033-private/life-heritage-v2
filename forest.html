@@ -232,6 +232,7 @@
           .order('created_at', { ascending: false })
           .limit(20);
         if (activeCat !== 'all') q = q.eq('category', activeCat);
+        else q = q.neq('category', 'memorial'); // 추모 보류·숨김 — 전체 피드에서 제외
         const { data, error } = await q;
         if (error) throw error;
         renderContentList(data || [], topHtml);

@@ -17,7 +17,7 @@ export async function listBoards() {
     .eq('is_active', true)
     .order('sort_order');
   if (error) throw error;
-  return data || [];
+  return (data || []).filter(b => b.slug !== 'memorial'); // 추모 보류·숨김
 }
 
 // 게시글 목록
