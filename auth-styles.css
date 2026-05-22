@@ -39,6 +39,7 @@ body {
   color: var(--ink);
   line-height: 1.6;
   font-size: 16px;
+  zoom: 1.1;                 /* 전역 110% 스케일 — 가독성 강화 (텍스트·UI 비례 확대) */
   -webkit-font-smoothing: antialiased;
   word-break: keep-all;
   overflow-wrap: break-word;
