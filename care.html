@@ -827,6 +827,7 @@
         <span class="subjects-section-title">돌봄 대상</span>
         <div style="display: flex; align-items: center; gap: 12px;">
           <button type="button" id="add-subject-top-btn" style="background:none;border:none;color:var(--ink-muted);font-weight:600;cursor:pointer;font-size:13px;font-family:inherit;">＋ 대상 추가</button>
+          <button type="button" id="invite-family-top-btn" style="background:none;border:none;color:var(--primary);font-weight:700;cursor:pointer;font-size:13px;font-family:inherit;text-decoration:underline;">＋ 가족 초대</button>
           <button type="button" id="enter-code-top-btn" style="background:none;border:none;color:var(--primary);font-weight:700;cursor:pointer;font-size:13px;font-family:inherit;text-decoration:underline;">＋ 초대 코드 입력</button>
           <span class="subjects-section-count" id="subjects-count"></span>
         </div>
@@ -1299,6 +1300,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── Load subjects on start ────────────
   await loadSubjects();
 
+  // nest.html 등에서 ?action=add 로 진입하면 대상 추가 모달 자동 오픈
+  if (_urlParams.get('action') === 'add') {
+    openSubjectModal();
+  }
+
   async function loadSubjects() {
     // RLS가 owner + 수락한 멤버 모두에게 접근 허용
     const [subjectsRes, membershipsRes] = await Promise.all([
@@ -1384,11 +1390,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       const logCount = state.logCountBySubject?.[s.id] || 0;
       const selected = s.id === state.currentSubjectId ? 'selected' : '';
-      const statusLabel = s.status === 'memorialized'
-        ? '🕊️ 추모 중'
-        : s.status === 'transferred'
-          ? '🌿 이관됨'
-          : '';
+      const statusLabel = s.status === 'transferred'
+        ? '🌿 이관됨'
+        : '';
       return `
         <button type="button" class="subject-card ${selected}" data-subject-id="${s.id}">
           <div class="subject-card-head">
@@ -1753,12 +1757,30 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // 초대 코드 생성
-  $('create-invite-btn').addEventListener('click', () => {
+  function openInviteModal() {
     $('invite-form-area').classList.remove('hidden');
     $('invite-result-area').classList.add('hidden');
     $('invite-name').value = '';
     $('invite-role').value = 'family';
     $('invite-modal').classList.remove('hidden');
+  }
+  $('create-invite-btn').addEventListener('click', openInviteModal);
+
+  // 헤더 "＋ 가족 초대": 가족 탭을 활성화한 뒤 초대 모달을 연다
+  $('invite-family-top-btn')?.addEventListener('click', async () => {
+    if (!state.currentSubjectId) {
+      showAlert('먼저 돌봄 대상을 추가해 주세요.');
+      return;
+    }
+    const familyTabBtn = document.querySelector('.tab[data-tab="family"]');
+    if (familyTabBtn) {
+      document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b === familyTabBtn));
+      document.querySelectorAll('.tab-panel').forEach(p => {
+        p.classList.toggle('hidden', p.dataset.panel !== 'family');
+      });
+      await loadFamilyTab();
+    }
+    openInviteModal();
   });
 
   $('generate-code-btn').addEventListener('click', async () => {
@@ -1814,11 +1836,13 @@ document.addEventListener('DOMContentLoaded', () => {
   $('share-code-btn').addEventListener('click', async () => {
     const code = $('generated-code-display').textContent;
     const subject = state.subjects.find(s => s.id === state.currentSubjectId);
-    // 공유 메시지는 항상 공개 도메인 사용 (localhost 방지)
+    // 공유 메시지는 항상 공개 배포 도메인 사용 (localhost 방지)
+    // 배포: GitHub Pages (https://suechoi033-private.github.io/life-heritage-v2/)
+    const baseUrl = new URL('./signup.html', window.location.href);
     const PUBLIC_ORIGIN = window.location.hostname === 'localhost'
-      ? 'https://itda-one.vercel.app'
-      : window.location.origin;
-    const shareText = `[잇다] ${subject?.name || ''} 돌봄에 함께해주세요.\n\n아래 링크에서 가입(또는 로그인)하시면 자동으로 합류돼요.\n${PUBLIC_ORIGIN}/signup.html?invite=${code}\n\n(혹시 자동 처리가 안 되면 직접 입력하세요. 초대 코드: ${code}, 7일간 유효)`;
+      ? 'https://suechoi033-private.github.io/life-heritage-v2'
+      : baseUrl.href.replace(/\/signup\.html$/, '');
+    const shareText = `[잇다] ${subject?.name || ''} 돌봄에 함께해주세요.\n\n아래 링크에서 가입(또는 로그인)하시면 자동으로 합류돼요.\n${PUBLIC_ORIGIN}/signup.html?invite=${code}\n\n(혹시 자동 처리가 안 되면 직접 입력하세요. 초대 코드: ${code}, 30일간 유효)`;
     const hintEl = $('share-fallback-hint');
     hintEl.classList.add('hidden');
 
