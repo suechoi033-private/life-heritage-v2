@@ -210,7 +210,75 @@
       background: var(--bg-alt);
       border-radius: var(--radius-sm);
     }
-  </style>
+
+    /* 회원탈퇴 — 위험 톤, 눈에 띄지 않게 */
+    .danger-zone {
+      margin: 22px 0 8px;
+      text-align: center;
+    }
+    .btn-delete-account {
+      background: transparent; border: none;
+      color: var(--ink-faint);
+      font-size: 12px; font-weight: 600;
+      text-decoration: underline; text-underline-offset: 3px;
+      cursor: pointer; font-family: inherit;
+      padding: 6px 10px;
+    }
+    .btn-delete-account:hover { color: var(--danger); }
+
+    /* 탈퇴 확인 모달 */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(33, 38, 30, 0.45);
+      display: none; align-items: center; justify-content: center;
+      padding: 20px; z-index: 1000;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-card {
+      background: #fff;
+      border-radius: var(--radius);
+      max-width: 420px; width: 100%;
+      padding: 22px 20px;
+      max-height: 88vh; overflow-y: auto;
+    }
+    .modal-title {
+      font-family: var(--font-serif);
+      font-size: 19px; font-weight: 800;
+      color: var(--ink); margin-bottom: 10px;
+    }
+    .modal-body { font-size: 13.5px; color: var(--ink-soft); line-height: 1.65; }
+    .modal-body ul { margin: 8px 0 0; padding-left: 18px; }
+    .modal-body li { margin-bottom: 3px; }
+    .modal-warn {
+      background: var(--danger-soft); color: var(--danger);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px; margin: 14px 0;
+      font-size: 12.5px; font-weight: 700; line-height: 1.55;
+    }
+    .modal-confirm-label { font-size: 12.5px; color: var(--ink-soft); margin: 14px 0 6px; }
+    .modal-confirm-label b { color: var(--ink); }
+    .modal-confirm-input {
+      width: 100%; box-sizing: border-box;
+      border: 1px solid var(--line); border-radius: var(--radius-sm);
+      padding: 11px 12px; font-size: 14px; font-family: inherit;
+    }
+    .modal-confirm-input:focus { outline: none; border-color: var(--danger); }
+    .modal-actions { display: flex; gap: 8px; margin-top: 18px; }
+    .modal-btn {
+      flex: 1; padding: 12px; border-radius: var(--radius-sm);
+      font-size: 14px; font-weight: 700; cursor: pointer;
+      font-family: inherit; border: 1px solid var(--line);
+    }
+    .modal-btn-cancel { background: var(--bg-alt); color: var(--ink-soft); }
+    .modal-btn-delete {
+      background: var(--danger); color: #fff; border-color: var(--danger);
+    }
+    .modal-btn-delete:disabled { opacity: 0.45; cursor: not-allowed; }
+    .modal-error {
+      margin-top: 12px; font-size: 12.5px; color: var(--danger);
+      font-weight: 600; line-height: 1.5;
+    }
+</style>
 </head>
 <body>
 
@@ -302,7 +370,38 @@
       <span class="menu-arrow">›</span>
     </button>
   </div>
+
+  <!-- 회원탈퇴 (위험 톤, 눈에 띄지 않게) -->
+  <div class="danger-zone">
+    <button type="button" class="btn-delete-account" id="btn-delete-account">회원탈퇴</button>
+  </div>
 </main>
+
+<!-- 회원탈퇴 확인 모달 -->
+<div class="modal-overlay" id="delete-modal" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
+  <div class="modal-card">
+    <div class="modal-title" id="delete-modal-title">회원탈퇴</div>
+    <div class="modal-body">
+      <p>탈퇴하시면 잇다 계정과 그동안 기록하신 데이터가 <b>영구적으로 삭제</b>됩니다. 삭제된 데이터는 다시 복구할 수 없습니다.</p>
+      <p style="margin-top:10px;">함께 삭제되는 정보</p>
+      <ul>
+        <li>작성하신 일기와 답변</li>
+        <li>돌봄 기록</li>
+        <li>커뮤니티 게시글·댓글·반응</li>
+        <li>작성하신 콘텐츠와 북마크</li>
+        <li>가족·친구 연결, 알림 설정, 프로필 정보</li>
+      </ul>
+      <div class="modal-warn">이 작업은 되돌릴 수 없습니다. 개인정보보호법(PIPA)에 따라 회원정보 및 관련 데이터는 지체 없이 파기됩니다.</div>
+      <div class="modal-confirm-label">계속하시려면 아래 칸에 <b>탈퇴</b>라고 입력해 주세요.</div>
+      <input type="text" class="modal-confirm-input" id="delete-confirm-input" placeholder="탈퇴" autocomplete="off" inputmode="text" />
+      <div class="modal-error" id="delete-error" style="display:none;"></div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="modal-btn modal-btn-cancel" id="delete-cancel">취소</button>
+      <button type="button" class="modal-btn modal-btn-delete" id="delete-confirm" disabled>탈퇴하기</button>
+    </div>
+  </div>
+</div>
 
 <script type="module">
   import { supabase, signOut } from './auth.js';
@@ -511,6 +610,62 @@
     if (!confirm('로그아웃 하시겠어요?')) return;
     await signOut();
     window.location.href = './index.html';
+  });
+
+  // ── 회원탈퇴 ──────────────────────────────────────────────
+  const deleteModal   = document.getElementById('delete-modal');
+  const deleteInput   = document.getElementById('delete-confirm-input');
+  const deleteConfirm = document.getElementById('delete-confirm');
+  const deleteCancel  = document.getElementById('delete-cancel');
+  const deleteError   = document.getElementById('delete-error');
+
+  function openDeleteModal() {
+    deleteInput.value = '';
+    deleteConfirm.disabled = true;
+    deleteError.style.display = 'none';
+    deleteModal.classList.add('open');
+    setTimeout(() => deleteInput.focus(), 50);
+  }
+  function closeDeleteModal() {
+    deleteModal.classList.remove('open');
+  }
+
+  document.getElementById('btn-delete-account').addEventListener('click', openDeleteModal);
+  deleteCancel.addEventListener('click', closeDeleteModal);
+  deleteModal.addEventListener('click', (e) => {
+    if (e.target === deleteModal) closeDeleteModal();
+  });
+
+  // "탈퇴" 정확히 입력해야만 버튼 활성화
+  deleteInput.addEventListener('input', () => {
+    deleteConfirm.disabled = deleteInput.value.trim() !== '탈퇴';
+  });
+
+  deleteConfirm.addEventListener('click', async () => {
+    if (deleteInput.value.trim() !== '탈퇴') return;
+    deleteConfirm.disabled = true;
+    deleteConfirm.textContent = '처리 중...';
+    deleteError.style.display = 'none';
+
+    try {
+      const { data, error } = await supabase.functions.invoke('delete-account', {
+        method: 'POST',
+      });
+      // 함수가 아직 배포되지 않았거나(404) 호출 실패 / 함수 내부 오류 처리
+      if (error || (data && data.error)) {
+        throw new Error((error && error.message) || (data && data.error) || 'unknown');
+      }
+      // 성공 → 세션 종료 후 안내 페이지로
+      await signOut();
+      window.location.href = './login.html?goodbye=1';
+    } catch (err) {
+      // 함수 미배포·네트워크 등 — 앱이 깨지지 않게 graceful 안내
+      console.warn('delete-account 실패:', err);
+      deleteError.textContent = '현재 탈퇴 처리를 준비 중입니다. 불편을 드려 죄송합니다. 고객센터(sue.choi033@gmail.com)로 문의해 주시면 직접 처리해 드리겠습니다.';
+      deleteError.style.display = 'block';
+      deleteConfirm.disabled = false;
+      deleteConfirm.textContent = '탈퇴하기';
+    }
   });
 </script>
 
