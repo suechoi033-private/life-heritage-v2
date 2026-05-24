@@ -26,10 +26,12 @@
       font-size: 24px; font-weight: 800;
       flex-shrink: 0;
     }
-    .my-name { font-size: 17px; font-weight: 800; letter-spacing: -0.01em; }
-    .my-email { font-size: 12.5px; color: var(--ink-muted); margin-top: 3px; }
+    .my-profile-info { min-width: 0; flex: 1; }
+    .my-name { font-size: 17px; font-weight: 800; letter-spacing: -0.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .my-email { font-size: 12.5px; color: var(--ink-muted); margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .my-edit-btn {
       margin-left: auto;
+      flex-shrink: 0;
       background: transparent; border: 1px solid var(--line);
       padding: 6px 12px; border-radius: 999px;
       font-size: 12px; font-weight: 700; color: var(--ink-soft);
@@ -291,7 +293,7 @@
   <!-- 프로필 -->
   <div class="my-profile">
     <div class="my-avatar" id="my-avatar">·</div>
-    <div>
+    <div class="my-profile-info">
       <div class="my-name" id="my-name">불러오는 중...</div>
       <div class="my-email" id="my-email"></div>
     </div>
