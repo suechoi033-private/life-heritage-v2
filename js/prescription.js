@@ -86,3 +86,38 @@ export async function deletePrescription(rx) {
 export function prescriptionImageUrl(storagePath, expiresIn = 600) {
   return getSignedUrl(BUCKET, storagePath, expiresIn);
 }
+
+// ── 추정 관리 영역 (진단 아님) ───────────────────────
+// 약물 적응증(효능) 텍스트의 키워드로 케어 카테고리를 추정한다.
+// 결정적(deterministic) 규칙 — AI 진단이 아니라 일반 정보 매핑.
+const CATEGORY_KEYWORDS = {
+  hypertension:  ['고혈압', '혈압'],
+  diabetes:      ['당뇨', '혈당', '인슐린'],
+  dyslipidemia:  ['고지혈', '콜레스테롤', '이상지질', '중성지방'],
+  bone_joint:    ['관절염', '골다공증', '관절', '연골'],
+};
+
+// drugs: care_prescription_drugs 행 배열 → 추정 카테고리 키 배열
+export function deriveCategories(drugs) {
+  const found = new Set();
+  (drugs || []).forEach((d) => {
+    const text = `${d.efficacy || ''} ${d.matched_name || ''} ${d.raw_name || ''}`;
+    Object.entries(CATEGORY_KEYWORDS).forEach(([cat, kws]) => {
+      if (kws.some((k) => text.includes(k))) found.add(cat);
+    });
+  });
+  return Array.from(found);
+}
+
+// 카테고리 키 배열 → 케어 가이드 콘텐츠
+export async function listCareGuides(categories) {
+  if (!categories?.length) return [];
+  const { data, error } = await supabase
+    .from('care_guides')
+    .select('*')
+    .in('category', categories)
+    .eq('is_published', true)
+    .order('sort_order', { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
