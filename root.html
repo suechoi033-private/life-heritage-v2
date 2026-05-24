@@ -274,6 +274,11 @@
       background: var(--danger); color: #fff; border-color: var(--danger);
     }
     .modal-btn-delete:disabled { opacity: 0.45; cursor: not-allowed; }
+    .modal-btn-save {
+      background: var(--primary); color: #fff; border-color: var(--primary);
+    }
+    .modal-btn-save:disabled { opacity: 0.45; cursor: not-allowed; }
+    #name-modal .modal-confirm-input:focus { border-color: var(--primary); }
     .modal-error {
       margin-top: 12px; font-size: 12.5px; color: var(--danger);
       font-weight: 600; line-height: 1.5;
@@ -290,6 +295,7 @@
       <div class="my-name" id="my-name">불러오는 중...</div>
       <div class="my-email" id="my-email"></div>
     </div>
+    <button type="button" class="my-edit-btn" id="my-edit-btn" aria-label="표시 이름 편집">✏️ 편집</button>
   </div>
 
   <!-- 통계 4칸 -->
@@ -403,6 +409,22 @@
   </div>
 </div>
 
+<!-- 표시 이름 편집 모달 -->
+<div class="modal-overlay" id="name-modal" role="dialog" aria-modal="true" aria-labelledby="name-modal-title">
+  <div class="modal-card">
+    <div class="modal-title" id="name-modal-title">표시 이름 변경</div>
+    <div class="modal-body">
+      <div class="modal-confirm-label">잇다에서 보여질 이름을 입력해 주세요. (1~20자)</div>
+      <input type="text" class="modal-confirm-input" id="name-input" placeholder="표시 이름" autocomplete="off" maxlength="20" inputmode="text" />
+      <div class="modal-error" id="name-error" style="display:none;"></div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="modal-btn modal-btn-cancel" id="name-cancel">취소</button>
+      <button type="button" class="modal-btn modal-btn-save" id="name-save">저장</button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
   import { supabase, signOut } from './auth.js';
   import { renderNav } from './nav.js';
@@ -420,11 +442,14 @@
   if (!session) { window.location.href = './login.html'; throw new Error('로그인 필요'); }
 
   const user = session.user;
-  const name = user.user_metadata?.name || user.email?.split('@')[0] || '잇다 사용자';
+  let displayName = user.user_metadata?.name || user.email?.split('@')[0] || '잇다 사용자';
 
-  document.getElementById('my-name').textContent  = name;
+  function renderProfileName(n) {
+    document.getElementById('my-name').textContent   = n;
+    document.getElementById('my-avatar').textContent = (n[0] || '·').toUpperCase();
+  }
+  renderProfileName(displayName);
   document.getElementById('my-email').textContent = user.email || '';
-  document.getElementById('my-avatar').textContent = (name[0] || '·').toUpperCase();
 
   // 운영자 메뉴
   if (user.email === 'sue.choi033@gmail.com') {
@@ -610,6 +635,73 @@
     if (!confirm('로그아웃 하시겠어요?')) return;
     await signOut();
     window.location.href = './index.html';
+  });
+
+  // ── 표시 이름 편집 ────────────────────────────────────────
+  const nameModal   = document.getElementById('name-modal');
+  const nameInput   = document.getElementById('name-input');
+  const nameSave    = document.getElementById('name-save');
+  const nameCancel  = document.getElementById('name-cancel');
+  const nameError   = document.getElementById('name-error');
+
+  function openNameModal() {
+    nameInput.value = displayName;
+    nameError.style.display = 'none';
+    nameSave.disabled = false;
+    nameSave.textContent = '저장';
+    nameModal.classList.add('open');
+    setTimeout(() => { nameInput.focus(); nameInput.select(); }, 50);
+  }
+  function closeNameModal() {
+    nameModal.classList.remove('open');
+  }
+
+  document.getElementById('my-edit-btn').addEventListener('click', openNameModal);
+  nameCancel.addEventListener('click', closeNameModal);
+  nameModal.addEventListener('click', (e) => {
+    if (e.target === nameModal) closeNameModal();
+  });
+  nameInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); nameSave.click(); }
+  });
+
+  nameSave.addEventListener('click', async () => {
+    const newName = nameInput.value.trim();
+    nameError.style.display = 'none';
+
+    if (newName.length < 1 || newName.length > 20) {
+      nameError.textContent = '이름은 1~20자로 입력해 주세요.';
+      nameError.style.display = 'block';
+      return;
+    }
+    if (newName === displayName) { closeNameModal(); return; }
+
+    nameSave.disabled = true;
+    nameSave.textContent = '저장 중...';
+
+    try {
+      // 1) profiles 행(본인) 업데이트 — RLS상 본인 행 수정 허용 전제
+      const { error: pErr } = await supabase
+        .from('profiles')
+        .update({ name: newName })
+        .eq('id', user.id);
+      if (pErr) throw pErr;
+
+      // 2) auth user_metadata도 일치시켜 다른 화면과 어긋나지 않게
+      const { error: aErr } = await supabase.auth.updateUser({ data: { name: newName } });
+      if (aErr) throw aErr;
+
+      // 화면 즉시 갱신
+      displayName = newName;
+      renderProfileName(displayName);
+      closeNameModal();
+    } catch (err) {
+      console.warn('표시 이름 변경 실패:', err);
+      nameError.textContent = '이름 변경에 실패했어요. 잠시 후 다시 시도해 주세요.';
+      nameError.style.display = 'block';
+      nameSave.disabled = false;
+      nameSave.textContent = '저장';
+    }
   });
 
   // ── 회원탈퇴 ──────────────────────────────────────────────
