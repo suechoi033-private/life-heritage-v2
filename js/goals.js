@@ -33,9 +33,16 @@ export function defaultDueDate(periodMonths, startDate = new Date()) {
   return d.toISOString().slice(0, 10);
 }
 
+// 로컬 세션에서 user를 읽는다(네트워크 검증 없는 getSession).
+// getUser()는 GoTrue /user로 네트워크 왕복을 하므로 읽기 경로에서는 사용하지 않는다.
+async function currentUser() {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session?.user || null;
+}
+
 // ===== 목표 CRUD =====
 export async function listMyGoals({ status = 'active', area = null } = {}) {
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await currentUser();
   if (!user) return [];
   let q = supabase.from('goals')
     .select('id, area, title, description, period_months, start_date, due_date, priority, status, progress_pct, created_at')
@@ -159,7 +166,7 @@ export async function recalcGoalProgress(goalId) {
 
 // ===== 대시보드 집계 =====
 export async function getDashboardSummary() {
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await currentUser();
   if (!user) return null;
   const { data: goals, error } = await supabase.from('goals')
     .select('area, status, progress_pct, due_date')

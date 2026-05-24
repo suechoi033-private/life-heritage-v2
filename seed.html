@@ -723,6 +723,11 @@
     }
 
     try {
+      if (!summary) {
+        // 세션이 없거나 집계 실패 — 목록만이라도 보여준다
+        summary = { overallProgress: 0, totalActive: (goals || []).length, byArea: {}, upcomingDeadlines: 0 };
+        Object.keys(AREAS).forEach((k) => { summary.byArea[k] = { active: 0, completed: 0, avgProgress: 0 }; });
+      }
 
       // 전체 진척 카드
       summaryEl.innerHTML = `
