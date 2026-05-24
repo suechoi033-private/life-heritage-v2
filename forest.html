@@ -71,6 +71,7 @@
       margin: 8px 0 6px;
     }
     .content-card-meta { font-size: 12px; color: var(--ink-muted); display: flex; gap: 10px; }
+    .content-card-author { font-weight: 800; color: var(--ink-soft); }
 
     /* 오늘의 성찰 질문 카드 (보라 강조 — 답변카드 시각 구분) */
     .question-card {
@@ -227,7 +228,7 @@
 
       if (activeSeg === 'content') {
         let q = supabase.from('contents')
-          .select('id, category, title, body, author_type, view_count, like_count, created_at')
+          .select('id, category, title, body, author_type, creator_id, view_count, like_count, created_at, profiles:creator_id(name, avatar_url)')
           .eq('is_published', true)
           .order('created_at', { ascending: false })
           .limit(20);
@@ -297,12 +298,11 @@
     }
     body.innerHTML = topHtml + items.map(c => `
       <a class="content-card" href="./content-detail.html?id=${c.id}">
-        <span class="content-card-badge ${c.author_type === 'official' ? 'badge-official' : 'badge-user'}">
-          ${c.author_type === 'official' ? '공식' : '유저'}
-        </span>
+        ${c.author_type === 'official' ? `<span class="content-card-badge badge-official">공식</span>` : ''}
         <span style="font-size:11px;color:var(--ink-muted);font-weight:700;">${labelFor(c.category)}</span>
         <div class="content-card-title">${escapeHtml(c.title)}</div>
         <div class="content-card-meta">
+          ${c.profiles?.name ? `<span class="content-card-author">${escapeHtml(c.profiles.name)}</span>` : ''}
           <span>👁 ${c.view_count ?? 0}</span>
           <span>❤ ${c.like_count ?? 0}</span>
           <span>${formatDate(c.created_at)}</span>

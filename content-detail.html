@@ -26,6 +26,9 @@
       margin: 12px 0 8px;
     }
     .content-meta-sub { font-size: 12px; color: var(--ink-muted); display: flex; gap: 10px; }
+    .content-byline { font-size: 12px; color: var(--ink-muted); display: flex; align-items: center; gap: 8px; }
+    .content-byline-avatar { width: 22px; height: 22px; border-radius: 999px; object-fit: cover; }
+    .content-byline-name { font-weight: 800; color: var(--ink-soft); }
     .content-body {
       font-size: 15.5px;
       line-height: 1.85;
@@ -247,13 +250,12 @@
     <div class="content-head">
       <div class="content-meta-row">
         <span class="content-cat-chip">${cat.icon} ${cat.label}</span>
-        <span class="content-author-chip ${content.author_type === 'official' ? 'author-official' : 'author-user'}">
-          ${content.author_type === 'official' ? '공식' : '유저'}
-        </span>
+        ${content.author_type === 'official' ? `<span class="content-author-chip author-official">공식</span>` : ''}
       </div>
       <div class="content-title">${escapeHtml(content.title)}</div>
-      <div class="content-meta-sub">
-        ${content.profiles?.name ? `<span>by ${escapeHtml(content.profiles.name)}</span>` : ''}
+      <div class="content-byline">
+        ${content.profiles?.avatar_url ? `<img class="content-byline-avatar" src="${content.profiles.avatar_url}" alt="">` : ''}
+        ${content.profiles?.name ? `<span class="content-byline-name">${escapeHtml(content.profiles.name)}</span>` : ''}
         <span>👁 ${content.view_count ?? 0}</span>
         <span>${formatDate(content.created_at)}</span>
       </div>
