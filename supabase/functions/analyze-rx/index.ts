@@ -1,0 +1,257 @@
+// =============================================================
+// Supabase Edge Function: analyze-rx (처방전 분석)
+//
+// ⚠️ 이 함수는 아직 배포되지 않았습니다. **창업자가 직접 배포해야 합니다.**
+//    (README.md 참고)
+//
+// 동작:
+//   1) 호출자 JWT 검증 → uid
+//   2) prescription_id로 care_prescriptions 조회 + 접근권한 확인
+//   3) care-rx 버킷 signed URL로 이미지 로드
+//   4) Claude Vision으로 OCR + 약물명/처방일 JSON 추출
+//   5) 약물별 식약처 e약은요(getDrbEasyDrugList) 조회 → 효능·용법·주의·상호작용
+//   6) care_prescription_drugs 저장, status='done'
+//
+// 요청: POST { prescription_id: string }
+// 응답: { ok: true, drugs: number } | { error }
+//
+// 배포: supabase functions deploy analyze-rx
+// 필요 시크릿(수동 설정):
+//   SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY (자동)
+//   ANTHROPIC_API_KEY  (Claude Vision OCR)
+//   DATA_GO_KR_KEY     (공공데이터포털 일반 인증키 — URL 인코딩된 값)
+//
+// ※ 의학적 진단이 아닌 정보 제공. 결과 표시에는 반드시 디스클레이머.
+// =============================================================
+
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY') || '';
+const DATA_GO_KR_KEY = Deno.env.get('DATA_GO_KR_KEY') || '';
+const MFDS_BASE =
+  'https://apis.data.go.kr/1471000/DrbEasyDrugInfoService/getDrbEasyDrugList';
+
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders() });
+  if (req.method !== 'POST') return json({ error: 'method not allowed' }, 405);
+
+  if (!ANTHROPIC_API_KEY) return json({ error: 'ANTHROPIC_API_KEY not configured' }, 500);
+
+  const url = Deno.env.get('SUPABASE_URL')!;
+  const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+  let prescriptionId = '';
+  try {
+    const body = await req.json();
+    prescriptionId = body.prescription_id;
+    if (!prescriptionId) return json({ error: 'prescription_id required' }, 400);
+  } catch {
+    return json({ error: 'invalid body' }, 400);
+  }
+
+  // 1) 호출자 인증
+  const authHeader = req.headers.get('Authorization') || '';
+  const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+  if (!token) return json({ error: 'unauthorized' }, 401);
+
+  const authClient = createClient(url, anonKey, {
+    global: { headers: { Authorization: `Bearer ${token}` } },
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+  const { data: userData, error: userErr } = await authClient.auth.getUser();
+  if (userErr || !userData?.user) return json({ error: 'unauthorized' }, 401);
+  const uid = userData.user.id;
+
+  const admin = createClient(url, serviceKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
+  try {
+    // 2) 처방전 조회 + 접근권한
+    const { data: rx, error: rxErr } = await admin
+      .from('care_prescriptions')
+      .select('id, subject_id, uploader_id, storage_path, status')
+      .eq('id', prescriptionId)
+      .maybeSingle();
+    if (rxErr || !rx) return json({ error: 'prescription not found' }, 404);
+
+    // service_role 컨텍스트라 auth.uid()가 없으므로 owner/member를 직접 확인
+    const owner = await admin
+      .from('care_subjects')
+      .select('user_id')
+      .eq('id', rx.subject_id)
+      .maybeSingle();
+    const member = await admin
+      .from('care_members')
+      .select('user_id')
+      .eq('subject_id', rx.subject_id)
+      .eq('user_id', uid)
+      .maybeSingle();
+    const allowed = owner.data?.user_id === uid || !!member.data;
+    if (!allowed) return json({ error: 'forbidden' }, 403);
+
+    await admin.from('care_prescriptions')
+      .update({ status: 'processing', error_msg: null })
+      .eq('id', prescriptionId);
+
+    // 3) signed URL로 이미지 로드
+    const { data: signed, error: signErr } = await admin.storage
+      .from('care-rx')
+      .createSignedUrl(rx.storage_path, 120);
+    if (signErr || !signed?.signedUrl) throw new Error('이미지 URL 생성 실패');
+
+    const imgRes = await fetch(signed.signedUrl);
+    if (!imgRes.ok) throw new Error('이미지 다운로드 실패');
+    const contentType = imgRes.headers.get('content-type') || 'image/jpeg';
+    const buf = new Uint8Array(await imgRes.arrayBuffer());
+    const b64 = base64Encode(buf);
+
+    // 4) Claude Vision: OCR + 구조화 추출
+    const extracted = await extractWithClaude(b64, contentType);
+    const drugs = (extracted.drugs || []).slice(0, 20);
+
+    // 5) 약물별 식약처 조회
+    const drugRows: any[] = [];
+    for (let i = 0; i < drugs.length; i++) {
+      const d = drugs[i];
+      const rawName = (d.name || '').trim();
+      if (!rawName) continue;
+      const info = DATA_GO_KR_KEY ? await lookupMfds(rawName) : null;
+      drugRows.push({
+        prescription_id: prescriptionId,
+        raw_name: rawName,
+        matched_name: info?.itemName || null,
+        item_seq: info?.itemSeq || null,
+        efficacy: info?.efcyQesitm || null,
+        usage_text: info?.useMethodQesitm || null,
+        caution: info?.atpnQesitm || null,
+        interactions: info?.intrcQesitm || null,
+        confidence: info ? info._confidence : 0,
+        sort_order: i,
+      });
+    }
+
+    // 6) 저장
+    await admin.from('care_prescription_drugs')
+      .delete().eq('prescription_id', prescriptionId);
+    if (drugRows.length) {
+      const { error: insErr } = await admin
+        .from('care_prescription_drugs')
+        .insert(drugRows);
+      if (insErr) throw insErr;
+    }
+
+    await admin.from('care_prescriptions').update({
+      status: 'done',
+      ocr_text: extracted.ocr_text || null,
+      rx_date: extracted.rx_date || null,
+    }).eq('id', prescriptionId);
+
+    return json({ ok: true, drugs: drugRows.length });
+  } catch (err) {
+    await admin.from('care_prescriptions').update({
+      status: 'failed',
+      error_msg: String(err).slice(0, 500),
+    }).eq('id', prescriptionId);
+    return json({ error: String(err) }, 500);
+  }
+});
+
+// ── Claude Vision OCR + 추출 ─────────────────────────
+const SUPPORTED_IMG = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+
+async function extractWithClaude(b64: string, mediaType: string) {
+  if (!SUPPORTED_IMG.includes(mediaType)) {
+    throw new Error('지원하지 않는 이미지 형식입니다. JPEG·PNG로 다시 올려주세요.');
+  }
+  const prompt = `이 이미지는 한국 병원/약국의 처방전 또는 약 봉투입니다.
+다음을 JSON으로만 출력하세요(설명·코드블록 금지):
+{
+  "ocr_text": "이미지에서 읽은 전체 텍스트",
+  "rx_date": "YYYY-MM-DD 또는 null (처방일/조제일)",
+  "drugs": [{ "name": "약품명(제품명, 용량 포함 가능)", "dose": "1회 투약량 또는 null", "frequency": "1일 투여횟수 또는 null", "days": "총 투약일수 또는 null" }]
+}
+약품명은 식별 가능한 제품명 위주로 정확히 적으세요. 읽을 수 없으면 drugs는 빈 배열.`;
+
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': ANTHROPIC_API_KEY,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1500,
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'image', source: { type: 'base64', media_type: mediaType, data: b64 } },
+          { type: 'text', text: prompt },
+        ],
+      }],
+    }),
+  });
+  if (!res.ok) throw new Error(`Claude 호출 실패: ${res.status} ${await res.text()}`);
+  const data = await res.json();
+  const text = (data.content || []).map((c: any) => c.text || '').join('').trim();
+  const jsonStr = text.replace(/^```(?:json)?/i, '').replace(/```$/i, '').trim();
+  try {
+    return JSON.parse(jsonStr);
+  } catch {
+    // JSON 본문만 추출 재시도
+    const m = jsonStr.match(/\{[\s\S]*\}/);
+    if (m) return JSON.parse(m[0]);
+    throw new Error('처방전 판독 결과 파싱 실패');
+  }
+}
+
+// ── 식약처 e약은요 조회 ───────────────────────────────
+async function lookupMfds(rawName: string) {
+  // 용량/단위 토큰 제거해 제품명 위주로 질의
+  const query = rawName.replace(/\d+(\.\d+)?\s*(mg|g|ml|밀리그람|밀리그램|정|캡슐|시럽)/gi, '').trim();
+  const tryNames = [rawName, query].filter((v, i, a) => v && a.indexOf(v) === i);
+
+  for (const name of tryNames) {
+    const u = `${MFDS_BASE}?serviceKey=${DATA_GO_KR_KEY}&type=json&numOfRows=3&pageNo=1&itemName=${encodeURIComponent(name)}`;
+    try {
+      const res = await fetch(u);
+      if (!res.ok) continue;
+      const data = await res.json();
+      const items = data?.body?.items;
+      if (Array.isArray(items) && items.length) {
+        const it = items[0];
+        const exact = (it.itemName || '').includes(query) || (it.itemName || '').includes(rawName);
+        return { ...it, _confidence: exact ? 1 : 0.6 };
+      }
+    } catch {
+      // 다음 후보로
+    }
+  }
+  return null;
+}
+
+// ── utils ─────────────────────────────────────────────
+function base64Encode(bytes: Uint8Array): string {
+  let binary = '';
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+  }
+  return btoa(binary);
+}
+
+function json(b: unknown, s = 200) {
+  return new Response(JSON.stringify(b), {
+    status: s,
+    headers: { 'Content-Type': 'application/json', ...corsHeaders() },
+  });
+}
+function corsHeaders() {
+  return {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  };
+}

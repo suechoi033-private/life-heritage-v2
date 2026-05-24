@@ -80,6 +80,8 @@ Deno.serve(async (req) => {
       { table: 'daily_answers',      column: 'user_id' },
       { table: 'diary_entries',      column: 'user_id' },
       { table: 'goals',              column: 'user_id' },
+      // 처방전(민감 건강정보) — 업로더 본인이 올린 것 (약물 cascade)
+      { table: 'care_prescriptions', column: 'uploader_id' },
       // 태그, 친구/초대
       { table: 'tags',               column: 'user_id' },
       { table: 'friend_invites',     column: 'inviter_id' },

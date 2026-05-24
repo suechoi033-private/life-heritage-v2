@@ -554,6 +554,76 @@
 
     .hidden { display: none !important; }
 
+    /* ── 복약·처방전 ─────────────────────── */
+    .rx-upload-row {
+      display: flex;
+      gap: 10px;
+      margin: 8px 0 16px;
+    }
+    .rx-upload-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 18px 10px;
+      border: 1.5px dashed var(--line);
+      border-radius: 14px;
+      background: var(--surface, #fff);
+      color: var(--ink-soft);
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      transition: border-color .15s, color .15s;
+    }
+    .rx-upload-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .rx-upload-icon { font-size: 26px; }
+    .rx-progress {
+      padding: 14px;
+      text-align: center;
+      color: var(--ink-soft);
+      font-size: 14px;
+    }
+    .rx-card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 14px;
+      background: var(--surface, #fff);
+    }
+    .rx-card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .rx-card-date { font-weight: 700; font-size: 14px; }
+    .rx-card-status { font-size: 12px; color: var(--ink-muted); }
+    .rx-del-btn {
+      background: none; border: none; color: var(--ink-muted);
+      font-size: 12px; cursor: pointer; text-decoration: underline;
+    }
+    .rx-drug {
+      border-top: 1px solid var(--line);
+      padding: 10px 0;
+    }
+    .rx-drug:first-of-type { border-top: none; }
+    .rx-drug-name { font-weight: 700; font-size: 14.5px; margin-bottom: 4px; }
+    .rx-drug-field { font-size: 13px; color: var(--ink-soft); line-height: 1.6; margin-top: 2px; }
+    .rx-drug-field b { color: var(--ink); font-weight: 700; }
+    .rx-drug-unmatched { font-size: 13px; color: var(--ink-muted); }
+    .rx-source { font-size: 11px; color: var(--ink-muted); margin-top: 6px; }
+    .rx-disclaimer {
+      margin-top: 18px;
+      padding: 12px 14px;
+      background: rgba(0,0,0,.03);
+      border-radius: 10px;
+      font-size: 12px;
+      color: var(--ink-muted);
+      line-height: 1.6;
+    }
+
     /* ── Photos ─────────────────────────── */
     .log-photos {
       display: flex;
@@ -838,6 +908,7 @@
     <!-- Tabs -->
     <div class="tabs">
       <button type="button" class="tab active" data-tab="logs">일지</button>
+      <button type="button" class="tab" data-tab="rx">복약·처방전</button>
       <button type="button" class="tab" data-tab="family">가족</button>
       <button type="button" class="tab" data-tab="settings">설정</button>
     </div>
@@ -849,6 +920,37 @@
         <button type="button" class="primary-cta" id="write-log-btn">✍️ 오늘 기록 쓰기</button>
       </div>
       <div id="logs-container"></div>
+    </section>
+
+    <!-- Tab: 복약·처방전 -->
+    <section class="tab-panel hidden" data-panel="rx">
+      <div class="write-cta-row">
+        <h3 id="rx-title">복약·처방전</h3>
+      </div>
+      <p class="modal-sub" style="margin-top:0;">
+        처방전을 촬영하거나 앨범에서 선택하면, 약 정보를 식약처 공개정보로 알려드려요.
+      </p>
+
+      <div class="rx-upload-row">
+        <label class="rx-upload-btn">
+          <input type="file" accept="image/*" capture="environment" id="rx-file-camera" style="display:none;">
+          <span class="rx-upload-icon">📷</span>
+          <span>사진 촬영</span>
+        </label>
+        <label class="rx-upload-btn">
+          <input type="file" accept="image/*" id="rx-file-album" style="display:none;">
+          <span class="rx-upload-icon">🖼️</span>
+          <span>앨범에서 선택</span>
+        </label>
+      </div>
+
+      <div id="rx-progress" class="rx-progress hidden"></div>
+      <div id="rx-list"></div>
+
+      <p class="rx-disclaimer">
+        본 정보는 식약처 공개정보(e약은요)를 기반으로 한 <b>참고용</b>이며,
+        의학적 진단·처방이 아닙니다. 복약·치료는 반드시 의사·약사와 상담하세요.
+      </p>
     </section>
 
     <!-- Tab: family -->
@@ -1120,6 +1222,32 @@
   </div>
 </div>
 
+<!-- 처방전 건강정보 동의 모달 -->
+<div class="modal-backdrop hidden" id="rx-consent-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">처방전 분석 동의</div>
+      <button type="button" class="modal-close" data-close-modal="rx-consent-modal">×</button>
+    </div>
+    <p class="modal-sub" id="rx-consent-sub">
+      처방전에는 민감한 건강정보가 담겨 있어요. 분석·저장 전에 확인이 필요합니다.
+    </p>
+    <div class="consent-box">
+      <label>
+        <input type="checkbox" id="rx-consent-1">
+        <span id="rx-consent-1-text">정보주체(부모님 등 본인 또는 법정대리인)의 처방전 분석·저장 동의를 받았습니다.</span>
+      </label>
+    </div>
+    <div class="consent-box">
+      <label>
+        <input type="checkbox" id="rx-consent-2">
+        <span>잇다는 의학적 진단·처방을 제공하지 않으며, 분석 결과는 식약처 공개정보 기반 <b>참고용</b>임을 이해했습니다. 원본 이미지는 30일 후 자동 삭제됩니다.</span>
+      </label>
+    </div>
+    <button type="button" class="primary-cta" id="rx-consent-submit" style="width:100%;" disabled>동의하고 계속</button>
+  </div>
+</div>
+
 
 <script>
 // 4카드 빠른 입력 토글 (module 밖에서 onclick용)
@@ -1222,6 +1350,10 @@ document.addEventListener('DOMContentLoaded', () => {
 <script type="module">
   import { requireAuth, supabase } from './auth.js';
   import { renderNav } from './nav.js';
+  import {
+    hasHealthConsent, recordHealthConsent, listPrescriptions,
+    uploadAndAnalyze, deletePrescription,
+  } from './prescription.js';
   await renderNav({ active: 'care', infoIcon: true, title: '돌봄' });
 
   // "더 적기" 토글
@@ -1607,7 +1739,148 @@ document.addEventListener('DOMContentLoaded', () => {
         p.classList.toggle('hidden', p.dataset.panel !== target);
       });
       if (target === 'family') loadFamilyTab();
+      if (target === 'rx') loadRxTab();
     });
+  });
+
+  // ── 복약·처방전 탭 ─────────────────────
+  let _rxPendingFile = null;
+
+  async function loadRxTab() {
+    const subjectId = state.currentSubjectId;
+    if (!subjectId) return;
+    const subject = state.subjects.find(s => s.id === subjectId);
+    if (!subject) return;
+    $('rx-title').textContent = `${getDisplayName(subject)} 복약·처방전`;
+    await renderRxList();
+  }
+
+  async function renderRxList() {
+    const list = $('rx-list');
+    list.innerHTML = '<div class="rx-progress">불러오는 중…</div>';
+    try {
+      const rxs = await listPrescriptions(state.currentSubjectId);
+      if (!rxs.length) {
+        list.innerHTML = '<div class="empty" style="padding:24px;">아직 등록한 처방전이 없어요. 위에서 촬영하거나 앨범에서 선택해 주세요.</div>';
+        return;
+      }
+      list.innerHTML = rxs.map(renderRxCard).join('');
+      list.querySelectorAll('[data-rx-del]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (!confirm('이 처방전을 삭제할까요? 원본 이미지도 함께 지워집니다.')) return;
+          const rx = rxs.find(r => r.id === btn.dataset.rxDel);
+          try { await deletePrescription(rx); await renderRxList(); }
+          catch (e) { showAlert('삭제 실패: ' + (e.message || e)); }
+        });
+      });
+    } catch (e) {
+      list.innerHTML = `<div class="empty" style="padding:24px;">불러오지 못했어요: ${escapeHtml(e.message || String(e))}</div>`;
+    }
+  }
+
+  function renderRxCard(rx) {
+    const dateLabel = rx.rx_date
+      ? `처방일 ${escapeHtml(rx.rx_date)}`
+      : new Date(rx.created_at).toLocaleDateString('ko-KR');
+    let bodyHtml = '';
+    if (rx.status === 'failed') {
+      bodyHtml = `<div class="rx-drug-unmatched">⚠️ 분석에 실패했어요. ${escapeHtml(rx.error_msg || '')}</div>`;
+    } else if (rx.status !== 'done') {
+      bodyHtml = '<div class="rx-drug-unmatched">분석 중이에요. 잠시 후 새로고침해 주세요.</div>';
+    } else if (!rx.drugs.length) {
+      bodyHtml = '<div class="rx-drug-unmatched">약품명을 읽지 못했어요. 더 선명한 사진으로 다시 시도해 보세요.</div>';
+    } else {
+      bodyHtml = rx.drugs.map(d => {
+        if (!d.matched_name) {
+          return `<div class="rx-drug">
+            <div class="rx-drug-name">💊 ${escapeHtml(d.raw_name)}</div>
+            <div class="rx-drug-unmatched">식약처 DB에서 정확히 찾지 못했어요. 약사에게 확인해 주세요.</div>
+          </div>`;
+        }
+        const field = (label, val) => val
+          ? `<div class="rx-drug-field"><b>${label}</b> ${escapeHtml(String(val).slice(0, 400))}</div>` : '';
+        return `<div class="rx-drug">
+          <div class="rx-drug-name">💊 ${escapeHtml(d.matched_name)}</div>
+          ${field('효능', d.efficacy)}
+          ${field('복약', d.usage_text)}
+          ${field('주의', d.caution)}
+          ${field('상호작용', d.interactions)}
+          <div class="rx-source">출처: 식약처 e약은요</div>
+        </div>`;
+      }).join('');
+    }
+    return `<div class="rx-card">
+      <div class="rx-card-head">
+        <span class="rx-card-date">${dateLabel}</span>
+        <span>
+          <span class="rx-card-status">${rxStatusLabel(rx.status)}</span>
+          <button type="button" class="rx-del-btn" data-rx-del="${rx.id}">삭제</button>
+        </span>
+      </div>
+      ${bodyHtml}
+    </div>`;
+  }
+
+  function rxStatusLabel(s) {
+    return { done: '분석 완료', processing: '분석 중', pending: '대기 중', failed: '실패' }[s] || s;
+  }
+
+  // 파일 선택 → 동의 확인 → 업로드·분석
+  function onRxFilePicked(input) {
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    const subject = state.subjects.find(s => s.id === state.currentSubjectId);
+    if (!subject) return;
+    if (hasHealthConsent(subject)) {
+      runRxAnalyze(file);
+    } else {
+      _rxPendingFile = file;
+      openRxConsent(subject);
+    }
+  }
+  $('rx-file-camera')?.addEventListener('change', (e) => onRxFilePicked(e.target));
+  $('rx-file-album')?.addEventListener('change', (e) => onRxFilePicked(e.target));
+
+  async function runRxAnalyze(file) {
+    const progress = $('rx-progress');
+    progress.classList.remove('hidden');
+    progress.textContent = '업로드 중…';
+    try {
+      progress.textContent = '처방전을 판독하고 있어요…';
+      await uploadAndAnalyze(state.currentSubjectId, file);
+      progress.classList.add('hidden');
+      await renderRxList();
+    } catch (e) {
+      progress.classList.add('hidden');
+      showAlert('분석 실패: ' + (e.message || e));
+    }
+  }
+
+  // 동의 모달
+  function openRxConsent(subject) {
+    $('rx-consent-1').checked = false;
+    $('rx-consent-2').checked = false;
+    $('rx-consent-submit').disabled = true;
+    $('rx-consent-1-text').textContent =
+      `정보주체(${getDisplayName(subject)} 본인 또는 법정대리인)의 처방전 분석·저장 동의를 받았습니다.`;
+    $('rx-consent-modal').classList.remove('hidden');
+  }
+  function refreshRxConsentBtn() {
+    $('rx-consent-submit').disabled = !($('rx-consent-1').checked && $('rx-consent-2').checked);
+  }
+  $('rx-consent-1')?.addEventListener('change', refreshRxConsentBtn);
+  $('rx-consent-2')?.addEventListener('change', refreshRxConsentBtn);
+  $('rx-consent-submit')?.addEventListener('click', async () => {
+    try {
+      await recordHealthConsent(state.currentSubjectId);
+      const s = state.subjects.find(x => x.id === state.currentSubjectId);
+      if (s) s.health_data_consent_at = new Date().toISOString();
+      closeModal('rx-consent-modal');
+      if (_rxPendingFile) { const f = _rxPendingFile; _rxPendingFile = null; await runRxAnalyze(f); }
+    } catch (e) {
+      showAlert('동의 저장 실패: ' + (e.message || e));
+    }
   });
 
   // ── Family tab ────────────────────────
