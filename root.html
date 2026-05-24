@@ -40,8 +40,8 @@
     /* 통계 그리드 */
     .stat-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
       margin-bottom: 18px;
     }
     .stat-cell {
@@ -153,6 +153,14 @@
       display: inline-flex; align-items: center; justify-content: center;
       font-size: 17px; font-weight: 800;
     }
+    /* 가족 = 케어링과 시각적 일관성 위해 클레이(--warm) 악센트 */
+    .family-avatar {
+      background: var(--warm-soft); color: var(--warm);
+    }
+    .friend-role {
+      font-size: 10px; font-weight: 700;
+      color: var(--warm);
+    }
     .friend-name {
       font-size: 12px; font-weight: 700;
       text-align: center;
@@ -221,6 +229,7 @@
     <a class="stat-cell" href="./seed.html"><div class="stat-num" id="stat-diary">·</div><div class="stat-label">일기</div></a>
     <a class="stat-cell" href="#" data-tab="answers"><div class="stat-num" id="stat-answers">·</div><div class="stat-label">답변</div></a>
     <a class="stat-cell" href="#" data-tab="posts"><div class="stat-num" id="stat-posts">·</div><div class="stat-label">게시글</div></a>
+    <a class="stat-cell" href="#" data-tab="family"><div class="stat-num" id="stat-family">·</div><div class="stat-label">가족</div></a>
     <a class="stat-cell" href="#" data-tab="friends"><div class="stat-num" id="stat-friends">·</div><div class="stat-label">친구</div></a>
   </div>
 
@@ -233,6 +242,7 @@
     <button class="activity-tab" data-tab="answers">답변</button>
     <button class="activity-tab" data-tab="posts">게시글</button>
     <button class="activity-tab" data-tab="comments">댓글</button>
+    <button class="activity-tab" data-tab="family">가족</button>
     <button class="activity-tab" data-tab="friends">친구</button>
   </div>
   <div id="activity-body">
@@ -300,7 +310,7 @@
   import { registerPWA, subscribePush } from './js/pwa.js';
   import { getVapidPublicKey } from './js/app-config.js';
   import {
-    getMyCounts, listMyDiary, listMyPosts, listMyComments, listMyFriends,
+    getMyCounts, listMyDiary, listMyPosts, listMyComments, listMyFriends, listMyFamily,
   } from './js/my-activity.js';
   import { listMyAnswers } from './js/answers.js';
 
@@ -328,6 +338,7 @@
     document.getElementById('stat-diary').textContent   = c.diary;
     document.getElementById('stat-answers').textContent = c.answers;
     document.getElementById('stat-posts').textContent   = c.posts;
+    document.getElementById('stat-family').textContent  = c.family;
     document.getElementById('stat-friends').textContent = c.friends;
   } catch (_) {}
 
@@ -360,6 +371,7 @@
       if (activeTab === 'answers')  return renderAnswers(await listMyAnswers({ limit: 15 }));
       if (activeTab === 'posts')    return renderPosts(await listMyPosts({ limit: 15 }));
       if (activeTab === 'comments') return renderComments(await listMyComments({ limit: 15 }));
+      if (activeTab === 'family')   return renderFamily(await listMyFamily());
       if (activeTab === 'friends')  return renderFriends(await listMyFriends());
     } catch (err) {
       body.innerHTML = `<div class="empty-activity">불러오기 실패: ${err.message || err}</div>`;
@@ -423,6 +435,20 @@
         <div class="activity-excerpt">${escapeHtml((c.body || '').slice(0, 100))}</div>
       </a>
     `).join('');
+  }
+
+  function renderFamily(items) {
+    if (!items.length) return setEmpty('아직 함께 돌보는 가족이 없어요', '케어링에서 가족을 초대해 보세요', './care.html');
+    document.getElementById('activity-body').innerHTML = `
+      <div class="friend-grid">
+        ${items.map((f) => `
+          <a class="friend-cell" href="./care.html">
+            <div class="friend-avatar family-avatar">${escapeHtml((f.name?.[0] || '·').toUpperCase())}</div>
+            <div class="friend-name">${escapeHtml(f.name || '가족')}</div>
+            <div class="friend-role">${f.role === 'owner' ? '주 보호자' : '가족'}</div>
+          </a>
+        `).join('')}
+      </div>`;
   }
 
   function renderFriends(items) {
