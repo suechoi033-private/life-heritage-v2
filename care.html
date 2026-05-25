@@ -1386,7 +1386,7 @@ document.addEventListener('DOMContentLoaded', () => {
     hasHealthConsent, recordHealthConsent, listPrescriptions,
     uploadAndAnalyze, deletePrescription,
     deriveCategories, listCareGuides,
-  } from './prescription.js';
+  } from './js/prescription.js';
   await renderNav({ active: 'care', infoIcon: true, title: '케어링' });
 
   // "더 적기" 토글
@@ -1472,17 +1472,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function loadSubjects() {
     // RLS가 owner + 수락한 멤버 모두에게 접근 허용
-    const [subjectsRes, membershipsRes] = await Promise.all([
-      supabase
-        .from('care_subjects')
-        .select('*')
-        .order('created_at', { ascending: true }),
-      supabase
-        .from('care_members')
-        .select('subject_id, role')
-        .eq('user_id', user.id)
-        .not('accepted_at', 'is', null),
+    const withTimeout = (p, ms = 8000) => Promise.race([
+      p, new Promise((_, rej) => setTimeout(() => rej(new Error('네트워크 시간초과 (8초)')), ms)),
     ]);
+    let subjectsRes, membershipsRes;
+    try {
+      [subjectsRes, membershipsRes] = await withTimeout(Promise.all([
+        supabase
+          .from('care_subjects')
+          .select('*')
+          .order('created_at', { ascending: true }),
+        supabase
+          .from('care_members')
+          .select('subject_id, role')
+          .eq('user_id', user.id)
+          .not('accepted_at', 'is', null),
+      ]));
+    } catch (e) {
+      $('loading-state').classList.add('hidden');
+      console.error('[care] loadSubjects 실패:', e);
+      showAlert('케어링 대상을 불러오지 못했어요: ' + (e.message || e) + ' — 잠시 후 새로고침 해주세요.');
+      return;
+    }
 
     $('loading-state').classList.add('hidden');
 
