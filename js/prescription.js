@@ -11,7 +11,7 @@ export function hasHealthConsent(subject) {
 }
 
 export async function recordHealthConsent(subjectId) {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
   if (!user) throw new Error('로그인 필요');
   const { data, error } = await supabase
     .from('care_subjects')
@@ -52,7 +52,7 @@ export async function listPrescriptions(subjectId) {
 // 업로드 → 레코드 생성 → 분석 호출
 // file: 촬영/앨범에서 고른 단일 이미지
 export async function uploadAndAnalyze(subjectId, file) {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
   if (!user) throw new Error('로그인 필요');
   if (!file.type.startsWith('image/')) throw new Error('이미지 파일만 업로드 가능합니다');
 

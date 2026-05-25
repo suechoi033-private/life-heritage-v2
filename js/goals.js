@@ -72,7 +72,7 @@ export async function getGoal(id) {
 }
 
 export async function createGoal({ area, title, description, period_months, start_date, due_date, priority }) {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
   if (!user) throw new Error('로그인 필요');
   const start = start_date || new Date().toISOString().slice(0, 10);
   const { data, error } = await supabase.from('goals').insert({
@@ -103,7 +103,7 @@ export async function deleteGoal(id) {
 
 // ===== 세부 계획 (goal_plans) =====
 export async function createPlan(goalId, { title, plan_type, due_date }) {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
   if (!user) throw new Error('로그인 필요');
   // sort_order = 마지막 + 1
   const { data: last } = await supabase.from('goal_plans')

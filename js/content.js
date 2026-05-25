@@ -48,7 +48,7 @@ export async function getContent(id) {
 }
 
 export async function createContent({ category, title, body, content_type = 'text', media_url = null, source_url = null }) {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
   if (!user) throw new Error('로그인 필요');
   const { data, error } = await supabase.from('contents').insert({
     category, title, body, content_type, media_url, source_url,
@@ -73,7 +73,7 @@ export async function deleteContent(id) {
 
 // ===== 북마크 =====
 export async function isBookmarked(contentId) {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
   if (!user) return false;
   const { data } = await supabase.from('content_bookmarks')
     .select('content_id').eq('user_id', user.id).eq('content_id', contentId).maybeSingle();
@@ -81,7 +81,7 @@ export async function isBookmarked(contentId) {
 }
 
 export async function toggleBookmark(contentId) {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
   if (!user) throw new Error('로그인 필요');
   const exists = await isBookmarked(contentId);
   if (exists) {
@@ -94,7 +94,7 @@ export async function toggleBookmark(contentId) {
 }
 
 export async function listMyBookmarks() {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
   if (!user) return [];
   const { data, error } = await supabase.from('content_bookmarks')
     .select('content_id, created_at, contents(id, category, title, author_type, view_count, like_count)')

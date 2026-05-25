@@ -3,7 +3,7 @@ import { supabase } from '../auth.js';
 
 // 통계 카운트 한 번에
 export async function getMyCounts() {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
   if (!user) return null;
 
   const [diary, answers, posts, comments, reactions, friends, goalsActive, contents] = await Promise.all([
@@ -41,7 +41,7 @@ export async function getMyCounts() {
 
 // 내 일기 목록
 export async function listMyDiary({ limit = 20, offset = 0 } = {}) {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
   if (!user) return [];
   const { data, error } = await supabase
     .from('diary_entries')
@@ -55,7 +55,7 @@ export async function listMyDiary({ limit = 20, offset = 0 } = {}) {
 
 // 내 게시글
 export async function listMyPosts({ limit = 20, offset = 0 } = {}) {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
   if (!user) return [];
   const { data, error } = await supabase
     .from('community_posts')
@@ -70,7 +70,7 @@ export async function listMyPosts({ limit = 20, offset = 0 } = {}) {
 
 // 내 콘텐츠
 export async function listMyContents({ limit = 20, offset = 0 } = {}) {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
   if (!user) return [];
   const { data, error } = await supabase
     .from('contents')
@@ -85,7 +85,7 @@ export async function listMyContents({ limit = 20, offset = 0 } = {}) {
 
 // 내 댓글
 export async function listMyComments({ limit = 20, offset = 0 } = {}) {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
   if (!user) return [];
   const { data, error } = await supabase
     .from('comments')
@@ -100,7 +100,7 @@ export async function listMyComments({ limit = 20, offset = 0 } = {}) {
 
 // 내가 좋아요한 것
 export async function listMyReactions({ limit = 20, offset = 0 } = {}) {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
   if (!user) return [];
   const { data, error } = await supabase
     .from('reactions')
@@ -129,7 +129,7 @@ async function getMyCareSubjectIds(userId) {
 // 본인 제외, user_id 기준 de-dupe. 본인이 owner인 그룹의 다른 보호자도 포함.
 // 반환: [{ id(user_id), name, avatar_url, role }]
 export async function listMyFamily() {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
   if (!user) return [];
 
   const subjectIds = await getMyCareSubjectIds(user.id);
@@ -169,7 +169,7 @@ export async function listMyFamily() {
 
 // 친구 목록 — friendships(accepted). 중복 정책(b): 가족인 사람은 친구 목록에서 제외.
 export async function listMyFriends() {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
   if (!user) return [];
   const { data, error } = await supabase
     .from('friendships')

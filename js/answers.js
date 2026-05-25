@@ -20,7 +20,7 @@ export async function getTodaysQuestion() {
 
 // 본인이 오늘 질문에 답했는지
 export async function hasAnsweredToday(questionId) {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
   if (!user || !questionId) return null;
   const since = new Date();
   since.setHours(0, 0, 0, 0);
@@ -58,7 +58,7 @@ export async function saveAnswerAsDiary({
   templateType = 'gratitude',
   visibility = 'private',  // 'private' | 'friends' | 'public'
 }) {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
   if (!user) throw new Error('로그인 필요');
 
   const today = entryDate || new Date().toISOString().slice(0, 10);
@@ -78,7 +78,7 @@ export async function saveAnswerAsDiary({
 
 // 내 답변 목록 (마이 탭 활동 조회용)
 export async function listMyAnswers({ limit = 20, offset = 0 } = {}) {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
   if (!user) return [];
   const { data, error } = await supabase
     .from('daily_answers')

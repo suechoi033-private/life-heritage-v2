@@ -51,7 +51,7 @@ export async function getPost(id) {
 }
 
 export async function createPost({ board_id, title, body, content_thread_id = null }) {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
   if (!user) throw new Error('로그인 필요');
   const { data, error } = await supabase.from('community_posts').insert({
     board_id, title, body,
@@ -97,7 +97,7 @@ export async function listComments(postId) {
 }
 
 export async function createComment({ post_id, body, parent_comment_id = null }) {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
   if (!user) throw new Error('로그인 필요');
   const { data, error } = await supabase.from('comments').insert({
     post_id, body, parent_comment_id,
@@ -128,7 +128,7 @@ export async function deleteComment(id, postId) {
 
 // ===== 반응 (좋아요·공감) =====
 export async function toggleReaction({ target_type, target_id, reaction_type = 'like' }) {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
   if (!user) throw new Error('로그인 필요');
 
   const { data: existing } = await supabase.from('reactions')
@@ -145,7 +145,7 @@ export async function toggleReaction({ target_type, target_id, reaction_type = '
 }
 
 export async function getReactionState(target_type, target_id) {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
   const [{ count }, mine] = await Promise.all([
     supabase.from('reactions').select('id', { count: 'exact', head: true })
       .eq('target_type', target_type).eq('target_id', target_id),
@@ -158,7 +158,7 @@ export async function getReactionState(target_type, target_id) {
 
 // ===== 신고 =====
 export async function reportTarget({ target_type, target_id, reason, detail = '' }) {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
   if (!user) throw new Error('로그인 필요');
   const { error } = await supabase.from('reports').insert({
     target_type, target_id, reason, detail,

@@ -38,7 +38,7 @@ export async function subscribePush(supabase, vapidPublicKey) {
 
   // Supabase에 구독 정보 저장
   const sub = subscription.toJSON();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
   if (user) {
     await supabase.from('push_subscriptions').upsert({
       user_id: user.id,

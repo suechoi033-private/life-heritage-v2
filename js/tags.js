@@ -20,7 +20,7 @@ export function emojiFor(emotionName) {
 
 // 사용자의 기존 태그 목록
 export async function listMyTags(tagType = null) {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
   if (!user) return [];
   let q = supabase.from('tags').select('id, name, tag_type, is_favorite').eq('user_id', user.id);
   if (tagType) q = q.eq('tag_type', tagType);
@@ -31,7 +31,7 @@ export async function listMyTags(tagType = null) {
 
 // 태그 upsert — 이름·타입 기준, 없으면 생성하고 ID 반환
 export async function ensureTags(items) {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
   if (!user) throw new Error('로그인 필요');
   if (!items?.length) return [];
 
