@@ -30,6 +30,9 @@ const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY') || '';
 const DATA_GO_KR_KEY = Deno.env.get('DATA_GO_KR_KEY') || '';
 const MFDS_BASE =
   'https://apis.data.go.kr/1471000/DrbEasyDrugInfoService/getDrbEasyDrugList';
+// 전문약 포함 전 품목 — 의약품 제품 허가정보(효능/용법/주의 문서 제공)
+const PERMIT_BASE =
+  'https://apis.data.go.kr/1471000/DrugPrdtPrmsnInfoService07/getDrugPrdtPrmsnDtlInq05';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders() });
@@ -209,9 +212,15 @@ async function extractWithClaude(b64: string, mediaType: string) {
 
 // ── 식약처 e약은요 조회 ───────────────────────────────
 async function lookupMfds(rawName: string) {
-  // 용량/단위 토큰 제거해 제품명 위주로 질의
-  const query = rawName.replace(/\d+(\.\d+)?\s*(mg|g|ml|밀리그람|밀리그램|정|캡슐|시럽)/gi, '').trim();
-  const tryNames = [rawName, query].filter((v, i, a) => v && a.indexOf(v) === i);
+  // 괄호(성분)·용량·단위를 제거해 제품명 위주로 정리
+  const noParen = rawName.replace(/\([^)]*\)/g, ' ');
+  const noDose = noParen
+    .replace(/\d+(\.\d+)?\s*(mg|g|ml|밀리그람|밀리그램|마이크로그램|mcg|iu|％|%)/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const core = noDose.split(' ')[0]; // 제품명 본체 (예: 아빌리파이정, 웰부트린엑스엘정)
+  // 후보: 정리된 전체명 → 본체 → 원문 순으로 시도
+  const tryNames = [...new Set([noDose, core, rawName].filter((v) => v && v.length >= 2))];
 
   for (const name of tryNames) {
     const u = `${MFDS_BASE}?serviceKey=${DATA_GO_KR_KEY}&type=json&numOfRows=3&pageNo=1&itemName=${encodeURIComponent(name)}`;
@@ -222,11 +231,53 @@ async function lookupMfds(rawName: string) {
       const items = data?.body?.items;
       if (Array.isArray(items) && items.length) {
         const it = items[0];
-        const exact = (it.itemName || '').includes(query) || (it.itemName || '').includes(rawName);
+        const norm = (s: string) => (s || '').replace(/\s/g, '');
+        const exact = norm(it.itemName).includes(norm(core)) || norm(it.itemName).includes(norm(noDose));
         return { ...it, _confidence: exact ? 1 : 0.6 };
       }
     } catch {
       // 다음 후보로
+    }
+  }
+  // e약은요에 없으면(주로 전문의약품) 의약품 제품 허가정보로 재조회
+  const permit = await lookupPermit(noDose, core);
+  if (permit) return permit;
+  return null;
+}
+
+// ── 의약품 제품 허가정보(전 품목) 조회 ─────────────────
+function stripXml(s: string): string {
+  return (s || '').replace(/<[^>]+>/g, ' ').replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim().slice(0, 800);
+}
+async function lookupPermit(noDose: string, core: string) {
+  if (!DATA_GO_KR_KEY) return null;
+  const names = [...new Set([noDose, core].filter((v) => v && v.length >= 2))];
+  for (const name of names) {
+    const u = `${PERMIT_BASE}?serviceKey=${DATA_GO_KR_KEY}&type=json&numOfRows=3&pageNo=1&item_name=${encodeURIComponent(name)}`;
+    try {
+      const res = await fetch(u);
+      if (!res.ok) continue;
+      const data = await res.json();
+      let items = data?.body?.items;
+      if (items && !Array.isArray(items)) items = items.item ? [].concat(items.item) : [];
+      if (Array.isArray(items) && items.length) {
+        const it = items[0];
+        const ee = stripXml(it.EE_DOC_DATA || it.eeDocData || '');
+        const ud = stripXml(it.UD_DOC_DATA || it.udDocData || '');
+        const nb = stripXml(it.NB_DOC_DATA || it.nbDocData || '');
+        if (!ee && !ud && !nb && !it.ITEM_NAME) continue;
+        return {
+          itemName: it.ITEM_NAME || it.itemName || name,
+          itemSeq: it.ITEM_SEQ || it.itemSeq || null,
+          efcyQesitm: ee || null,
+          useMethodQesitm: ud || null,
+          atpnQesitm: nb || null,
+          intrcQesitm: null,
+          _confidence: 0.85,
+        };
+      }
+    } catch {
+      // 다음 후보
     }
   }
   return null;

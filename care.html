@@ -446,6 +446,12 @@
       margin-bottom: 20px;
     }
 
+    /* .modal-body를 쓰지 않는 모달(대상 등록·처방전 동의)은 안쪽 여백을 직접 부여 */
+    #subject-modal .modal,
+    #rx-consent-modal .modal { padding: 0 22px 24px; }
+    #subject-modal .modal-header,
+    #rx-consent-modal .modal-header { padding-top: 18px; }
+
     /* ── Field ──────────────────────────── */
     .field { margin-bottom: 16px; }
     .field label {
@@ -1384,7 +1390,7 @@ document.addEventListener('DOMContentLoaded', () => {
   import { renderNav } from './nav.js';
   import {
     hasHealthConsent, recordHealthConsent, listPrescriptions,
-    uploadAndAnalyze, deletePrescription,
+    uploadAndAnalyze, deletePrescription, reanalyzePrescription,
     deriveCategories, listCareGuides,
   } from './js/prescription.js';
   await renderNav({ active: 'care', infoIcon: true, title: '케어링' });
@@ -1818,6 +1824,14 @@ document.addEventListener('DOMContentLoaded', () => {
           catch (e) { showAlert('삭제 실패: ' + (e.message || e)); }
         });
       });
+      list.querySelectorAll('[data-rx-reanalyze]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.dataset.rxReanalyze;
+          btn.disabled = true; btn.textContent = '분석 중…';
+          try { await reanalyzePrescription(id); await renderRxList(); }
+          catch (e) { showAlert('다시 분석 실패: ' + (e.message || e)); btn.disabled = false; btn.textContent = '다시 분석'; }
+        });
+      });
       // 모든 처방전의 약물 → 추정 관리 영역 → 케어 가이드
       const allDrugs = rxs.flatMap(r => r.drugs || []);
       await renderRxGuides(deriveCategories(allDrugs));
@@ -1895,6 +1909,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <span class="rx-card-date">${dateLabel}</span>
         <span>
           <span class="rx-card-status">${rxStatusLabel(rx.status)}</span>
+          <button type="button" class="rx-del-btn" data-rx-reanalyze="${rx.id}">다시 분석</button>
           <button type="button" class="rx-del-btn" data-rx-del="${rx.id}">삭제</button>
         </span>
       </div>
