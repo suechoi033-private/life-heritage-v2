@@ -228,7 +228,7 @@
 
       if (activeSeg === 'content') {
         let q = supabase.from('contents')
-          .select('id, category, title, body, author_type, creator_id, view_count, like_count, created_at, profiles:creator_id(name, avatar_url)')
+          .select('id, category, title, body, format, author_type, creator_id, view_count, like_count, created_at, profiles:creator_id(name, avatar_url)')
           .eq('is_published', true)
           .order('created_at', { ascending: false })
           .limit(20);
@@ -298,6 +298,7 @@
     }
     body.innerHTML = topHtml + items.map(c => `
       <a class="content-card" href="./content-detail.html?id=${c.id}">
+        ${c.format === 'story' ? `<span class="content-card-badge badge-official">📖 이야기</span>` : ''}
         ${c.author_type === 'official'
           ? `<span class="content-card-badge badge-official">✓ 잇다 에디터</span>`
           : `<span class="content-card-badge badge-user">먼저 겪은 분의 기록</span>`}

@@ -247,6 +247,7 @@
 import { supabase } from './auth.js';
 import { renderNav } from './nav.js';
 import { registerPWA } from './js/pwa.js';
+import { getFeaturedStory } from './js/content.js';
 
 await renderNav({ active: 'home', infoIcon: true });
 registerPWA();
@@ -387,23 +388,45 @@ async function renderHomeFeed() {
   const body = document.getElementById('home-feed-body');
   section.hidden = false;
   try {
-    const { data, error } = await supabase.from('contents')
-      .select('id, category, title, body, author_type, view_count, like_count, created_at, profiles:creator_id(name)')
-      .eq('is_published', true)
-      .neq('category', 'memorial')
-      .order('created_at', { ascending: false })
-      .limit(8);
-    if (error) throw error;
-    const items = data || [];
-    if (!items.length) {
+    const [story, listRes] = await Promise.all([
+      getFeaturedStory().catch(() => null),
+      supabase.from('contents')
+        .select('id, category, title, body, author_type, view_count, like_count, created_at, profiles:creator_id(name)')
+        .eq('is_published', true)
+        .neq('category', 'memorial')
+        .order('created_at', { ascending: false })
+        .limit(8),
+    ]);
+    if (listRes.error) throw listRes.error;
+    let items = listRes.data || [];
+    if (story) items = items.filter((c) => c.id !== story.id); // hero 중복 제거
+
+    if (!story && !items.length) {
       body.innerHTML = `<div class="feed-empty">아직 조용하네요.<br>당신의 오늘 한 줄이 누군가의 내일이 됩니다.</div>`;
       return;
     }
-    body.innerHTML = items.map((c, i) => feedCard(c, i === 0)).join('');
+    body.innerHTML = (story ? storyHero(story) : '') + items.map((c) => feedCard(c, false)).join('');
   } catch (err) {
     console.warn('[home] 피드 로드 실패:', err);
     section.hidden = true;
   }
+}
+
+function storyHero(s) {
+  const excerpt = s.excerpt || (s.body || '').replace(/[#*>`_\-\[\]()]/g, '').replace(/\s+/g, ' ').trim();
+  const author = s.author_type === 'user' && s.profiles?.name ? escapeHtml(s.profiles.name) : '잇다 에디터';
+  const meta = [CATEGORY_LABELS[s.category] || '', author].filter(Boolean).join(' · ');
+  const cover = s.cover_image_url
+    ? `<img src="${escapeHtml(s.cover_image_url)}" alt="" style="width:100%;border-radius:12px;margin-bottom:12px;object-fit:cover;max-height:200px;">` : '';
+  return `
+    <a href="./content-detail.html?id=${s.id}" class="feed-card feed-card-hero">
+      ${cover}
+      <span class="feed-card-label feed-label-editor">📖 이야기</span>
+      <div class="feed-card-title">${escapeHtml(s.title || '')}</div>
+      ${excerpt ? `<div class="feed-card-summary">${escapeHtml(excerpt)}</div>` : ''}
+      <div class="feed-card-meta">${meta ? `<span>${meta}</span>` : ''}</div>
+    </a>
+  `;
 }
 
 function feedCard(c, hero) {

@@ -47,16 +47,34 @@ export async function getContent(id) {
   };
 }
 
-export async function createContent({ category, title, body, content_type = 'text', media_url = null, source_url = null }) {
+export async function createContent({
+  category, title, body, content_type = 'text', media_url = null, source_url = null,
+  format = 'article', cover_image_url = null, excerpt = null,
+  checklist = null, cta_label = null, cta_url = null,
+}) {
   const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
   if (!user) throw new Error('로그인 필요');
   const { data, error } = await supabase.from('contents').insert({
     category, title, body, content_type, media_url, source_url,
+    format, cover_image_url, excerpt, checklist, cta_label, cta_url,
     author_type: 'user',
     creator_id: user.id,
     is_published: true,
   }).select().single();
   if (error) throw error;
+  return data;
+}
+
+// 홈 hero용 — 최신 발행 이야기 카드 1건
+export async function getFeaturedStory() {
+  const { data, error } = await supabase.from('contents')
+    .select('id, category, title, excerpt, body, cover_image_url, author_type, created_at, profiles:creator_id(name)')
+    .eq('is_published', true)
+    .eq('format', 'story')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) return null;
   return data;
 }
 
@@ -91,6 +109,39 @@ export async function toggleBookmark(contentId) {
     await supabase.from('content_bookmarks').insert({ user_id: user.id, content_id: contentId });
     return true;
   }
+}
+
+// ===== 공감 반응 ("비슷한 시기를 지나는 중") =====
+// reactions 테이블 재사용: target_type='content', reaction_type='empathy'
+export async function getEmpathy(contentId) {
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
+  const { count } = await supabase.from('reactions')
+    .select('id', { count: 'exact', head: true })
+    .eq('target_type', 'content').eq('target_id', contentId).eq('reaction_type', 'empathy');
+  let mine = false;
+  if (user) {
+    const { data } = await supabase.from('reactions')
+      .select('id').eq('target_type', 'content').eq('target_id', contentId)
+      .eq('reaction_type', 'empathy').eq('user_id', user.id).maybeSingle();
+    mine = !!data;
+  }
+  return { count: count ?? 0, mine };
+}
+
+export async function toggleEmpathy(contentId) {
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
+  if (!user) throw new Error('로그인 필요');
+  const { data: existing } = await supabase.from('reactions')
+    .select('id').eq('target_type', 'content').eq('target_id', contentId)
+    .eq('reaction_type', 'empathy').eq('user_id', user.id).maybeSingle();
+  if (existing) {
+    await supabase.from('reactions').delete().eq('id', existing.id);
+    return false;
+  }
+  await supabase.from('reactions').insert({
+    target_type: 'content', target_id: contentId, user_id: user.id, reaction_type: 'empathy',
+  });
+  return true;
 }
 
 export async function listMyBookmarks() {
