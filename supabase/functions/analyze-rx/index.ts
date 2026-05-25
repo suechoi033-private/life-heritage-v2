@@ -256,13 +256,28 @@ async function lookupMfds(rawName: string) {
 }
 
 // ── 의약품 제품 허가정보(전 품목) 조회 ─────────────────
+// 식약처 문서(XML)는 본문 텍스트 + ARTICLE/PARAGRAPH의 title="..." 속성에
+// 내용이 흩어져 있다. 효능효과(EE)는 주로 title 속성에 들어있어, 태그만 지우면
+// 텍스트가 사라진다. → title 속성값과 본문 텍스트를 모두 합쳐 추출한다.
 function stripXml(s: string): string {
-  return (s || '').replace(/<[^>]+>/g, ' ').replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim().slice(0, 800);
+  if (!s) return '';
+  // ARTICLE/PARAGRAPH의 title 속성(효능효과가 주로 여기 있음)을 먼저 본문화한 뒤 태그 제거
+  const withTitles = s.replace(/<[^>]*?\btitle="([^"]*)"[^>]*>/gi, ' $1 ');
+  return withTitles
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&[a-z]+;/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 800);
 }
 function mapPermitItem(it: any, fallbackName: string) {
-  const ee = stripXml(it.EE_DOC_DATA || it.eeDocData || '');
-  const ud = stripXml(it.UD_DOC_DATA || it.udDocData || '');
-  const nb = stripXml(it.NB_DOC_DATA || it.nbDocData || '');
+  const eeRaw = it.EE_DOC_DATA || it.eeDocData || '';
+  const udRaw = it.UD_DOC_DATA || it.udDocData || '';
+  const nbRaw = it.NB_DOC_DATA || it.nbDocData || '';
+  console.log(`[permit-doc] EE=${String(eeRaw).length} UD=${String(udRaw).length} NB=${String(nbRaw).length}`);
+  const ee = stripXml(String(eeRaw));
+  const ud = stripXml(String(udRaw));
+  const nb = stripXml(String(nbRaw));
   if (!ee && !ud && !nb && !(it.ITEM_NAME || it.itemName)) return null;
   return {
     itemName: it.ITEM_NAME || it.itemName || fallbackName,
