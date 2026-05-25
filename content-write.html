@@ -62,6 +62,32 @@
     .btn-delete { background: var(--danger-soft); color: var(--danger); flex: 0 0 auto; padding: 13px 18px; }
     body.has-bottom-nav { padding-bottom: 0; }
     .itda-bottom-nav { display: none !important; }
+
+    /* 포맷 토글 */
+    .fmt-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .fmt-opt {
+      padding: 14px 10px; border-radius: var(--radius-sm);
+      border: 1.5px solid var(--line); background: #fff;
+      cursor: pointer; font-family: inherit; text-align: left;
+    }
+    .fmt-opt.active { border-color: var(--primary); background: var(--primary-soft); }
+    .fmt-opt-title { font-size: 13.5px; font-weight: 800; color: var(--ink); }
+    .fmt-opt-desc { font-size: 11.5px; color: var(--ink-muted); margin-top: 3px; line-height: 1.5; }
+    /* 이야기 전용 */
+    #story-fields { display: none; }
+    #story-fields.on { display: block; }
+    .cover-drop {
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      padding: 22px; border: 1.5px dashed var(--line); border-radius: var(--radius-sm);
+      color: var(--ink-soft); font-size: 13px; font-weight: 700; cursor: pointer; background: #fff;
+    }
+    .cover-drop:hover { border-color: var(--primary); color: var(--primary); }
+    .cover-preview { width: 100%; border-radius: var(--radius-sm); margin-bottom: 8px; }
+    .check-row { display: flex; gap: 8px; margin-bottom: 8px; }
+    .check-row input { flex: 1; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: var(--radius-sm); font-family: inherit; font-size: 14px; }
+    .check-del { background: var(--danger-soft); color: var(--danger); border: none; border-radius: var(--radius-sm); padding: 0 12px; cursor: pointer; font-size: 18px; }
+    .check-add { background: var(--bg-alt); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 9px 14px; font-size: 13px; font-weight: 700; color: var(--ink-soft); cursor: pointer; font-family: inherit; }
+    .field-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   </style>
 </head>
 <body>
@@ -72,6 +98,19 @@
   </div>
   <form id="content-form">
     <div class="form-group">
+      <label class="form-label">형식</label>
+      <div class="fmt-options" id="fmt-options">
+        <button type="button" class="fmt-opt active" data-fmt="article">
+          <div class="fmt-opt-title">📄 일반 글</div>
+          <div class="fmt-opt-desc">정보·가이드·생각을 자유롭게</div>
+        </button>
+        <button type="button" class="fmt-opt" data-fmt="story">
+          <div class="fmt-opt-title">📖 이야기</div>
+          <div class="fmt-opt-desc">한 단계를 지나온 나의 여정. 표지·체크리스트·도구를 더해요</div>
+        </button>
+      </div>
+    </div>
+    <div class="form-group">
       <label class="form-label">카테고리</label>
       <div class="cat-options" id="cat-options"></div>
     </div>
@@ -79,10 +118,43 @@
       <label class="form-label" for="title">제목</label>
       <input type="text" class="title-input" id="title" placeholder="콘텐츠 제목" required maxlength="120">
     </div>
+
+    <div id="story-fields">
+      <div class="form-group">
+        <label class="form-label" for="excerpt">한 줄 발췌 <span style="font-weight:600;color:var(--ink-muted);">(피드·표지에 보여요)</span></label>
+        <input type="text" class="title-input" id="excerpt" placeholder="예: 엄마를 보낸 90일, 내가 통과한 시간" maxlength="120" style="font-size:14px;font-weight:600;">
+      </div>
+      <div class="form-group">
+        <label class="form-label">표지 이미지 (선택)</label>
+        <img id="cover-preview" class="cover-preview" style="display:none;" alt="표지 미리보기">
+        <label class="cover-drop" id="cover-drop">
+          <input type="file" accept="image/*" id="cover-file" style="display:none;">
+          <span style="font-size:24px;">🖼️</span>
+          <span id="cover-drop-text">표지 사진 올리기</span>
+        </label>
+      </div>
+    </div>
+
     <div class="form-group">
       <label class="form-label" for="body">본문</label>
       <textarea class="body-input" id="body" placeholder="경험·정보·통찰을 자유롭게 나눠보세요" required></textarea>
     </div>
+
+    <div id="story-fields-2" style="display:none;">
+      <div class="form-group">
+        <label class="form-label">체크리스트 <span style="font-weight:600;color:var(--ink-muted);">(다음 사람이 따라 할 단계)</span></label>
+        <div id="check-list"></div>
+        <button type="button" class="check-add" id="check-add">＋ 항목 추가</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">도구 연결 CTA (선택)</label>
+        <div class="field-2col">
+          <input type="text" class="title-input" id="cta_label" placeholder="버튼 문구 (예: 사전연명의향서 작성)" maxlength="40" style="font-size:13px;font-weight:600;">
+          <input type="url" class="title-input" id="cta_url" placeholder="https:// 또는 ./도구.html" style="font-size:13px;font-weight:600;">
+        </div>
+      </div>
+    </div>
+
     <div class="form-group">
       <label class="form-label" for="source_url">참고 출처 (선택)</label>
       <input type="url" class="title-input" id="source_url" placeholder="https://" style="font-size:13px;font-weight:600;">
@@ -100,6 +172,7 @@
   import { supabase } from './auth.js';
   import { renderNav } from './nav.js';
   import { CATEGORIES, getContent, createContent, updateContent, deleteContent } from './js/content.js';
+  import { uploadMedia, getPublicUrl } from './js/media-upload.js';
 
   await renderNav({ active: 'forest', infoIcon: false, title: '콘텐츠 쓰기' });
 
@@ -110,7 +183,13 @@
   const editId = params.get('id');
   const isEdit = !!editId;
 
-  let state = { category: params.get('category') || 'reflection', title: '', body: '', source_url: '' };
+  let state = {
+    category: params.get('category') || 'reflection',
+    title: '', body: '', source_url: '',
+    format: params.get('format') === 'story' ? 'story' : 'article',
+    excerpt: '', cover_image_url: null, cta_label: '', cta_url: '',
+  };
+  let checklist = [];
 
   if (isEdit) {
     const c = await getContent(editId);
@@ -119,7 +198,13 @@
       window.location.href = './forest.html';
       throw new Error('not authorized');
     }
-    state = { category: c.category, title: c.title, body: c.body, source_url: c.source_url || '' };
+    state = {
+      category: c.category, title: c.title, body: c.body, source_url: c.source_url || '',
+      format: c.format || 'article', excerpt: c.excerpt || '',
+      cover_image_url: c.cover_image_url || null,
+      cta_label: c.cta_label || '', cta_url: c.cta_url || '',
+    };
+    checklist = Array.isArray(c.checklist) ? c.checklist.map((x) => ({ text: x.text || '', url: x.url || '' })) : [];
     document.getElementById('btn-delete').style.display = '';
   }
 
@@ -139,6 +224,78 @@
   document.getElementById('title').value = state.title;
   document.getElementById('body').value = state.body;
   document.getElementById('source_url').value = state.source_url || '';
+  document.getElementById('excerpt').value = state.excerpt || '';
+  document.getElementById('cta_label').value = state.cta_label || '';
+  document.getElementById('cta_url').value = state.cta_url || '';
+
+  // ── 포맷 토글 ──
+  const fmtEl = document.getElementById('fmt-options');
+  function applyFormat() {
+    fmtEl.querySelectorAll('.fmt-opt').forEach((b) => b.classList.toggle('active', b.dataset.fmt === state.format));
+    const on = state.format === 'story';
+    document.getElementById('story-fields').classList.toggle('on', on);
+    document.getElementById('story-fields-2').style.display = on ? 'block' : 'none';
+  }
+  fmtEl.addEventListener('click', (e) => {
+    const btn = e.target.closest('.fmt-opt');
+    if (!btn) return;
+    state.format = btn.dataset.fmt;
+    applyFormat();
+  });
+  applyFormat();
+
+  // ── 표지 이미지 업로드 ──
+  function renderCover() {
+    const img = document.getElementById('cover-preview');
+    const txt = document.getElementById('cover-drop-text');
+    if (state.cover_image_url) {
+      img.src = state.cover_image_url; img.style.display = 'block';
+      txt.textContent = '표지 바꾸기';
+    } else {
+      img.style.display = 'none'; txt.textContent = '표지 사진 올리기';
+    }
+  }
+  renderCover();
+  document.getElementById('cover-file').addEventListener('change', async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    const txt = document.getElementById('cover-drop-text');
+    txt.textContent = '업로드 중…';
+    try {
+      const { storage_path } = await uploadMedia('content-media', file, { scope: 'story-cover' });
+      state.cover_image_url = getPublicUrl('content-media', storage_path);
+      renderCover();
+    } catch (err) {
+      alert('표지 업로드 실패: ' + (err.message || err));
+      renderCover();
+    }
+  });
+
+  // ── 체크리스트 ──
+  const checkListEl = document.getElementById('check-list');
+  function renderChecklist() {
+    checkListEl.innerHTML = checklist.map((c, i) => `
+      <div class="check-row">
+        <input type="text" data-idx="${i}" value="${(c.text || '').replace(/"/g, '&quot;')}" placeholder="예: 사망신고 (주민센터, 30일 이내)">
+        <button type="button" class="check-del" data-del="${i}" aria-label="삭제">×</button>
+      </div>
+    `).join('');
+  }
+  checkListEl.addEventListener('input', (e) => {
+    const idx = e.target.dataset.idx;
+    if (idx != null) checklist[idx].text = e.target.value;
+  });
+  checkListEl.addEventListener('click', (e) => {
+    const del = e.target.dataset.del;
+    if (del != null) { checklist.splice(del, 1); renderChecklist(); }
+  });
+  document.getElementById('check-add').addEventListener('click', () => {
+    checklist.push({ text: '', url: '' }); renderChecklist();
+    const inputs = checkListEl.querySelectorAll('input');
+    inputs[inputs.length - 1]?.focus();
+  });
+  renderChecklist();
 
   document.getElementById('btn-cancel').addEventListener('click', () => {
     if (confirm('작성을 취소하시겠어요?')) window.location.href = './forest.html';
@@ -154,11 +311,21 @@
     const btn = document.getElementById('btn-save');
     btn.disabled = true; btn.textContent = '저장 중...';
 
+    const isStory = state.format === 'story';
+    const cleanChecklist = checklist
+      .map((c) => ({ text: (c.text || '').trim(), url: (c.url || '').trim() || undefined }))
+      .filter((c) => c.text);
     const payload = {
       category: state.category,
       title: document.getElementById('title').value.trim(),
       body: document.getElementById('body').value,
       source_url: document.getElementById('source_url').value.trim() || null,
+      format: state.format,
+      excerpt: isStory ? (document.getElementById('excerpt').value.trim() || null) : null,
+      cover_image_url: isStory ? state.cover_image_url : null,
+      checklist: isStory && cleanChecklist.length ? cleanChecklist : null,
+      cta_label: isStory ? (document.getElementById('cta_label').value.trim() || null) : null,
+      cta_url: isStory ? (document.getElementById('cta_url').value.trim() || null) : null,
     };
 
     try {

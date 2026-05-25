@@ -1,0 +1,64 @@
+name: Deploy Supabase
+
+# 수동 실행(워크플로 디스패치)만 — 마이그레이션은 one-way door라
+# 창업자가 GitHub Actions 탭에서 버튼으로 직접 실행한다.
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: '배포 대상'
+        type: choice
+        default: all
+        options:
+          - all
+          - migrations
+          - functions
+          - function-secrets
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+      DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link project
+        run: supabase link --project-ref "$PROJECT_REF" --password "$DB_PASSWORD"
+
+      # 마이그레이션 적용 (DDL — one-way)
+      - name: DB push (migrations)
+        if: ${{ inputs.target == 'all' || inputs.target == 'migrations' }}
+        run: supabase db push --password "$DB_PASSWORD"
+
+      # Edge Function 배포 (idempotent — 재배포 안전)
+      - name: Deploy functions
+        if: ${{ inputs.target == 'all' || inputs.target == 'functions' }}
+        run: |
+          supabase functions deploy analyze-rx --project-ref "$PROJECT_REF"
+          # 필요 시 주석 해제하여 함께 배포:
+          # supabase functions deploy push-notify --project-ref "$PROJECT_REF"
+          # supabase functions deploy kakao-signin --project-ref "$PROJECT_REF"
+          # ⚠️ delete-account 는 실데이터 삭제 로직 — 수동 배포 권장(여기서 자동 배포하지 않음)
+
+      # Edge Function 시크릿 설정 (선택 — GH 시크릿이 있을 때만)
+      - name: Set function secrets
+        if: ${{ inputs.target == 'all' || inputs.target == 'function-secrets' }}
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
+        run: |
+          ARGS=""
+          [ -n "$ANTHROPIC_API_KEY" ] && ARGS="$ARGS ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY"
+          [ -n "$DATA_GO_KR_KEY" ] && ARGS="$ARGS DATA_GO_KR_KEY=$DATA_GO_KR_KEY"
+          if [ -n "$ARGS" ]; then
+            supabase secrets set $ARGS --project-ref "$PROJECT_REF"
+          else
+            echo "설정할 시크릿이 없습니다(ANTHROPIC_API_KEY/DATA_GO_KR_KEY 미설정). 건너뜀."
+          fi

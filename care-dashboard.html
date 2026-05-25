@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>돌봄 대시보드 · 잇다</title>
+  <title>케어링 대시보드 · 잇다</title>
   <link rel="stylesheet" href="./auth-styles.css">
   <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#2F6B4F">
@@ -201,7 +201,7 @@
   import { renderNav } from './nav.js';
   import { getCareDashboard, subscribeCareLogs } from './js/care.js';
 
-  await renderNav({ active: 'nest', infoIcon: false, title: '돌봄 대시보드' });
+  await renderNav({ active: 'nest', infoIcon: false, title: '케어링 대시보드' });
 
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) { window.location.href = './login.html'; throw new Error('로그인 필요'); }

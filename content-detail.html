@@ -298,6 +298,43 @@
     }
     .modal-cancel { background: var(--bg-alt); border: 1px solid var(--line); }
     .modal-submit { background: var(--danger); color: #fff; }
+
+    /* 이야기 카드 상세 */
+    .story-badge {
+      display: inline-block; font-size: 11.5px; font-weight: 800;
+      padding: 3px 10px; border-radius: 999px;
+      background: var(--primary); color: #fff; letter-spacing: 0.02em;
+    }
+    .story-cover { width: 100%; border-radius: var(--radius); margin: 4px 0 16px; display: block; }
+    .story-excerpt {
+      font-family: var(--font-serif);
+      font-size: 16.5px; line-height: 1.6; color: var(--ink-soft);
+      font-style: italic; margin: 8px 0 4px;
+    }
+    .story-checklist {
+      background: var(--primary-soft);
+      border-radius: var(--radius);
+      padding: 18px 20px; margin: 24px 0;
+    }
+    .story-checklist-head { font-size: 14.5px; font-weight: 800; color: var(--primary); margin-bottom: 12px; }
+    .story-check-item { display: flex; gap: 10px; align-items: flex-start; padding: 7px 0; font-size: 14.5px; line-height: 1.55; }
+    .story-check-item::before { content: '✓'; color: var(--primary); font-weight: 800; flex-shrink: 0; }
+    .story-check-item a { color: var(--primary); text-decoration: underline; }
+    .story-cta {
+      display: block; text-align: center; text-decoration: none;
+      background: var(--primary); color: #fff;
+      font-size: 15px; font-weight: 800;
+      padding: 15px; border-radius: var(--radius);
+      margin: 20px 0;
+    }
+    .empathy-btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 10px 18px; border-radius: 999px;
+      border: 1.5px solid var(--primary); background: #fff;
+      color: var(--primary); font-size: 13.5px; font-weight: 800;
+      cursor: pointer; font-family: inherit;
+    }
+    .empathy-btn.active { background: var(--primary); color: #fff; }
   </style>
 </head>
 <body>
@@ -312,7 +349,7 @@
 <script type="module">
   import { supabase } from './auth.js';
   import { renderNav } from './nav.js';
-  import { getContent, CATEGORIES, isBookmarked, toggleBookmark, deleteContent } from './js/content.js';
+  import { getContent, CATEGORIES, isBookmarked, toggleBookmark, getEmpathy, toggleEmpathy, deleteContent } from './js/content.js';
   import { toggleReaction, getReactionState, reportTarget, REPORT_REASONS, createPost } from './js/community.js';
   import { getSignedUrl, getPublicUrl } from './js/media-upload.js';
 
@@ -350,16 +387,21 @@
   const reactionState = await getReactionState('content', id);
   const bookmarked = await isBookmarked(id);
   const isOwner = session && content.creator_id === session.user.id;
+  const isStory = content.format === 'story';
+  const empathy = isStory ? await getEmpathy(id) : { count: 0, mine: false };
+  const checklist = Array.isArray(content.checklist) ? content.checklist : [];
   const isAdmin = session?.user?.email === 'sue.choi033@gmail.com';
   const canManage = isOwner || isAdmin;
 
   document.getElementById('content-body').innerHTML = `
     <div class="content-head">
       <div class="content-meta-row">
+        ${isStory ? `<span class="story-badge">📖 이야기</span>` : ''}
         <span class="content-cat-chip">${cat.icon} ${cat.label}</span>
         ${content.author_type === 'official' ? `<span class="content-author-chip author-official">공식</span>` : ''}
       </div>
       <div class="content-title">${escapeHtml(content.title)}</div>
+      ${isStory && content.excerpt ? `<div class="story-excerpt">"${escapeHtml(content.excerpt)}"</div>` : ''}
       <div class="content-byline">
         ${content.profiles?.avatar_url ? `<img class="content-byline-avatar" src="${content.profiles.avatar_url}" alt="">` : ''}
         ${content.profiles?.name ? `<span class="content-byline-name">${escapeHtml(content.profiles.name)}</span>` : ''}
@@ -369,6 +411,7 @@
       </div>
     </div>
 
+    ${isStory && content.cover_image_url ? `<img class="story-cover" src="${escapeHtml(content.cover_image_url)}" alt="표지">` : ''}
     <div id="toc-mount"></div>
 
     ${relatedQuestion ? `
@@ -386,6 +429,27 @@
       </div>` : ''}
 
     <div class="content-body" id="content-body-text"></div>
+
+    ${isStory && checklist.length ? `
+      <div class="story-checklist">
+        <div class="story-checklist-head">✓ 다음 사람을 위한 체크리스트</div>
+        ${checklist.map((c) => `
+          <div class="story-check-item">
+            <span>${c.url ? `<a href="${escapeHtml(c.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(c.text || '')}</a>` : escapeHtml(c.text || '')}</span>
+          </div>`).join('')}
+      </div>` : ''}
+
+    ${isStory && content.cta_url ? `
+      <a class="story-cta" href="${escapeHtml(content.cta_url)}" ${/^https?:/i.test(content.cta_url) ? 'target="_blank" rel="noopener noreferrer"' : ''}>
+        ${escapeHtml(content.cta_label || '바로 시작하기')} →
+      </a>` : ''}
+
+    ${isStory ? `
+      <div style="text-align:center;margin:22px 0;">
+        <button class="empathy-btn ${empathy.mine ? 'active' : ''}" id="btn-empathy">
+          🤝 비슷한 시기를 지나는 중 <span id="empathy-count">${empathy.count}</span>
+        </button>
+      </div>` : ''}
 
     ${content.source_url ? `
       <div style="margin-top:18px;font-size:12.5px;">
@@ -486,6 +550,17 @@
       const btn = document.getElementById('btn-bookmark');
       btn.classList.toggle('active', newState);
       btn.innerHTML = `🔖 ${newState ? '저장됨' : '저장'}`;
+    } catch (err) { alert(err.message); }
+  });
+
+  // 공감 ("비슷한 시기를 지나는 중")
+  document.getElementById('btn-empathy')?.addEventListener('click', async () => {
+    if (!session) { window.location.href = './login.html'; return; }
+    try {
+      const active = await toggleEmpathy(id);
+      const cnt = document.getElementById('empathy-count');
+      cnt.textContent = parseInt(cnt.textContent, 10) + (active ? 1 : -1);
+      document.getElementById('btn-empathy').classList.toggle('active', active);
     } catch (err) { alert(err.message); }
   });
 

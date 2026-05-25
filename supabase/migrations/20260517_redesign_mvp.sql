@@ -2,7 +2,7 @@
 -- 잇다 v3 재설계 마이그레이션
 -- MVP + 높음 우선순위 기능을 위한 스키마
 --
--- 5탭 IA: 홈 / 씨앗(일기·계획) / 둥지(돌봄) / 숲(콘텐츠·커뮤니티·추모) / 뿌리(마이)
+-- 5탭 IA: 홈 / 씨앗(일기·계획) / 둥지(케어링) / 숲(콘텐츠·커뮤니티·추모) / 뿌리(마이)
 --
 -- 기존 테이블(profiles, care_*, daily_questions/answers, stories)은 유지
 -- 신규: 일기, 태그, 친구, 목표/계획, 콘텐츠 허브, 커뮤니티
@@ -390,7 +390,7 @@ create policy "boards_public_read" on public.boards for select using (is_active 
 
 -- 시드 게시판
 insert into public.boards (slug, name, description, sort_order) values
-  ('parent-care',  '부모 돌봄',     '부모님 돌봄의 경험과 노하우를 나눠요',    10),
+  ('parent-care',  '부모 케어링',     '부모님 케어링의 경험과 노하우를 나눠요',    10),
   ('retirement',   '노후 준비',     '재정·건강·관계, 노년기 준비 이야기',     20),
   ('end-of-life',  '삶의 마무리',   '존엄한 마지막을 함께 준비합니다',         30),
   ('reflection',   '오늘의 성찰',   '하루를 돌아보며 나누고 싶은 생각',         40),
@@ -535,7 +535,7 @@ create policy "reports_reporter_read" on public.reports
   for select using (auth.uid() = reporter_id);
 
 -- =============================================================
--- 7. 돌봄 강화 (7번)
+-- 7. 케어링 강화 (7번)
 -- =============================================================
 -- 응급 연락처 (7.5)
 create table if not exists public.care_emergency_contacts (
@@ -561,7 +561,7 @@ create policy "care_emergency_via_member" on public.care_emergency_contacts
     )
   );
 
--- 돌봄 대시보드 집계 뷰 (7.4)
+-- 케어링 대시보드 집계 뷰 (7.4)
 create or replace view public.care_dashboard_view as
   select
     cl.subject_id,

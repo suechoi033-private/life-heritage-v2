@@ -200,7 +200,7 @@
 
       <div class="broadcast-section">
         <div class="broadcast-title">📢 협력자들에게 상황 공유</div>
-        <div class="broadcast-desc">현재 상황을 한 줄로 알려주면, 이 돌봄에 함께 있는 가족·돌봄 제공자에게 실시간으로 전달됩니다.</div>
+        <div class="broadcast-desc">현재 상황을 한 줄로 알려주면, 이 케어링에 함께 있는 가족·케어링 제공자에게 실시간으로 전달됩니다.</div>
         <textarea class="broadcast-input" id="broadcast-note" placeholder="예: 어머니 호흡 곤란, 119 부름. 강남세브란스로 이송 중"></textarea>
         <button class="broadcast-btn" id="btn-broadcast">상황 공유</button>
       </div>
@@ -210,7 +210,7 @@
     document.getElementById('btn-broadcast').addEventListener('click', async () => {
       const note = document.getElementById('broadcast-note').value.trim();
       if (!note) { alert('상황을 적어주세요'); return; }
-      if (!confirm('이 돌봄의 모든 협력자에게 즉시 공유됩니다. 진행할까요?')) return;
+      if (!confirm('이 케어링의 모든 협력자에게 즉시 공유됩니다. 진행할까요?')) return;
       try {
         await broadcastEmergency(subjectId, { note });
         alert('공유되었습니다. 협력자에게 실시간으로 전달됩니다.');
