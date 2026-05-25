@@ -31,6 +31,149 @@
     .seed-hero-stat { font-size: 12.5px; color: var(--ink-soft); }
     .seed-hero-stat strong { color: var(--primary); font-weight: 800; }
 
+    /* ── 내 기록 진행 배너 (라이프 → 책 서사) ── */
+    .chapter-banner {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      margin-bottom: 16px;
+    }
+    .chapter-banner-title {
+      font-family: var(--font-serif);
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1.5;
+      letter-spacing: -0.01em;
+      color: var(--ink);
+    }
+    .chapter-banner-sub {
+      font-size: 12.5px;
+      color: var(--ink-muted);
+      line-height: 1.55;
+      margin-top: 5px;
+    }
+    .chapter-banner-count {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 4px;
+      margin-top: 12px;
+      font-size: 12.5px;
+      color: var(--ink-soft);
+    }
+    .chapter-banner-count strong {
+      font-family: var(--font-serif);
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--primary);
+      line-height: 1;
+    }
+    .chapter-banner-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+    }
+    .chapter-banner-foot-text { font-size: 12px; color: var(--ink-muted); line-height: 1.5; flex: 1; }
+    .chapter-banner-cta {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-size: 12.5px;
+      font-weight: 800;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .chapter-banner-cta:hover { background: var(--primary); color: #fff; }
+
+    /* ── 한 문장 공유 액션 (타임라인 카드 내) ── */
+    .diary-card-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px dashed var(--line);
+    }
+    .share-sentence-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink-soft);
+      font-size: 11.5px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+    }
+    .share-sentence-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+    /* ── 문장 선택 모달 ── */
+    .sc-overlay {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(33,38,30,0.45);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .sc-overlay.open { display: flex; }
+    .sc-sheet {
+      background: #fff;
+      width: 100%;
+      max-width: 480px;
+      border-radius: 20px 20px 0 0;
+      padding: 20px 18px calc(20px + env(safe-area-inset-bottom, 0px));
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .sc-sheet-title {
+      font-size: 15px; font-weight: 800; letter-spacing: -0.01em;
+      margin-bottom: 4px;
+    }
+    .sc-sheet-desc { font-size: 12.5px; color: var(--ink-muted); margin-bottom: 14px; }
+    .sc-option {
+      display: block; width: 100%; text-align: left;
+      background: var(--bg-alt);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 8px;
+      font-family: var(--font-serif);
+      font-size: 14px;
+      line-height: 1.55;
+      color: var(--ink);
+      cursor: pointer;
+    }
+    .sc-option:hover { border-color: var(--primary); }
+    .sc-close {
+      width: 100%; padding: 11px; margin-top: 6px;
+      background: #fff; border: 1px solid var(--line); border-radius: 12px;
+      font-size: 13px; font-weight: 700; color: var(--ink-soft);
+      font-family: inherit; cursor: pointer;
+    }
+    .sc-toast {
+      position: fixed; left: 50%; bottom: calc(90px + env(safe-area-inset-bottom, 0px));
+      transform: translateX(-50%);
+      z-index: 300;
+      background: var(--ink); color: #fff;
+      padding: 10px 16px; border-radius: 999px;
+      font-size: 12.5px; font-weight: 700;
+      opacity: 0; transition: opacity 0.2s;
+      pointer-events: none;
+      max-width: 90vw; text-align: center;
+    }
+    .sc-toast.show { opacity: 1; }
+
     /* 캘린더 */
     .calendar-wrap {
       background: var(--bg-alt);
@@ -408,6 +551,18 @@
   </div>
 
   <div id="diary-pane">
+    <!-- 내 기록 진행 배너 — 라이프 기록이 한 권의 책으로 이어진다는 서사 -->
+    <div class="chapter-banner" id="chapter-banner">
+      <div class="chapter-banner-title">질문에 답할수록, 내 삶이 또렷해집니다.</div>
+      <div class="chapter-banner-count" id="chapter-count">
+        <span>지금까지</span><strong id="chapter-count-num">–</strong><span>개의 기록</span>
+      </div>
+      <div class="chapter-banner-foot">
+        <div class="chapter-banner-foot-text">그 답들이 모여, 당신만의 한 권이 됩니다.</div>
+        <a href="./book-export.html" class="chapter-banner-cta">표지 미리보기 →</a>
+      </div>
+    </div>
+
     <!-- 일기 쓰기 CTA (캘린더는 조회용이라 액션 진입점을 명확히) -->
     <a href="./diary-write.html" class="write-cta" id="write-cta">
       <span class="write-cta-plus">＋</span>
@@ -460,12 +615,24 @@
 
 <button class="fab" id="fab-write" aria-label="작성">＋</button>
 
+<!-- 한 문장 선택 모달 -->
+<div class="sc-overlay" id="sc-overlay">
+  <div class="sc-sheet" role="dialog" aria-modal="true" aria-label="문장 공유">
+    <div class="sc-sheet-title">이 문장 공유하기</div>
+    <div class="sc-sheet-desc">공유할 한 문장을 골라주세요. 미니멀 카드로 만들어 드려요.</div>
+    <div id="sc-options"></div>
+    <button class="sc-close" id="sc-close">닫기</button>
+  </div>
+</div>
+<div class="sc-toast" id="sc-toast"></div>
+
 <script type="module">
   import { supabase } from './auth.js';
   import { renderNav } from './nav.js';
   import { registerPWA } from './js/pwa.js';
   import { listMyDiariesByMonth, listMyDiariesTimeline, TEMPLATES } from './js/diary.js';
   import { AREAS, listMyGoals, getDashboardSummary } from './js/goals.js';
+  import { shareSentenceCard } from './js/share-card.js';
 
   await renderNav({ active: 'seed', infoIcon: true, title: '라이프' });
   registerPWA();
@@ -520,6 +687,9 @@
       } else {
         stat.innerHTML = `일기 <strong>${dc ?? '-'}</strong>개 · 버킷리스트 <strong>${gc ?? '-'}</strong>개`;
       }
+      // 진행 배너 개수 (일기 카운트 재사용)
+      const numEl = document.getElementById('chapter-count-num');
+      if (numEl) numEl.textContent = dc != null ? dc : '–';
     } catch (err) {
       console.warn('[seed] 통계 조회 실패:', err);
       stat.textContent = '시작해 보세요';
@@ -621,6 +791,7 @@
   // ── 타임라인 ──
   let timelineCursor = null;
   let timelineExhausted = false;
+  const diaryById = new Map(); // 공유 모달에서 문장 추출에 재사용
 
   async function loadTimeline(append = false) {
     const body = document.getElementById('timeline-body');
@@ -644,17 +815,25 @@
         return;
       }
 
+      items.forEach((d) => { diaryById.set(String(d.id), d); });
+
       const html = items.map((d) => {
         const excerpt = (d.content || '').replace(/\s+/g, ' ').slice(0, 120);
+        const hasText = !!(d.content && d.content.trim()) || !!(d.title && d.title.trim());
         return `
-          <a class="diary-card" href="./diary-detail.html?id=${d.id}">
-            <div class="diary-card-meta">
-              <span class="diary-card-date">${formatDate(d.entry_date)}</span>
-              <span class="diary-card-template">${TEMPLATES[d.template_type]?.label || ''}</span>
-            </div>
-            ${d.title ? `<div class="diary-card-title">${escapeHtml(d.title)}</div>` : ''}
-            ${excerpt ? `<div class="diary-card-excerpt">${escapeHtml(excerpt)}</div>` : ''}
-          </a>`;
+          <div class="diary-card-wrap">
+            <a class="diary-card" href="./diary-detail.html?id=${d.id}">
+              <div class="diary-card-meta">
+                <span class="diary-card-date">${formatDate(d.entry_date)}</span>
+                <span class="diary-card-template">${TEMPLATES[d.template_type]?.label || ''}</span>
+              </div>
+              ${d.title ? `<div class="diary-card-title">${escapeHtml(d.title)}</div>` : ''}
+              ${excerpt ? `<div class="diary-card-excerpt">${escapeHtml(excerpt)}</div>` : ''}
+              ${hasText ? `<div class="diary-card-actions">
+                <button type="button" class="share-sentence-btn" data-share-id="${d.id}">✦ 이 문장 공유</button>
+              </div>` : ''}
+            </a>
+          </div>`;
       }).join('');
 
       body.insertAdjacentHTML('beforeend', html);
@@ -675,6 +854,77 @@
   }
 
   loadTimeline();
+
+  // ── 한 문장 공유 ──
+  const scOverlay = document.getElementById('sc-overlay');
+  const scOptions = document.getElementById('sc-options');
+  const scToast = document.getElementById('sc-toast');
+
+  function showToast(msg) {
+    scToast.textContent = msg;
+    scToast.classList.add('show');
+    setTimeout(() => scToast.classList.remove('show'), 2600);
+  }
+
+  // 본문을 한 문장 단위로 분리 (제목 우선 + 본문 문장들)
+  function extractSentences(d) {
+    const out = [];
+    if (d.title && d.title.trim()) out.push(d.title.trim());
+    const body = (d.content || '').replace(/\s+/g, ' ').trim();
+    if (body) {
+      // 문장 경계에 마커(\u0001) 삽입 후 분리 — lookbehind 미사용(구형 iOS Safari 호환)
+      body
+        .replace(/([.!?。…])\s+/g, '$1\u0001')
+        .replace(/(다)\s+(?=[가-힣])/g, '$1\u0001')
+        .split('\u0001')
+        .map((s) => s.trim())
+        .filter((s) => s.length >= 4)
+        .forEach((s) => { if (!out.includes(s)) out.push(s); });
+      if (!out.length) out.push(body);
+    }
+    return out.slice(0, 8);
+  }
+
+  function openShareModal(id) {
+    const d = diaryById.get(String(id));
+    if (!d) return;
+    const sentences = extractSentences(d);
+    if (!sentences.length) { showToast('공유할 문장이 없어요'); return; }
+    const meta = formatDate(d.entry_date);
+    scOptions.innerHTML = sentences.map((s, i) =>
+      `<button type="button" class="sc-option" data-idx="${i}">${escapeHtml(s)}</button>`
+    ).join('');
+    scOptions.querySelectorAll('.sc-option').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const sentence = sentences[Number(btn.dataset.idx)];
+        scOverlay.classList.remove('open');
+        showToast('카드를 만드는 중…');
+        try {
+          const res = await shareSentenceCard(sentence, { meta });
+          if (res.method === 'share' || res.method === 'kakao') showToast('공유 시트를 열었어요');
+          else if (res.method === 'clipboard') showToast('이미지 저장 · 캡션 복사 완료');
+          else if (res.method === 'download') showToast('카드 이미지를 저장했어요');
+          else if (res.method === 'cancelled') scToast.classList.remove('show');
+        } catch (err) {
+          console.warn('[seed] 공유 실패:', err);
+          showToast('공유에 실패했어요');
+        }
+      });
+    });
+    scOverlay.classList.add('open');
+  }
+
+  document.getElementById('sc-close').addEventListener('click', () => scOverlay.classList.remove('open'));
+  scOverlay.addEventListener('click', (e) => { if (e.target === scOverlay) scOverlay.classList.remove('open'); });
+
+  // 타임라인 카드 내 "이 문장 공유" — 카드 링크 이동 방지
+  document.getElementById('timeline-body').addEventListener('click', (e) => {
+    const btn = e.target.closest('.share-sentence-btn');
+    if (!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    openShareModal(btn.dataset.shareId);
+  });
 
   // 초기 탭이 goal이면 대시보드 로드
   if (initialTab === 'goal') loadGoalDashboard();
