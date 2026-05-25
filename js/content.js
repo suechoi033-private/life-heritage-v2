@@ -89,6 +89,41 @@ export async function deleteContent(id) {
   if (error) throw error;
 }
 
+// 홈 피드용 — 신규 콘텐츠(추모 제외) + 표지/포맷/작성자
+export async function listHomeFeed(limit = 12) {
+  const { data, error } = await supabase.from('contents')
+    .select('id, category, title, body, excerpt, cover_image_url, format, author_type, creator_id, created_at, profiles:creator_id(name, avatar_url)')
+    .eq('is_published', true)
+    .neq('category', 'memorial')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return data || [];
+}
+
+// 여러 콘텐츠의 좋아요·댓글(토론) 수를 배치로 — N+1 방지
+export async function getEngagementMap(ids) {
+  if (!ids?.length) return {};
+  const { data: { session } } = await supabase.auth.getSession();
+  const me = session?.user?.id || null;
+  const [likesRes, postsRes] = await Promise.all([
+    supabase.from('reactions').select('target_id, user_id')
+      .eq('target_type', 'content').eq('reaction_type', 'like').in('target_id', ids),
+    supabase.from('community_posts').select('content_thread_id')
+      .in('content_thread_id', ids).eq('is_deleted', false),
+  ]);
+  const map = {};
+  ids.forEach((id) => { map[id] = { likes: 0, mineLiked: false, comments: 0 }; });
+  (likesRes.data || []).forEach((r) => {
+    const m = map[r.target_id]; if (!m) return;
+    m.likes++; if (me && r.user_id === me) m.mineLiked = true;
+  });
+  (postsRes.data || []).forEach((p) => {
+    const m = map[p.content_thread_id]; if (m) m.comments++;
+  });
+  return map;
+}
+
 // ===== 북마크 =====
 export async function isBookmarked(contentId) {
   const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;

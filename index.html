@@ -169,52 +169,70 @@
     }
     @keyframes shimmer { to { background-position: -200% 0; } }
 
-    /* ── 홈 콘텐츠 피드 ───────────────────── */
+    /* ── 홈 콘텐츠 피드 (오늘의집/Airbnb 스타일) ── */
     .feed-section { margin-top: 30px; }
     .feed-head {
       display: flex; align-items: baseline; justify-content: space-between;
       margin-bottom: 14px;
     }
-    .feed-head-title { font-size: 17px; font-weight: 800; color: var(--ink); }
+    .feed-head-title { font-size: 18px; font-weight: 800; color: var(--ink); }
     .feed-head-more { font-size: 13px; font-weight: 700; color: var(--primary); text-decoration: none; }
-    .feed-card {
-      display: block;
-      background: var(--bg-alt);
+
+    .hcard {
+      background: #fff;
       border: 1px solid var(--line);
-      border-radius: var(--radius-sm, 14px);
-      padding: 16px 18px;
-      margin-bottom: 12px;
-      text-decoration: none;
-      color: inherit;
+      border-radius: 18px;
+      overflow: hidden;
+      margin-bottom: 18px;
+      cursor: pointer;
+      transition: box-shadow .15s, transform .1s;
     }
-    .feed-card:hover { border-color: var(--primary-soft); }
-    .feed-card.feed-card-hero {
-      background: linear-gradient(135deg, var(--primary-soft), var(--bg-alt));
-      border-color: var(--primary-soft);
+    .hcard:active { transform: scale(0.995); }
+    .hcard:hover { box-shadow: 0 6px 22px rgba(0,0,0,0.07); }
+    .hcard-cover {
+      position: relative;
+      aspect-ratio: 16 / 9;
+      background-size: cover; background-position: center;
+      display: flex; align-items: center; justify-content: center;
     }
-    .feed-card-label {
-      display: inline-flex; align-items: center; gap: 5px;
-      font-size: 11.5px; font-weight: 700;
-      padding: 3px 9px; border-radius: 999px; margin-bottom: 9px;
+    .hcard-cover-icon { font-size: 56px; opacity: 0.9; }
+    .hcard-badges {
+      position: absolute; top: 12px; left: 12px;
+      display: flex; gap: 6px; flex-wrap: wrap;
     }
-    .feed-label-editor { background: var(--primary-soft); color: var(--primary); }
-    .feed-label-user   { background: #EFEAF6; color: #7A5BA8; }
-    .feed-card-title {
-      font-size: 16.5px; font-weight: 800; color: var(--ink);
-      line-height: 1.4; margin-bottom: 6px;
+    .hbadge {
+      font-size: 11px; font-weight: 800; padding: 4px 9px; border-radius: 999px;
+      background: rgba(255,255,255,0.92); color: var(--ink); backdrop-filter: blur(4px);
     }
-    .feed-card-hero .feed-card-title { font-size: 19px; }
-    .feed-card-summary {
-      font-size: 14px; color: var(--ink-soft); line-height: 1.6;
+    .hbadge-new { background: var(--primary); color: #fff; }
+    .hbadge-story { background: #1c2620; color: #fff; }
+    .hbadge-mine { background: var(--warm, #BE6440); color: #fff; }
+    .hcard-body { padding: 14px 16px 16px; }
+    .hcard-cat { font-size: 12px; font-weight: 700; color: var(--primary); margin-bottom: 5px; }
+    .hcard-title { font-size: 17px; font-weight: 800; color: var(--ink); line-height: 1.4; margin-bottom: 6px; }
+    .hcard-excerpt {
+      font-size: 14px; color: var(--ink-soft); line-height: 1.6; margin-bottom: 12px;
       display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
     }
-    .feed-card-meta {
-      margin-top: 10px; font-size: 12.5px; color: var(--ink-muted);
-      display: flex; gap: 10px; flex-wrap: wrap;
+    .hcard-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .hcard-author { display: flex; align-items: center; gap: 7px; min-width: 0; }
+    .hcard-avatar {
+      width: 26px; height: 26px; border-radius: 999px; object-fit: cover;
+      background: var(--primary-soft); color: var(--primary);
+      display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; flex-shrink: 0;
     }
+    .hcard-author-name { font-size: 12.5px; font-weight: 700; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .hcard-engage { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+    .hcard-heart, .hcard-comment {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: none; border: none; font-family: inherit; cursor: pointer;
+      font-size: 13.5px; font-weight: 700; color: var(--ink-muted); padding: 4px;
+    }
+    .hcard-heart.on { color: #E0556B; }
+    .hcard-heart .ic { font-size: 16px; }
     .feed-empty {
       background: var(--bg-alt); border: 1px solid var(--line);
-      border-radius: var(--radius-sm, 14px); padding: 28px 20px;
+      border-radius: 18px; padding: 32px 20px;
       text-align: center; color: var(--ink-soft); font-size: 14px; line-height: 1.7;
     }
   </style>
@@ -247,13 +265,15 @@
 import { supabase } from './auth.js';
 import { renderNav } from './nav.js';
 import { registerPWA } from './js/pwa.js';
-import { getFeaturedStory } from './js/content.js';
+import { getFeaturedStory, listHomeFeed, getEngagementMap } from './js/content.js';
+import { toggleReaction } from './js/community.js';
 
 await renderNav({ active: 'home', infoIcon: true });
 registerPWA();
 
 const { data: { session } } = await supabase.auth.getSession();
 const user = session?.user ?? null;
+const currentUserId = user?.id || null;
 
 // ── 인사말 ──
 const greetingLabel = document.getElementById('greeting-label');
@@ -381,70 +401,119 @@ const CATEGORY_LABELS = {
   reflection: '오늘의 성찰', family: '가족 케어링', health: '건강',
   finance: '재정', death_prep: '죽음 준비', memorial: '추모',
 };
+const CATEGORY_THEME = {
+  reflection: { icon: '🕯', c1: '#F4ECDE', c2: '#E8D9BE' },
+  family:     { icon: '🏡', c1: '#E3EEF7', c2: '#C9DEEE' },
+  health:     { icon: '💪', c1: '#E7F1EC', c2: '#CFE5D8' },
+  finance:    { icon: '💰', c1: '#FBF5E6', c2: '#F2E6C5' },
+  death_prep: { icon: '🕊', c1: '#EDEAF6', c2: '#DAD2EE' },
+  memorial:   { icon: '🌿', c1: '#E7F1EC', c2: '#CFE5D8' },
+};
 renderHomeFeed();
+
+function isNew(created) { return (Date.now() - new Date(created).getTime()) < 3 * 86400000; }
 
 async function renderHomeFeed() {
   const section = document.getElementById('home-feed');
   const body = document.getElementById('home-feed-body');
   section.hidden = false;
   try {
-    const [story, listRes] = await Promise.all([
+    const [story, list] = await Promise.all([
       getFeaturedStory().catch(() => null),
-      supabase.from('contents')
-        .select('id, category, title, body, author_type, view_count, like_count, created_at, profiles:creator_id(name)')
-        .eq('is_published', true)
-        .neq('category', 'memorial')
-        .order('created_at', { ascending: false })
-        .limit(8),
+      listHomeFeed(12),
     ]);
-    if (listRes.error) throw listRes.error;
-    let items = listRes.data || [];
-    if (story) items = items.filter((c) => c.id !== story.id); // hero 중복 제거
+    let items = list || [];
+    if (story) items = items.filter((c) => c.id !== story.id);
+    const ordered = story ? [story, ...items] : items;
 
-    if (!story && !items.length) {
+    if (!ordered.length) {
       body.innerHTML = `<div class="feed-empty">아직 조용하네요.<br>당신의 오늘 한 줄이 누군가의 내일이 됩니다.</div>`;
       return;
     }
-    body.innerHTML = (story ? storyHero(story) : '') + items.map((c) => feedCard(c, false)).join('');
+
+    const eng = await getEngagementMap(ordered.map((c) => c.id)).catch(() => ({}));
+    body.innerHTML = ordered.map((c) => feedCard(c, eng[c.id] || { likes: 0, mineLiked: false, comments: 0 })).join('');
+    wireHearts(body);
   } catch (err) {
     console.warn('[home] 피드 로드 실패:', err);
     section.hidden = true;
   }
 }
 
-function storyHero(s) {
-  const excerpt = s.excerpt || (s.body || '').replace(/[#*>`_\-\[\]()]/g, '').replace(/\s+/g, ' ').trim();
-  const author = s.author_type === 'user' && s.profiles?.name ? escapeHtml(s.profiles.name) : '잇다 에디터';
-  const meta = [CATEGORY_LABELS[s.category] || '', author].filter(Boolean).join(' · ');
-  const cover = s.cover_image_url
-    ? `<img src="${escapeHtml(s.cover_image_url)}" alt="" style="width:100%;border-radius:12px;margin-bottom:12px;object-fit:cover;max-height:200px;">` : '';
+function feedCard(c, e) {
+  const theme = CATEGORY_THEME[c.category] || { icon: '📄', c1: '#EFEFEF', c2: '#DADADA' };
+  const isEditor = c.author_type !== 'user';
+  const isStory = c.format === 'story';
+  const cover = c.cover_image_url
+    ? `style="background-image:url('${encodeURI(c.cover_image_url)}')"`
+    : `style="background:linear-gradient(135deg, ${theme.c1}, ${theme.c2})"`;
+  const coverIcon = c.cover_image_url ? '' : `<span class="hcard-cover-icon">${theme.icon}</span>`;
+
+  const badges = [];
+  if (isNew(c.created_at)) badges.push(`<span class="hbadge hbadge-new">NEW</span>`);
+  if (isStory) badges.push(`<span class="hbadge hbadge-story">📖 이야기</span>`);
+  if (currentUserId && c.creator_id === currentUserId) badges.push(`<span class="hbadge hbadge-mine">내 글</span>`);
+
+  const authorName = isEditor ? '잇다 에디터' : (c.profiles?.name || '잇다 사용자');
+  const avatar = (!isEditor && c.profiles?.avatar_url)
+    ? `<img class="hcard-avatar" src="${escapeHtml(c.profiles.avatar_url)}" alt="">`
+    : `<span class="hcard-avatar">${isEditor ? '✓' : escapeHtml((authorName[0] || '·'))}</span>`;
+  const excerpt = c.excerpt || (c.body || '').replace(/[#*>`_\-\[\]()]/g, '').replace(/\s+/g, ' ').trim();
+
   return `
-    <a href="./content-detail.html?id=${s.id}" class="feed-card feed-card-hero">
-      ${cover}
-      <span class="feed-card-label feed-label-editor">📖 이야기</span>
-      <div class="feed-card-title">${escapeHtml(s.title || '')}</div>
-      ${excerpt ? `<div class="feed-card-summary">${escapeHtml(excerpt)}</div>` : ''}
-      <div class="feed-card-meta">${meta ? `<span>${meta}</span>` : ''}</div>
-    </a>
+    <article class="hcard" data-href="./content-detail.html?id=${c.id}">
+      <div class="hcard-cover" ${cover}>
+        ${coverIcon}
+        ${badges.length ? `<div class="hcard-badges">${badges.join('')}</div>` : ''}
+      </div>
+      <div class="hcard-body">
+        <div class="hcard-cat">${CATEGORY_LABELS[c.category] || ''}</div>
+        <div class="hcard-title">${escapeHtml(c.title || '제목 없음')}</div>
+        ${excerpt ? `<div class="hcard-excerpt">${escapeHtml(excerpt)}</div>` : ''}
+        <div class="hcard-foot">
+          <div class="hcard-author">${avatar}<span class="hcard-author-name">${escapeHtml(authorName)}</span></div>
+          <div class="hcard-engage">
+            <button class="hcard-heart ${e.mineLiked ? 'on' : ''}" data-id="${c.id}" aria-label="좋아요">
+              <span class="ic">${e.mineLiked ? '❤' : '♡'}</span><span class="cnt">${e.likes}</span>
+            </button>
+            <span class="hcard-comment"><span class="ic">💬</span>${e.comments}</span>
+          </div>
+        </div>
+      </div>
+    </article>
   `;
 }
 
-function feedCard(c, hero) {
-  const isEditor = c.author_type !== 'user';
-  const label = isEditor
-    ? `<span class="feed-card-label feed-label-editor">✓ 잇다 에디터</span>`
-    : `<span class="feed-card-label feed-label-user">먼저 겪은 분의 기록</span>`;
-  const summary = (c.body || '').replace(/[#*>`_\-\[\]()]/g, '').replace(/\s+/g, ' ').trim();
-  const author = !isEditor && c.profiles?.name ? escapeHtml(c.profiles.name) : '';
-  const meta = [CATEGORY_LABELS[c.category] || '', author].filter(Boolean).join(' · ');
-  return `
-    <a href="./content-detail.html?id=${c.id}" class="feed-card${hero ? ' feed-card-hero' : ''}">
-      ${label}
-      <div class="feed-card-title">${escapeHtml(c.title || '제목 없음')}</div>
-      ${summary ? `<div class="feed-card-summary">${escapeHtml(summary)}</div>` : ''}
-      <div class="feed-card-meta">${meta ? `<span>${meta}</span>` : ''}</div>
-    </a>
-  `;
+function wireHearts(root) {
+  // 카드 본문 클릭 → 상세 이동 (하트/댓글 영역 제외)
+  root.querySelectorAll('.hcard').forEach((card) => {
+    card.addEventListener('click', (ev) => {
+      if (ev.target.closest('.hcard-engage')) return;
+      window.location.href = card.dataset.href;
+    });
+  });
+  // 하트 토글
+  root.querySelectorAll('.hcard-heart').forEach((btn) => {
+    btn.addEventListener('click', async (ev) => {
+      ev.stopPropagation();
+      if (!currentUserId) { window.location.href = './login.html'; return; }
+      const cntEl = btn.querySelector('.cnt');
+      const icEl = btn.querySelector('.ic');
+      const wasOn = btn.classList.contains('on');
+      // 낙관적 업데이트
+      btn.classList.toggle('on', !wasOn);
+      icEl.textContent = !wasOn ? '❤' : '♡';
+      cntEl.textContent = Math.max(0, parseInt(cntEl.textContent, 10) + (wasOn ? -1 : 1));
+      try {
+        await toggleReaction({ target_type: 'content', target_id: btn.dataset.id });
+      } catch (err) {
+        // 롤백
+        btn.classList.toggle('on', wasOn);
+        icEl.textContent = wasOn ? '❤' : '♡';
+        cntEl.textContent = Math.max(0, parseInt(cntEl.textContent, 10) + (wasOn ? 1 : -1));
+      }
+    });
+  });
 }
 
 function escapeHtml(s) {
