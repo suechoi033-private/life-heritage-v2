@@ -51,6 +51,37 @@ export async function signOut() {
   return { error };
 }
 
+// ── 기기에 기억하는 로그인 계정 목록 (이메일·표시이름만; 비밀번호는 저장하지 않음) ──
+const KNOWN_ACCOUNTS_KEY = 'itda:known_accounts';
+
+export function getKnownAccounts() {
+  try {
+    const raw = localStorage.getItem(KNOWN_ACCOUNTS_KEY);
+    const list = raw ? JSON.parse(raw) : [];
+    return Array.isArray(list) ? list.filter((a) => a && a.email) : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+export function rememberAccount(email, name) {
+  if (!email) return;
+  const e = String(email).trim().toLowerCase();
+  const list = getKnownAccounts().filter((a) => a.email !== e);
+  list.unshift({ email: e, name: name || e.split('@')[0], ts: Date.now() });
+  try {
+    localStorage.setItem(KNOWN_ACCOUNTS_KEY, JSON.stringify(list.slice(0, 5)));
+  } catch (_) { /* 저장 실패는 무시 */ }
+}
+
+export function forgetAccount(email) {
+  if (!email) return;
+  const e = String(email).trim().toLowerCase();
+  try {
+    localStorage.setItem(KNOWN_ACCOUNTS_KEY, JSON.stringify(getKnownAccounts().filter((a) => a.email !== e)));
+  } catch (_) { /* 무시 */ }
+}
+
 export async function resetPassword(email) {
   const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${window.location.origin}/life-heritage-v2/reset.html`,

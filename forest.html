@@ -42,12 +42,15 @@
       border-color: var(--primary);
     }
     .content-card {
+      display: block;
       background: var(--bg-alt);
       border: 1px solid var(--line);
       border-radius: var(--radius);
       padding: 18px 20px;
       margin-bottom: 12px;
       cursor: pointer;
+      text-decoration: none;
+      color: var(--ink);
       transition: border-color 0.15s, box-shadow 0.15s;
     }
     .content-card:hover { border-color: var(--primary-soft); box-shadow: 0 4px 16px rgba(47,107,79,0.08); }
@@ -70,7 +73,7 @@
       line-height: 1.45;
       margin: 8px 0 6px;
     }
-    .content-card-meta { font-size: 12px; color: var(--ink-muted); display: flex; gap: 10px; }
+    .content-card-meta { font-size: 12px; color: var(--ink-muted); display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
     .content-card-author { font-weight: 800; color: var(--ink-soft); }
 
     /* 오늘의 성찰 질문 카드 (보라 강조 — 답변카드 시각 구분) */
