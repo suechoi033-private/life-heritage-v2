@@ -47,8 +47,10 @@
       display: inline-flex; align-items: center; justify-content: center;
       font-size: 20px; font-weight: 800; flex-shrink: 0;
     }
-    .subject-name { font-size: 15px; font-weight: 800; }
-    .subject-relation { font-size: 12px; color: var(--ink-muted); }
+    .subject-card-head > div:not([class]) { min-width: 0; flex: 1; }
+    .subject-name { font-size: 15px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .subject-relation { font-size: 12px; color: var(--ink-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .live-indicator { flex-shrink: 0; }
 
     .subject-stats {
       display: grid;
@@ -94,30 +96,44 @@
       font-weight: 800;
     }
 
-    /* 나의 발자취 — 미니 잔디 + 대시보드 링크 */
+    /* 나의 발자취 — 콤팩트 28일 스트립 + 대시보드 링크 */
     .footprint-wrap {
       display: block;
-      background: #fff;
+      background: var(--bg-alt);
       border: 1px solid var(--line);
       border-radius: var(--radius-sm);
-      padding: 10px 12px;
+      padding: 9px 12px 10px;
       margin-bottom: 8px;
       text-decoration: none;
       color: inherit;
-      transition: border-color 0.15s;
+      transition: border-color 0.15s, background 0.15s;
     }
-    .footprint-wrap:hover { border-color: var(--warm); }
+    .footprint-wrap:hover { border-color: var(--warm); background: var(--warm-soft); }
     .footprint-head {
       display: flex;
-      align-items: center;
+      align-items: baseline;
       justify-content: space-between;
-      margin-bottom: 8px;
+      gap: 8px;
+      margin-bottom: 7px;
     }
     .footprint-label {
       font-size: 11px;
       font-weight: 800;
       color: var(--ink-soft);
       letter-spacing: 0.04em;
+    }
+    /* 연속 기록(streak) — 따뜻한 한 줄 메시지 */
+    .footprint-streak {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--ink-muted);
+      margin-left: auto;
+      white-space: nowrap;
+    }
+    .footprint-streak b {
+      font-family: var(--font-serif);
+      font-weight: 800;
+      color: var(--primary);
     }
     .footprint-arrow {
       font-size: 12px;
@@ -126,21 +142,28 @@
       transition: transform 0.15s;
     }
     .footprint-wrap:hover .footprint-arrow { transform: translateX(2px); }
+    /* 28일을 가로 한 줄 스텝으로 — 공간 절약, 발자취 은유 */
     .mini-grass {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 3px;
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      height: 22px;
     }
     .mg-cell {
-      aspect-ratio: 1;
+      flex: 1 1 0;
+      min-width: 0;
       border-radius: 2px;
+      background: var(--primary);
+      transition: opacity 0.15s;
     }
-    .mg-cell.level-0 { background: #EBEDF0; }
-    .mg-cell.level-1 { background: #C7E9C9; }
-    .mg-cell.level-2 { background: #88D094; }
-    .mg-cell.level-3 { background: #4CAE5C; }
-    .mg-cell.level-4 { background: #1F7A3A; }
-    .mg-cell.mg-today { outline: 2px solid #E8732A; outline-offset: -1px; border-radius: 3px; }
+    /* 기록 없는 날: 아주 옅은 바닥선 — 허전함 완화 */
+    .mg-cell.level-0 { height: 4px; background: var(--line); }
+    .mg-cell.level-1 { height: 9px;  opacity: 0.40; }
+    .mg-cell.level-2 { height: 13px; opacity: 0.62; }
+    .mg-cell.level-3 { height: 17px; opacity: 0.82; }
+    .mg-cell.level-4 { height: 22px; opacity: 1; }
+    /* 오늘 — 클레이(케어링 악센트) 점으로 또렷이 */
+    .mg-cell.mg-today { background: var(--warm); opacity: 1; }
 
     .subject-action {
       display: block;
@@ -268,6 +291,7 @@
       <a class="footprint-wrap" href="./care-dashboard.html?subject=${s.id}" aria-label="나의 발자취 — 대시보드로">
         <div class="footprint-head">
           <span class="footprint-label">나의 발자취</span>
+          <span class="footprint-streak" data-streak="${s.id}"></span>
           <span class="footprint-arrow">›</span>
         </div>
         <div class="mini-grass" data-grass="${s.id}">
@@ -278,7 +302,7 @@
     </div>
   `).join('') + `<a href="./care.html?action=add" class="add-subject-btn">＋ 돌봄 대상 추가</a>`;
 
-  // 미니 잔디 (28일 × 7열 그리드)
+  // 미니 발자취 (28일 가로 스텝) — 레벨 계산식 보존
   function buildMiniGrass(daily) {
     const today = new Date();
     const cells = [];
@@ -293,13 +317,35 @@
     return cells.join('');
   }
 
+  // 현재 연속 기록일 — 동일한 daily 맵에서 파생 (오늘 미기록이면 어제부터 계산)
+  function currentStreak(daily) {
+    const today = new Date();
+    let streak = 0;
+    for (let i = 0; i < 28; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      const has = (daily[key] || 0) > 0;
+      if (has) { streak++; }
+      else if (i === 0) { continue; } // 오늘 아직 기록 전이면 끊지 않음
+      else { break; }
+    }
+    return streak;
+  }
+
   // 대시보드 비동기 로딩
   function paintStats(card, dash) {
     if (!card) return;
     card.querySelector('[data-stat="logs"]').textContent       = dash.totalLogs;
     card.querySelector('[data-stat="completion"]').textContent = `${dash.completionPct}%`;
+    const daily = dash.daily || {};
     const grassEl = card.querySelector('.mini-grass');
-    if (grassEl) grassEl.innerHTML = buildMiniGrass(dash.daily || {});
+    if (grassEl) grassEl.innerHTML = buildMiniGrass(daily);
+    const streakEl = card.querySelector('.footprint-streak');
+    if (streakEl) {
+      const days = currentStreak(daily);
+      streakEl.innerHTML = days > 0 ? `🌱 <b>${days}일</b> 연속` : '오늘 곁을 기록해요';
+    }
   }
   for (const s of subjects) {
     getCareDashboard(s.id).then((dash) => {

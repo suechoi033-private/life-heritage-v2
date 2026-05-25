@@ -7,7 +7,79 @@
   <link rel="stylesheet" href="./auth-styles.css">
   <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#2F6B4F">
+  <!-- 마크다운 렌더링: marked(GFM) + DOMPurify(XSS sanitize). 둘 다 실패 시 본문은 escape 텍스트 폴백. -->
+  <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/lib/marked.umd.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js" crossorigin="anonymous"></script>
   <style>
+    /* 읽기 진척도 바 — 화면 상단 고정, 본문 스크롤 비율만큼 차오름 */
+    .reading-progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      width: 0%;
+      background: var(--primary);
+      z-index: 120;
+      transition: width 0.08s linear;
+      will-change: width;
+    }
+
+    /* 읽기 시간 칩 (바이라인 옆) */
+    .content-readtime { display: inline-flex; align-items: center; gap: 4px; }
+
+    /* 목차(TOC) — 모바일 우선 접이식 */
+    .content-toc {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: var(--bg-alt);
+      margin: 0 0 20px;
+      overflow: hidden;
+    }
+    .content-toc-toggle {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 12px 14px;
+      background: transparent;
+      border: none;
+      font-family: inherit;
+      font-size: 13.5px;
+      font-weight: 800;
+      color: var(--ink-soft);
+      cursor: pointer;
+      text-align: left;
+    }
+    .content-toc-toggle-label { display: inline-flex; align-items: center; gap: 7px; }
+    .content-toc-chevron { font-size: 11px; color: var(--ink-muted); transition: transform 0.18s ease; }
+    .content-toc[data-open="true"] .content-toc-chevron { transform: rotate(180deg); }
+    .content-toc-list {
+      list-style: none;
+      margin: 0;
+      padding: 0 14px 12px;
+      display: none;
+    }
+    .content-toc[data-open="true"] .content-toc-list { display: block; }
+    .content-toc-list li { margin: 0; }
+    .content-toc-link {
+      display: block;
+      padding: 6px 8px;
+      border-radius: 8px;
+      font-size: 13.5px;
+      line-height: 1.45;
+      color: var(--ink-soft);
+      text-decoration: none;
+      border-left: 2px solid transparent;
+    }
+    .content-toc-link:hover { background: var(--primary-soft); color: var(--primary); }
+    .content-toc-link.depth-3 { padding-left: 20px; font-size: 13px; color: var(--ink-muted); }
+    .content-toc-link.active { color: var(--primary); font-weight: 800; border-left-color: var(--primary); background: var(--primary-soft); }
+    .content-toc-link:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
+
+    /* 헤딩 앵커 — 고정 탑바(52px) 만큼 스크롤 여백 */
+    .content-body h2[id], .content-body h3[id] { scroll-margin-top: 64px; }
+
     .content-head { padding: 6px 0 16px; border-bottom: 1px solid var(--line); margin-bottom: 18px; }
     .content-meta-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 12px; }
     .content-cat-chip { padding: 3px 10px; background: var(--primary-soft); color: var(--primary); border-radius: 999px; font-weight: 800; }
@@ -23,13 +95,82 @@
       margin: 12px 0 8px;
     }
     .content-meta-sub { font-size: 12px; color: var(--ink-muted); display: flex; gap: 10px; }
+    .content-byline { font-size: 12px; color: var(--ink-muted); display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; }
+    .content-byline-avatar { width: 22px; height: 22px; border-radius: 999px; object-fit: cover; flex-shrink: 0; }
+    .content-byline-name { font-weight: 800; color: var(--ink-soft); }
     .content-body {
       font-size: 15.5px;
       line-height: 1.85;
-      white-space: pre-wrap;
       word-break: break-word;
     }
     .content-body img { max-width: 100%; border-radius: var(--radius-sm); }
+    /* 마크다운 렌더 결과 스타일 */
+    .content-body > *:first-child { margin-top: 0; }
+    .content-body p { margin: 0 0 1em; }
+    .content-body h1, .content-body h2, .content-body h3, .content-body h4 {
+      font-family: var(--font-serif);
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      line-height: 1.4;
+      color: var(--ink);
+    }
+    .content-body h1 { font-size: 22px; margin: 1.6em 0 0.6em; }
+    .content-body h2 { font-size: 19px; margin: 1.5em 0 0.5em; }
+    .content-body h3 { font-size: 16.5px; margin: 1.4em 0 0.45em; }
+    .content-body h4 { font-size: 15px; margin: 1.3em 0 0.4em; }
+    .content-body strong { font-weight: 800; color: var(--ink); }
+    .content-body em { font-style: italic; }
+    .content-body a {
+      color: var(--primary);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      word-break: break-all;
+    }
+    .content-body a:hover { color: var(--primary-hover); }
+    .content-body ul, .content-body ol { margin: 0 0 1em; padding-left: 1.4em; }
+    .content-body li { margin: 0.3em 0; }
+    .content-body li > ul, .content-body li > ol { margin: 0.3em 0; }
+    .content-body blockquote {
+      margin: 1.2em 0;
+      padding: 8px 16px;
+      border-left: 3px solid var(--primary);
+      background: var(--primary-soft);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      color: var(--ink-soft);
+    }
+    .content-body blockquote p:last-child { margin-bottom: 0; }
+    .content-body hr { border: none; border-top: 1px solid var(--line); margin: 1.6em 0; }
+    .content-body code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.88em;
+      background: var(--bg-alt);
+      padding: 1.5px 5px;
+      border-radius: 5px;
+    }
+    .content-body pre {
+      background: var(--bg-alt);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      overflow-x: auto;
+      margin: 1.2em 0;
+    }
+    .content-body pre code { background: none; padding: 0; font-size: 13px; }
+    .content-body table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.2em 0;
+      font-size: 14px;
+      display: block;
+      overflow-x: auto;
+    }
+    .content-body th, .content-body td {
+      border: 1px solid var(--line);
+      padding: 8px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+    .content-body th { background: var(--bg-alt); font-weight: 800; }
     .related-q {
       background: var(--primary-soft);
       border-radius: var(--radius);
@@ -127,6 +268,8 @@
 </head>
 <body>
 
+<div class="reading-progress" id="reading-progress" role="progressbar" aria-label="읽기 진척도" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+
 <main class="page-shell">
   <div id="content-body"><div class="empty-state"><div class="empty-icon">⏳</div></div></div>
 </main>
@@ -178,17 +321,19 @@
     <div class="content-head">
       <div class="content-meta-row">
         <span class="content-cat-chip">${cat.icon} ${cat.label}</span>
-        <span class="content-author-chip ${content.author_type === 'official' ? 'author-official' : 'author-user'}">
-          ${content.author_type === 'official' ? '공식' : '유저'}
-        </span>
+        ${content.author_type === 'official' ? `<span class="content-author-chip author-official">공식</span>` : ''}
       </div>
       <div class="content-title">${escapeHtml(content.title)}</div>
-      <div class="content-meta-sub">
-        ${content.profiles?.name ? `<span>by ${escapeHtml(content.profiles.name)}</span>` : ''}
+      <div class="content-byline">
+        ${content.profiles?.avatar_url ? `<img class="content-byline-avatar" src="${content.profiles.avatar_url}" alt="">` : ''}
+        ${content.profiles?.name ? `<span class="content-byline-name">${escapeHtml(content.profiles.name)}</span>` : ''}
         <span>👁 ${content.view_count ?? 0}</span>
         <span>${formatDate(content.created_at)}</span>
+        <span class="content-readtime" id="content-readtime"></span>
       </div>
     </div>
+
+    <div id="toc-mount"></div>
 
     ${relatedQuestion ? `
       <div class="related-q">
@@ -204,7 +349,7 @@
         ).join('')}
       </div>` : ''}
 
-    <div class="content-body">${escapeHtml(content.body || '')}</div>
+    <div class="content-body" id="content-body-text"></div>
 
     ${content.source_url ? `
       <div style="margin-top:18px;font-size:12.5px;">
@@ -243,6 +388,15 @@
       <div class="cta-block" style="margin-top:14px;"><button id="btn-start-thread">＋ 이 콘텐츠로 대화 시작</button></div>
     ` : ''}
   `;
+
+  // 본문 마크다운 렌더 (marked로 GFM 파싱 → DOMPurify로 정화 → innerHTML)
+  renderBody(content.body || '');
+
+  // 읽기 경험 3종: 읽기시간 · 목차(TOC) · 진척도 바
+  // 읽기시간은 본문 텍스트 길이 기반이라 마크다운 성공/폴백 무관하게 항상 표시
+  setupReadTime(content.body || '');
+  setupTOC();
+  setupReadingProgress();
 
   // 좋아요
   document.getElementById('btn-like').addEventListener('click', async () => {
@@ -304,6 +458,181 @@
       try { await reportTarget({ target_type, target_id, reason: selected }); alert('신고가 접수되었어요. 운영자가 확인합니다.'); close(); }
       catch (err) { alert(err.message); }
     });
+  }
+
+  // 본문을 마크다운으로 렌더. 라이브러리 로드 실패 시 escape 텍스트로 폴백.
+  function renderBody(raw) {
+    const el = document.getElementById('content-body-text');
+    if (!el) return;
+    const md = window.marked;
+    const purify = window.DOMPurify;
+    // marked 또는 DOMPurify 미로드 → sanitize 없이 raw HTML 주입 금지. 안전 폴백.
+    if (!md || !purify || typeof purify.sanitize !== 'function') {
+      el.style.whiteSpace = 'pre-wrap';
+      el.textContent = raw;
+      return;
+    }
+    try {
+      const html = md.parse(raw, { gfm: true, breaks: true });
+      const clean = purify.sanitize(html, {
+        ALLOWED_TAGS: ['h1','h2','h3','h4','h5','h6','p','br','hr','strong','b','em','i','u','s','del',
+          'ul','ol','li','blockquote','a','code','pre','table','thead','tbody','tr','th','td','img','span'],
+        ALLOWED_ATTR: ['href','title','alt','src'],
+        ALLOWED_URI_REGEXP: /^(?:https?:|mailto:|tel:|\/|\.\/|#)/i,
+      });
+      el.innerHTML = clean;
+      // 링크는 새 탭 + noopener (sanitize 후 적용해 안전)
+      el.querySelectorAll('a[href]').forEach((a) => {
+        a.setAttribute('target', '_blank');
+        a.setAttribute('rel', 'noopener noreferrer');
+      });
+    } catch (_) {
+      el.style.whiteSpace = 'pre-wrap';
+      el.textContent = raw;
+    }
+  }
+
+  // ── 읽기 예상 시간 ──────────────────────────────
+  // 마크다운 문법(#, *, [], 링크 등)을 대략 제거한 순수 글자 수로 추정.
+  // 한글 읽기 속도 가정: 분당 약 500자. 최소 1분.
+  function setupReadTime(raw) {
+    const el = document.getElementById('content-readtime');
+    if (!el) return;
+    const text = String(raw)
+      .replace(/```[\s\S]*?```/g, ' ')           // 코드블록
+      .replace(/`[^`]*`/g, ' ')                   // 인라인 코드
+      .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')  // 이미지/링크 → 텍스트만
+      .replace(/[#>*_~`>-]/g, ' ')                // 마크다운 기호
+      .replace(/\s+/g, ' ')
+      .trim();
+    const charCount = [...text].length;
+    if (charCount === 0) { el.remove(); return; }
+    const minutes = Math.max(1, Math.ceil(charCount / 500));
+    el.textContent = `📖 약 ${minutes}분 읽기`;
+  }
+
+  // ── 목차(TOC) ──────────────────────────────────
+  // 렌더된 본문에서 h2/h3 추출 → 각 헤딩에 안전한 id 부여 → 접이식 목차 생성.
+  // 헤딩 2개 미만이면 표시하지 않음(짧은 글 폴백).
+  function setupTOC() {
+    const body = document.getElementById('content-body-text');
+    const mount = document.getElementById('toc-mount');
+    if (!body || !mount) return;
+
+    const headings = [...body.querySelectorAll('h2, h3')];
+    if (headings.length < 2) { mount.remove(); return; }
+
+    const usedIds = new Set();
+    const items = headings.map((h, i) => {
+      // 기존 id 우선, 없으면 텍스트 기반 slug + 중복 방지
+      let id = h.id;
+      if (!id) {
+        const base = (h.textContent || '')
+          .trim().toLowerCase()
+          .replace(/\s+/g, '-')
+          .replace(/[^\w가-힣ㄱ-ㅎㅏ-ㅣ-]/g, '')
+          .slice(0, 50);
+        id = base || `section-${i + 1}`;
+        let unique = id, n = 1;
+        while (usedIds.has(unique)) unique = `${id}-${n++}`;
+        id = unique;
+        h.id = id;
+      }
+      usedIds.add(id);
+      return { id, text: h.textContent || '', level: h.tagName === 'H3' ? 3 : 2 };
+    });
+
+    // 모바일에서 답답하지 않게 기본 펼침. 토글로 접힘 가능.
+    mount.innerHTML = `
+      <nav class="content-toc" id="content-toc" data-open="true" aria-label="목차">
+        <button type="button" class="content-toc-toggle" id="toc-toggle"
+                aria-expanded="true" aria-controls="toc-list">
+          <span class="content-toc-toggle-label">📑 목차</span>
+          <span class="content-toc-chevron" aria-hidden="true">▾</span>
+        </button>
+        <ul class="content-toc-list" id="toc-list">
+          ${items.map((it) => `
+            <li>
+              <a class="content-toc-link depth-${it.level}" href="#${escapeAttr(it.id)}" data-target="${escapeAttr(it.id)}">
+                ${escapeHtml(it.text)}
+              </a>
+            </li>`).join('')}
+        </ul>
+      </nav>`;
+
+    const toc = document.getElementById('content-toc');
+    const toggle = document.getElementById('toc-toggle');
+    toggle.addEventListener('click', () => {
+      const open = toc.getAttribute('data-open') !== 'true';
+      toc.setAttribute('data-open', String(open));
+      toggle.setAttribute('aria-expanded', String(open));
+    });
+
+    // 목차 클릭 → 부드러운 스크롤. 헤딩에 포커스 이동(접근성).
+    toc.querySelectorAll('.content-toc-link').forEach((a) => {
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        const target = document.getElementById(a.dataset.target);
+        if (!target) return;
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // 포커스 가능하게 한 뒤 포커스(스크린리더/키보드)
+        target.setAttribute('tabindex', '-1');
+        target.focus({ preventScroll: true });
+        history.replaceState(null, '', `#${a.dataset.target}`);
+      });
+    });
+
+    // 현재 섹션 하이라이트 (IntersectionObserver, 미지원 시 생략)
+    const linkById = new Map();
+    toc.querySelectorAll('.content-toc-link').forEach((a) => linkById.set(a.dataset.target, a));
+    if ('IntersectionObserver' in window) {
+      const visible = new Set();
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((en) => {
+          if (en.isIntersecting) visible.add(en.target.id);
+          else visible.delete(en.target.id);
+        });
+        // 화면에 보이는 헤딩 중 문서 순서상 첫 번째를 활성화
+        let activeId = null;
+        for (const it of items) { if (visible.has(it.id)) { activeId = it.id; break; } }
+        linkById.forEach((a, id) => a.classList.toggle('active', id === activeId));
+      }, { rootMargin: '-60px 0px -70% 0px', threshold: 0 });
+      headings.forEach((h) => io.observe(h));
+    }
+  }
+
+  // ── 읽기 진척도 바 ──────────────────────────────
+  // 본문 영역 기준 스크롤 비율. rAF로 스로틀.
+  function setupReadingProgress() {
+    const bar = document.getElementById('reading-progress');
+    const body = document.getElementById('content-body-text');
+    if (!bar || !body) return;
+    let ticking = false;
+
+    const update = () => {
+      ticking = false;
+      const rect = body.getBoundingClientRect();
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      const total = rect.height - vh;        // 본문이 뷰포트를 넘어 스크롤되는 양
+      let pct;
+      if (total <= 0) {
+        // 본문이 화면보다 짧으면(짧은 글) 진척도 의미 없음 → 0% 유지
+        pct = 0;
+      } else {
+        const scrolled = -rect.top;          // 본문 상단이 뷰포트 위로 올라간 거리
+        pct = Math.min(100, Math.max(0, (scrolled / total) * 100));
+      }
+      bar.style.width = pct.toFixed(1) + '%';
+      bar.setAttribute('aria-valuenow', String(Math.round(pct)));
+    };
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(update);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    update();
   }
 
   function formatDate(d) { return new Date(d).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }); }

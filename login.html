@@ -65,6 +65,15 @@
 
   // ── 초대 코드 캡처 (돌봄 초대 + 친구 초대 둘 다) ────────────────────────
   const params = new URLSearchParams(location.search);
+
+  // ── 탈퇴 완료 안내 (담담하게) ────────────────────────
+  if (params.get('goodbye') === '1') {
+    const lead = document.querySelector('.auth-lead');
+    const h1 = document.querySelector('h1');
+    if (h1) h1.innerHTML = '탈퇴가 완료되었습니다';
+    if (lead) lead.innerHTML = '그동안 잇다와 함께해 주셔서 감사합니다. 계정과 기록은 모두 삭제되었습니다. 언제든 다시 시작하고 싶으시면 새로 가입하실 수 있습니다.';
+  }
+
   const careInvite   = (params.get('invite') || localStorage.getItem('itda:pending_invite') || '').toUpperCase();
   const friendInvite = (params.get('friend') || localStorage.getItem('itda:pending_friend_invite') || '').toUpperCase();
 

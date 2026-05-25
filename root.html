@@ -26,10 +26,12 @@
       font-size: 24px; font-weight: 800;
       flex-shrink: 0;
     }
-    .my-name { font-size: 17px; font-weight: 800; letter-spacing: -0.01em; }
-    .my-email { font-size: 12.5px; color: var(--ink-muted); margin-top: 3px; }
+    .my-profile-info { min-width: 0; flex: 1; }
+    .my-name { font-size: 17px; font-weight: 800; letter-spacing: -0.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .my-email { font-size: 12.5px; color: var(--ink-muted); margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .my-edit-btn {
       margin-left: auto;
+      flex-shrink: 0;
       background: transparent; border: 1px solid var(--line);
       padding: 6px 12px; border-radius: 999px;
       font-size: 12px; font-weight: 700; color: var(--ink-soft);
@@ -40,8 +42,8 @@
     /* 통계 그리드 */
     .stat-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
       margin-bottom: 18px;
     }
     .stat-cell {
@@ -153,6 +155,14 @@
       display: inline-flex; align-items: center; justify-content: center;
       font-size: 17px; font-weight: 800;
     }
+    /* 가족 = 케어링과 시각적 일관성 위해 클레이(--warm) 악센트 */
+    .family-avatar {
+      background: var(--warm-soft); color: var(--warm);
+    }
+    .friend-role {
+      font-size: 10px; font-weight: 700;
+      color: var(--warm);
+    }
     .friend-name {
       font-size: 12px; font-weight: 700;
       text-align: center;
@@ -202,7 +212,80 @@
       background: var(--bg-alt);
       border-radius: var(--radius-sm);
     }
-  </style>
+
+    /* 회원탈퇴 — 위험 톤, 눈에 띄지 않게 */
+    .danger-zone {
+      margin: 22px 0 8px;
+      text-align: center;
+    }
+    .btn-delete-account {
+      background: transparent; border: none;
+      color: var(--ink-faint);
+      font-size: 12px; font-weight: 600;
+      text-decoration: underline; text-underline-offset: 3px;
+      cursor: pointer; font-family: inherit;
+      padding: 6px 10px;
+    }
+    .btn-delete-account:hover { color: var(--danger); }
+
+    /* 탈퇴 확인 모달 */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(33, 38, 30, 0.45);
+      display: none; align-items: center; justify-content: center;
+      padding: 20px; z-index: 1000;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-card {
+      background: #fff;
+      border-radius: var(--radius);
+      max-width: 420px; width: 100%;
+      padding: 22px 20px;
+      max-height: 88vh; overflow-y: auto;
+    }
+    .modal-title {
+      font-family: var(--font-serif);
+      font-size: 19px; font-weight: 800;
+      color: var(--ink); margin-bottom: 10px;
+    }
+    .modal-body { font-size: 13.5px; color: var(--ink-soft); line-height: 1.65; }
+    .modal-body ul { margin: 8px 0 0; padding-left: 18px; }
+    .modal-body li { margin-bottom: 3px; }
+    .modal-warn {
+      background: var(--danger-soft); color: var(--danger);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px; margin: 14px 0;
+      font-size: 12.5px; font-weight: 700; line-height: 1.55;
+    }
+    .modal-confirm-label { font-size: 12.5px; color: var(--ink-soft); margin: 14px 0 6px; }
+    .modal-confirm-label b { color: var(--ink); }
+    .modal-confirm-input {
+      width: 100%; box-sizing: border-box;
+      border: 1px solid var(--line); border-radius: var(--radius-sm);
+      padding: 11px 12px; font-size: 14px; font-family: inherit;
+    }
+    .modal-confirm-input:focus { outline: none; border-color: var(--danger); }
+    .modal-actions { display: flex; gap: 8px; margin-top: 18px; }
+    .modal-btn {
+      flex: 1; padding: 12px; border-radius: var(--radius-sm);
+      font-size: 14px; font-weight: 700; cursor: pointer;
+      font-family: inherit; border: 1px solid var(--line);
+    }
+    .modal-btn-cancel { background: var(--bg-alt); color: var(--ink-soft); }
+    .modal-btn-delete {
+      background: var(--danger); color: #fff; border-color: var(--danger);
+    }
+    .modal-btn-delete:disabled { opacity: 0.45; cursor: not-allowed; }
+    .modal-btn-save {
+      background: var(--primary); color: #fff; border-color: var(--primary);
+    }
+    .modal-btn-save:disabled { opacity: 0.45; cursor: not-allowed; }
+    #name-modal .modal-confirm-input:focus { border-color: var(--primary); }
+    .modal-error {
+      margin-top: 12px; font-size: 12.5px; color: var(--danger);
+      font-weight: 600; line-height: 1.5;
+    }
+</style>
 </head>
 <body>
 
@@ -210,10 +293,11 @@
   <!-- 프로필 -->
   <div class="my-profile">
     <div class="my-avatar" id="my-avatar">·</div>
-    <div>
+    <div class="my-profile-info">
       <div class="my-name" id="my-name">불러오는 중...</div>
       <div class="my-email" id="my-email"></div>
     </div>
+    <button type="button" class="my-edit-btn" id="my-edit-btn" aria-label="표시 이름 편집">✏️ 편집</button>
   </div>
 
   <!-- 통계 4칸 -->
@@ -221,6 +305,7 @@
     <a class="stat-cell" href="./seed.html"><div class="stat-num" id="stat-diary">·</div><div class="stat-label">일기</div></a>
     <a class="stat-cell" href="#" data-tab="answers"><div class="stat-num" id="stat-answers">·</div><div class="stat-label">답변</div></a>
     <a class="stat-cell" href="#" data-tab="posts"><div class="stat-num" id="stat-posts">·</div><div class="stat-label">게시글</div></a>
+    <a class="stat-cell" href="#" data-tab="family"><div class="stat-num" id="stat-family">·</div><div class="stat-label">가족</div></a>
     <a class="stat-cell" href="#" data-tab="friends"><div class="stat-num" id="stat-friends">·</div><div class="stat-label">친구</div></a>
   </div>
 
@@ -233,6 +318,7 @@
     <button class="activity-tab" data-tab="answers">답변</button>
     <button class="activity-tab" data-tab="posts">게시글</button>
     <button class="activity-tab" data-tab="comments">댓글</button>
+    <button class="activity-tab" data-tab="family">가족</button>
     <button class="activity-tab" data-tab="friends">친구</button>
   </div>
   <div id="activity-body">
@@ -292,7 +378,54 @@
       <span class="menu-arrow">›</span>
     </button>
   </div>
+
+  <!-- 회원탈퇴 (위험 톤, 눈에 띄지 않게) -->
+  <div class="danger-zone">
+    <button type="button" class="btn-delete-account" id="btn-delete-account">회원탈퇴</button>
+  </div>
 </main>
+
+<!-- 회원탈퇴 확인 모달 -->
+<div class="modal-overlay" id="delete-modal" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
+  <div class="modal-card">
+    <div class="modal-title" id="delete-modal-title">회원탈퇴</div>
+    <div class="modal-body">
+      <p>탈퇴하시면 잇다 계정과 그동안 기록하신 데이터가 <b>영구적으로 삭제</b>됩니다. 삭제된 데이터는 다시 복구할 수 없습니다.</p>
+      <p style="margin-top:10px;">함께 삭제되는 정보</p>
+      <ul>
+        <li>작성하신 일기와 답변</li>
+        <li>돌봄 기록</li>
+        <li>커뮤니티 게시글·댓글·반응</li>
+        <li>작성하신 콘텐츠와 북마크</li>
+        <li>가족·친구 연결, 알림 설정, 프로필 정보</li>
+      </ul>
+      <div class="modal-warn">이 작업은 되돌릴 수 없습니다. 개인정보보호법(PIPA)에 따라 회원정보 및 관련 데이터는 지체 없이 파기됩니다.</div>
+      <div class="modal-confirm-label">계속하시려면 아래 칸에 <b>탈퇴</b>라고 입력해 주세요.</div>
+      <input type="text" class="modal-confirm-input" id="delete-confirm-input" placeholder="탈퇴" autocomplete="off" inputmode="text" />
+      <div class="modal-error" id="delete-error" style="display:none;"></div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="modal-btn modal-btn-cancel" id="delete-cancel">취소</button>
+      <button type="button" class="modal-btn modal-btn-delete" id="delete-confirm" disabled>탈퇴하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 표시 이름 편집 모달 -->
+<div class="modal-overlay" id="name-modal" role="dialog" aria-modal="true" aria-labelledby="name-modal-title">
+  <div class="modal-card">
+    <div class="modal-title" id="name-modal-title">표시 이름 변경</div>
+    <div class="modal-body">
+      <div class="modal-confirm-label">잇다에서 보여질 이름을 입력해 주세요. (1~20자)</div>
+      <input type="text" class="modal-confirm-input" id="name-input" placeholder="표시 이름" autocomplete="off" maxlength="20" inputmode="text" />
+      <div class="modal-error" id="name-error" style="display:none;"></div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="modal-btn modal-btn-cancel" id="name-cancel">취소</button>
+      <button type="button" class="modal-btn modal-btn-save" id="name-save">저장</button>
+    </div>
+  </div>
+</div>
 
 <script type="module">
   import { supabase, signOut } from './auth.js';
@@ -300,7 +433,7 @@
   import { registerPWA, subscribePush } from './js/pwa.js';
   import { getVapidPublicKey } from './js/app-config.js';
   import {
-    getMyCounts, listMyDiary, listMyPosts, listMyComments, listMyFriends,
+    getMyCounts, listMyDiary, listMyPosts, listMyComments, listMyFriends, listMyFamily,
   } from './js/my-activity.js';
   import { listMyAnswers } from './js/answers.js';
 
@@ -311,11 +444,14 @@
   if (!session) { window.location.href = './login.html'; throw new Error('로그인 필요'); }
 
   const user = session.user;
-  const name = user.user_metadata?.name || user.email?.split('@')[0] || '잇다 사용자';
+  let displayName = user.user_metadata?.name || user.email?.split('@')[0] || '잇다 사용자';
 
-  document.getElementById('my-name').textContent  = name;
+  function renderProfileName(n) {
+    document.getElementById('my-name').textContent   = n;
+    document.getElementById('my-avatar').textContent = (n[0] || '·').toUpperCase();
+  }
+  renderProfileName(displayName);
   document.getElementById('my-email').textContent = user.email || '';
-  document.getElementById('my-avatar').textContent = (name[0] || '·').toUpperCase();
 
   // 운영자 메뉴
   if (user.email === 'sue.choi033@gmail.com') {
@@ -328,6 +464,7 @@
     document.getElementById('stat-diary').textContent   = c.diary;
     document.getElementById('stat-answers').textContent = c.answers;
     document.getElementById('stat-posts').textContent   = c.posts;
+    document.getElementById('stat-family').textContent  = c.family;
     document.getElementById('stat-friends').textContent = c.friends;
   } catch (_) {}
 
@@ -360,6 +497,7 @@
       if (activeTab === 'answers')  return renderAnswers(await listMyAnswers({ limit: 15 }));
       if (activeTab === 'posts')    return renderPosts(await listMyPosts({ limit: 15 }));
       if (activeTab === 'comments') return renderComments(await listMyComments({ limit: 15 }));
+      if (activeTab === 'family')   return renderFamily(await listMyFamily());
       if (activeTab === 'friends')  return renderFriends(await listMyFriends());
     } catch (err) {
       body.innerHTML = `<div class="empty-activity">불러오기 실패: ${err.message || err}</div>`;
@@ -425,6 +563,20 @@
     `).join('');
   }
 
+  function renderFamily(items) {
+    if (!items.length) return setEmpty('아직 함께 돌보는 가족이 없어요', '케어링에서 가족을 초대해 보세요', './care.html');
+    document.getElementById('activity-body').innerHTML = `
+      <div class="friend-grid">
+        ${items.map((f) => `
+          <a class="friend-cell" href="./care.html">
+            <div class="friend-avatar family-avatar">${escapeHtml((f.name?.[0] || '·').toUpperCase())}</div>
+            <div class="friend-name">${escapeHtml(f.name || '가족')}</div>
+            <div class="friend-role">${f.role === 'owner' ? '주 보호자' : '가족'}</div>
+          </a>
+        `).join('')}
+      </div>`;
+  }
+
   function renderFriends(items) {
     if (!items.length) return setEmpty('아직 친구가 없어요', '잇다 친구를 초대해 보세요', './invite.html');
     document.getElementById('activity-body').innerHTML = `
@@ -485,6 +637,129 @@
     if (!confirm('로그아웃 하시겠어요?')) return;
     await signOut();
     window.location.href = './index.html';
+  });
+
+  // ── 표시 이름 편집 ────────────────────────────────────────
+  const nameModal   = document.getElementById('name-modal');
+  const nameInput   = document.getElementById('name-input');
+  const nameSave    = document.getElementById('name-save');
+  const nameCancel  = document.getElementById('name-cancel');
+  const nameError   = document.getElementById('name-error');
+
+  function openNameModal() {
+    nameInput.value = displayName;
+    nameError.style.display = 'none';
+    nameSave.disabled = false;
+    nameSave.textContent = '저장';
+    nameModal.classList.add('open');
+    setTimeout(() => { nameInput.focus(); nameInput.select(); }, 50);
+  }
+  function closeNameModal() {
+    nameModal.classList.remove('open');
+  }
+
+  document.getElementById('my-edit-btn').addEventListener('click', openNameModal);
+  nameCancel.addEventListener('click', closeNameModal);
+  nameModal.addEventListener('click', (e) => {
+    if (e.target === nameModal) closeNameModal();
+  });
+  nameInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); nameSave.click(); }
+  });
+
+  nameSave.addEventListener('click', async () => {
+    const newName = nameInput.value.trim();
+    nameError.style.display = 'none';
+
+    if (newName.length < 1 || newName.length > 20) {
+      nameError.textContent = '이름은 1~20자로 입력해 주세요.';
+      nameError.style.display = 'block';
+      return;
+    }
+    if (newName === displayName) { closeNameModal(); return; }
+
+    nameSave.disabled = true;
+    nameSave.textContent = '저장 중...';
+
+    try {
+      // 1) profiles 행(본인) 업데이트 — RLS상 본인 행 수정 허용 전제
+      const { error: pErr } = await supabase
+        .from('profiles')
+        .update({ name: newName })
+        .eq('id', user.id);
+      if (pErr) throw pErr;
+
+      // 2) auth user_metadata도 일치시켜 다른 화면과 어긋나지 않게
+      const { error: aErr } = await supabase.auth.updateUser({ data: { name: newName } });
+      if (aErr) throw aErr;
+
+      // 화면 즉시 갱신
+      displayName = newName;
+      renderProfileName(displayName);
+      closeNameModal();
+    } catch (err) {
+      console.warn('표시 이름 변경 실패:', err);
+      nameError.textContent = '이름 변경에 실패했어요. 잠시 후 다시 시도해 주세요.';
+      nameError.style.display = 'block';
+      nameSave.disabled = false;
+      nameSave.textContent = '저장';
+    }
+  });
+
+  // ── 회원탈퇴 ──────────────────────────────────────────────
+  const deleteModal   = document.getElementById('delete-modal');
+  const deleteInput   = document.getElementById('delete-confirm-input');
+  const deleteConfirm = document.getElementById('delete-confirm');
+  const deleteCancel  = document.getElementById('delete-cancel');
+  const deleteError   = document.getElementById('delete-error');
+
+  function openDeleteModal() {
+    deleteInput.value = '';
+    deleteConfirm.disabled = true;
+    deleteError.style.display = 'none';
+    deleteModal.classList.add('open');
+    setTimeout(() => deleteInput.focus(), 50);
+  }
+  function closeDeleteModal() {
+    deleteModal.classList.remove('open');
+  }
+
+  document.getElementById('btn-delete-account').addEventListener('click', openDeleteModal);
+  deleteCancel.addEventListener('click', closeDeleteModal);
+  deleteModal.addEventListener('click', (e) => {
+    if (e.target === deleteModal) closeDeleteModal();
+  });
+
+  // "탈퇴" 정확히 입력해야만 버튼 활성화
+  deleteInput.addEventListener('input', () => {
+    deleteConfirm.disabled = deleteInput.value.trim() !== '탈퇴';
+  });
+
+  deleteConfirm.addEventListener('click', async () => {
+    if (deleteInput.value.trim() !== '탈퇴') return;
+    deleteConfirm.disabled = true;
+    deleteConfirm.textContent = '처리 중...';
+    deleteError.style.display = 'none';
+
+    try {
+      const { data, error } = await supabase.functions.invoke('delete-account', {
+        method: 'POST',
+      });
+      // 함수가 아직 배포되지 않았거나(404) 호출 실패 / 함수 내부 오류 처리
+      if (error || (data && data.error)) {
+        throw new Error((error && error.message) || (data && data.error) || 'unknown');
+      }
+      // 성공 → 세션 종료 후 안내 페이지로
+      await signOut();
+      window.location.href = './login.html?goodbye=1';
+    } catch (err) {
+      // 함수 미배포·네트워크 등 — 앱이 깨지지 않게 graceful 안내
+      console.warn('delete-account 실패:', err);
+      deleteError.textContent = '현재 탈퇴 처리를 준비 중입니다. 불편을 드려 죄송합니다. 고객센터(sue.choi033@gmail.com)로 문의해 주시면 직접 처리해 드리겠습니다.';
+      deleteError.style.display = 'block';
+      deleteConfirm.disabled = false;
+      deleteConfirm.textContent = '탈퇴하기';
+    }
   });
 </script>
 

@@ -17,13 +17,23 @@ export async function getMyCounts() {
     supabase.from('contents').select('id', { count: 'exact', head: true }).eq('creator_id', user.id).eq('is_published', true),
   ]);
 
+  // 가족/친구 분리 카운트 — de-dupe(가족 우선) 반영
+  let familyCount = 0;
+  let friendsDeduped = friends?.count ?? 0;
+  try {
+    const [family, friendList] = await Promise.all([listMyFamily(), listMyFriends()]);
+    familyCount = family.length;
+    friendsDeduped = friendList.length;
+  } catch (_) { /* 조회 실패 시 raw friendships count 폴백 */ }
+
   return {
     diary:    diary?.count    ?? 0,
     answers:  answers?.count  ?? 0,
     posts:    posts?.count    ?? 0,
     comments: comments?.count ?? 0,
     reactions:reactions?.count?? 0,
-    friends:  friends?.count  ?? 0,
+    family:   familyCount,
+    friends:  friendsDeduped,
     goalsActive: goalsActive?.count ?? 0,
     contents: contents?.count ?? 0,
   };
@@ -102,7 +112,62 @@ export async function listMyReactions({ limit = 20, offset = 0 } = {}) {
   return data || [];
 }
 
-// 친구 목록
+// 내가 소유/참여한 돌봄 그룹의 subject_id 목록
+// (care.js listMyCareSubjects 와 동일한 owner + member 경로)
+async function getMyCareSubjectIds(userId) {
+  const [{ data: owned }, { data: memberOf }] = await Promise.all([
+    supabase.from('care_subjects').select('id').eq('user_id', userId),
+    supabase.from('care_members').select('subject_id').eq('user_id', userId),
+  ]);
+  const ids = new Set();
+  (owned || []).forEach((s) => s.id && ids.add(s.id));
+  (memberOf || []).forEach((m) => m.subject_id && ids.add(m.subject_id));
+  return Array.from(ids);
+}
+
+// 가족 목록 — 내가 함께 돌보는 돌봄 그룹의 동료(care_members)
+// 본인 제외, user_id 기준 de-dupe. 본인이 owner인 그룹의 다른 보호자도 포함.
+// 반환: [{ id(user_id), name, avatar_url, role }]
+export async function listMyFamily() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const subjectIds = await getMyCareSubjectIds(user.id);
+  if (!subjectIds.length) return [];
+
+  // 그룹들의 care_members(수락 완료) + owner 프로필 조회
+  const [membersRes, ownersRes] = await Promise.all([
+    supabase.from('care_members')
+      .select('user_id, role, accepted_at, profile:profiles!user_id(id, name, avatar_url)')
+      .in('subject_id', subjectIds)
+      .not('accepted_at', 'is', null),
+    supabase.from('care_subjects')
+      .select('user_id, profiles:user_id(id, name, avatar_url)')
+      .in('id', subjectIds),
+  ]);
+  if (membersRes.error) throw membersRes.error;
+
+  const map = new Map(); // user_id -> { id, name, avatar_url, role }
+  // owner(주 보호자) 먼저
+  (ownersRes.data || []).forEach((s) => {
+    const p = s.profiles;
+    if (!s.user_id || s.user_id === user.id) return;
+    if (!map.has(s.user_id)) {
+      map.set(s.user_id, { id: s.user_id, name: p?.name || null, avatar_url: p?.avatar_url || null, role: 'owner' });
+    }
+  });
+  // 수락된 멤버
+  (membersRes.data || []).forEach((m) => {
+    if (!m.user_id || m.user_id === user.id) return;
+    if (!map.has(m.user_id)) {
+      const p = m.profile;
+      map.set(m.user_id, { id: m.user_id, name: p?.name || null, avatar_url: p?.avatar_url || null, role: m.role || 'member' });
+    }
+  });
+  return Array.from(map.values());
+}
+
+// 친구 목록 — friendships(accepted). 중복 정책(b): 가족인 사람은 친구 목록에서 제외.
 export async function listMyFriends() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return [];
@@ -113,5 +178,17 @@ export async function listMyFriends() {
     .eq('status', 'accepted')
     .order('accepted_at', { ascending: false });
   if (error) throw error;
-  return (data || []).map((r) => r.profiles).filter(Boolean);
+
+  let friends = (data || []).map((r) => r.profiles).filter(Boolean);
+
+  // (b) 가족 우선 de-dupe: 가족 목록에 있는 user는 친구에서 제외
+  try {
+    const family = await listMyFamily();
+    if (family.length) {
+      const famIds = new Set(family.map((f) => f.id));
+      friends = friends.filter((f) => !famIds.has(f.id));
+    }
+  } catch (_) { /* 가족 조회 실패 시 친구는 그대로 노출 */ }
+
+  return friends;
 }
