@@ -32,19 +32,19 @@ const PROTECTED_TABS = new Set(['seed', 'nest', 'root']);
 export async function renderNav(opts = {}) {
   const rawActive = opts.active || '';
   const active = LEGACY_ACTIVE_MAP[rawActive] || rawActive;
-  const { infoIcon = true, title = '' } = opts;
+  const { infoIcon = true, title = '', quickWrite = true } = opts;
 
   const { data: { session } } = await supabase.auth.getSession();
   const loggedIn = !!session;
 
-  _renderTopBar({ loggedIn, infoIcon, title });
+  _renderTopBar({ loggedIn, infoIcon, title, quickWrite });
   _renderBottomTabs({ active, loggedIn });
 
   document.body.classList.add('has-bottom-nav');
 }
 
 // 탑바
-function _renderTopBar({ loggedIn, infoIcon, title }) {
+function _renderTopBar({ loggedIn, infoIcon, title, quickWrite = true }) {
   if (document.getElementById('itda-top-bar')) return;
 
   const bar = document.createElement('div');
@@ -59,9 +59,9 @@ function _renderTopBar({ loggedIn, infoIcon, title }) {
   if (infoIcon) {
     actions.push(`<a href="./forest.html?category=death_prep" title="안내" aria-label="안내">📚</a>`);
   }
-  if (loggedIn) {
+  if (loggedIn && quickWrite) {
     actions.push(`<button id="itda-ask-btn" title="오늘 일기" aria-label="오늘 일기">✏️</button>`);
-  } else {
+  } else if (!loggedIn) {
     actions.push(`<a href="./login.html" style="font-size:14px;color:var(--ink-soft);text-decoration:none;font-weight:600;padding:4px 2px;">로그인</a>`);
   }
 

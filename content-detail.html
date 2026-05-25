@@ -139,6 +139,18 @@
       color: var(--ink-soft);
     }
     .content-body blockquote p:last-child { margin-bottom: 0; }
+    .content-body blockquote.cta-linked {
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+    .content-body blockquote.cta-linked:hover {
+      background: var(--primary);
+      border-left-color: var(--primary-hover);
+    }
+    .content-body blockquote.cta-linked:hover, .content-body blockquote.cta-linked:hover strong {
+      color: #fff;
+    }
+    .content-body blockquote.cta-linked:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
     .content-body hr { border: none; border-top: 1px solid var(--line); margin: 1.6em 0; }
     .content-body code {
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -205,6 +217,28 @@
     .action-btn.active { background: var(--primary); color: #fff; }
     .action-btn.bookmark.active { background: var(--warm); }
     .action-btn-spacer { margin-left: auto; }
+    .content-manage { position: relative; display: inline-flex; }
+    #content-manage-btn {
+      background: transparent; border: none; cursor: pointer;
+      font-size: 20px; line-height: 1; color: var(--ink-soft);
+      padding: 4px 6px; font-family: inherit;
+    }
+    .content-manage-menu {
+      position: absolute; top: 120%; right: 0; z-index: 130;
+      background: #fff; border: 1px solid var(--line); border-radius: 12px;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.10); padding: 6px;
+      min-width: 132px; display: flex; flex-direction: column;
+    }
+    .content-manage-menu[hidden] { display: none; }
+    .content-manage-menu a, .content-manage-menu button {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 12px; border-radius: 8px;
+      background: transparent; border: none; cursor: pointer;
+      font-size: 14px; font-weight: 600; color: var(--ink);
+      font-family: inherit; text-decoration: none; text-align: left; width: 100%;
+    }
+    .content-manage-menu a:hover, .content-manage-menu button:hover { background: var(--bg-alt); }
+    .content-manage-menu button.danger { color: var(--warm); }
     .action-report {
       background: transparent;
       border: none;
@@ -278,11 +312,11 @@
 <script type="module">
   import { supabase } from './auth.js';
   import { renderNav } from './nav.js';
-  import { getContent, CATEGORIES, isBookmarked, toggleBookmark } from './js/content.js';
+  import { getContent, CATEGORIES, isBookmarked, toggleBookmark, deleteContent } from './js/content.js';
   import { toggleReaction, getReactionState, reportTarget, REPORT_REASONS, createPost } from './js/community.js';
   import { getSignedUrl, getPublicUrl } from './js/media-upload.js';
 
-  await renderNav({ active: 'forest', infoIcon: false, title: '콘텐츠' });
+  await renderNav({ active: 'forest', infoIcon: false, title: '콘텐츠', quickWrite: false });
 
   const { data: { session } } = await supabase.auth.getSession();
   const id = new URLSearchParams(location.search).get('id');
@@ -316,6 +350,8 @@
   const reactionState = await getReactionState('content', id);
   const bookmarked = await isBookmarked(id);
   const isOwner = session && content.creator_id === session.user.id;
+  const isAdmin = session?.user?.email === 'sue.choi033@gmail.com';
+  const canManage = isOwner || isAdmin;
 
   document.getElementById('content-body').innerHTML = `
     <div class="content-head">
@@ -364,9 +400,7 @@
         🔖 ${bookmarked ? '저장됨' : '저장'}
       </button>
       <div class="action-btn-spacer"></div>
-      ${isOwner ? `
-        <a class="action-btn" href="./content-write.html?id=${content.id}">✏ 수정</a>
-      ` : `
+      ${canManage ? '' : `
         <button class="action-report" id="btn-report">🚩 신고</button>
       `}
     </div>
@@ -397,6 +431,41 @@
   setupReadTime(content.body || '');
   setupTOC();
   setupReadingProgress();
+
+  // 작성자/관리자 전용 우상단 메뉴 (수정·삭제)
+  if (canManage) {
+    const barActions = document.querySelector('.itda-top-bar-actions');
+    if (barActions) {
+      const wrap = document.createElement('div');
+      wrap.className = 'content-manage';
+      wrap.innerHTML = `
+        <button id="content-manage-btn" title="관리" aria-label="글 관리" aria-haspopup="true" aria-expanded="false">⋯</button>
+        <div class="content-manage-menu" id="content-manage-menu" role="menu" hidden>
+          <a role="menuitem" href="./content-write.html?id=${content.id}">✏ 수정</a>
+          <button role="menuitem" id="content-delete-btn" class="danger">🗑 삭제</button>
+        </div>`;
+      barActions.appendChild(wrap);
+
+      const mBtn = wrap.querySelector('#content-manage-btn');
+      const menu = wrap.querySelector('#content-manage-menu');
+      mBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const open = !menu.hidden;
+        menu.hidden = open;
+        mBtn.setAttribute('aria-expanded', String(!open));
+      });
+      document.addEventListener('click', () => { menu.hidden = true; mBtn.setAttribute('aria-expanded', 'false'); });
+      menu.addEventListener('click', (e) => e.stopPropagation());
+
+      wrap.querySelector('#content-delete-btn').addEventListener('click', async () => {
+        if (!confirm('이 글을 삭제할까요? 되돌릴 수 없습니다.')) return;
+        try {
+          await deleteContent(content.id);
+          window.location.href = './forest.html';
+        } catch (err) { alert('삭제에 실패했습니다: ' + err.message); }
+      });
+    }
+  }
 
   // 좋아요
   document.getElementById('btn-like').addEventListener('click', async () => {
@@ -486,10 +555,34 @@
         a.setAttribute('target', '_blank');
         a.setAttribute('rel', 'noopener noreferrer');
       });
+      // 잇다 기능을 언급한 CTA 인용구는 해당 탭으로 바로 이동(탭 가능)하게 만든다.
+      linkifyCtaBlockquotes(el);
     } catch (_) {
       el.style.whiteSpace = 'pre-wrap';
       el.textContent = raw;
     }
+  }
+
+  // 본문 끝 CTA 인용구를 잇다 기능 탭으로 연결. 키워드→경로 매핑.
+  // 인용구 안에 이미 링크가 있으면(출처 인용 등) 건드리지 않는다.
+  function linkifyCtaBlockquotes(el) {
+    const ROUTES = [
+      { kw: '잇다 케어링', href: './nest.html' },
+    ];
+    el.querySelectorAll('blockquote').forEach((bq) => {
+      if (bq.querySelector('a')) return;
+      const text = bq.textContent || '';
+      const hit = ROUTES.find((r) => text.includes(r.kw));
+      if (!hit) return;
+      bq.classList.add('cta-linked');
+      bq.setAttribute('role', 'link');
+      bq.setAttribute('tabindex', '0');
+      const go = () => { window.location.href = hit.href; };
+      bq.addEventListener('click', go);
+      bq.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); }
+      });
+    });
   }
 
   // ── 읽기 예상 시간 ──────────────────────────────
