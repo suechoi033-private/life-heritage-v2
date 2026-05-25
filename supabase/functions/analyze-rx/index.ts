@@ -226,8 +226,11 @@ async function lookupMfds(rawName: string) {
     const u = `${MFDS_BASE}?serviceKey=${DATA_GO_KR_KEY}&type=json&numOfRows=3&pageNo=1&itemName=${encodeURIComponent(name)}`;
     try {
       const res = await fetch(u);
+      const raw = await res.text();
+      console.log(`[easydrug] name="${name}" status=${res.status} body=${raw.slice(0, 500)}`);
       if (!res.ok) continue;
-      const data = await res.json();
+      let data: any;
+      try { data = JSON.parse(raw); } catch { continue; }
       const items = data?.body?.items;
       if (Array.isArray(items) && items.length) {
         const it = items[0];
@@ -256,8 +259,11 @@ async function lookupPermit(noDose: string, core: string) {
     const u = `${PERMIT_BASE}?serviceKey=${DATA_GO_KR_KEY}&type=json&numOfRows=3&pageNo=1&item_name=${encodeURIComponent(name)}`;
     try {
       const res = await fetch(u);
+      const raw = await res.text();
+      console.log(`[permit] name="${name}" status=${res.status} body=${raw.slice(0, 700)}`);
       if (!res.ok) continue;
-      const data = await res.json();
+      let data: any;
+      try { data = JSON.parse(raw); } catch { continue; }
       let items = data?.body?.items;
       if (items && !Array.isArray(items)) items = items.item ? [].concat(items.item) : [];
       if (Array.isArray(items) && items.length) {
