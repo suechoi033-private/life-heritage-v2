@@ -60,7 +60,7 @@
 </footer>
 
 <script type="module">
-  import { signIn, redirectIfAuthed, friendlyError } from './auth.js';
+  import { signIn, redirectIfAuthed, friendlyError, rememberAccount } from './auth.js';
   import { renderSocialAuthButtons } from './js/social-auth.js';
 
   // ── 초대 코드 캡처 (돌봄 초대 + 친구 초대 둘 다) ────────────────────────
@@ -107,6 +107,13 @@
   const alertBox = document.getElementById('alert');
   const submitBtn = form.querySelector('.auth-submit');
 
+  // 계정 전환: 이메일이 넘어오면 자동 입력하고 비밀번호로 포커스(브라우저 자동완성 유도)
+  const prefillEmail = params.get('email');
+  if (prefillEmail) {
+    form.email.value = prefillEmail.trim();
+    setTimeout(() => form.password?.focus(), 50);
+  }
+
   function showAlert(message, type = 'error') {
     alertBox.className = `alert alert-${type}`;
     alertBox.textContent = message;
@@ -135,6 +142,7 @@
       return;
     }
 
+    rememberAccount(email, data?.user?.user_metadata?.name);
     window.location.href = redirectAfterLogin;
   });
 </script>
