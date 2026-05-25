@@ -209,9 +209,15 @@ async function extractWithClaude(b64: string, mediaType: string) {
 
 // ── 식약처 e약은요 조회 ───────────────────────────────
 async function lookupMfds(rawName: string) {
-  // 용량/단위 토큰 제거해 제품명 위주로 질의
-  const query = rawName.replace(/\d+(\.\d+)?\s*(mg|g|ml|밀리그람|밀리그램|정|캡슐|시럽)/gi, '').trim();
-  const tryNames = [rawName, query].filter((v, i, a) => v && a.indexOf(v) === i);
+  // 괄호(성분)·용량·단위를 제거해 제품명 위주로 정리
+  const noParen = rawName.replace(/\([^)]*\)/g, ' ');
+  const noDose = noParen
+    .replace(/\d+(\.\d+)?\s*(mg|g|ml|밀리그람|밀리그램|마이크로그램|mcg|iu|％|%)/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const core = noDose.split(' ')[0]; // 제품명 본체 (예: 아빌리파이정, 웰부트린엑스엘정)
+  // 후보: 정리된 전체명 → 본체 → 원문 순으로 시도
+  const tryNames = [...new Set([noDose, core, rawName].filter((v) => v && v.length >= 2))];
 
   for (const name of tryNames) {
     const u = `${MFDS_BASE}?serviceKey=${DATA_GO_KR_KEY}&type=json&numOfRows=3&pageNo=1&itemName=${encodeURIComponent(name)}`;
@@ -222,7 +228,8 @@ async function lookupMfds(rawName: string) {
       const items = data?.body?.items;
       if (Array.isArray(items) && items.length) {
         const it = items[0];
-        const exact = (it.itemName || '').includes(query) || (it.itemName || '').includes(rawName);
+        const norm = (s: string) => (s || '').replace(/\s/g, '');
+        const exact = norm(it.itemName).includes(norm(core)) || norm(it.itemName).includes(norm(noDose));
         return { ...it, _confidence: exact ? 1 : 0.6 };
       }
     } catch {
