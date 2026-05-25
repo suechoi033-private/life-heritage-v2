@@ -76,6 +76,15 @@ export async function uploadAndAnalyze(subjectId, file) {
   return { prescription_id: rx.id, ...data };
 }
 
+// 이미 업로드된 처방전을 (재업로드 없이) 다시 분석 — 저장된 이미지로 재실행
+export async function reanalyzePrescription(prescriptionId) {
+  const { data, error } = await supabase.functions.invoke('analyze-rx', {
+    body: { prescription_id: prescriptionId },
+  });
+  if (error) throw new Error('분석 호출 실패: ' + (error.message || error));
+  return data;
+}
+
 export async function deletePrescription(rx) {
   // 레코드 삭제(약물 cascade) + 스토리지 원본 삭제
   const { error } = await supabase.from('care_prescriptions').delete().eq('id', rx.id);
