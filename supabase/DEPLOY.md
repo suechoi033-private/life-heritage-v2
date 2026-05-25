@@ -38,14 +38,18 @@ push가 **이미 적용된 것까지 다시 적용하려다 `create policy ... a
   `supabase migration repair --status applied <version>`
 - 또는 신규 파일만 SQL Editor에 직접 붙여넣어 적용(아래 4번).
 
-## 4. 수동 적용 대안 (CLI/CI 없이)
+## 4. 수동 적용 (권장 — CLI/CI 없이, 라이브 DB 안전)
 
-Supabase 대시보드 → SQL Editor에 아래 파일 내용을 **순서대로** 붙여넣어 실행:
+> ⚠️ `db push`는 마이그레이션 히스토리가 비어 있는 기존(이미 적용된) DB에
+> 전체를 다시 밀려다 `policy ... already exists` 등으로 실패한다. 신규 기능만
+> 안전하게 올리려면 아래 단일 스크립트를 쓴다.
 
-1. `supabase/migrations/20260524_care_prescriptions.sql`
-2. `supabase/migrations/20260524_care_guides.sql`
-3. `supabase/migrations/20260525_story_format.sql`
-4. `supabase/migrations/20260525_inline_comments_realtime.sql`
+Supabase 대시보드 → SQL Editor → **`supabase/deploy-all.sql` 내용을 통째로
+붙여넣고 Run** 한 번이면 끝.
+
+- 포함: 처방전 분석 + 케어 가이드 + 이야기 카드 + 인라인 댓글/실시간 + 자기성찰 질문 v2
+- 멱등(여러 번 실행해도 안전): 정책은 `drop ... if exists` 후 재생성,
+  시드/문항 삽입은 `on conflict` / `not exists` 로 중복 방지.
 
 Edge Function은 CLI 필요(로컬에서):
 ```bash
