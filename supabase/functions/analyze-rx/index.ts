@@ -33,8 +33,8 @@ const MFDS_BASE =
 // 전문약 포함 전 품목 — 의약품 제품 허가정보(효능/용법/주의 문서 제공)
 // 서비스/오퍼레이션 버전이 갱신돼 와서, 동작하는 엔드포인트를 자동 탐색한다.
 const PERMIT_ENDPOINTS = [
-  'https://apis.data.go.kr/1471000/DrugPrdtPrmsnInfoService07/getDrugPrdtPrmsnDtlInq05',
   'https://apis.data.go.kr/1471000/DrugPrdtPrmsnInfoService07/getDrugPrdtPrmsnDtlInq06',
+  'https://apis.data.go.kr/1471000/DrugPrdtPrmsnInfoService07/getDrugPrdtPrmsnDtlInq05',
   'https://apis.data.go.kr/1471000/DrugPrdtPrmsnInfoService06/getDrugPrdtPrmsnDtlInq05',
   'https://apis.data.go.kr/1471000/DrugPrdtPrmsnInfoService05/getDrugPrdtPrmsnDtlInq04',
   'https://apis.data.go.kr/1471000/DrugPrdtPrmsnInfoService04/getDrugPrdtPrmsnDtlInq03',
@@ -293,7 +293,9 @@ async function lookupPermit(noDose: string, core: string) {
         let items = data?.body?.items;
         if (items && !Array.isArray(items)) items = items.item ? [].concat(items.item) : [];
         if (Array.isArray(items) && items.length) {
-          const mapped = mapPermitItem(items[0], name);
+          const it = items[0];
+          console.log(`[permit-item] keys=${Object.keys(it).join('|')}`);
+          const mapped = mapPermitItem(it, name);
           if (mapped) return mapped;
         }
       } catch (e) {
