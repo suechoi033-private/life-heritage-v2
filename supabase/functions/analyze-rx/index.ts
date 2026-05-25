@@ -30,6 +30,9 @@ const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY') || '';
 const DATA_GO_KR_KEY = Deno.env.get('DATA_GO_KR_KEY') || '';
 const MFDS_BASE =
   'https://apis.data.go.kr/1471000/DrbEasyDrugInfoService/getDrbEasyDrugList';
+// 전문약 포함 전 품목 — 의약품 제품 허가정보(효능/용법/주의 문서 제공)
+const PERMIT_BASE =
+  'https://apis.data.go.kr/1471000/DrugPrdtPrmsnInfoService07/getDrugPrdtPrmsnDtlInq05';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders() });
@@ -234,6 +237,47 @@ async function lookupMfds(rawName: string) {
       }
     } catch {
       // 다음 후보로
+    }
+  }
+  // e약은요에 없으면(주로 전문의약품) 의약품 제품 허가정보로 재조회
+  const permit = await lookupPermit(noDose, core);
+  if (permit) return permit;
+  return null;
+}
+
+// ── 의약품 제품 허가정보(전 품목) 조회 ─────────────────
+function stripXml(s: string): string {
+  return (s || '').replace(/<[^>]+>/g, ' ').replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim().slice(0, 800);
+}
+async function lookupPermit(noDose: string, core: string) {
+  if (!DATA_GO_KR_KEY) return null;
+  const names = [...new Set([noDose, core].filter((v) => v && v.length >= 2))];
+  for (const name of names) {
+    const u = `${PERMIT_BASE}?serviceKey=${DATA_GO_KR_KEY}&type=json&numOfRows=3&pageNo=1&item_name=${encodeURIComponent(name)}`;
+    try {
+      const res = await fetch(u);
+      if (!res.ok) continue;
+      const data = await res.json();
+      let items = data?.body?.items;
+      if (items && !Array.isArray(items)) items = items.item ? [].concat(items.item) : [];
+      if (Array.isArray(items) && items.length) {
+        const it = items[0];
+        const ee = stripXml(it.EE_DOC_DATA || it.eeDocData || '');
+        const ud = stripXml(it.UD_DOC_DATA || it.udDocData || '');
+        const nb = stripXml(it.NB_DOC_DATA || it.nbDocData || '');
+        if (!ee && !ud && !nb && !it.ITEM_NAME) continue;
+        return {
+          itemName: it.ITEM_NAME || it.itemName || name,
+          itemSeq: it.ITEM_SEQ || it.itemSeq || null,
+          efcyQesitm: ee || null,
+          useMethodQesitm: ud || null,
+          atpnQesitm: nb || null,
+          intrcQesitm: null,
+          _confidence: 0.85,
+        };
+      }
+    } catch {
+      // 다음 후보
     }
   }
   return null;
