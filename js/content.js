@@ -106,11 +106,11 @@ export async function getEngagementMap(ids) {
   if (!ids?.length) return {};
   const { data: { session } } = await supabase.auth.getSession();
   const me = session?.user?.id || null;
-  const [likesRes, postsRes] = await Promise.all([
+  const [likesRes, cmtRes] = await Promise.all([
     supabase.from('reactions').select('target_id, user_id')
       .eq('target_type', 'content').eq('reaction_type', 'like').in('target_id', ids),
-    supabase.from('community_posts').select('content_thread_id')
-      .in('content_thread_id', ids).eq('is_deleted', false),
+    supabase.from('comments').select('content_id')
+      .in('content_id', ids).eq('is_deleted', false),
   ]);
   const map = {};
   ids.forEach((id) => { map[id] = { likes: 0, mineLiked: false, comments: 0 }; });
@@ -118,10 +118,34 @@ export async function getEngagementMap(ids) {
     const m = map[r.target_id]; if (!m) return;
     m.likes++; if (me && r.user_id === me) m.mineLiked = true;
   });
-  (postsRes.data || []).forEach((p) => {
-    const m = map[p.content_thread_id]; if (m) m.comments++;
+  (cmtRes.data || []).forEach((c) => {
+    const m = map[c.content_id]; if (m) m.comments++;
   });
   return map;
+}
+
+// 콘텐츠 인라인 댓글
+export async function listContentComments(contentId, limit = 50) {
+  const { data, error } = await supabase.from('comments')
+    .select('id, body, created_at, user_id, profiles:user_id(name, avatar_url)')
+    .eq('content_id', contentId).eq('is_deleted', false)
+    .order('created_at', { ascending: true })
+    .limit(limit);
+  if (error) throw error;
+  return data || [];
+}
+
+export async function addContentComment(contentId, body) {
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
+  if (!user) throw new Error('로그인 필요');
+  const text = (body || '').trim();
+  if (!text) throw new Error('내용을 입력해주세요');
+  const { data, error } = await supabase.from('comments')
+    .insert({ content_id: contentId, user_id: user.id, body: text })
+    .select('id, body, created_at, user_id, profiles:user_id(name, avatar_url)')
+    .single();
+  if (error) throw error;
+  return data;
 }
 
 // ===== 북마크 =====

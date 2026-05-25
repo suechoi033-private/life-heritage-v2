@@ -235,6 +235,43 @@
       border-radius: 18px; padding: 32px 20px;
       text-align: center; color: var(--ink-soft); font-size: 14px; line-height: 1.7;
     }
+    /* 새 글 실시간 알림 pill */
+    .feed-new-pill {
+      position: sticky; top: 8px; z-index: 30;
+      display: block; margin: 0 auto 14px; width: fit-content;
+      background: var(--primary); color: #fff;
+      border: none; border-radius: 999px; padding: 9px 18px;
+      font-size: 13px; font-weight: 800; font-family: inherit;
+      box-shadow: 0 4px 16px rgba(47,107,79,0.35); cursor: pointer;
+      animation: pill-in .2s ease;
+    }
+    @keyframes pill-in { from { transform: translateY(-8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    /* 인라인 댓글 패널 */
+    .hcard-comments {
+      border-top: 1px solid var(--line);
+      padding: 12px 16px 4px; background: var(--bg-alt);
+    }
+    .hcc-item { display: flex; gap: 8px; padding: 7px 0; }
+    .hcc-avatar {
+      width: 24px; height: 24px; border-radius: 999px; flex-shrink: 0;
+      background: var(--primary-soft); color: var(--primary);
+      display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800;
+    }
+    .hcc-bubble { flex: 1; min-width: 0; }
+    .hcc-name { font-size: 12px; font-weight: 800; color: var(--ink-soft); }
+    .hcc-body { font-size: 13.5px; color: var(--ink); line-height: 1.5; word-break: break-word; }
+    .hcc-empty { font-size: 13px; color: var(--ink-muted); padding: 6px 0 10px; }
+    .hcc-form { display: flex; gap: 8px; padding: 8px 0 12px; }
+    .hcc-input {
+      flex: 1; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 999px;
+      font-family: inherit; font-size: 14px; background: #fff;
+    }
+    .hcc-input:focus { outline: none; border-color: var(--primary); }
+    .hcc-send {
+      background: var(--primary); color: #fff; border: none; border-radius: 999px;
+      padding: 0 16px; font-size: 13.5px; font-weight: 800; font-family: inherit; cursor: pointer;
+    }
+    .hcc-send:disabled { opacity: .5; }
   </style>
 </head>
 <body>
@@ -250,6 +287,7 @@
   </div>
 
   <section class="feed-section" id="home-feed" hidden>
+    <button id="feed-new-pill" class="feed-new-pill" hidden></button>
     <div class="feed-head">
       <span class="feed-head-title">요즘 이야기</span>
       <a href="./forest.html" class="feed-head-more">더보기 →</a>
@@ -265,7 +303,7 @@
 import { supabase } from './auth.js';
 import { renderNav } from './nav.js';
 import { registerPWA } from './js/pwa.js';
-import { getFeaturedStory, listHomeFeed, getEngagementMap } from './js/content.js';
+import { getFeaturedStory, listHomeFeed, getEngagementMap, listContentComments, addContentComment } from './js/content.js';
 import { toggleReaction } from './js/community.js';
 
 await renderNav({ active: 'home', infoIcon: true });
@@ -410,6 +448,7 @@ const CATEGORY_THEME = {
   memorial:   { icon: '🌿', c1: '#E7F1EC', c2: '#CFE5D8' },
 };
 renderHomeFeed();
+subscribeRealtime();
 
 function isNew(created) { return (Date.now() - new Date(created).getTime()) < 3 * 86400000; }
 
@@ -476,10 +515,11 @@ function feedCard(c, e) {
             <button class="hcard-heart ${e.mineLiked ? 'on' : ''}" data-id="${c.id}" aria-label="좋아요">
               <span class="ic">${e.mineLiked ? '❤' : '♡'}</span><span class="cnt">${e.likes}</span>
             </button>
-            <span class="hcard-comment"><span class="ic">💬</span>${e.comments}</span>
+            <button class="hcard-comment" data-id="${c.id}" aria-label="댓글"><span class="ic">💬</span><span class="cnt">${e.comments}</span></button>
           </div>
         </div>
       </div>
+      <div class="hcard-comments" data-for="${c.id}" hidden></div>
     </article>
   `;
 }
@@ -488,7 +528,7 @@ function wireHearts(root) {
   // 카드 본문 클릭 → 상세 이동 (하트/댓글 영역 제외)
   root.querySelectorAll('.hcard').forEach((card) => {
     card.addEventListener('click', (ev) => {
-      if (ev.target.closest('.hcard-engage')) return;
+      if (ev.target.closest('.hcard-engage') || ev.target.closest('.hcard-comments')) return;
       window.location.href = card.dataset.href;
     });
   });
@@ -500,19 +540,121 @@ function wireHearts(root) {
       const cntEl = btn.querySelector('.cnt');
       const icEl = btn.querySelector('.ic');
       const wasOn = btn.classList.contains('on');
-      // 낙관적 업데이트
       btn.classList.toggle('on', !wasOn);
       icEl.textContent = !wasOn ? '❤' : '♡';
       cntEl.textContent = Math.max(0, parseInt(cntEl.textContent, 10) + (wasOn ? -1 : 1));
       try {
         await toggleReaction({ target_type: 'content', target_id: btn.dataset.id });
       } catch (err) {
-        // 롤백
         btn.classList.toggle('on', wasOn);
         icEl.textContent = wasOn ? '❤' : '♡';
         cntEl.textContent = Math.max(0, parseInt(cntEl.textContent, 10) + (wasOn ? 1 : -1));
       }
     });
+  });
+  // 댓글 토글
+  root.querySelectorAll('.hcard-comment').forEach((btn) => {
+    btn.addEventListener('click', (ev) => { ev.stopPropagation(); toggleComments(btn.dataset.id); });
+  });
+}
+
+const _commentsLoaded = new Set();
+async function toggleComments(id) {
+  const panel = document.querySelector(`.hcard-comments[data-for="${id}"]`);
+  if (!panel) return;
+  if (!panel.hidden) { panel.hidden = true; return; }
+  panel.hidden = false;
+  if (!_commentsLoaded.has(id)) {
+    panel.innerHTML = `<div class="hcc-empty">불러오는 중…</div>`;
+    try {
+      const list = await listContentComments(id);
+      renderCommentPanel(panel, id, list);
+      _commentsLoaded.add(id);
+    } catch (e) {
+      panel.innerHTML = `<div class="hcc-empty">댓글을 불러오지 못했어요.</div>`;
+    }
+  }
+}
+
+function commentItemHtml(c) {
+  const name = c.profiles?.name || '잇다 사용자';
+  return `<div class="hcc-item">
+    <span class="hcc-avatar">${escapeHtml(name[0] || '·')}</span>
+    <div class="hcc-bubble"><div class="hcc-name">${escapeHtml(name)}</div><div class="hcc-body">${escapeHtml(c.body)}</div></div>
+  </div>`;
+}
+
+function renderCommentPanel(panel, id, list) {
+  panel.innerHTML = `
+    <div class="hcc-list">${list.length ? list.map(commentItemHtml).join('') : '<div class="hcc-empty">첫 댓글을 남겨보세요.</div>'}</div>
+    <form class="hcc-form" data-id="${id}">
+      <input class="hcc-input" type="text" placeholder="${currentUserId ? '따뜻한 한마디를 남겨주세요' : '로그인 후 댓글을 남길 수 있어요'}" maxlength="500" ${currentUserId ? '' : 'disabled'}>
+      <button type="submit" class="hcc-send" ${currentUserId ? '' : 'disabled'}>등록</button>
+    </form>`;
+  const form = panel.querySelector('.hcc-form');
+  form.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const input = form.querySelector('.hcc-input');
+    const text = input.value.trim();
+    if (!text) return;
+    const send = form.querySelector('.hcc-send');
+    send.disabled = true;
+    try {
+      const c = await addContentComment(id, text);
+      const listEl = panel.querySelector('.hcc-list');
+      if (listEl.querySelector('.hcc-empty')) listEl.innerHTML = '';
+      listEl.insertAdjacentHTML('beforeend', commentItemHtml(c));
+      input.value = '';
+      bumpCommentCount(id, 1);
+    } catch (e) {
+      alert(e.message || '댓글 등록 실패');
+    } finally {
+      send.disabled = false;
+    }
+  });
+}
+
+function bumpCommentCount(id, delta) {
+  const cnt = document.querySelector(`.hcard-comment[data-id="${id}"] .cnt`);
+  if (cnt) cnt.textContent = Math.max(0, parseInt(cnt.textContent, 10) + delta);
+}
+function bumpLikeCount(id, delta) {
+  const btn = document.querySelector(`.hcard-heart[data-id="${id}"]`);
+  if (!btn) return;
+  const cnt = btn.querySelector('.cnt');
+  cnt.textContent = Math.max(0, parseInt(cnt.textContent, 10) + delta);
+}
+
+// ── 실시간 갱신 ──
+let _newCount = 0;
+function subscribeRealtime() {
+  const pill = document.getElementById('feed-new-pill');
+  supabase.channel('home-feed')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'contents' }, (p) => {
+      const r = p.new || {};
+      if (r.is_published === false || r.category === 'memorial') return;
+      _newCount++;
+      pill.hidden = false;
+      pill.textContent = `🆕 새 글 ${_newCount}개 · 보기`;
+    })
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'reactions' }, (p) => {
+      const r = p.new || {};
+      if (r.target_type !== 'content' || r.reaction_type !== 'like') return;
+      if (currentUserId && r.user_id === currentUserId) return; // 내 좋아요는 낙관적 처리됨
+      bumpLikeCount(r.target_id, 1);
+    })
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'comments' }, (p) => {
+      const r = p.new || {};
+      if (!r.content_id) return;
+      if (currentUserId && r.user_id === currentUserId) return; // 내 댓글은 낙관적 처리됨
+      bumpCommentCount(r.content_id, 1);
+    })
+    .subscribe();
+
+  pill.addEventListener('click', () => {
+    _newCount = 0; pill.hidden = true; _commentsLoaded.clear();
+    renderHomeFeed();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 }
 
