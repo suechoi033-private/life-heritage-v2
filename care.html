@@ -446,6 +446,12 @@
       margin-bottom: 20px;
     }
 
+    /* .modal-body를 쓰지 않는 모달(대상 등록·처방전 동의)은 안쪽 여백을 직접 부여 */
+    #subject-modal .modal,
+    #rx-consent-modal .modal { padding: 0 22px 24px; }
+    #subject-modal .modal-header,
+    #rx-consent-modal .modal-header { padding-top: 18px; }
+
     /* ── Field ──────────────────────────── */
     .field { margin-bottom: 16px; }
     .field label {
