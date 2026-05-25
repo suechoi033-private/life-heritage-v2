@@ -14,7 +14,7 @@ export const VISIBILITY = {
 };
 
 export async function listMyDiariesByMonth(year, monthIndex) {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
   if (!user) return [];
   const start = `${year}-${String(monthIndex + 1).padStart(2, '0')}-01`;
   const endDate = new Date(year, monthIndex + 1, 1);
@@ -31,7 +31,7 @@ export async function listMyDiariesByMonth(year, monthIndex) {
 }
 
 export async function listMyDiariesTimeline(limit = 20, beforeDate = null) {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
   if (!user) return [];
   let q = supabase
     .from('diary_entries')
@@ -70,7 +70,7 @@ export async function getDiary(id) {
 }
 
 export async function createDiary({ entry_date, template_type, title, content, visibility }) {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
   if (!user) throw new Error('로그인 필요');
   const { data, error } = await supabase.from('diary_entries').insert({
     user_id: user.id,
@@ -105,7 +105,7 @@ export async function deleteDiary(id) {
 export async function searchDiaries(query, { limit = 30 } = {}) {
   const q = (query || '').trim();
   if (!q) return [];
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
   if (!user) return [];
 
   const like = `%${q.replace(/[%_]/g, (m) => '\\' + m)}%`;

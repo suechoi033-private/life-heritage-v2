@@ -80,6 +80,8 @@ Deno.serve(async (req) => {
       { table: 'daily_answers',      column: 'user_id' },
       { table: 'diary_entries',      column: 'user_id' },
       { table: 'goals',              column: 'user_id' },
+      // 처방전(민감 건강정보) — 업로더 본인이 올린 것 (약물 cascade)
+      { table: 'care_prescriptions', column: 'uploader_id' },
       // 태그, 친구/초대
       { table: 'tags',               column: 'user_id' },
       { table: 'friend_invites',     column: 'inviter_id' },
@@ -105,7 +107,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 돌봄(care_*): 스키마상 care 테이블의 소유/멤버 컬럼이 이 repo에 없어
+    // 케어링(care_*): 스키마상 care 테이블의 소유/멤버 컬럼이 이 repo에 없어
     //   구조를 확정할 수 없다. care_members(있다면) 본인 멤버십 제거를 시도하되
     //   실패해도 전체를 막지 않는다. (creator/owner 컬럼명이 다를 수 있음)
     for (const col of ['user_id', 'member_id', 'profile_id']) {

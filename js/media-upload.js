@@ -10,7 +10,7 @@ function makePath(userId, scope, filename) {
 }
 
 export async function uploadMedia(bucket, file, { scope = 'misc' } = {}) {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
   if (!user) throw new Error('로그인 필요');
 
   const isImage = file.type.startsWith('image/');

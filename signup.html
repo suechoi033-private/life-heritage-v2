@@ -68,7 +68,7 @@
   import { signUp, redirectIfAuthed, friendlyError, supabase } from './auth.js';
   import { renderSocialAuthButtons } from './js/social-auth.js';
 
-  // ── 초대 코드 캡처 (돌봄 + 친구) ────────────────────────
+  // ── 초대 코드 캡처 (케어링 + 친구) ────────────────────────
   const params = new URLSearchParams(location.search);
   const careInvite   = (params.get('invite') || '').toUpperCase();
   const friendInvite = (params.get('friend') || '').toUpperCase();

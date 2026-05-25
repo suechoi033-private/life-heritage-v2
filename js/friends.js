@@ -14,7 +14,7 @@ function generateInviteCode(length = 8) {
 
 // 초대 코드 발급
 export async function createFriendInvite({ message = '', channel = 'link' } = {}) {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
   if (!user) throw new Error('로그인 필요');
 
   let code, attempt = 0;
@@ -91,7 +91,7 @@ export async function fetchInviteByCode(code) {
 
 // 초대 수락 — RLS 우회를 위해 security definer RPC 호출
 export async function acceptFriendInvite(code) {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
   if (!user) throw new Error('로그인 필요');
 
   const { data, error } = await supabase.rpc('accept_friend_invite', { p_code: code.toUpperCase() });
@@ -110,7 +110,7 @@ export async function acceptFriendInvite(code) {
 
 // 친구 목록
 export async function listFriends() {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
   if (!user) return [];
 
   const { data, error } = await supabase

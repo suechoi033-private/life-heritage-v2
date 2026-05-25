@@ -1,11 +1,11 @@
-// 돌봄 헬퍼 — 대상자·기록·대시보드 집계·응급 연락처·실시간 구독
+// 케어링 헬퍼 — 대상자·기록·대시보드 집계·응급 연락처·실시간 구독
 import { supabase } from '../auth.js';
 
 // ===== 대상자 =====
 // 본인이 직접 만든 care_subjects(owner) + care_members로 초대받은 대상자 모두 조회
 // 기존 care.html은 owner를 care_subjects.user_id에 저장하므로 두 경로 모두 확인
 export async function listMyCareSubjects() {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
   if (!user) return [];
 
   const [{ data: owned, error: e1 }, { data: invited, error: e2 }] = await Promise.all([
@@ -124,7 +124,7 @@ export async function deleteEmergencyContact(id) {
 // 응급 상황 공유 — care_logs에 [SOS] 마커로 기록
 // 기존 스키마: author_id, daily_status 사용
 export async function broadcastEmergency(subjectId, { note = '', contactsCalled = [] } = {}) {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
   if (!user) throw new Error('로그인 필요');
   const body = `[SOS] ${note || '응급 상황 공유'}`
     + (contactsCalled.length ? `\n연락: ${contactsCalled.join(', ')}` : '');
