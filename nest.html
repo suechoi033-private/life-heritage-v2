@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>케어링 · 잇다</title>
-  <meta name="description" content="가족 돌봄 기록과 협력">
+  <meta name="description" content="가족 케어링 기록과 협력">
   <link rel="stylesheet" href="./auth-styles.css">
   <link rel="manifest" href="./manifest.json">
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
@@ -258,10 +258,10 @@
     listEl.innerHTML = `
       <div class="empty-state">
         <div class="empty-icon">🪺</div>
-        <div class="empty-title">첫 돌봄을 시작해요</div>
-        <div class="empty-desc">돌봄 대상을 추가하면 가족과 함께 기록·공유할 수 있어요.</div>
+        <div class="empty-title">첫 케어링을 시작해요</div>
+        <div class="empty-desc">케어링 대상을 추가하면 가족과 함께 기록·공유할 수 있어요.</div>
       </div>
-      <a href="./care.html?action=add" class="add-subject-btn">＋ 돌봄 대상 추가</a>`;
+      <a href="./care.html?action=add" class="add-subject-btn">＋ 케어링 대상 추가</a>`;
     throw new Error('no subjects');
   }
 
@@ -271,7 +271,7 @@
       <div class="subject-card-head">
         <div class="subject-avatar">${(s.name?.[0] || '·').toUpperCase()}</div>
         <div>
-          <div class="subject-name">${escapeHtml(s.name || '돌봄 대상')}</div>
+          <div class="subject-name">${escapeHtml(s.name || '케어링 대상')}</div>
           <div class="subject-relation">${escapeHtml(s.relation || '')} · ${s.role === 'owner' ? '내가 추가' : '초대받음'}</div>
         </div>
         <span class="live-indicator"><span class="live-dot"></span>실시간</span>
@@ -298,7 +298,7 @@
       </a>
       <a class="subject-action sos" href="./care-emergency.html?subject=${s.id}">🚨 응급</a>
     </div>
-  `).join('') + `<a href="./care.html?action=add" class="add-subject-btn">＋ 돌봄 대상 추가</a>`;
+  `).join('') + `<a href="./care.html?action=add" class="add-subject-btn">＋ 케어링 대상 추가</a>`;
 
   // 미니 발자취 (28일 가로 스텝) — 레벨 계산식 보존
   function buildMiniGrass(daily) {

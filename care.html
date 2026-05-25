@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>돌봄 · 잇다</title>
+  <title>케어링 · 잇다</title>
   <link rel="stylesheet" href="./auth-styles.css">
   <style>
     .care-shell {
@@ -874,20 +874,20 @@
   <div class="consent-banner">
     <div class="consent-banner-icon">🔒</div>
     <div>
-      돌봄 기록은 민감한 건강정보입니다. 본인(또는 법정대리인)의 허락을 받은 경우에만 기록해주세요.
+      케어링 기록은 민감한 건강정보입니다. 본인(또는 법정대리인)의 허락을 받은 경우에만 기록해주세요.
       이 서비스는 의료 진료·판단을 대체하지 않습니다. 모든 기록은 암호화되어 저장되며, 본인만 볼 수 있습니다.
     </div>
   </div>
 
   <div>
-    <span class="page-kicker">CARE · 돌봄</span>
+    <span class="page-kicker">CARE · 케어링</span>
     <h1 class="page-title" id="page-title">곁에 있는 오늘을 함께 기록합니다</h1>
     <p class="page-sub" id="page-sub">
       부모님의 하루·약·병원 방문을 짧게라도 남기면, 다음 결정에 힘이 됩니다.
     </p>
   </div>
 
-  <!-- 부모님 의향 유도 배너 (돌봄 대상이 있을 때만 표시) -->
+  <!-- 부모님 의향 유도 배너 (케어링 대상이 있을 때만 표시) -->
   <div class="parent-intent-banner" id="parent-intent-banner" style="display:none;">
     <span style="font-size:18px;">🕊</span>
     <span>이 분의 의향이 등록되어 있나요? 본인이 직접 잇다를 써두시면 가족이 더 편해요.</span>
@@ -904,12 +904,12 @@
   <div id="no-subject-state" class="hidden">
     <div class="empty">
       <div class="empty-icon">🤝</div>
-      <h3>누구의 하루를 함께 기록할까요?</h3>
+      <h3>누구의 하루를 기록할까요?</h3>
       <p>
-        부모님·배우자·할머니·반려동물 — 돌봄이 필요한 한 분을 먼저 등록해 주세요.<br>
+        나 자신·부모님·배우자·할머니·반려동물 — 케어링이 필요한 한 분(또는 나의 건강기록)을 먼저 등록해 주세요.<br>
         언제든 여러 분을 추가하실 수 있습니다.
       </p>
-      <button type="button" class="primary-cta" id="first-subject-btn">돌봄 대상 등록하기</button>
+      <button type="button" class="primary-cta" id="first-subject-btn">케어링 대상 등록하기</button>
       <p style="margin-top: 22px; color: var(--ink-muted); font-size: 13.5px;">
         또는 가족이 보내준 코드가 있다면
         <button type="button" id="enter-code-empty-btn" style="background:none;border:none;color:var(--primary);font-weight:700;cursor:pointer;text-decoration:underline;font-size:13.5px;font-family:inherit;">초대 코드 입력하기</button>
@@ -923,7 +923,7 @@
     <!-- Subject cards -->
     <section class="subjects-section">
       <div class="subjects-section-head">
-        <span class="subjects-section-title">돌봄 대상</span>
+        <span class="subjects-section-title">케어링 대상</span>
         <div style="display: flex; align-items: center; gap: 12px;">
           <button type="button" id="add-subject-top-btn" style="background:none;border:none;color:var(--ink-muted);font-weight:600;cursor:pointer;font-size:13px;font-family:inherit;">＋ 대상 추가</button>
           <button type="button" id="invite-family-top-btn" style="background:none;border:none;color:var(--primary);font-weight:700;cursor:pointer;font-size:13px;font-family:inherit;text-decoration:underline;">＋ 가족 초대</button>
@@ -994,7 +994,7 @@
       <div id="family-list"></div>
       <div id="family-self-leave" class="hidden" style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--line);">
         <button type="button" class="subject-btn" id="leave-care-btn" style="color: var(--danger);">
-          이 돌봄에서 나가기
+          이 케어링에서 나가기
         </button>
       </div>
     </section>
@@ -1002,7 +1002,7 @@
     <!-- Tab: settings -->
     <section class="tab-panel hidden" data-panel="settings">
       <div class="empty" style="text-align: left; padding: 28px;">
-        <h3 id="settings-subject-name" style="margin-bottom: 4px;">돌봄 대상 정보</h3>
+        <h3 id="settings-subject-name" style="margin-bottom: 4px;">케어링 대상 정보</h3>
         <div id="settings-my-label-display" style="font-size: 13px; color: var(--primary); font-weight: 700; margin-bottom: 12px; display: none;">
           내 호칭: <span id="settings-my-label-text"></span>
         </div>
@@ -1033,11 +1033,11 @@
 <div class="modal-backdrop hidden" id="subject-modal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title" id="subject-modal-title">돌봄 대상 등록</div>
+      <div class="modal-title" id="subject-modal-title">케어링 대상 등록</div>
       <button type="button" class="modal-close" data-close-modal="subject-modal">×</button>
     </div>
     <p class="modal-sub">
-      누구의 하루를 함께 기록하시나요? 실명 대신 "엄마", "아버님" 같은 호칭도 괜찮습니다.
+      누구의 하루를 기록하시나요? 나 자신의 건강기록도 좋고, 실명 대신 "엄마", "아버님" 같은 호칭도 괜찮습니다.
     </p>
     <form id="subject-form">
       <div class="field">
@@ -1049,6 +1049,7 @@
           <label for="s-relation">관계 <span class="optional">(선택)</span></label>
           <select id="s-relation" name="relation">
             <option value="">선택하지 않음</option>
+            <option value="본인">본인 (나의 건강기록)</option>
             <option value="어머니">어머니</option>
             <option value="아버지">아버지</option>
             <option value="시어머니">시어머니</option>
@@ -1077,7 +1078,7 @@
       <div class="consent-box">
         <label>
           <input type="checkbox" id="s-consent" required>
-          <span>이 분(또는 법정대리인)의 돌봄 기록 동의를 받았습니다. 민감한 건강정보 기록의 책임을 이해하고, 잇다가 의료 진료를 대체하지 않음을 확인했습니다.</span>
+          <span>이 분(또는 법정대리인)의 케어링 기록 동의를 받았습니다. 민감한 건강정보 기록의 책임을 이해하고, 잇다가 의료 진료를 대체하지 않음을 확인했습니다.</span>
         </label>
       </div>
 
@@ -1386,7 +1387,7 @@ document.addEventListener('DOMContentLoaded', () => {
     uploadAndAnalyze, deletePrescription,
     deriveCategories, listCareGuides,
   } from './prescription.js';
-  await renderNav({ active: 'care', infoIcon: true, title: '돌봄' });
+  await renderNav({ active: 'care', infoIcon: true, title: '케어링' });
 
   // "더 적기" 토글
   document.getElementById('more-fields-btn')?.addEventListener('click', function() {
@@ -1486,7 +1487,7 @@ document.addEventListener('DOMContentLoaded', () => {
     $('loading-state').classList.add('hidden');
 
     if (subjectsRes.error) {
-      showAlert('돌봄 대상을 불러오지 못했습니다: ' + (subjectsRes.error.message || subjectsRes.error));
+      showAlert('케어링 대상을 불러오지 못했습니다: ' + (subjectsRes.error.message || subjectsRes.error));
       return;
     }
 
@@ -1517,7 +1518,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (state.subjects.length === 0) {
       $('no-subject-state').classList.remove('hidden');
     } else {
-      // 돌봄 대상이 있을 때만 의향 유도 배너 표시
+      // 케어링 대상이 있을 때만 의향 유도 배너 표시
       const banner = document.getElementById('parent-intent-banner');
       if (banner) banner.style.display = '';
 
@@ -1962,7 +1963,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const myRole = state.myRoleBySubject[subjectId];
     const isOwner = myRole === 'admin';
 
-    $('family-title').textContent = `${getDisplayName(subject)} 돌봄 — 가족·도우미`;
+    $('family-title').textContent = `${getDisplayName(subject)} 케어링 — 가족·도우미`;
     $('family-desc').textContent = '코드 하나로 가족 여러 명이 모두 참여할 수 있어요. 카톡·문자로 전달하세요.';
 
     $('create-invite-btn').classList.remove('hidden');
@@ -2092,7 +2093,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function removeMember(memberId) {
-    if (!confirm('이 사람을 돌봄에서 내보낼까요? 이후로는 일지를 볼 수 없게 돼요.')) return;
+    if (!confirm('이 사람을 케어링에서 내보낼까요? 이후로는 일지를 볼 수 없게 돼요.')) return;
     const { error } = await supabase.from('care_members').delete().eq('id', memberId);
     if (error) { showAlert('내보내지 못했어요: ' + error.message); return; }
     loadFamilyTab();
@@ -2111,7 +2112,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // 헤더 "＋ 가족 초대": 가족 탭을 활성화한 뒤 초대 모달을 연다
   $('invite-family-top-btn')?.addEventListener('click', async () => {
     if (!state.currentSubjectId) {
-      showAlert('먼저 돌봄 대상을 추가해 주세요.');
+      showAlert('먼저 케어링 대상을 추가해 주세요.');
       return;
     }
     const familyTabBtn = document.querySelector('.tab[data-tab="family"]');
@@ -2184,7 +2185,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const PUBLIC_ORIGIN = window.location.hostname === 'localhost'
       ? 'https://suechoi033-private.github.io/life-heritage-v2'
       : baseUrl.href.replace(/\/signup\.html$/, '');
-    const shareText = `[잇다] ${subject?.name || ''} 돌봄에 함께해주세요.\n\n아래 링크에서 가입(또는 로그인)하시면 자동으로 합류돼요.\n${PUBLIC_ORIGIN}/signup.html?invite=${code}\n\n(혹시 자동 처리가 안 되면 직접 입력하세요. 초대 코드: ${code}, 30일간 유효)`;
+    const shareText = `[잇다] ${subject?.name || ''} 케어링에 함께해주세요.\n\n아래 링크에서 가입(또는 로그인)하시면 자동으로 합류돼요.\n${PUBLIC_ORIGIN}/signup.html?invite=${code}\n\n(혹시 자동 처리가 안 되면 직접 입력하세요. 초대 코드: ${code}, 30일간 유효)`;
     const hintEl = $('share-fallback-hint');
     hintEl.classList.add('hidden');
 
@@ -2265,7 +2266,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const subjectId = state.currentSubjectId;
     if (!subjectId) return;
     const subject = state.subjects.find(s => s.id === subjectId);
-    if (!confirm(`${subject.name} 돌봄에서 나갈까요? 다시 합류하려면 초대 코드를 받아야 해요.`)) return;
+    if (!confirm(`${subject.name} 케어링에서 나갈까요? 다시 합류하려면 초대 코드를 받아야 해요.`)) return;
     const { error } = await supabase.from('care_members').delete()
       .eq('subject_id', subjectId).eq('user_id', user.id);
     if (error) { showAlert('나가지 못했어요: ' + error.message); return; }
@@ -2278,7 +2279,7 @@ document.addEventListener('DOMContentLoaded', () => {
     state.editingSubjectId = subjectId || null;
     const modal = $('subject-modal');
     modal.classList.remove('hidden');
-    $('subject-modal-title').textContent = subjectId ? '대상 정보 수정' : '돌봄 대상 등록';
+    $('subject-modal-title').textContent = subjectId ? '대상 정보 수정' : '케어링 대상 등록';
     $('subject-form').reset();
 
     if (subjectId) {
@@ -2311,7 +2312,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const s = state.subjects.find(x => x.id === state.currentSubjectId);
     if (!s) return;
     const current = getMyLabel(s.id) || '';
-    const newLabel = prompt(`돌봄대상자 닉네임 변경`, current);
+    const newLabel = prompt(`케어링대상자 닉네임 변경`, current);
     if (newLabel === null) return; // 취소
     setMyLabel(s.id, newLabel.trim());
     renderSubjectCards();
@@ -2368,7 +2369,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   $('delete-subject-btn').addEventListener('click', async () => {
-    if (!confirm('이 돌봄 대상과 모든 기록을 삭제하시겠어요?\n되돌릴 수 없습니다.')) return;
+    if (!confirm('이 케어링 대상과 모든 기록을 삭제하시겠어요?\n되돌릴 수 없습니다.')) return;
     const { error } = await supabase
       .from('care_subjects')
       .delete()

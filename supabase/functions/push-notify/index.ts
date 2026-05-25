@@ -109,7 +109,7 @@ async function derivePushFromWebhook(wh: any) {
     return {
       user_ids,
       payload: {
-        title: isSOS ? `🚨 ${subject?.name || '돌봄'} 응급 상황` : `${subject?.name || '돌봄'} 새 기록`,
+        title: isSOS ? `🚨 ${subject?.name || '케어링'} 응급 상황` : `${subject?.name || '케어링'} 새 기록`,
         body: (r.body || '').slice(0, 100),
         url: `./care-dashboard.html?subject=${r.subject_id}`,
         tag: `care-${r.subject_id}`,

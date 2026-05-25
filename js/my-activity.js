@@ -112,7 +112,7 @@ export async function listMyReactions({ limit = 20, offset = 0 } = {}) {
   return data || [];
 }
 
-// 내가 소유/참여한 돌봄 그룹의 subject_id 목록
+// 내가 소유/참여한 케어링 그룹의 subject_id 목록
 // (care.js listMyCareSubjects 와 동일한 owner + member 경로)
 async function getMyCareSubjectIds(userId) {
   const [{ data: owned }, { data: memberOf }] = await Promise.all([
@@ -125,7 +125,7 @@ async function getMyCareSubjectIds(userId) {
   return Array.from(ids);
 }
 
-// 가족 목록 — 내가 함께 돌보는 돌봄 그룹의 동료(care_members)
+// 가족 목록 — 내가 함께 돌보는 케어링 그룹의 동료(care_members)
 // 본인 제외, user_id 기준 de-dupe. 본인이 owner인 그룹의 다른 보호자도 포함.
 // 반환: [{ id(user_id), name, avatar_url, role }]
 export async function listMyFamily() {
