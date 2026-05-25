@@ -168,6 +168,55 @@
       border-radius: var(--radius-sm);
     }
     @keyframes shimmer { to { background-position: -200% 0; } }
+
+    /* ── 홈 콘텐츠 피드 ───────────────────── */
+    .feed-section { margin-top: 30px; }
+    .feed-head {
+      display: flex; align-items: baseline; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .feed-head-title { font-size: 17px; font-weight: 800; color: var(--ink); }
+    .feed-head-more { font-size: 13px; font-weight: 700; color: var(--primary); text-decoration: none; }
+    .feed-card {
+      display: block;
+      background: var(--bg-alt);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm, 14px);
+      padding: 16px 18px;
+      margin-bottom: 12px;
+      text-decoration: none;
+      color: inherit;
+    }
+    .feed-card:hover { border-color: var(--primary-soft); }
+    .feed-card.feed-card-hero {
+      background: linear-gradient(135deg, var(--primary-soft), var(--bg-alt));
+      border-color: var(--primary-soft);
+    }
+    .feed-card-label {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 11.5px; font-weight: 700;
+      padding: 3px 9px; border-radius: 999px; margin-bottom: 9px;
+    }
+    .feed-label-editor { background: var(--primary-soft); color: var(--primary); }
+    .feed-label-user   { background: #EFEAF6; color: #7A5BA8; }
+    .feed-card-title {
+      font-size: 16.5px; font-weight: 800; color: var(--ink);
+      line-height: 1.4; margin-bottom: 6px;
+    }
+    .feed-card-hero .feed-card-title { font-size: 19px; }
+    .feed-card-summary {
+      font-size: 14px; color: var(--ink-soft); line-height: 1.6;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .feed-card-meta {
+      margin-top: 10px; font-size: 12.5px; color: var(--ink-muted);
+      display: flex; gap: 10px; flex-wrap: wrap;
+    }
+    .feed-empty {
+      background: var(--bg-alt); border: 1px solid var(--line);
+      border-radius: var(--radius-sm, 14px); padding: 28px 20px;
+      text-align: center; color: var(--ink-soft); font-size: 14px; line-height: 1.7;
+    }
   </style>
 </head>
 <body>
@@ -181,6 +230,17 @@
     <div class="skeleton" style="height:120px;"></div>
     <div class="skeleton" style="height:80px;margin-top:14px;"></div>
   </div>
+
+  <section class="feed-section" id="home-feed" hidden>
+    <div class="feed-head">
+      <span class="feed-head-title">요즘 이야기</span>
+      <a href="./forest.html" class="feed-head-more">더보기 →</a>
+    </div>
+    <div id="home-feed-body">
+      <div class="skeleton" style="height:96px;"></div>
+      <div class="skeleton" style="height:96px;margin-top:12px;"></div>
+    </div>
+  </section>
 </main>
 
 <script type="module">
@@ -311,6 +371,55 @@ if (user) {
         <div class="card-forest-desc">가입 없이 콘텐츠와 대화 탐색</div>
       </div>
       <span class="card-arrow">›</span>
+    </a>
+  `;
+}
+
+// ── 콘텐츠 피드 (잇다에디터 + 유저, '추모' 제외) ──
+const CATEGORY_LABELS = {
+  reflection: '오늘의 성찰', family: '가족 케어링', health: '건강',
+  finance: '재정', death_prep: '죽음 준비', memorial: '추모',
+};
+renderHomeFeed();
+
+async function renderHomeFeed() {
+  const section = document.getElementById('home-feed');
+  const body = document.getElementById('home-feed-body');
+  section.hidden = false;
+  try {
+    const { data, error } = await supabase.from('contents')
+      .select('id, category, title, body, author_type, view_count, like_count, created_at, profiles:creator_id(name)')
+      .eq('is_published', true)
+      .neq('category', 'memorial')
+      .order('created_at', { ascending: false })
+      .limit(8);
+    if (error) throw error;
+    const items = data || [];
+    if (!items.length) {
+      body.innerHTML = `<div class="feed-empty">아직 조용하네요.<br>당신의 오늘 한 줄이 누군가의 내일이 됩니다.</div>`;
+      return;
+    }
+    body.innerHTML = items.map((c, i) => feedCard(c, i === 0)).join('');
+  } catch (err) {
+    console.warn('[home] 피드 로드 실패:', err);
+    section.hidden = true;
+  }
+}
+
+function feedCard(c, hero) {
+  const isEditor = c.author_type !== 'user';
+  const label = isEditor
+    ? `<span class="feed-card-label feed-label-editor">✓ 잇다 에디터</span>`
+    : `<span class="feed-card-label feed-label-user">먼저 겪은 분의 기록</span>`;
+  const summary = (c.body || '').replace(/[#*>`_\-\[\]()]/g, '').replace(/\s+/g, ' ').trim();
+  const author = !isEditor && c.profiles?.name ? escapeHtml(c.profiles.name) : '';
+  const meta = [CATEGORY_LABELS[c.category] || '', author].filter(Boolean).join(' · ');
+  return `
+    <a href="./content-detail.html?id=${c.id}" class="feed-card${hero ? ' feed-card-hero' : ''}">
+      ${label}
+      <div class="feed-card-title">${escapeHtml(c.title || '제목 없음')}</div>
+      ${summary ? `<div class="feed-card-summary">${escapeHtml(summary)}</div>` : ''}
+      <div class="feed-card-meta">${meta ? `<span>${meta}</span>` : ''}</div>
     </a>
   `;
 }

@@ -298,7 +298,9 @@
     }
     body.innerHTML = topHtml + items.map(c => `
       <a class="content-card" href="./content-detail.html?id=${c.id}">
-        ${c.author_type === 'official' ? `<span class="content-card-badge badge-official">공식</span>` : ''}
+        ${c.author_type === 'official'
+          ? `<span class="content-card-badge badge-official">✓ 잇다 에디터</span>`
+          : `<span class="content-card-badge badge-user">먼저 겪은 분의 기록</span>`}
         <span style="font-size:11px;color:var(--ink-muted);font-weight:700;">${labelFor(c.category)}</span>
         <div class="content-card-title">${escapeHtml(c.title)}</div>
         <div class="content-card-meta">
