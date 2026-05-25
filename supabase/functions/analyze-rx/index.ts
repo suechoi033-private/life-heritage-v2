@@ -81,7 +81,7 @@ Deno.serve(async (req) => {
     // 2) 처방전 조회 + 접근권한
     const { data: rx, error: rxErr } = await admin
       .from('care_prescriptions')
-      .select('id, subject_id, uploader_id, storage_path, status')
+      .select('id, subject_id, uploader_id, storage_path, status, ocr_text, rx_date')
       .eq('id', prescriptionId)
       .maybeSingle();
     if (rxErr || !rx) return json({ error: 'prescription not found' }, 404);
@@ -105,21 +105,40 @@ Deno.serve(async (req) => {
       .update({ status: 'processing', error_msg: null })
       .eq('id', prescriptionId);
 
-    // 3) signed URL로 이미지 로드
-    const { data: signed, error: signErr } = await admin.storage
-      .from('care-rx')
-      .createSignedUrl(rx.storage_path, 120);
-    if (signErr || !signed?.signedUrl) throw new Error('이미지 URL 생성 실패');
+    // 3) 재분석 최적화: 이미 추출된 약물이 있으면 OCR(Claude Vision)을 건너뛰고
+    //    기존 약물명으로 식약처만 다시 조회한다(빠르고 비용 0, 시간초과 방지).
+    //    OCR을 새로 하려면 처방전을 삭제하고 다시 업로드하면 된다.
+    const { data: prevDrugs } = await admin
+      .from('care_prescription_drugs')
+      .select('raw_name')
+      .eq('prescription_id', prescriptionId)
+      .order('sort_order', { ascending: true });
 
-    const imgRes = await fetch(signed.signedUrl);
-    if (!imgRes.ok) throw new Error('이미지 다운로드 실패');
-    const contentType = imgRes.headers.get('content-type') || 'image/jpeg';
-    const buf = new Uint8Array(await imgRes.arrayBuffer());
-    const b64 = base64Encode(buf);
+    let drugs: any[];
+    let ocrText: string | null = rx.ocr_text || null;
+    let rxDate: string | null = rx.rx_date || null;
 
-    // 4) Claude Vision: OCR + 구조화 추출
-    const extracted = await extractWithClaude(b64, contentType);
-    const drugs = (extracted.drugs || []).slice(0, 20);
+    if (prevDrugs && prevDrugs.length) {
+      drugs = prevDrugs.map((d: any) => ({ name: d.raw_name })).filter((d: any) => d.name);
+      console.log(`[reanalyze] OCR 생략 — 기존 약물 ${drugs.length}건으로 식약처 재조회`);
+    } else {
+      // 신규 분석: signed URL로 이미지 로드 → Claude Vision OCR
+      const { data: signed, error: signErr } = await admin.storage
+        .from('care-rx')
+        .createSignedUrl(rx.storage_path, 120);
+      if (signErr || !signed?.signedUrl) throw new Error('이미지 URL 생성 실패');
+
+      const imgRes = await fetch(signed.signedUrl);
+      if (!imgRes.ok) throw new Error('이미지 다운로드 실패');
+      const contentType = imgRes.headers.get('content-type') || 'image/jpeg';
+      const buf = new Uint8Array(await imgRes.arrayBuffer());
+      const b64 = base64Encode(buf);
+
+      const extracted = await extractWithClaude(b64, contentType);
+      drugs = (extracted.drugs || []).slice(0, 20);
+      ocrText = extracted.ocr_text || null;
+      rxDate = extracted.rx_date || null;
+    }
 
     // 5) 약물별 식약처 조회
     const drugRows: any[] = [];
@@ -154,8 +173,8 @@ Deno.serve(async (req) => {
 
     await admin.from('care_prescriptions').update({
       status: 'done',
-      ocr_text: extracted.ocr_text || null,
-      rx_date: extracted.rx_date || null,
+      ocr_text: ocrText,
+      rx_date: rxDate,
     }).eq('id', prescriptionId);
 
     return json({ ok: true, drugs: drugRows.length });
