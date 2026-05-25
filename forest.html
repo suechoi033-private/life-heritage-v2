@@ -144,6 +144,23 @@
 </main>
 
 <button class="fab-forest" id="fab-forest" aria-label="새 글">＋</button>
+
+<!-- 형식 선택 시트 (콘텐츠 작성 진입점) -->
+<div class="fmt-scrim" id="fmt-scrim" hidden>
+  <div class="fmt-sheet" id="fmt-sheet" role="dialog" aria-label="글 형식 선택">
+    <div class="fmt-grip"></div>
+    <div class="fmt-sheet-title">어떤 글을 남겨볼까요?</div>
+    <div class="fmt-sheet-sub">형식을 먼저 골라주세요. 나중에 바꿀 수 있어요.</div>
+    <button type="button" class="fmt-opt" data-fmt="article">
+      <span class="fmt-opt-ic">📄</span>
+      <span><span class="fmt-opt-t">일반 글</span><span class="fmt-opt-d">정보·가이드·생각을 자유롭게 나눠요</span></span>
+    </button>
+    <button type="button" class="fmt-opt story" data-fmt="story">
+      <span class="fmt-opt-ic">📖</span>
+      <span><span class="fmt-opt-t">이야기</span><span class="fmt-opt-d">한 단계를 지나온 나의 여정. 표지·체크리스트·도구를 더해 다음 사람에게 길이 됩니다.</span></span>
+    </button>
+  </div>
+</div>
 <style>
   .fab-forest {
     position: fixed; right: 20px;
@@ -159,6 +176,35 @@
   }
   .fab-forest:hover { background: var(--primary-hover); }
   .fab-forest:active { transform: scale(0.95); }
+
+  /* 형식 선택 시트 */
+  .fmt-scrim {
+    position: fixed; inset: 0; z-index: 120;
+    background: rgba(0,0,0,0.4);
+    display: flex; align-items: flex-end; justify-content: center;
+  }
+  .fmt-scrim[hidden] { display: none; }
+  .fmt-sheet {
+    width: 100%; max-width: 480px;
+    background: #fff;
+    border-radius: 22px 22px 0 0;
+    padding: 14px 20px calc(26px + env(safe-area-inset-bottom, 0px));
+    animation: fmt-up 0.22s ease;
+  }
+  @keyframes fmt-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .fmt-grip { width: 40px; height: 4px; background: var(--line); border-radius: 99px; margin: 0 auto 18px; }
+  .fmt-sheet-title { font-size: 17px; font-weight: 800; color: var(--ink); margin-bottom: 4px; }
+  .fmt-sheet-sub { font-size: 13px; color: var(--ink-muted); margin-bottom: 18px; }
+  .fmt-opt {
+    display: flex; gap: 14px; align-items: flex-start; width: 100%; text-align: left;
+    padding: 16px; border: 1.5px solid var(--line); border-radius: 16px;
+    margin-bottom: 12px; background: #fff; cursor: pointer; font-family: inherit;
+  }
+  .fmt-opt.story { border-color: var(--primary); background: var(--primary-soft); }
+  .fmt-opt:active { transform: scale(0.99); }
+  .fmt-opt-ic { font-size: 28px; line-height: 1; flex-shrink: 0; }
+  .fmt-opt-t { display: block; font-size: 15.5px; font-weight: 800; color: var(--ink); }
+  .fmt-opt-d { display: block; font-size: 12.5px; color: var(--ink-soft); margin-top: 4px; line-height: 1.5; }
 </style>
 
 <script type="module">
@@ -211,8 +257,22 @@
     if (activeSeg === 'community') {
       window.location.href = './post-write.html';
     } else {
-      window.location.href = `./content-write.html${activeCat !== 'all' ? `?category=${activeCat}` : ''}`;
+      openFmtSheet();
     }
+  });
+
+  // 형식 선택 시트
+  const fmtScrim = document.getElementById('fmt-scrim');
+  function openFmtSheet() { fmtScrim.hidden = false; }
+  function closeFmtSheet() { fmtScrim.hidden = true; }
+  fmtScrim.addEventListener('click', (e) => { if (e.target === fmtScrim) closeFmtSheet(); });
+  fmtScrim.querySelectorAll('.fmt-opt').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const params = [];
+      if (btn.dataset.fmt === 'story') params.push('format=story');
+      if (activeCat !== 'all') params.push(`category=${activeCat}`);
+      window.location.href = `./content-write.html${params.length ? '?' + params.join('&') : ''}`;
+    });
   });
 
   async function loadFeed() {
