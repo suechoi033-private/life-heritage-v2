@@ -280,14 +280,17 @@ async function lookupMfds(rawName: string) {
 // 텍스트가 사라진다. → title 속성값과 본문 텍스트를 모두 합쳐 추출한다.
 function stripXml(s: string): string {
   if (!s) return '';
-  // ARTICLE/PARAGRAPH의 title 속성(효능효과가 주로 여기 있음)을 먼저 본문화한 뒤 태그 제거
-  const withTitles = s.replace(/<[^>]*?\btitle="([^"]*)"[^>]*>/gi, ' $1 ');
-  return withTitles
+  // ARTICLE/PARAGRAPH 등의 title 속성은 본문화하되, 최상위 <DOC title="효능효과">
+  // 같은 섹션 라벨은 제외한다(라벨만 남아 "효능 효능효과"처럼 보이는 것 방지).
+  const withTitles = s.replace(/<(?!DOC\b)[^>]*?\btitle="([^"]*)"[^>]*>/gi, ' $1 ');
+  const text = withTitles
     .replace(/<[^>]+>/g, ' ')
     .replace(/&[a-z]+;/gi, ' ')
     .replace(/\s+/g, ' ')
-    .trim()
-    .slice(0, 800);
+    .trim();
+  // 내용이 섹션 라벨 수준(효능효과/용법용량/사용상의 주의사항 등)뿐이면 빈 값 취급
+  if (/^(효능효과|용법용량|사용상의\s*주의사항|주의사항|효능·효과|용법·용량)$/.test(text)) return '';
+  return text.slice(0, 800);
 }
 function mapPermitItem(it: any, fallbackName: string) {
   const eeRaw = it.EE_DOC_DATA || it.eeDocData || '';
