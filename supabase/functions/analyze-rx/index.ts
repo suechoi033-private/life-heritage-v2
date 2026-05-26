@@ -280,23 +280,22 @@ async function lookupMfds(rawName: string) {
 // 텍스트가 사라진다. → title 속성값과 본문 텍스트를 모두 합쳐 추출한다.
 function stripXml(s: string): string {
   if (!s) return '';
-  // ARTICLE/PARAGRAPH 등의 title 속성은 본문화하되, 최상위 <DOC title="효능효과">
-  // 같은 섹션 라벨은 제외한다(라벨만 남아 "효능 효능효과"처럼 보이는 것 방지).
-  const withTitles = s.replace(/<(?!DOC\b)[^>]*?\btitle="([^"]*)"[^>]*>/gi, ' $1 ');
-  const text = withTitles
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&[a-z]+;/gi, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-  // 내용이 섹션 라벨 수준(효능효과/용법용량/사용상의 주의사항 등)뿐이면 빈 값 취급
-  if (/^(효능효과|용법용량|사용상의\s*주의사항|주의사항|효능·효과|용법·용량)$/.test(text)) return '';
-  return text.slice(0, 800);
+  let t = s;
+  // 1) CDATA 내용 보존 (효능효과가 종종 CDATA 안에 들어있어 태그제거 시 사라짐)
+  t = t.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, ' $1 ');
+  // 2) 비-DOC 태그의 title 속성 본문화 (효능이 ARTICLE title에 있는 경우)
+  t = t.replace(/<(?!DOC\b)[^>]*?\btitle="([^"]*)"[^>]*>/gi, ' $1 ');
+  // 3) 나머지 태그 제거
+  t = t.replace(/<[^>]+>/g, ' ').replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim();
+  // 섹션 라벨만 남았으면 빈 값 취급
+  if (/^(효능효과|용법용량|사용상의\s*주의사항|주의사항|효능·효과|용법·용량)$/.test(t)) return '';
+  return t.slice(0, 800);
 }
 function mapPermitItem(it: any, fallbackName: string) {
   const eeRaw = it.EE_DOC_DATA || it.eeDocData || '';
   const udRaw = it.UD_DOC_DATA || it.udDocData || '';
   const nbRaw = it.NB_DOC_DATA || it.nbDocData || '';
-  console.log(`[permit-doc] EE=${String(eeRaw).length} UD=${String(udRaw).length} NB=${String(nbRaw).length}`);
+  console.log(`[permit-doc] EE=${String(eeRaw).length} UD=${String(udRaw).length} NB=${String(nbRaw).length} EEraw=${String(eeRaw).slice(0, 200)}`);
   const ee = stripXml(String(eeRaw));
   const ud = stripXml(String(udRaw));
   const nb = stripXml(String(nbRaw));
