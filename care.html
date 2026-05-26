@@ -1503,6 +1503,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ── Load subjects on start ────────────
+  // nest.html / care-dashboard.html 등에서 ?subject=<id> 로 특정 대상자를 지목해 들어오면
+  // 그 대상자를 선택하고 곧바로 케어링 화면(detail)으로 진입한다.
+  const _subjectParam = _urlParams.get('subject');
+  if (_subjectParam) {
+    state.currentSubjectId = _subjectParam;
+    state.view = 'detail';
+  }
   await loadSubjects();
 
   // nest.html 등에서 ?action=add 로 진입하면 대상 추가 모달 자동 오픈
@@ -1580,6 +1587,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!stillValid) {
         const active = state.subjects.find(s => s.status === 'active') || state.subjects[0];
         state.currentSubjectId = active.id;
+        // 지목된 대상자가 유효하지 않으면 detail 강제 진입을 취소하고 기본(목록)으로
+        if (state.view === 'detail') state.view = null;
       }
       $('main-app').classList.remove('hidden');
       renderSubjectCards();
