@@ -228,7 +228,33 @@
       border-bottom: 1px solid var(--line);
       margin-bottom: 24px;
       overflow-x: auto;
-      scroll-margin-top: 12px;
+    }
+    /* ── Detail view header (대상자 케어링 화면) ── */
+    .detail-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .detail-back-btn {
+      background: none;
+      border: 1.5px solid var(--line);
+      border-radius: 999px;
+      padding: 7px 14px;
+      font-family: inherit;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--ink-soft);
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: border-color 0.12s ease, color 0.12s ease;
+    }
+    .detail-back-btn:hover { border-color: var(--ink-muted); color: var(--ink); }
+    .detail-subject-name {
+      font-weight: 700;
+      font-size: 17px;
+      color: var(--ink);
+      line-height: 1.3;
     }
     .tab {
       padding: 10px 14px;
@@ -941,6 +967,12 @@
       <div class="subject-cards" id="subject-cards"></div>
     </section>
 
+    <!-- Detail header (대상자를 선택해 케어링 화면으로 들어왔을 때만 표시) -->
+    <div id="detail-header" class="detail-header hidden">
+      <button type="button" id="back-to-list-btn" class="detail-back-btn">← 케어링 대상</button>
+      <span id="detail-subject-name" class="detail-subject-name"></span>
+    </div>
+
     <!-- Tabs -->
     <div class="tabs">
       <button type="button" class="tab active" data-tab="logs">일지</button>
@@ -1431,6 +1463,7 @@ document.addEventListener('DOMContentLoaded', () => {
     reactions: {},      // { [logId]: { count, myReacted } }
     editingLogId: null,
     editingSubjectId: null,
+    view: null,          // 'list' | 'detail' — 대상자 목록 vs 개별 케어링 화면
     pendingPhotoFiles: [],
     existingPhotoUrls: [],
     removedPhotoUrls: [],
@@ -1534,6 +1567,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (state.subjects.length === 0) {
+      state.view = null;
+      $('main-app').classList.add('hidden');
       $('no-subject-state').classList.remove('hidden');
     } else {
       // 케어링 대상이 있을 때만 의향 유도 배너 표시
@@ -1550,6 +1585,11 @@ document.addEventListener('DOMContentLoaded', () => {
       renderSubjectCards();
       renderSettings();
       await loadLogs();
+      // 처음 들어왔을 때: 대상이 1명이면 바로 그 사람 케어링으로, 여러 명이면 목록부터
+      if (state.view === null) {
+        state.view = state.subjects.length === 1 ? 'detail' : 'list';
+      }
+      applyView();
     }
   }
 
@@ -1598,13 +1638,12 @@ document.addEventListener('DOMContentLoaded', () => {
     container.querySelectorAll('[data-subject-id]').forEach(btn => {
       btn.addEventListener('click', async () => {
         const id = btn.dataset.subjectId;
-        if (id === state.currentSubjectId) return;
         state.currentSubjectId = id;
         renderSubjectCards();
         renderSettings();
         await loadLogs();
-        // 대상자를 바꾸면 곧바로 그 대상자의 기록이 보이도록 콘텐츠 영역으로 이동
-        document.querySelector('.tabs')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // 목록에서 한 명을 고르면 그 대상자의 케어링 화면으로 진입
+        enterDetail();
       });
     });
     $('add-subject-top-btn')?.addEventListener('click', () => openSubjectModal());
@@ -1783,17 +1822,52 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ── Tab switching ─────────────────────
+  function activateTab(name) {
+    document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+    document.querySelectorAll('.tab-panel').forEach(p => {
+      p.classList.toggle('hidden', p.dataset.panel !== name);
+    });
+    if (name === 'family') loadFamilyTab();
+    if (name === 'rx') loadRxTab();
+  }
+
   document.querySelectorAll('.tab').forEach(btn => {
     btn.addEventListener('click', () => {
       if (btn.disabled) return;
-      document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b === btn));
-      const target = btn.dataset.tab;
-      document.querySelectorAll('.tab-panel').forEach(p => {
-        p.classList.toggle('hidden', p.dataset.panel !== target);
-      });
-      if (target === 'family') loadFamilyTab();
-      if (target === 'rx') loadRxTab();
+      activateTab(btn.dataset.tab);
     });
+  });
+
+  // ── 목록 ↔ 개별 케어링 화면 전환 ───────
+  function applyView() {
+    const detail = state.view === 'detail';
+    document.querySelector('.subjects-section').classList.toggle('hidden', detail);
+    $('detail-header').classList.toggle('hidden', !detail);
+    document.querySelector('.tabs').classList.toggle('hidden', !detail);
+    if (detail) {
+      const s = state.subjects.find(x => x.id === state.currentSubjectId);
+      $('detail-subject-name').textContent = s ? getDisplayName(s) : '';
+      const active = document.querySelector('.tab.active')?.dataset.tab || 'logs';
+      document.querySelectorAll('.tab-panel').forEach(p => {
+        p.classList.toggle('hidden', p.dataset.panel !== active);
+      });
+    } else {
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+    }
+  }
+
+  function enterDetail() {
+    state.view = 'detail';
+    activateTab('logs');
+    applyView();
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }
+
+  $('back-to-list-btn').addEventListener('click', () => {
+    state.view = 'list';
+    renderSubjectCards();
+    applyView();
+    window.scrollTo({ top: 0, behavior: 'auto' });
   });
 
   // ── 복약·처방전 탭 ─────────────────────
@@ -2388,6 +2462,8 @@ document.addEventListener('DOMContentLoaded', () => {
       $('main-app').classList.remove('hidden');
       await loadSubjects();
       await loadLogs();
+      // 새 대상자를 추가하면 곧바로 그 사람 케어링 화면으로 진입
+      if (!state.editingSubjectId) enterDetail();
     } catch (e) {
       console.error(e);
       showAlert('저장 실패: ' + (e.message || e));
@@ -2405,6 +2481,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .eq('id', state.currentSubjectId);
     if (error) { showAlert('삭제 실패: ' + error.message); return; }
     state.currentSubjectId = null;
+    state.view = null;
     await loadSubjects();
   });
 
