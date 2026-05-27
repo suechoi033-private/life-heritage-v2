@@ -696,6 +696,18 @@
       padding: 6px 12px; font-size: 12.5px; font-weight: 700; color: var(--ink-soft); cursor: pointer;
     }
     .cond-summary-chip.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    /* 관리 중인 병명·약 */
+    .mgmt-head { font-size: 15px; font-weight: 800; margin: 4px 0 10px; }
+    .mgmt-item {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; background: var(--surface,#fff);
+    }
+    .mgmt-label { font-weight: 800; font-size: 14.5px; }
+    .mgmt-period { font-size: 12px; color: var(--ink-muted); margin-top: 2px; }
+    .mgmt-end { background: none; border: none; color: var(--ink-muted); font-size: 12px; text-decoration: underline; cursor: pointer; }
+    .mgmt-add { background: var(--bg-alt); border: 1px dashed var(--line); border-radius: 12px; padding: 11px 14px; font-size: 13px; font-weight: 700; color: var(--ink-soft); cursor: pointer; font-family: inherit; width: 100%; }
+    .mgmt-period-opt { display:inline-block; background:#fff; border:1px solid var(--primary-soft); color:var(--primary); border-radius:999px; padding:5px 11px; font-size:12.5px; font-weight:700; cursor:pointer; margin:0 5px 5px 0; }
+    .mgmt-period-opt:hover { background: var(--primary-soft); }
 
     /* ── Photos ─────────────────────────── */
     .log-photos {
@@ -1016,6 +1028,8 @@
           <span>앨범에서 선택</span>
         </label>
       </div>
+
+      <div id="rx-conditions"></div>
 
       <div id="rx-progress" class="rx-progress hidden"></div>
       <div id="rx-list"></div>
@@ -1438,6 +1452,7 @@ document.addEventListener('DOMContentLoaded', () => {
     hasHealthConsent, recordHealthConsent, listPrescriptions,
     uploadAndAnalyze, deletePrescription, reanalyzePrescription,
     deriveCategories, listCareGuides, deriveConditionTags,
+    listActiveConditions, addCondition, endCondition, periodToEndDate, isChronicCategory,
   } from './js/prescription.js';
   await renderNav({ active: 'care', infoIcon: true, title: '케어링' });
 
@@ -1874,7 +1889,96 @@ document.addEventListener('DOMContentLoaded', () => {
     const subject = state.subjects.find(s => s.id === subjectId);
     if (!subject) return;
     $('rx-title').textContent = `${getDisplayName(subject)} 복약·처방전`;
+    await renderConditions();
     await renderRxList();
+  }
+
+  // ── 관리 중인 병명·약 (기간 보유) ───────────
+  async function renderConditions() {
+    const box = $('rx-conditions');
+    if (!box) return;
+    let conds = [];
+    try { conds = await listActiveConditions(state.currentSubjectId); } catch (_) { box.innerHTML = ''; return; }
+    const periodText = (c) => {
+      if (!c.end_date) return '계속(만성)';
+      const left = Math.ceil((new Date(c.end_date) - new Date()) / 86400000);
+      return left >= 0 ? `~${c.end_date} (D-${left})` : `종료 ${c.end_date}`;
+    };
+    box.innerHTML = `
+      <div class="mgmt-head">🗓 관리 중인 병명·약</div>
+      ${conds.map((c) => `
+        <div class="mgmt-item">
+          <div>
+            <div class="mgmt-label">🏷 ${escapeHtml(c.label)}</div>
+            <div class="mgmt-period">${periodText(c)}</div>
+          </div>
+          <button type="button" class="mgmt-end" data-cond-end="${c.id}">종료</button>
+        </div>`).join('')}
+      <button type="button" class="mgmt-add" id="mgmt-add-btn">＋ 처방전에서 병명·약 관리 추가</button>
+      <div id="mgmt-add-area"></div>
+    `;
+    box.querySelectorAll('[data-cond-end]').forEach((b) => {
+      b.addEventListener('click', async () => {
+        if (!confirm('이 항목을 오늘부로 종료할까요?')) return;
+        try { await endCondition(b.dataset.condEnd); await renderConditions(); }
+        catch (e) { showAlert('종료 실패: ' + (e.message || e)); }
+      });
+    });
+    $('mgmt-add-btn')?.addEventListener('click', () => openMgmtAdd());
+  }
+
+  async function openMgmtAdd() {
+    const area = $('mgmt-add-area');
+    area.innerHTML = '<div class="mgmt-period">불러오는 중…</div>';
+    const rxs = await listPrescriptions(state.currentSubjectId).catch(() => []);
+    // 처방전별 태그 + 처방일수(약물 days) 추정
+    const items = rxs.map((r) => ({
+      rx: r,
+      tags: deriveConditionTags(r.drugs || []),
+      days: maxRxDays(r.drugs || []),
+    })).filter((x) => x.tags.length);
+    if (!items.length) { area.innerHTML = '<div class="mgmt-period">분석된 처방전 병명이 없어요.</div>'; return; }
+    area.innerHTML = items.map(({ rx, tags }) => `
+      <div class="cond-pick-rx">
+        <div class="cond-pick-date">${rx.rx_date ? '처방일 ' + escapeHtml(rx.rx_date) : new Date(rx.created_at).toLocaleDateString('ko-KR')}</div>
+        ${tags.map((t) => `<button type="button" class="cond-pick-tag" data-rx="${rx.id}" data-key="${escapeHtml(t.key)}">＋ ${escapeHtml(t.label)}</button>`).join('')}
+      </div>`).join('');
+    area.querySelectorAll('.cond-pick-tag').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const entry = items.find((x) => x.rx.id === btn.dataset.rx);
+        const tag = entry?.tags.find((t) => t.key === btn.dataset.key);
+        if (tag) showPeriodPicker(area, tag, entry.rx, entry.days);
+      });
+    });
+  }
+
+  function maxRxDays(drugs) {
+    let m = 0;
+    (drugs || []).forEach((d) => { const n = parseInt(d.days, 10); if (!isNaN(n) && n > m) m = n; });
+    return m || null;
+  }
+
+  function showPeriodPicker(area, tag, rx, days) {
+    const chronic = isChronicCategory(tag.category);
+    area.innerHTML = `
+      <div class="cond-pick-rx">
+        <div class="cond-pick-date"><b>${escapeHtml(tag.label)}</b> — 관리 기간을 고르세요</div>
+        <button type="button" class="mgmt-period-opt" data-p="ongoing">계속(만성)${chronic ? ' ⭐' : ''}</button>
+        ${days ? `<button type="button" class="mgmt-period-opt" data-p="rx_days">처방 ${days}일</button>` : ''}
+        <button type="button" class="mgmt-period-opt" data-p="3m">3개월</button>
+        <button type="button" class="mgmt-period-opt" data-p="6m">6개월</button>
+        <button type="button" class="mgmt-period-opt" data-p="1y">1년</button>
+      </div>`;
+    area.querySelectorAll('.mgmt-period-opt').forEach((b) => {
+      b.addEventListener('click', async () => {
+        const end = periodToEndDate(b.dataset.p, new Date().toISOString().slice(0, 10), days);
+        try {
+          await addCondition(state.currentSubjectId, { tag, end_date: end, source_prescription_id: rx.id });
+          area.innerHTML = '';
+          await renderConditions();
+        } catch (e) { showAlert('관리 추가 실패: ' + (e.message || e)); }
+      });
+    });
   }
 
   async function renderRxList() {
@@ -2571,20 +2675,34 @@ document.addEventListener('DOMContentLoaded', () => {
     picker.classList.remove('hidden');
     picker.innerHTML = '<div class="cond-pick-date">불러오는 중…</div>';
     try {
+      // 1) 지금 관리 중인 병명(우선) — 매번 안 불러와도 한 번에
+      const active = await listActiveConditions(state.currentSubjectId).catch(() => []);
+      // 2) 처방전에서 직접 가져오기
       const rxs = await listPrescriptions(state.currentSubjectId);
       const withTags = rxs
         .map((r) => ({ rx: r, tags: deriveConditionTags(r.drugs || []) }))
         .filter((x) => x.tags.length);
-      if (!withTags.length) {
+
+      if (!active.length && !withTags.length) {
         picker.innerHTML = '<div class="cond-pick-date">분석된 처방전의 추정 병명이 없어요. 복약·처방전 탭에서 먼저 분석해 주세요.</div>';
         return;
       }
-      picker.innerHTML = withTags.map(({ rx, tags }) => `
+      const activeHtml = active.length ? `
+        <div class="cond-pick-rx">
+          <div class="cond-pick-date">🗓 지금 관리 중</div>
+          ${active.map((c) => `<button type="button" class="cond-pick-tag" data-cond-key="${escapeHtml(c.cond_key)}" data-cond-label="${escapeHtml(c.label)}" data-cond-eff="${escapeHtml(c.efficacy || '')}">＋ ${escapeHtml(c.label)}</button>`).join('')}
+        </div>` : '';
+      const rxHtml = withTags.map(({ rx, tags }) => `
         <div class="cond-pick-rx">
           <div class="cond-pick-date">${rx.rx_date ? '처방일 ' + escapeHtml(rx.rx_date) : new Date(rx.created_at).toLocaleDateString('ko-KR')}</div>
           ${tags.map((t) => `<button type="button" class="cond-pick-tag" data-rx="${rx.id}" data-key="${escapeHtml(t.key)}">＋ ${escapeHtml(t.label)}</button>`).join('')}
         </div>`).join('');
-      picker.querySelectorAll('.cond-pick-tag').forEach((btn) => {
+      picker.innerHTML = activeHtml + rxHtml;
+
+      picker.querySelectorAll('.cond-pick-tag[data-cond-key]').forEach((btn) => {
+        btn.addEventListener('click', () => addConditionTag({ key: btn.dataset.condKey, label: btn.dataset.condLabel, efficacy: btn.dataset.condEff }));
+      });
+      picker.querySelectorAll('.cond-pick-tag[data-rx]').forEach((btn) => {
         btn.addEventListener('click', () => {
           const entry = withTags.find((x) => x.rx.id === btn.dataset.rx);
           const tag = entry?.tags.find((t) => t.key === btn.dataset.key);
