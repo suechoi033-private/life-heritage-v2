@@ -208,7 +208,11 @@
     .hbadge-story { background: #1c2620; color: #fff; }
     .hbadge-mine { background: var(--warm, #BE6440); color: #fff; }
     .hcard-body { padding: 12px 15px 13px; }
-    .hcard-cat { font-size: 11.5px; font-weight: 700; color: var(--primary); margin-bottom: 4px; }
+    .hcard-cat { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; flex-wrap: wrap; }
+    .hcard-src { font-size: 10.5px; font-weight: 800; padding: 2px 7px; border-radius: 999px; }
+    .src-editor { background: var(--primary-soft); color: var(--primary); }
+    .src-user { background: var(--warm-soft, #F4E7DE); color: var(--warm, #BE6440); }
+    .hcard-catname { font-size: 11.5px; font-weight: 700; color: var(--ink-muted); }
     .hcard-title { font-size: 15.5px; font-weight: 800; color: var(--ink); line-height: 1.4; margin-bottom: 5px; }
     .hcard-excerpt {
       font-size: 13px; color: var(--ink-soft); line-height: 1.55; margin-bottom: 10px;
@@ -449,7 +453,7 @@ async function renderHomeFeed() {
 }
 
 function feedCard(c, e) {
-  const isEditor = c.author_type !== 'user';
+  const isEditor = c.author_type === 'official';
   const isStory = c.format === 'story';
   const cover = c.cover_image_url
     ? `style="background-image:url('${encodeURI(c.cover_image_url)}')"`
@@ -474,14 +478,17 @@ function feedCard(c, e) {
         ${badges.length ? `<div class="hcard-badges">${badges.join('')}</div>` : ''}
       </div>
       <div class="hcard-body">
-        <div class="hcard-cat">${CATEGORY_LABELS[c.category] || ''}</div>
+        <div class="hcard-cat">
+          <span class="hcard-src ${isEditor ? 'src-editor' : 'src-user'}">${isEditor ? '✓ 잇다 에디터' : '이웃의 이야기'}</span>
+          ${CATEGORY_LABELS[c.category] ? `<span class="hcard-catname">${CATEGORY_LABELS[c.category]}</span>` : ''}
+        </div>
         <div class="hcard-title">${escapeHtml(c.title || '제목 없음')}</div>
         ${excerpt ? `<div class="hcard-excerpt">${escapeHtml(excerpt)}</div>` : ''}
         <div class="hcard-foot">
           <div class="hcard-author">${avatar}<span class="hcard-author-name">${escapeHtml(authorName)}</span></div>
           <div class="hcard-engage">
-            <button class="hcard-heart ${e.mineLiked ? 'on' : ''}" data-id="${c.id}" aria-label="좋아요">
-              <span class="ic">${e.mineLiked ? '❤' : '♡'}</span><span class="cnt">${e.likes}</span>
+            <button class="hcard-heart ${e.mineLiked ? 'on' : ''}" data-id="${c.id}" aria-label="공감">
+              <span class="ic">${e.mineLiked ? '❤' : '♡'}</span>
             </button>
             <button class="hcard-comment" data-id="${c.id}" aria-label="댓글"><span class="ic">💬</span><span class="cnt">${e.comments}</span></button>
           </div>
@@ -505,18 +512,15 @@ function wireHearts(root) {
     btn.addEventListener('click', async (ev) => {
       ev.stopPropagation();
       if (!currentUserId) { window.location.href = './login.html'; return; }
-      const cntEl = btn.querySelector('.cnt');
       const icEl = btn.querySelector('.ic');
       const wasOn = btn.classList.contains('on');
       btn.classList.toggle('on', !wasOn);
       icEl.textContent = !wasOn ? '❤' : '♡';
-      cntEl.textContent = Math.max(0, parseInt(cntEl.textContent, 10) + (wasOn ? -1 : 1));
       try {
         await toggleReaction({ target_type: 'content', target_id: btn.dataset.id });
       } catch (err) {
         btn.classList.toggle('on', wasOn);
         icEl.textContent = wasOn ? '❤' : '♡';
-        cntEl.textContent = Math.max(0, parseInt(cntEl.textContent, 10) + (wasOn ? 1 : -1));
       }
     });
   });

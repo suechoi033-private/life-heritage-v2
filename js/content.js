@@ -70,6 +70,7 @@ export async function getFeaturedStory() {
   const { data, error } = await supabase.from('contents')
     .select('id, category, title, excerpt, body, cover_image_url, author_type, created_at, profiles:creator_id(name)')
     .eq('is_published', true)
+    .neq('category', 'memorial')
     .eq('format', 'story')
     .order('created_at', { ascending: false })
     .limit(1)
