@@ -405,7 +405,7 @@
       <div class="content-byline">
         ${content.profiles?.avatar_url ? `<img class="content-byline-avatar" src="${content.profiles.avatar_url}" alt="">` : ''}
         ${content.profiles?.name ? `<span class="content-byline-name">${escapeHtml(content.profiles.name)}</span>` : ''}
-        <span>👁 ${content.view_count ?? 0}</span>
+        <span>조회 ${content.view_count ?? 0}</span>
         <span>${formatDate(content.created_at)}</span>
         <span class="content-readtime" id="content-readtime"></span>
       </div>
@@ -416,7 +416,7 @@
 
     ${relatedQuestion ? `
       <div class="related-q">
-        <div class="related-q-label">오늘의 성찰 질문</div>
+        <div class="related-q-label">오늘 잇고</div>
         <div class="related-q-text">"${escapeHtml(relatedQuestion.question_text)}"</div>
       </div>` : ''}
 

@@ -31,8 +31,15 @@ const DATA_GO_KR_KEY = Deno.env.get('DATA_GO_KR_KEY') || '';
 const MFDS_BASE =
   'https://apis.data.go.kr/1471000/DrbEasyDrugInfoService/getDrbEasyDrugList';
 // 전문약 포함 전 품목 — 의약품 제품 허가정보(효능/용법/주의 문서 제공)
-const PERMIT_BASE =
-  'https://apis.data.go.kr/1471000/DrugPrdtPrmsnInfoService07/getDrugPrdtPrmsnDtlInq05';
+// 서비스/오퍼레이션 버전이 갱신돼 와서, 동작하는 엔드포인트를 자동 탐색한다.
+const PERMIT_ENDPOINTS = [
+  'https://apis.data.go.kr/1471000/DrugPrdtPrmsnInfoService07/getDrugPrdtPrmsnDtlInq06',
+  'https://apis.data.go.kr/1471000/DrugPrdtPrmsnInfoService07/getDrugPrdtPrmsnDtlInq05',
+  'https://apis.data.go.kr/1471000/DrugPrdtPrmsnInfoService06/getDrugPrdtPrmsnDtlInq05',
+  'https://apis.data.go.kr/1471000/DrugPrdtPrmsnInfoService05/getDrugPrdtPrmsnDtlInq04',
+  'https://apis.data.go.kr/1471000/DrugPrdtPrmsnInfoService04/getDrugPrdtPrmsnDtlInq03',
+  'https://apis.data.go.kr/1471000/DrugPrdtPrmsnInfoService03/getDrugPrdtPrmsnDtlInq03',
+];
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders() });
@@ -74,7 +81,7 @@ Deno.serve(async (req) => {
     // 2) 처방전 조회 + 접근권한
     const { data: rx, error: rxErr } = await admin
       .from('care_prescriptions')
-      .select('id, subject_id, uploader_id, storage_path, status')
+      .select('id, subject_id, uploader_id, storage_path, status, ocr_text, rx_date')
       .eq('id', prescriptionId)
       .maybeSingle();
     if (rxErr || !rx) return json({ error: 'prescription not found' }, 404);
@@ -98,42 +105,68 @@ Deno.serve(async (req) => {
       .update({ status: 'processing', error_msg: null })
       .eq('id', prescriptionId);
 
-    // 3) signed URL로 이미지 로드
-    const { data: signed, error: signErr } = await admin.storage
-      .from('care-rx')
-      .createSignedUrl(rx.storage_path, 120);
-    if (signErr || !signed?.signedUrl) throw new Error('이미지 URL 생성 실패');
+    // 3) 재분석 최적화: 이미 추출된 약물이 있으면 OCR(Claude Vision)을 건너뛰고
+    //    기존 약물명으로 식약처만 다시 조회한다(빠르고 비용 0, 시간초과 방지).
+    //    OCR을 새로 하려면 처방전을 삭제하고 다시 업로드하면 된다.
+    const { data: prevDrugs } = await admin
+      .from('care_prescription_drugs')
+      .select('raw_name')
+      .eq('prescription_id', prescriptionId)
+      .order('sort_order', { ascending: true });
 
-    const imgRes = await fetch(signed.signedUrl);
-    if (!imgRes.ok) throw new Error('이미지 다운로드 실패');
-    const contentType = imgRes.headers.get('content-type') || 'image/jpeg';
-    const buf = new Uint8Array(await imgRes.arrayBuffer());
-    const b64 = base64Encode(buf);
+    let drugs: any[];
+    let ocrText: string | null = rx.ocr_text || null;
+    let rxDate: string | null = rx.rx_date || null;
 
-    // 4) Claude Vision: OCR + 구조화 추출
-    const extracted = await extractWithClaude(b64, contentType);
-    const drugs = (extracted.drugs || []).slice(0, 20);
+    if (prevDrugs && prevDrugs.length) {
+      drugs = prevDrugs.map((d: any) => ({ name: d.raw_name })).filter((d: any) => d.name);
+      console.log(`[reanalyze] OCR 생략 — 기존 약물 ${drugs.length}건으로 식약처 재조회`);
+    } else {
+      // 신규 분석: signed URL로 이미지 로드 → Claude Vision OCR
+      const { data: signed, error: signErr } = await admin.storage
+        .from('care-rx')
+        .createSignedUrl(rx.storage_path, 120);
+      if (signErr || !signed?.signedUrl) throw new Error('이미지 URL 생성 실패');
 
-    // 5) 약물별 식약처 조회
-    const drugRows: any[] = [];
-    for (let i = 0; i < drugs.length; i++) {
-      const d = drugs[i];
-      const rawName = (d.name || '').trim();
-      if (!rawName) continue;
-      const info = DATA_GO_KR_KEY ? await lookupMfds(rawName) : null;
-      drugRows.push({
-        prescription_id: prescriptionId,
-        raw_name: rawName,
-        matched_name: info?.itemName || null,
-        item_seq: info?.itemSeq || null,
-        efficacy: info?.efcyQesitm || null,
-        usage_text: info?.useMethodQesitm || null,
-        caution: info?.atpnQesitm || null,
-        interactions: info?.intrcQesitm || null,
-        confidence: info ? info._confidence : 0,
-        sort_order: i,
-      });
+      const imgRes = await fetchWithTimeout(signed.signedUrl, {}, 10000);
+      if (!imgRes.ok) throw new Error('이미지 다운로드 실패');
+      const contentType = imgRes.headers.get('content-type') || 'image/jpeg';
+      const buf = new Uint8Array(await imgRes.arrayBuffer());
+      const b64 = base64Encode(buf);
+
+      const extracted = await extractWithClaude(b64, contentType);
+      drugs = (extracted.drugs || []).slice(0, 20);
+      ocrText = extracted.ocr_text || null;
+      rxDate = extracted.rx_date || null;
     }
+
+    // 5) 약물별 식약처 조회 — 병렬 처리(총 시간을 약물 1건 수준으로 단축)
+    const drugRows = (await Promise.all(
+      drugs.slice(0, 20).map(async (d: any, i: number) => {
+        const rawName = (d.name || '').trim();
+        if (!rawName) return null;
+        let info: any = null;
+        if (DATA_GO_KR_KEY) {
+          try {
+            info = await lookupMfds(rawName);
+          } catch (e) {
+            console.log(`[drug] 조회 실패 name="${rawName}" ${String(e).slice(0, 150)}`);
+          }
+        }
+        return {
+          prescription_id: prescriptionId,
+          raw_name: rawName,
+          matched_name: info?.itemName || null,
+          item_seq: info?.itemSeq || null,
+          efficacy: info?.efcyQesitm || null,
+          usage_text: info?.useMethodQesitm || null,
+          caution: info?.atpnQesitm || null,
+          interactions: info?.intrcQesitm || null,
+          confidence: info ? info._confidence : 0,
+          sort_order: i,
+        };
+      }),
+    )).filter(Boolean);
 
     // 6) 저장
     await admin.from('care_prescription_drugs')
@@ -147,8 +180,8 @@ Deno.serve(async (req) => {
 
     await admin.from('care_prescriptions').update({
       status: 'done',
-      ocr_text: extracted.ocr_text || null,
-      rx_date: extracted.rx_date || null,
+      ocr_text: ocrText,
+      rx_date: rxDate,
     }).eq('id', prescriptionId);
 
     return json({ ok: true, drugs: drugRows.length });
@@ -168,16 +201,19 @@ async function extractWithClaude(b64: string, mediaType: string) {
   if (!SUPPORTED_IMG.includes(mediaType)) {
     throw new Error('지원하지 않는 이미지 형식입니다. JPEG·PNG로 다시 올려주세요.');
   }
+  if (b64.length > 5_000_000) {
+    throw new Error('사진 용량이 너무 큽니다. 더 작게(또는 다시) 촬영해 올려주세요.');
+  }
   const prompt = `이 이미지는 한국 병원/약국의 처방전 또는 약 봉투입니다.
 다음을 JSON으로만 출력하세요(설명·코드블록 금지):
 {
-  "ocr_text": "이미지에서 읽은 전체 텍스트",
   "rx_date": "YYYY-MM-DD 또는 null (처방일/조제일)",
   "drugs": [{ "name": "약품명(제품명, 용량 포함 가능)", "dose": "1회 투약량 또는 null", "frequency": "1일 투여횟수 또는 null", "days": "총 투약일수 또는 null" }]
 }
-약품명은 식별 가능한 제품명 위주로 정확히 적으세요. 읽을 수 없으면 drugs는 빈 배열.`;
+약품명은 식별 가능한 제품명 위주로 정확히 적으세요. 읽을 수 없으면 drugs는 빈 배열.
+전체 OCR 원문은 출력하지 마세요(drugs만 정확히).`;
 
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+  const res = await fetchWithTimeout('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -186,7 +222,7 @@ async function extractWithClaude(b64: string, mediaType: string) {
     },
     body: JSON.stringify({
       model: 'claude-sonnet-4-6',
-      max_tokens: 1500,
+      max_tokens: 4096,
       messages: [{
         role: 'user',
         content: [
@@ -195,7 +231,7 @@ async function extractWithClaude(b64: string, mediaType: string) {
         ],
       }],
     }),
-  });
+  }, 25000);
   if (!res.ok) throw new Error(`Claude 호출 실패: ${res.status} ${await res.text()}`);
   const data = await res.json();
   const text = (data.content || []).map((c: any) => c.text || '').join('').trim();
@@ -225,9 +261,12 @@ async function lookupMfds(rawName: string) {
   for (const name of tryNames) {
     const u = `${MFDS_BASE}?serviceKey=${DATA_GO_KR_KEY}&type=json&numOfRows=3&pageNo=1&itemName=${encodeURIComponent(name)}`;
     try {
-      const res = await fetch(u);
+      const res = await fetchWithTimeout(u, {}, 6000);
+      const raw = await res.text();
+      console.log(`[easydrug] name="${name}" status=${res.status} body=${raw.slice(0, 500)}`);
       if (!res.ok) continue;
-      const data = await res.json();
+      let data: any;
+      try { data = JSON.parse(raw); } catch { continue; }
       const items = data?.body?.items;
       if (Array.isArray(items) && items.length) {
         const it = items[0];
@@ -246,44 +285,86 @@ async function lookupMfds(rawName: string) {
 }
 
 // ── 의약품 제품 허가정보(전 품목) 조회 ─────────────────
+// 식약처 문서(XML)는 본문 텍스트 + ARTICLE/PARAGRAPH의 title="..." 속성에
+// 내용이 흩어져 있다. 효능효과(EE)는 주로 title 속성에 들어있어, 태그만 지우면
+// 텍스트가 사라진다. → title 속성값과 본문 텍스트를 모두 합쳐 추출한다.
 function stripXml(s: string): string {
-  return (s || '').replace(/<[^>]+>/g, ' ').replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim().slice(0, 800);
+  if (!s) return '';
+  let t = s;
+  // 1) CDATA 내용 보존 (효능효과가 종종 CDATA 안에 들어있어 태그제거 시 사라짐)
+  t = t.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, ' $1 ');
+  // 2) 비-DOC 태그의 title 속성 본문화 (효능이 ARTICLE title에 있는 경우)
+  t = t.replace(/<(?!DOC\b)[^>]*?\btitle="([^"]*)"[^>]*>/gi, ' $1 ');
+  // 3) 나머지 태그 제거
+  t = t.replace(/<[^>]+>/g, ' ').replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim();
+  // 섹션 라벨만 남았으면 빈 값 취급
+  if (/^(효능효과|용법용량|사용상의\s*주의사항|주의사항|효능·효과|용법·용량)$/.test(t)) return '';
+  return t.slice(0, 800);
+}
+function mapPermitItem(it: any, fallbackName: string) {
+  const eeRaw = it.EE_DOC_DATA || it.eeDocData || '';
+  const udRaw = it.UD_DOC_DATA || it.udDocData || '';
+  const nbRaw = it.NB_DOC_DATA || it.nbDocData || '';
+  console.log(`[permit-doc] EE=${String(eeRaw).length} UD=${String(udRaw).length} NB=${String(nbRaw).length} EEraw=${String(eeRaw).slice(0, 200)}`);
+  const ee = stripXml(String(eeRaw));
+  const ud = stripXml(String(udRaw));
+  const nb = stripXml(String(nbRaw));
+  if (!ee && !ud && !nb && !(it.ITEM_NAME || it.itemName)) return null;
+  return {
+    itemName: it.ITEM_NAME || it.itemName || fallbackName,
+    itemSeq: it.ITEM_SEQ || it.itemSeq || null,
+    efcyQesitm: ee || null,
+    useMethodQesitm: ud || null,
+    atpnQesitm: nb || null,
+    intrcQesitm: null,
+    _confidence: 0.85,
+  };
 }
 async function lookupPermit(noDose: string, core: string) {
   if (!DATA_GO_KR_KEY) return null;
   const names = [...new Set([noDose, core].filter((v) => v && v.length >= 2))];
-  for (const name of names) {
-    const u = `${PERMIT_BASE}?serviceKey=${DATA_GO_KR_KEY}&type=json&numOfRows=3&pageNo=1&item_name=${encodeURIComponent(name)}`;
-    try {
-      const res = await fetch(u);
-      if (!res.ok) continue;
-      const data = await res.json();
-      let items = data?.body?.items;
-      if (items && !Array.isArray(items)) items = items.item ? [].concat(items.item) : [];
-      if (Array.isArray(items) && items.length) {
-        const it = items[0];
-        const ee = stripXml(it.EE_DOC_DATA || it.eeDocData || '');
-        const ud = stripXml(it.UD_DOC_DATA || it.udDocData || '');
-        const nb = stripXml(it.NB_DOC_DATA || it.nbDocData || '');
-        if (!ee && !ud && !nb && !it.ITEM_NAME) continue;
-        return {
-          itemName: it.ITEM_NAME || it.itemName || name,
-          itemSeq: it.ITEM_SEQ || it.itemSeq || null,
-          efcyQesitm: ee || null,
-          useMethodQesitm: ud || null,
-          atpnQesitm: nb || null,
-          intrcQesitm: null,
-          _confidence: 0.85,
-        };
+  for (const base of PERMIT_ENDPOINTS) {
+    let endpointValid = false;
+    for (const name of names) {
+      const u = `${base}?serviceKey=${DATA_GO_KR_KEY}&type=json&numOfRows=3&pageNo=1&item_name=${encodeURIComponent(name)}`;
+      try {
+        const res = await fetchWithTimeout(u, {}, 6000);
+        const raw = await res.text();
+        console.log(`[permit] op=${base.split('/').pop()} name="${name}" status=${res.status} body=${raw.slice(0, 280)}`);
+        if (res.status === 404) break;        // 이 엔드포인트 자체가 없음 → 다음 후보 base
+        endpointValid = true;
+        if (!res.ok) continue;
+        let data: any;
+        try { data = JSON.parse(raw); } catch { continue; }
+        let items = data?.body?.items;
+        if (items && !Array.isArray(items)) items = items.item ? [].concat(items.item) : [];
+        if (Array.isArray(items) && items.length) {
+          const it = items[0];
+          console.log(`[permit-item] keys=${Object.keys(it).join('|')}`);
+          const mapped = mapPermitItem(it, name);
+          if (mapped) return mapped;
+        }
+      } catch (e) {
+        console.log(`[permit] op=${base.split('/').pop()} name="${name}" error=${String(e).slice(0, 120)}`);
       }
-    } catch {
-      // 다음 후보
     }
+    if (endpointValid) break; // 동작하는 엔드포인트를 찾았으면(결과 0건이어도) 다른 후보는 시도 안 함
   }
   return null;
 }
 
 // ── utils ─────────────────────────────────────────────
+// 외부 호출이 멈춰 함수 전체가 시간/자원 초과로 죽는 것을 막는 타임아웃 fetch
+async function fetchWithTimeout(url: string, opts: RequestInit = {}, ms = 8000): Promise<Response> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), ms);
+  try {
+    return await fetch(url, { ...opts, signal: ctrl.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 function base64Encode(bytes: Uint8Array): string {
   let binary = '';
   const chunk = 0x8000;

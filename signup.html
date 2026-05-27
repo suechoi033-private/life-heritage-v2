@@ -78,6 +78,9 @@
   const params = new URLSearchParams(location.search);
   const careInvite   = (params.get('invite') || '').toUpperCase();
   const friendInvite = (params.get('friend') || '').toUpperCase();
+  // 가입 후 돌아갈 곳 (온보딩 등). 오픈 리다이렉트 방지: 사이트 내 상대경로 .html만 허용
+  const rawNext = params.get('next') || '';
+  const safeNext = /^\.\/[a-zA-Z0-9_\-]+\.html(\?[^#]*)?$/.test(rawNext) ? rawNext : '';
 
   let redirectAfterSignup = './index.html';
 
@@ -107,6 +110,9 @@
     const lead = document.querySelector('.auth-lead');
     if (lead) lead.innerHTML = `<strong style="color: var(--primary);">초대 코드 ${careInvite}</strong>를 받으셨네요. 가입하시면 자동으로 합류됩니다.`;
     showInviteLoginBanner(`./login.html?invite=${careInvite}`);
+  } else if (safeNext) {
+    redirectAfterSignup = safeNext;
+    await redirectIfAuthed(safeNext);
   } else {
     await redirectIfAuthed('./index.html');
   }
@@ -153,7 +159,7 @@
     // 가입 직후 세션이 바로 잡혔는지 (자동 확인 환경) 확인
     const { data: sessData } = await supabase.auth.getSession();
     if (sessData?.session) {
-      if (friendInvite || careInvite) {
+      if (friendInvite || careInvite || safeNext) {
         window.location.href = redirectAfterSignup;
         return;
       }

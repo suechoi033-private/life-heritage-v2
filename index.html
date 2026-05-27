@@ -289,7 +289,7 @@
   <section class="feed-section" id="home-feed" hidden>
     <button id="feed-new-pill" class="feed-new-pill" hidden></button>
     <div class="feed-head">
-      <span class="feed-head-title">요즘 이야기</span>
+      <span class="feed-head-title">요즘, 잇다에선</span>
       <a href="./forest.html" class="feed-head-more">더보기 →</a>
     </div>
     <div id="home-feed-body">
@@ -345,42 +345,29 @@ const cardsEl = document.getElementById('home-cards');
 if (user) {
   cardsEl.innerHTML = `
     <a href="./ask.html" class="card-seed">
-      <div class="card-eyebrow">🕯 오늘의 질문</div>
+      <div class="card-eyebrow">🕯 오늘 잇고</div>
       <div class="card-seed-title">${todayQ?.question_text || '오늘 하루, 어떻게 보내셨나요?'}</div>
       <div class="card-cta">답변 남기기 <span>→</span></div>
+    </a>
+    <a href="./ceremony.html" class="card-forest" style="margin-top:14px;">
+      <div class="card-forest-icon">🌿</div>
+      <div class="card-forest-body">
+        <div class="card-forest-title">장례희망</div>
+        <div class="card-forest-desc">내가 듣고 싶은 말, 부르고 싶은 사람 — 살아서 하는 장례식을 미리 그려보세요</div>
+      </div>
+      <span class="card-arrow">›</span>
     </a>
   `;
 } else {
   // 비로그인 온보딩
   cardsEl.innerHTML = `
-    <div class="card-onboard">
-      <div class="card-onboard-title">라이프 · 케어링 · 커뮤니티<br>한 곳에서</div>
-      <div class="card-onboard-desc">잇다는 삶을 성찰하고 미래를 준비하는 통합 플랫폼입니다.</div>
-      <div class="onboard-options">
-        <a href="./signup.html?mode=seed" class="onboard-opt">
-          <div class="onboard-opt-icon">🌱</div>
-          <div class="onboard-opt-text">
-            매일 기록하고 목표를 세우고 싶어요
-            <span class="onboard-opt-sub">라이프 — 일기 · 3·6·12·60개월 계획</span>
-          </div>
-        </a>
-        <a href="./signup.html?mode=nest" class="onboard-opt">
-          <div class="onboard-opt-icon">🪺</div>
-          <div class="onboard-opt-text">
-            가족 케어링을 함께 기록하고 싶어요
-            <span class="onboard-opt-sub">케어링 — 케어링 일지 · 가족 초대 · 응급</span>
-          </div>
-        </a>
-        <a href="./signup.html?mode=forest" class="onboard-opt">
-          <div class="onboard-opt-icon">🌳</div>
-          <div class="onboard-opt-text">
-            먼저 둘러보고 싶어요
-            <span class="onboard-opt-sub">커뮤니티 — 콘텐츠 · 게시판 · 추모</span>
-          </div>
-        </a>
-      </div>
-      <div class="onboard-note">이미 계정이 있으시면 <a href="./login.html" style="color:var(--primary);font-weight:700;">로그인</a></div>
-    </div>
+    <a href="./onboarding.html" class="card-seed">
+      <div class="card-eyebrow">🌿 1분 · 정답은 없어요</div>
+      <div class="card-seed-title">지금, 어느 단계에 와 계세요? 일곱 번만 답하면, 지금 맞는 첫걸음을 같이 찾아드려요.</div>
+      <div class="card-cta">시작하기 <span>→</span></div>
+    </a>
+
+    <div class="onboard-note" style="margin-top:14px;text-align:center;">이미 계정이 있으시면 <a href="./login.html" style="color:var(--primary);font-weight:700;">로그인</a></div>
 
     <a href="./forest.html" class="card-forest" style="margin-top:14px;">
       <div class="card-forest-icon">🌳</div>
@@ -395,7 +382,7 @@ if (user) {
 
 // ── 콘텐츠 피드 (잇다에디터 + 유저, '추모' 제외) ──
 const CATEGORY_LABELS = {
-  reflection: '오늘의 성찰', family: '가족 케어링', health: '건강',
+  reflection: '오늘 잇고', family: '가족 케어링', health: '건강',
   finance: '재정', death_prep: '죽음 준비', memorial: '추모',
 };
 // 카테고리별 차분·힐링 톤 인라인 일러스트(이모지 대체). 실제 cover_image_url이 있으면 그게 우선.
