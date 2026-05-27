@@ -195,7 +195,7 @@
       background-size: cover; background-position: center;
       display: flex; align-items: center; justify-content: center;
     }
-    .hcard-cover-icon { font-size: 56px; opacity: 0.9; }
+    .hcard-art { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
     .hcard-badges {
       position: absolute; top: 12px; left: 12px;
       display: flex; gap: 6px; flex-wrap: wrap;
@@ -398,14 +398,37 @@ const CATEGORY_LABELS = {
   reflection: '오늘의 성찰', family: '가족 케어링', health: '건강',
   finance: '재정', death_prep: '죽음 준비', memorial: '추모',
 };
-const CATEGORY_THEME = {
-  reflection: { icon: '🕯', c1: '#F4ECDE', c2: '#E8D9BE' },
-  family:     { icon: '🏡', c1: '#E3EEF7', c2: '#C9DEEE' },
-  health:     { icon: '💪', c1: '#E7F1EC', c2: '#CFE5D8' },
-  finance:    { icon: '💰', c1: '#FBF5E6', c2: '#F2E6C5' },
-  death_prep: { icon: '🕊', c1: '#EDEAF6', c2: '#DAD2EE' },
-  memorial:   { icon: '🌿', c1: '#E7F1EC', c2: '#CFE5D8' },
+// 카테고리별 차분·힐링 톤 인라인 일러스트(이모지 대체). 실제 cover_image_url이 있으면 그게 우선.
+const CATEGORY_ART = {
+  reflection: { a:'#FBF3E2', b:'#F3E4C6', sun:'#E9C987', h1:'#E5D6AE', h2:'#D2BC86', motif:'candle' },
+  family:     { a:'#EAF2FA', b:'#D8E8F5', sun:'#F3D9A6', h1:'#C2DACB', h2:'#A0C7B1', motif:'house'  },
+  health:     { a:'#EAF4ED', b:'#D5EADD', sun:'#BFE1C8', h1:'#ABD4B8', h2:'#86BF98', motif:'sprout' },
+  finance:    { a:'#FBF6E6', b:'#F2E6C5', sun:'#EBCF88', h1:'#D0E1BA', h2:'#A9CD8E', motif:'plant'  },
+  death_prep: { a:'#F1EEF9', b:'#E1DAEF', sun:'#CCC1EA', h1:'#D1CBE7', h2:'#B5ABDF', motif:'dove'   },
+  memorial:   { a:'#EAF3EC', b:'#D2E6DA', sun:'#BDDAC6', h1:'#ABD1BA', h2:'#82B698', motif:'leaf'   },
 };
+const COVER_MOTIF = {
+  candle: '<rect x="75" y="56" width="9" height="18" rx="2.5" fill="#F6EFE2"/><path d="M79.5 48 q4.5 5 0 9.5 q-4.5 -4.5 0 -9.5z" fill="#E79A39"/>',
+  house:  '<path d="M69 63 L79.5 53 L90 63 Z" fill="#C98A5E"/><rect x="72" y="62" width="15" height="12" rx="1.5" fill="#FBF6EE"/>',
+  sprout: '<g stroke="#5C9A6E" stroke-width="2.4" fill="none" stroke-linecap="round"><path d="M80 74 V60"/></g><path d="M80 67 q-9 -1 -11 -8 q10 0 11 8z" fill="#7FB494"/><path d="M80 64 q9 -1 11 -8 q-10 0 -11 8z" fill="#7FB494"/>',
+  plant:  '<g stroke="#6BA277" stroke-width="2.2" fill="none" stroke-linecap="round"><path d="M80 75 V58"/></g><path d="M80 68 q-8 -1 -10 -8 q9 1 10 8z" fill="#8DBE99"/><path d="M80 64 q8 -1 10 -8 q-9 1 -10 8z" fill="#8DBE99"/>',
+  dove:   '<g fill="none" stroke="#9183C9" stroke-width="2.4" stroke-linecap="round"><path d="M99 27 q7 -7 14 0"/><path d="M115 24 q7 -7 14 0"/></g>',
+  leaf:   '<path d="M80 75 q-13 -11 0 -24 q13 13 0 24z" fill="#7FB494"/><path d="M80 73 V55" stroke="#4F8366" stroke-width="1.6" fill="none"/>',
+};
+function coverArt(c) {
+  const p = CATEGORY_ART[c.category] || { a:'#EFEFEF', b:'#DADADA', sun:'#CFCFCF', h1:'#DCDCDC', h2:'#C6C6C6', motif:'' };
+  const gid = 'sky_' + String(c.id || c.category || 'x').replace(/[^a-zA-Z0-9_-]/g, '');
+  const motif = COVER_MOTIF[p.motif] || '';
+  return `<svg class="hcard-art" viewBox="0 0 160 90" preserveAspectRatio="xMidYMid slice" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">`
+    + `<defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${p.a}"/><stop offset="1" stop-color="${p.b}"/></linearGradient></defs>`
+    + `<rect width="160" height="90" fill="url(#${gid})"/>`
+    + `<circle cx="119" cy="31" r="22" fill="${p.sun}" opacity="0.26"/>`
+    + `<circle cx="119" cy="31" r="12.5" fill="${p.sun}"/>`
+    + `<path d="M0 58 Q40 45 80 53 T160 50 L160 90 L0 90 Z" fill="${p.h1}"/>`
+    + `<path d="M0 74 Q48 63 100 71 T160 69 L160 90 L0 90 Z" fill="${p.h2}"/>`
+    + motif
+    + `</svg>`;
+}
 renderHomeFeed();
 subscribeRealtime();
 
@@ -439,13 +462,12 @@ async function renderHomeFeed() {
 }
 
 function feedCard(c, e) {
-  const theme = CATEGORY_THEME[c.category] || { icon: '📄', c1: '#EFEFEF', c2: '#DADADA' };
   const isEditor = c.author_type !== 'user';
   const isStory = c.format === 'story';
   const cover = c.cover_image_url
     ? `style="background-image:url('${encodeURI(c.cover_image_url)}')"`
-    : `style="background:linear-gradient(135deg, ${theme.c1}, ${theme.c2})"`;
-  const coverIcon = c.cover_image_url ? '' : `<span class="hcard-cover-icon">${theme.icon}</span>`;
+    : '';
+  const coverIcon = c.cover_image_url ? '' : coverArt(c);
 
   const badges = [];
   if (isNew(c.created_at)) badges.push(`<span class="hbadge hbadge-new">NEW</span>`);
