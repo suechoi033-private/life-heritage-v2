@@ -98,10 +98,22 @@
     .diary-card-actions {
       display: flex;
       justify-content: flex-end;
+      gap: 8px;
       margin-top: 8px;
       padding-top: 8px;
       border-top: 1px dashed var(--line);
     }
+    .diary-del-btn {
+      display: inline-flex; align-items: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink-muted);
+      font-size: 11.5px; font-weight: 700; font-family: inherit;
+      cursor: pointer;
+    }
+    .diary-del-btn:hover { border-color: var(--danger); color: var(--danger); }
     .share-sentence-btn {
       display: inline-flex;
       align-items: center;
@@ -630,7 +642,7 @@
   import { supabase } from './auth.js';
   import { renderNav } from './nav.js';
   import { registerPWA } from './js/pwa.js';
-  import { listMyDiariesByMonth, listMyDiariesTimeline, TEMPLATES } from './js/diary.js';
+  import { listMyDiariesByMonth, listMyDiariesTimeline, deleteDiary, TEMPLATES } from './js/diary.js';
   import { AREAS, listMyGoals, getDashboardSummary } from './js/goals.js';
   import { shareSentenceCard } from './js/share-card.js';
 
@@ -829,9 +841,10 @@
               </div>
               ${d.title ? `<div class="diary-card-title">${escapeHtml(d.title)}</div>` : ''}
               ${excerpt ? `<div class="diary-card-excerpt">${escapeHtml(excerpt)}</div>` : ''}
-              ${hasText ? `<div class="diary-card-actions">
-                <button type="button" class="share-sentence-btn" data-share-id="${d.id}">✦ 이 문장 공유</button>
-              </div>` : ''}
+              <div class="diary-card-actions">
+                ${hasText ? `<button type="button" class="share-sentence-btn" data-share-id="${d.id}">✦ 이 문장 공유</button>` : ''}
+                <button type="button" class="diary-del-btn" data-del-id="${d.id}" aria-label="일기 삭제">삭제</button>
+              </div>
             </a>
           </div>`;
       }).join('');
@@ -919,12 +932,40 @@
 
   // 타임라인 카드 내 "이 문장 공유" — 카드 링크 이동 방지
   document.getElementById('timeline-body').addEventListener('click', (e) => {
-    const btn = e.target.closest('.share-sentence-btn');
-    if (!btn) return;
-    e.preventDefault();
-    e.stopPropagation();
-    openShareModal(btn.dataset.shareId);
+    const shareBtn = e.target.closest('.share-sentence-btn');
+    if (shareBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      openShareModal(shareBtn.dataset.shareId);
+      return;
+    }
+    const delBtn = e.target.closest('.diary-del-btn');
+    if (delBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      handleDeleteDiary(delBtn);
+    }
   });
+
+  async function handleDeleteDiary(btn) {
+    if (!confirm('이 일기를 삭제할까요? 되돌릴 수 없습니다.')) return;
+    btn.disabled = true;
+    const prev = btn.textContent;
+    btn.textContent = '삭제 중…';
+    try {
+      await deleteDiary(btn.dataset.delId);
+      btn.closest('.diary-card-wrap')?.remove();
+      diaryById.delete(String(btn.dataset.delId));
+      const body = document.getElementById('timeline-body');
+      if (!body.querySelector('.diary-card-wrap')) {
+        body.innerHTML = `<div class="timeline-empty">아직 일기가 없어요.</div>`;
+      }
+    } catch (err) {
+      alert('삭제에 실패했어요: ' + (err.message || err));
+      btn.disabled = false;
+      btn.textContent = prev;
+    }
+  }
 
   // 초기 탭이 goal이면 대시보드 로드
   if (initialTab === 'goal') loadGoalDashboard();
