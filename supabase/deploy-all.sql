@@ -1,8 +1,7 @@
 -- =============================================================
 -- 잇다 — 신규 기능 일괄 적용 (SQL Editor에 통째로 붙여넣고 Run)
--- 포함: 처방전 분석 + 케어 가이드 + 이야기 카드 + 인라인 댓글/실시간
--- 멱등(여러 번 실행해도 안전)하게 작성됨.
--- 생성: 4개 마이그레이션 병합본
+-- 처방전 분석 + 케어 가이드 + 이야기 카드 + 인라인 댓글/실시간 + 기록 병명태그
+-- 멱등(여러 번 실행해도 안전).
 -- =============================================================
 
 -- ===== 20260524_care_prescriptions.sql =====
@@ -319,5 +318,24 @@ exception when undefined_object then
   -- supabase_realtime publication이 없으면 무시(로컬/특수 환경)
   null;
 end $$;
+
+
+-- ===== 20260527_care_log_conditions.sql =====
+-- =============================================================
+-- 케어링 기록 ↔ 처방전 연결 + 추정 병명 태그
+--   기록(care_logs)에 처방전에서 끌어온 "추정 병명" 태그를 붙인다.
+--   병명별 기록 모아보기·유사 병명 인사이트의 기반.
+--   ⚠️ 진단이 아닌 약물 적응증 기반 "추정". 디스클레이머 유지.
+-- 20260524_care_prescriptions.sql 이후 실행.
+-- =============================================================
+
+alter table public.care_logs
+  add column if not exists condition_tags jsonb,   -- [{ key, label, efficacy }]
+  add column if not exists linked_prescription_id uuid
+    references public.care_prescriptions(id) on delete set null;
+
+-- 병명별 모아보기 조회용 (jsonb 태그 내 key 기준)
+create index if not exists care_logs_condition_idx
+  on public.care_logs using gin (condition_tags);
 
 

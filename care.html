@@ -699,6 +699,44 @@
       line-height: 1.6;
     }
 
+    /* ── 추정 병명 태그 ─────────────────────── */
+    .cond-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+    .cond-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--primary-soft); color: var(--primary);
+      border-radius: 999px; padding: 5px 10px; font-size: 12.5px; font-weight: 700;
+    }
+    .cond-chip .x { cursor: pointer; opacity: .7; font-weight: 800; }
+    .cond-chip .x:hover { opacity: 1; }
+    .cond-add-btn {
+      background: var(--bg-alt); border: 1px solid var(--line); border-radius: 10px;
+      padding: 9px 14px; font-size: 13px; font-weight: 700; color: var(--ink-soft);
+      cursor: pointer; font-family: inherit;
+    }
+    .cond-picker {
+      margin-top: 8px; border: 1px solid var(--line); border-radius: 10px;
+      padding: 8px; background: var(--bg-alt); max-height: 220px; overflow-y: auto;
+    }
+    .cond-pick-rx { padding: 8px; border-bottom: 1px solid var(--line); }
+    .cond-pick-rx:last-child { border-bottom: none; }
+    .cond-pick-date { font-size: 12px; color: var(--ink-muted); margin-bottom: 5px; }
+    .cond-pick-tag {
+      display: inline-block; background: #fff; border: 1px solid var(--primary-soft);
+      color: var(--primary); border-radius: 999px; padding: 4px 10px; font-size: 12.5px;
+      font-weight: 700; cursor: pointer; margin: 0 4px 4px 0;
+    }
+    .cond-pick-tag:hover { background: var(--primary-soft); }
+    /* 로그 카드의 병명 태그 */
+    .log-cond { display: flex; flex-wrap: wrap; gap: 5px; margin: 8px 0 2px; }
+    .log-cond-tag { background: var(--primary-soft); color: var(--primary); border-radius: 999px; padding: 3px 9px; font-size: 11.5px; font-weight: 700; }
+    /* 병명별 모아보기 */
+    .cond-summary { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 14px; }
+    .cond-summary-chip {
+      background: var(--bg-alt); border: 1px solid var(--line); border-radius: 999px;
+      padding: 6px 12px; font-size: 12.5px; font-weight: 700; color: var(--ink-soft); cursor: pointer;
+    }
+    .cond-summary-chip.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
     /* ── Photos ─────────────────────────── */
     .log-photos {
       display: flex;
@@ -1191,6 +1229,14 @@
         <label for="l-meds">💊 복용 약</label>
         <textarea id="l-meds" name="medications" placeholder="예: 아침 혈압약 복용, 저녁 당뇨약은 식사 거부로 넘김."></textarea>
       </div>
+
+      <!-- 추정 병명 태그 (처방전에서 가져오기) -->
+      <div class="field" id="l-condition-wrap">
+        <label>🏷 추정 병명 <span class="optional">(처방전에서 가져오기 · 진단 아님)</span></label>
+        <div id="l-condition-chips" class="cond-chips"></div>
+        <button type="button" id="l-condition-add" class="cond-add-btn">＋ 처방전에서 병명 가져오기</button>
+        <div id="l-condition-picker" class="cond-picker hidden"></div>
+      </div>
       <div id="l-emotion-wrap" class="field hidden">
         <label for="l-emotion">😊 기분·감정</label>
         <textarea id="l-emotion" name="emotion" placeholder="예: 봄이 오면 한강 가고 싶다고 하셨다."></textarea>
@@ -1438,7 +1484,7 @@ document.addEventListener('DOMContentLoaded', () => {
   import {
     hasHealthConsent, recordHealthConsent, listPrescriptions,
     uploadAndAnalyze, deletePrescription, reanalyzePrescription,
-    deriveCategories, listCareGuides,
+    deriveCategories, listCareGuides, deriveConditionTags,
   } from './js/prescription.js';
   await renderNav({ active: 'care', infoIcon: true, title: '케어링' });
 
@@ -1761,7 +1807,29 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     countEl.textContent = `기록 ${state.logs.length}개`;
-    container.innerHTML = `<div class="log-list">${state.logs.map(renderLogItem).join('')}</div>`;
+
+    // 병명별 모아보기 — 태그 집계
+    const condCounts = {};
+    state.logs.forEach((l) => (Array.isArray(l.condition_tags) ? l.condition_tags : []).forEach((t) => {
+      if (!condCounts[t.key]) condCounts[t.key] = { label: t.label, count: 0 };
+      condCounts[t.key].count++;
+    }));
+    const condKeys = Object.entries(condCounts);
+    const filter = state.condFilter || null;
+    const shown = filter ? state.logs.filter((l) => (l.condition_tags || []).some((t) => t.key === filter)) : state.logs;
+
+    let summaryHtml = '';
+    if (condKeys.length) {
+      summaryHtml = `<div class="cond-summary">
+        <span class="cond-summary-chip ${!filter ? 'active' : ''}" data-cond-filter="">전체 ${state.logs.length}</span>
+        ${condKeys.map(([k, v]) => `<span class="cond-summary-chip ${filter === k ? 'active' : ''}" data-cond-filter="${escapeHtml(k)}">🏷 ${escapeHtml(v.label)} ${v.count}</span>`).join('')}
+      </div>`;
+    }
+
+    container.innerHTML = summaryHtml + `<div class="log-list">${shown.map(renderLogItem).join('')}</div>`;
+    container.querySelectorAll('[data-cond-filter]').forEach((c) => {
+      c.addEventListener('click', () => { state.condFilter = c.dataset.condFilter || null; renderLogs(); });
+    });
     container.querySelectorAll('[data-edit]').forEach(btn => {
       btn.addEventListener('click', () => openLogModal(btn.dataset.edit));
     });
@@ -1817,6 +1885,10 @@ document.addEventListener('DOMContentLoaded', () => {
             `).join('')}
           </div>
         `}
+        ${Array.isArray(log.condition_tags) && log.condition_tags.length ? `
+          <div class="log-cond">
+            ${log.condition_tags.map(t => `<span class="log-cond-tag" title="${escapeHtml(t.efficacy || '')}">🏷 ${escapeHtml(t.label)}</span>`).join('')}
+          </div>` : ''}
         ${log.photo_urls && log.photo_urls.length > 0 ? (() => {
           const allUrlsJson = JSON.stringify(log.photo_urls).replace(/"/g, '&quot;');
           return `<div class="log-photos" data-urls="${allUrlsJson}">
@@ -2523,6 +2595,13 @@ document.addEventListener('DOMContentLoaded', () => {
     state.removedPhotoUrls = [];
     renderPhotoPreviews();
 
+    // Reset 추정 병명 태그
+    state.conditionTags = [];
+    state.linkedPrescriptionId = null;
+    $('l-condition-picker').classList.add('hidden');
+    $('l-condition-picker').innerHTML = '';
+    renderConditionChips();
+
     // Default date = today
     $('l-date').value = new Date().toISOString().split('T')[0];
 
@@ -2559,9 +2638,67 @@ document.addEventListener('DOMContentLoaded', () => {
 
         state.existingPhotoUrls = [...(log.photo_urls || [])];
         renderPhotoPreviews();
+
+        state.conditionTags = Array.isArray(log.condition_tags) ? [...log.condition_tags] : [];
+        state.linkedPrescriptionId = log.linked_prescription_id || null;
+        renderConditionChips();
       }
     }
   }
+
+  // ── 추정 병명 태그 (기록↔처방전 연결) ───────
+  function renderConditionChips() {
+    const el = $('l-condition-chips');
+    if (!el) return;
+    el.innerHTML = (state.conditionTags || []).map((t, i) =>
+      `<span class="cond-chip">${escapeHtml(t.label)}<span class="x" data-cond-rm="${i}">×</span></span>`
+    ).join('');
+    el.querySelectorAll('[data-cond-rm]').forEach((x) => {
+      x.addEventListener('click', () => {
+        state.conditionTags.splice(parseInt(x.dataset.condRm, 10), 1);
+        renderConditionChips();
+      });
+    });
+  }
+
+  function addConditionTag(tag) {
+    state.conditionTags = state.conditionTags || [];
+    if (!state.conditionTags.some((t) => t.key === tag.key)) {
+      state.conditionTags.push({ key: tag.key, label: tag.label, efficacy: tag.efficacy || '' });
+      renderConditionChips();
+    }
+  }
+
+  $('l-condition-add')?.addEventListener('click', async () => {
+    const picker = $('l-condition-picker');
+    if (!picker.classList.contains('hidden')) { picker.classList.add('hidden'); return; }
+    picker.classList.remove('hidden');
+    picker.innerHTML = '<div class="cond-pick-date">불러오는 중…</div>';
+    try {
+      const rxs = await listPrescriptions(state.currentSubjectId);
+      const withTags = rxs
+        .map((r) => ({ rx: r, tags: deriveConditionTags(r.drugs || []) }))
+        .filter((x) => x.tags.length);
+      if (!withTags.length) {
+        picker.innerHTML = '<div class="cond-pick-date">분석된 처방전의 추정 병명이 없어요. 복약·처방전 탭에서 먼저 분석해 주세요.</div>';
+        return;
+      }
+      picker.innerHTML = withTags.map(({ rx, tags }) => `
+        <div class="cond-pick-rx">
+          <div class="cond-pick-date">${rx.rx_date ? '처방일 ' + escapeHtml(rx.rx_date) : new Date(rx.created_at).toLocaleDateString('ko-KR')}</div>
+          ${tags.map((t) => `<button type="button" class="cond-pick-tag" data-rx="${rx.id}" data-key="${escapeHtml(t.key)}">＋ ${escapeHtml(t.label)}</button>`).join('')}
+        </div>`).join('');
+      picker.querySelectorAll('.cond-pick-tag').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const entry = withTags.find((x) => x.rx.id === btn.dataset.rx);
+          const tag = entry?.tags.find((t) => t.key === btn.dataset.key);
+          if (tag) { addConditionTag(tag); state.linkedPrescriptionId = btn.dataset.rx; }
+        });
+      });
+    } catch (e) {
+      picker.innerHTML = `<div class="cond-pick-date">불러오지 못했어요: ${escapeHtml(e.message || String(e))}</div>`;
+    }
+  });
 
   $('write-log-btn').addEventListener('click', () => openLogModal());
 
@@ -2608,6 +2745,8 @@ document.addEventListener('DOMContentLoaded', () => {
       emotion: val('l-emotion'),
       free_memo: val('l-memo'),
       photo_urls: allPhotoUrls,
+      condition_tags: (state.conditionTags && state.conditionTags.length) ? state.conditionTags : null,
+      linked_prescription_id: state.linkedPrescriptionId || null,
     };
 
     try {
