@@ -49,6 +49,27 @@ export async function listPrescriptions(subjectId) {
   return rxs.map((r) => ({ ...r, drugs: byRx[r.id] || [] }));
 }
 
+// 업로드 전 이미지 축소·압축 (Claude 5MB 한도·업로드 속도). 긴 변 1600px, JPEG.
+async function compressImage(file, maxDim = 1600, quality = 0.82) {
+  if (!file.type.startsWith('image/')) return file;
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
+    const w = Math.round(bitmap.width * scale);
+    const h = Math.round(bitmap.height * scale);
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(bitmap, 0, 0, w, h);
+    const blob = await new Promise((res) => canvas.toBlob(res, 'image/jpeg', quality));
+    if (!blob) return file;
+    // 압축본이 더 크면(이미 작은 파일 등) 원본 유지
+    if (blob.size >= file.size && file.size < 3_500_000) return file;
+    return new File([blob], (file.name || 'rx').replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' });
+  } catch (_) {
+    return file; // 변환 실패 시 원본 (HEIC 등) — 서버가 용량 가드로 안내
+  }
+}
+
 // 업로드 → 레코드 생성 → 분석 호출
 // file: 촬영/앨범에서 고른 단일 이미지
 export async function uploadAndAnalyze(subjectId, file) {
@@ -56,6 +77,7 @@ export async function uploadAndAnalyze(subjectId, file) {
   if (!user) throw new Error('로그인 필요');
   if (!file.type.startsWith('image/')) throw new Error('이미지 파일만 업로드 가능합니다');
 
+  file = await compressImage(file);
   const { storage_path } = await uploadMedia(BUCKET, file, { scope: 'rx' });
 
   const { data: rx, error } = await supabase
