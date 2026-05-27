@@ -128,7 +128,7 @@ Deno.serve(async (req) => {
         .createSignedUrl(rx.storage_path, 120);
       if (signErr || !signed?.signedUrl) throw new Error('이미지 URL 생성 실패');
 
-      const imgRes = await fetch(signed.signedUrl);
+      const imgRes = await fetchWithTimeout(signed.signedUrl, {}, 10000);
       if (!imgRes.ok) throw new Error('이미지 다운로드 실패');
       const contentType = imgRes.headers.get('content-type') || 'image/jpeg';
       const buf = new Uint8Array(await imgRes.arrayBuffer());
@@ -140,26 +140,33 @@ Deno.serve(async (req) => {
       rxDate = extracted.rx_date || null;
     }
 
-    // 5) 약물별 식약처 조회
-    const drugRows: any[] = [];
-    for (let i = 0; i < drugs.length; i++) {
-      const d = drugs[i];
-      const rawName = (d.name || '').trim();
-      if (!rawName) continue;
-      const info = DATA_GO_KR_KEY ? await lookupMfds(rawName) : null;
-      drugRows.push({
-        prescription_id: prescriptionId,
-        raw_name: rawName,
-        matched_name: info?.itemName || null,
-        item_seq: info?.itemSeq || null,
-        efficacy: info?.efcyQesitm || null,
-        usage_text: info?.useMethodQesitm || null,
-        caution: info?.atpnQesitm || null,
-        interactions: info?.intrcQesitm || null,
-        confidence: info ? info._confidence : 0,
-        sort_order: i,
-      });
-    }
+    // 5) 약물별 식약처 조회 — 병렬 처리(총 시간을 약물 1건 수준으로 단축)
+    const drugRows = (await Promise.all(
+      drugs.slice(0, 20).map(async (d: any, i: number) => {
+        const rawName = (d.name || '').trim();
+        if (!rawName) return null;
+        let info: any = null;
+        if (DATA_GO_KR_KEY) {
+          try {
+            info = await lookupMfds(rawName);
+          } catch (e) {
+            console.log(`[drug] 조회 실패 name="${rawName}" ${String(e).slice(0, 150)}`);
+          }
+        }
+        return {
+          prescription_id: prescriptionId,
+          raw_name: rawName,
+          matched_name: info?.itemName || null,
+          item_seq: info?.itemSeq || null,
+          efficacy: info?.efcyQesitm || null,
+          usage_text: info?.useMethodQesitm || null,
+          caution: info?.atpnQesitm || null,
+          interactions: info?.intrcQesitm || null,
+          confidence: info ? info._confidence : 0,
+          sort_order: i,
+        };
+      }),
+    )).filter(Boolean);
 
     // 6) 저장
     await admin.from('care_prescription_drugs')
@@ -203,7 +210,7 @@ async function extractWithClaude(b64: string, mediaType: string) {
 }
 약품명은 식별 가능한 제품명 위주로 정확히 적으세요. 읽을 수 없으면 drugs는 빈 배열.`;
 
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+  const res = await fetchWithTimeout('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -221,7 +228,7 @@ async function extractWithClaude(b64: string, mediaType: string) {
         ],
       }],
     }),
-  });
+  }, 25000);
   if (!res.ok) throw new Error(`Claude 호출 실패: ${res.status} ${await res.text()}`);
   const data = await res.json();
   const text = (data.content || []).map((c: any) => c.text || '').join('').trim();
@@ -251,7 +258,7 @@ async function lookupMfds(rawName: string) {
   for (const name of tryNames) {
     const u = `${MFDS_BASE}?serviceKey=${DATA_GO_KR_KEY}&type=json&numOfRows=3&pageNo=1&itemName=${encodeURIComponent(name)}`;
     try {
-      const res = await fetch(u);
+      const res = await fetchWithTimeout(u, {}, 6000);
       const raw = await res.text();
       console.log(`[easydrug] name="${name}" status=${res.status} body=${raw.slice(0, 500)}`);
       if (!res.ok) continue;
@@ -318,7 +325,7 @@ async function lookupPermit(noDose: string, core: string) {
     for (const name of names) {
       const u = `${base}?serviceKey=${DATA_GO_KR_KEY}&type=json&numOfRows=3&pageNo=1&item_name=${encodeURIComponent(name)}`;
       try {
-        const res = await fetch(u);
+        const res = await fetchWithTimeout(u, {}, 6000);
         const raw = await res.text();
         console.log(`[permit] op=${base.split('/').pop()} name="${name}" status=${res.status} body=${raw.slice(0, 280)}`);
         if (res.status === 404) break;        // 이 엔드포인트 자체가 없음 → 다음 후보 base
@@ -344,6 +351,17 @@ async function lookupPermit(noDose: string, core: string) {
 }
 
 // ── utils ─────────────────────────────────────────────
+// 외부 호출이 멈춰 함수 전체가 시간/자원 초과로 죽는 것을 막는 타임아웃 fetch
+async function fetchWithTimeout(url: string, opts: RequestInit = {}, ms = 8000): Promise<Response> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), ms);
+  try {
+    return await fetch(url, { ...opts, signal: ctrl.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 function base64Encode(bytes: Uint8Array): string {
   let binary = '';
   const chunk = 0x8000;
