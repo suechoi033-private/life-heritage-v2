@@ -151,6 +151,12 @@
   import { renderNav } from './nav.js';
 
   await renderNav({ active: 'seed', infoIcon: false, title: '살아서 하는 장례식', quickWrite: false });
+  // 풀스크린 플로우 탈출구: 상단에 홈 링크
+  {
+    const tbActions = document.querySelector('#itda-top-bar .itda-top-bar-actions');
+    if (tbActions) tbActions.insertAdjacentHTML('beforeend',
+      '<a href="./index.html" aria-label="홈으로" style="font-size:13.5px;color:var(--ink-soft);text-decoration:none;font-weight:700;padding:4px 8px;">홈</a>');
+  }
 
   const { data: { session } } = await supabase.auth.getSession();
   const loggedIn = !!session;

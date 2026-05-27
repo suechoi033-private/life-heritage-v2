@@ -126,6 +126,12 @@
   import { renderSocialAuthButtons } from './js/social-auth.js';
 
   await renderNav({ active: 'home', infoIcon: false, title: '잇다 시작하기', quickWrite: false });
+  // 풀스크린 플로우 탈출구: 상단에 홈 링크
+  {
+    const tbActions = document.querySelector('#itda-top-bar .itda-top-bar-actions');
+    if (tbActions) tbActions.insertAdjacentHTML('beforeend',
+      '<a href="./index.html" aria-label="홈으로" style="font-size:13.5px;color:var(--ink-soft);text-decoration:none;font-weight:700;padding:4px 8px;">홈</a>');
+  }
 
   const { data: { session } } = await supabase.auth.getSession();
   const loggedIn = !!session;
@@ -318,7 +324,7 @@
     }
 
     backBtn.textContent = idx === 0 ? '처음으로' : '이전';
-    nextBtn.textContent = idx === STEPS.length - 1 ? '내 자리 보기' : '다음';
+    nextBtn.textContent = idx === STEPS.length - 1 ? '결과 보기' : '다음';
     nextBtn.disabled = s.type !== 'text' && !answered(s.key);
   }
 
