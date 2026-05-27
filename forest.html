@@ -221,7 +221,7 @@
 
   const CATEGORIES = [
     { key: 'all',        label: '전체' },
-    { key: 'reflection', label: '오늘의 성찰' },
+    { key: 'reflection', label: '오늘 잇고' },
     { key: 'family',     label: '가족 케어링' },
     { key: 'health',     label: '건강' },
     { key: 'finance',    label: '재정' },
@@ -337,7 +337,7 @@
       ` : '';
       return `
         <a class="question-card" href="./ask.html">
-          <div class="question-card-eyebrow">🕯 오늘의 성찰</div>
+          <div class="question-card-eyebrow">🕯 오늘 잇고</div>
           <div class="question-card-text">${escapeHtml(q.question_text)}</div>
           ${statusHtml}
           ${previewHtml}
@@ -369,8 +369,7 @@
         <div class="content-card-title">${escapeHtml(c.title)}</div>
         <div class="content-card-meta">
           ${c.profiles?.name ? `<span class="content-card-author">${escapeHtml(c.profiles.name)}</span>` : ''}
-          <span>👁 ${c.view_count ?? 0}</span>
-          <span>❤ ${c.like_count ?? 0}</span>
+          <span>조회 ${c.view_count ?? 0}</span>
           <span>${formatDate(c.created_at)}</span>
         </div>
       </a>
@@ -393,7 +392,6 @@
         <div class="content-card-title">${escapeHtml(p.title)}</div>
         <div class="content-card-meta">
           <span>💬 ${p.comment_count ?? 0}</span>
-          <span>❤ ${p.reaction_count ?? 0}</span>
           <span>${formatDate(p.created_at)}</span>
         </div>
       </a>

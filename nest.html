@@ -16,7 +16,7 @@
       background: linear-gradient(135deg, #F5EFE3, #FAF6EC);
       border-radius: var(--radius);
       padding: 18px 20px;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }
     .nest-hero-label { font-size: 11.5px; font-weight: 700; color: var(--warm); letter-spacing: 0.04em; }
     .nest-hero-title {
@@ -28,168 +28,103 @@
     }
     .nest-hero-stat { font-size: 12.5px; color: var(--ink-soft); }
 
-    .subject-card {
+    /* ── 오늘 요약 바 ── */
+    .today-summary {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 14px;
+      margin-bottom: 14px;
       background: var(--bg-alt);
       border: 1px solid var(--line);
-      border-radius: var(--radius);
-      padding: 16px 18px;
-      margin-bottom: 10px;
+      border-radius: var(--radius-sm);
     }
-    .subject-card-head {
+    .today-summary.all-done { background: var(--success-soft, #E8F2EC); border-color: var(--success); }
+    .ts-ring {
+      --pct: 0;
+      flex-shrink: 0;
+      width: 34px; height: 34px; border-radius: 50%;
+      background: conic-gradient(var(--primary) calc(var(--pct) * 1%), var(--line) 0);
+      display: grid; place-items: center;
+    }
+    .ts-ring::after {
+      content: "";
+      width: 24px; height: 24px; border-radius: 50%;
+      background: var(--bg-alt);
+    }
+    .today-summary.all-done .ts-ring { background: var(--success); }
+    .today-summary.all-done .ts-ring::after { background: var(--success-soft, #E8F2EC); }
+    .ts-text { font-size: 13px; color: var(--ink); line-height: 1.45; min-width: 0; }
+    .ts-text b { font-weight: 800; }
+    .ts-sub { font-size: 11.5px; color: var(--ink-muted); }
+
+    /* ── 콤팩트 로스터 행 ── */
+    .roster-item {
+      display: flex;
+      align-items: stretch;
+      background: var(--bg-alt);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+      overflow: hidden;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .roster-item:hover { border-color: var(--warm); box-shadow: 0 2px 10px rgba(0,0,0,0.04); }
+    .roster-item.needs-today { border-left: 3px solid var(--warm); }
+
+    .roster-row {
+      flex: 1;
       display: flex;
       align-items: center;
       gap: 12px;
-      margin-bottom: 10px;
+      padding: 12px 8px 12px 13px;
+      text-decoration: none;
+      color: inherit;
+      min-width: 0;
     }
-    .subject-avatar {
-      width: 44px; height: 44px; border-radius: 50%;
+    .roster-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
       background: var(--warm-soft); color: var(--warm);
       display: inline-flex; align-items: center; justify-content: center;
-      font-size: 20px; font-weight: 800; flex-shrink: 0;
+      font-size: 17px; font-weight: 800; flex-shrink: 0;
     }
-    .subject-card-head > div:not([class]) { min-width: 0; flex: 1; }
-    .subject-name { font-size: 15px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .subject-relation { font-size: 12px; color: var(--ink-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .live-indicator { flex-shrink: 0; }
+    .roster-main { min-width: 0; flex: 1; }
+    .roster-nameline { display: flex; align-items: baseline; gap: 7px; min-width: 0; }
+    .roster-name {
+      font-size: 15px; font-weight: 800; color: var(--ink);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .roster-rel {
+      font-size: 11.5px; color: var(--ink-muted); flex-shrink: 0;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .roster-status {
+      font-size: 12px; color: var(--ink-muted); margin-top: 3px;
+      display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    }
+    .rs-ok   { color: var(--success); font-weight: 700; }
+    .rs-miss { color: var(--warm);    font-weight: 800; }
+    .rs-dot  { color: var(--line); }
+    .roster-chevron { flex-shrink: 0; color: var(--ink-muted); font-size: 17px; padding-right: 4px; }
 
-    .subject-stats {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-bottom: 10px;
-    }
-    .stat-cell {
-      background: #fff;
-      border-radius: 10px;
-      padding: 10px 6px;
-      text-align: center;
+    .roster-sos {
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      width: 50px;
+      border-left: 1px solid var(--line);
+      color: var(--danger);
       text-decoration: none;
-      color: inherit;
-      border: 1px solid transparent;
-      transition: border-color 0.15s, background 0.15s;
-      cursor: pointer;
-      display: block;
-    }
-    .stat-cell:hover { border-color: var(--warm); background: var(--warm-soft); }
-    .stat-cell:hover .stat-num { color: var(--warm); }
-    .stat-cell:hover .stat-arrow { opacity: 1; transform: translateX(2px); }
-    .stat-num {
-      font-family: var(--font-serif);
       font-size: 18px;
-      font-weight: 800;
-      color: var(--warm);
+      transition: background 0.15s;
     }
-    .stat-label {
-      font-size: 10.5px;
-      color: var(--ink-muted);
-      margin-top: 2px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 3px;
-    }
-    .stat-arrow {
-      font-size: 11px;
-      opacity: 0;
-      transition: opacity 0.15s, transform 0.15s;
-      color: var(--warm);
-      font-weight: 800;
-    }
-
-    /* 나의 발자취 — 콤팩트 28일 스트립 + 대시보드 링크 */
-    .footprint-wrap {
-      display: block;
-      background: var(--bg-alt);
-      border: 1px solid var(--line);
-      border-radius: var(--radius-sm);
-      padding: 9px 12px 10px;
-      margin-bottom: 8px;
-      text-decoration: none;
-      color: inherit;
-      transition: border-color 0.15s, background 0.15s;
-    }
-    .footprint-wrap:hover { border-color: var(--warm); background: var(--warm-soft); }
-    .footprint-head {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      gap: 8px;
-      margin-bottom: 7px;
-    }
-    .footprint-label {
-      font-size: 11px;
-      font-weight: 800;
-      color: var(--ink-soft);
-      letter-spacing: 0.04em;
-    }
-    /* 연속 기록(streak) — 따뜻한 한 줄 메시지 */
-    .footprint-streak {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--ink-muted);
-      margin-left: auto;
-      white-space: nowrap;
-    }
-    .footprint-streak b {
-      font-family: var(--font-serif);
-      font-weight: 800;
-      color: var(--primary);
-    }
-    .footprint-arrow {
-      font-size: 12px;
-      color: var(--warm);
-      font-weight: 800;
-      transition: transform 0.15s;
-    }
-    .footprint-wrap:hover .footprint-arrow { transform: translateX(2px); }
-    /* 28일을 가로 한 줄 스텝으로 — 공간 절약, 발자취 은유 */
-    .mini-grass {
-      display: flex;
-      align-items: flex-end;
-      gap: 2px;
-      height: 22px;
-    }
-    .mg-cell {
-      flex: 1 1 0;
-      min-width: 0;
-      border-radius: 2px;
-      background: var(--primary);
-      transition: opacity 0.15s;
-    }
-    /* 기록 없는 날: 아주 옅은 바닥선 — 허전함 완화 */
-    .mg-cell.level-0 { height: 4px; background: var(--line); }
-    .mg-cell.level-1 { height: 9px;  opacity: 0.40; }
-    .mg-cell.level-2 { height: 13px; opacity: 0.62; }
-    .mg-cell.level-3 { height: 17px; opacity: 0.82; }
-    .mg-cell.level-4 { height: 22px; opacity: 1; }
-    /* 오늘 — 클레이(케어링 악센트) 점으로 또렷이 */
-    .mg-cell.mg-today { background: var(--warm); opacity: 1; }
-
-    .subject-action {
-      display: block;
-      padding: 9px 4px;
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--line);
-      background: #fff;
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--ink-soft);
-      cursor: pointer;
-      text-decoration: none;
-      text-align: center;
-      font-family: inherit;
-      transition: border-color 0.15s;
-    }
-    .subject-action:hover { border-color: var(--primary); color: var(--primary); }
-    .subject-action.sos { color: var(--danger); border-color: var(--danger-soft); }
-    .subject-action.sos:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
+    .roster-sos:hover { background: var(--danger); }
 
     .add-subject-btn {
       width: 100%;
-      padding: 16px;
+      padding: 15px;
       background: var(--bg-alt);
       border: 1.5px dashed var(--line);
-      border-radius: var(--radius);
+      border-radius: var(--radius-sm);
       font-size: 14px;
       font-weight: 700;
       color: var(--ink-soft);
@@ -198,29 +133,10 @@
       text-decoration: none;
       display: block;
       text-align: center;
+      margin-top: 4px;
       transition: border-color 0.15s, color 0.15s;
     }
     .add-subject-btn:hover { border-color: var(--warm); color: var(--warm); }
-
-    .live-indicator {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 10.5px;
-      font-weight: 700;
-      color: var(--success);
-      margin-left: auto;
-    }
-    .live-dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: var(--success);
-      animation: pulse 1.5s infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 0.5; }
-      50% { opacity: 1; }
-    }
   </style>
 </head>
 <body>
@@ -228,9 +144,11 @@
 <main class="page-shell" id="main-content">
   <div class="nest-hero">
     <div class="nest-hero-label">케어링</div>
-    <div class="nest-hero-title" id="hero-title">가족과 함께<br>곁을 지켜요</div>
+    <div class="nest-hero-title" id="hero-title">가족과 함께 곁을 지켜요</div>
     <div class="nest-hero-stat" id="hero-stat">불러오는 중...</div>
   </div>
+
+  <div id="today-summary"></div>
 
   <div id="subjects-list">
     <div class="empty-state"><div class="empty-icon">⏳</div></div>
@@ -251,12 +169,13 @@
 
   const subjects = await listMyCareSubjects();
 
-  document.getElementById('hero-stat').textContent = subjects.length
-    ? `${subjects.length}분을 함께 보살피고 있어요`
-    : '돌볼 분을 추가해 시작해보세요';
+  const heroStatEl = document.getElementById('hero-stat');
+  const summaryEl  = document.getElementById('today-summary');
+  const listEl     = document.getElementById('subjects-list');
 
-  const listEl = document.getElementById('subjects-list');
   if (!subjects.length) {
+    heroStatEl.textContent = '돌볼 분을 추가해 시작해보세요';
+    summaryEl.innerHTML = '';
     listEl.innerHTML = `
       <div class="empty-state">
         <div class="empty-icon">🪺</div>
@@ -267,107 +186,126 @@
     throw new Error('no subjects');
   }
 
-  // 대상자별 카드 렌더 + 비동기 대시보드 로딩
-  listEl.innerHTML = subjects.map((s) => `
-    <div class="subject-card" data-id="${s.id}">
-      <div class="subject-card-head">
-        <div class="subject-avatar">${(s.name?.[0] || '·').toUpperCase()}</div>
-        <div>
-          <div class="subject-name">${escapeHtml(s.name || '케어링 대상')}</div>
-          <div class="subject-relation">${escapeHtml(s.relation || '')} · ${s.role === 'owner' ? '내가 추가' : '초대받음'}</div>
-        </div>
-        <span class="live-indicator"><span class="live-dot"></span>실시간</span>
-      </div>
-      <div class="subject-stats">
-        <a class="stat-cell" href="./care.html?subject=${s.id}" aria-label="기록 보러가기">
-          <div class="stat-num" data-stat="logs">·</div>
-          <div class="stat-label">28일 중 기록 <span class="stat-arrow">›</span></div>
-        </a>
-        <a class="stat-cell" href="./care-dashboard.html?subject=${s.id}" aria-label="충실도 대시보드">
-          <div class="stat-num" data-stat="completion">·</div>
-          <div class="stat-label">충실도 <span class="stat-arrow">›</span></div>
-        </a>
-      </div>
-      <a class="footprint-wrap" href="./care-dashboard.html?subject=${s.id}" aria-label="나의 발자취 — 대시보드로">
-        <div class="footprint-head">
-          <span class="footprint-label">나의 발자취</span>
-          <span class="footprint-streak" data-streak="${s.id}"></span>
-          <span class="footprint-arrow">›</span>
-        </div>
-        <div class="mini-grass" data-grass="${s.id}">
-          <div style="grid-column:1/-1;text-align:center;color:var(--ink-muted);font-size:11px;padding:4px 0;">불러오는 중…</div>
-        </div>
-      </a>
-      <a class="subject-action sos" href="./care-emergency.html?subject=${s.id}">🚨 응급</a>
-    </div>
-  `).join('') + `<a href="./care.html?action=add" class="add-subject-btn">＋ 케어링 대상 추가</a>`;
+  heroStatEl.textContent = `${subjects.length}분을 함께 보살피고 있어요`;
 
-  // 미니 발자취 (28일 가로 스텝) — 레벨 계산식 보존
-  function buildMiniGrass(daily) {
-    const today = new Date();
-    const cells = [];
-    for (let i = 27; i >= 0; i--) {
-      const d = new Date(today);
-      d.setDate(today.getDate() - i);
-      const key = d.toISOString().slice(0, 10);
-      const count = daily[key] || 0;
-      const level = count === 0 ? 0 : count === 1 ? 1 : count <= 3 ? 2 : count <= 5 ? 3 : 4;
-      cells.push(`<div class="mg-cell level-${level}${i === 0 ? ' mg-today' : ''}" title="${key}: ${count}건"></div>`);
-    }
-    return cells.join('');
+  // ── 날짜 헬퍼: 로컬 기준 YYYY-MM-DD (log_date와 동일 체계) ──
+  function localKey(offset = 0) {
+    const d = new Date();
+    d.setDate(d.getDate() - offset);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
   }
-
-  // 현재 연속 기록일 — 동일한 daily 맵에서 파생 (오늘 미기록이면 어제부터 계산)
+  function recordedToday(daily) { return (daily?.[localKey(0)] || 0) > 0; }
   function currentStreak(daily) {
-    const today = new Date();
+    if (!daily) return 0;
     let streak = 0;
-    for (let i = 0; i < 28; i++) {
-      const d = new Date(today);
-      d.setDate(today.getDate() - i);
-      const key = d.toISOString().slice(0, 10);
-      const has = (daily[key] || 0) > 0;
-      if (has) { streak++; }
-      else if (i === 0) { continue; } // 오늘 아직 기록 전이면 끊지 않음
-      else { break; }
+    for (let i = 0; i < 90; i++) {
+      const has = (daily[localKey(i)] || 0) > 0;
+      if (has) streak++;
+      else if (i === 0) continue;   // 오늘 아직 미기록이면 연속 끊지 않음
+      else break;
     }
     return streak;
   }
 
-  // 대시보드 비동기 로딩
-  function paintStats(card, dash) {
-    if (!card) return;
-    card.querySelector('[data-stat="logs"]').textContent       = dash.totalLogs;
-    card.querySelector('[data-stat="completion"]').textContent = `${dash.completionPct}%`;
-    const daily = dash.daily || {};
-    const grassEl = card.querySelector('.mini-grass');
-    if (grassEl) grassEl.innerHTML = buildMiniGrass(daily);
-    const streakEl = card.querySelector('.footprint-streak');
-    if (streakEl) {
-      const days = currentStreak(daily);
-      streakEl.innerHTML = days > 0 ? `🌱 <b>${days}일</b> 연속` : '오늘 곁을 기록해요';
-    }
-  }
-  for (const s of subjects) {
-    getCareDashboard(s.id).then((dash) => {
-      paintStats(listEl.querySelector(`.subject-card[data-id="${s.id}"]`), dash);
-    }).catch((err) => {
-      console.warn('[케어링] 통계 조회 실패:', s.id, err);
-      const card = listEl.querySelector(`.subject-card[data-id="${s.id}"]`);
-      if (card) {
-        card.querySelectorAll('[data-stat]').forEach((el) => { el.textContent = '-'; });
-      }
-    });
+  // 대시보드는 대상자별 비동기 로딩 → 도착하는 대로 dashById 채우고 재렌더
+  const dashById = {};   // id → dashboard | null(실패)
+
+  function statusHtml(s) {
+    const dash = dashById[s.id];
+    if (dash === undefined) return '<span style="color:var(--ink-muted)">불러오는 중…</span>';
+    if (dash === null) return '<span class="rs-miss">정보를 불러오지 못했어요</span>';
+    const today = recordedToday(dash.daily);
+    const streak = currentStreak(dash.daily);
+    const parts = [];
+    parts.push(today ? '<span class="rs-ok">오늘 기록 ✓</span>' : '<span class="rs-miss">오늘 미기록</span>');
+    if (streak > 0) parts.push(`🌱 ${streak}일`);
+    parts.push(`충실도 ${dash.completionPct}%`);
+    return parts.join('<span class="rs-dot">·</span>');
   }
 
-  // 실시간 구독 — 새 기록 들어오면 카운트 갱신
+  function sortKey(s) {
+    const dash = dashById[s.id];
+    const ready = dash !== undefined;
+    const today = ready && dash ? recordedToday(dash.daily) : false;   // 미기록/미로딩이 위로
+    const streak = ready && dash ? currentStreak(dash.daily) : 0;
+    return { today, streak };
+  }
+
+  function render() {
+    // 전부 로딩되기 전엔 원래 순서 유지(행이 들썩이지 않게), 완료되면 우선정렬 1회
+    const allLoaded = subjects.every((s) => dashById[s.id] !== undefined);
+    const ordered = !allLoaded ? subjects : [...subjects].sort((a, b) => {
+      const ka = sortKey(a), kb = sortKey(b);
+      if (ka.today !== kb.today) return ka.today ? 1 : -1;   // 오늘 미기록 먼저
+      if (ka.streak !== kb.streak) return ka.streak - kb.streak; // 연속 짧은 사람 먼저
+      return (a.name || '').localeCompare(b.name || '');
+    });
+
+    listEl.innerHTML = ordered.map((s) => {
+      const dash = dashById[s.id];
+      const needsToday = dash && !recordedToday(dash.daily);
+      return `
+      <div class="roster-item${needsToday ? ' needs-today' : ''}" data-id="${s.id}">
+        <a class="roster-row" href="./care.html?subject=${s.id}" aria-label="${escapeHtml(s.name || '케어링 대상')} 케어링 열기">
+          <span class="roster-avatar">${(s.name?.[0] || '·').toUpperCase()}</span>
+          <span class="roster-main">
+            <span class="roster-nameline">
+              <span class="roster-name">${escapeHtml(s.name || '케어링 대상')}</span>
+              <span class="roster-rel">${escapeHtml(s.relation || '')}${s.role === 'owner' ? '' : ' · 초대받음'}</span>
+            </span>
+            <span class="roster-status" data-status="${s.id}">${statusHtml(s)}</span>
+          </span>
+          <span class="roster-chevron">›</span>
+        </a>
+        <a class="roster-sos" href="./care-emergency.html?subject=${s.id}" aria-label="${escapeHtml(s.name || '')} 응급">🚨</a>
+      </div>`;
+    }).join('') + `<a href="./care.html?action=add" class="add-subject-btn">＋ 케어링 대상 추가</a>`;
+
+    renderSummary();
+  }
+
+  function renderSummary() {
+    const loaded = subjects.filter((s) => dashById[s.id] !== undefined);
+    if (loaded.length < subjects.length) {
+      summaryEl.innerHTML = '';   // 전부 로딩되기 전엔 요약 숨김
+      return;
+    }
+    const total = subjects.length;
+    const done = subjects.filter((s) => dashById[s.id] && recordedToday(dashById[s.id].daily)).length;
+    const waiting = total - done;
+    const pct = Math.round((done / total) * 100);
+    const allDone = waiting === 0;
+    summaryEl.innerHTML = `
+      <div class="today-summary${allDone ? ' all-done' : ''}">
+        <span class="ts-ring" style="--pct:${pct}"></span>
+        <span class="ts-text">
+          ${allDone
+            ? `<b>오늘 ${total}분 모두 기록했어요</b> 🌿<div class="ts-sub">꾸준함이 가장 큰 돌봄이에요.</div>`
+            : `오늘 <b>${total}분 중 ${done}분</b> 기록 완료<div class="ts-sub">${waiting}분이 오늘의 기록을 기다려요.</div>`}
+        </span>
+      </div>`;
+  }
+
+  // 첫 렌더(플레이스홀더) → 대시보드 도착마다 갱신
+  render();
+
+  for (const s of subjects) {
+    getCareDashboard(s.id)
+      .then((dash) => { dashById[s.id] = dash; render(); })
+      .catch((err) => { console.warn('[케어링] 통계 조회 실패:', s.id, err); dashById[s.id] = null; render(); });
+  }
+
+  // 실시간 구독 — 새 기록이 들어오면 해당 대상자만 갱신 후 재렌더
   const unsubscribers = subjects.map((s) =>
     subscribeCareLogs(s.id, () => {
       getCareDashboard(s.id)
-        .then((dash) => paintStats(listEl.querySelector(`.subject-card[data-id="${s.id}"]`), dash))
+        .then((dash) => { dashById[s.id] = dash; render(); })
         .catch((err) => console.warn('[케어링] 실시간 갱신 실패:', s.id, err));
     })
   );
-
   window.addEventListener('beforeunload', () => unsubscribers.forEach((un) => un()));
 
   function escapeHtml(s) {

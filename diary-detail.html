@@ -102,6 +102,8 @@
       color: var(--ink);
     }
     .detail-actions .primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .detail-actions .danger { color: var(--danger); border-color: var(--danger-soft); flex: 0 0 auto; padding: 12px 16px; }
+    .detail-actions .danger:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
   </style>
 </head>
 <body>
@@ -115,7 +117,7 @@
 <script type="module">
   import { supabase } from './auth.js';
   import { renderNav } from './nav.js';
-  import { getDiary, TEMPLATES, VISIBILITY } from './js/diary.js';
+  import { getDiary, deleteDiary, TEMPLATES, VISIBILITY } from './js/diary.js';
   import { getSignedUrl } from './js/media-upload.js';
   import { emojiFor } from './js/tags.js';
 
@@ -179,6 +181,7 @@
       <div class="detail-actions">
         <a href="./seed.html">목록으로</a>
         <a href="./diary-write.html?id=${entry.id}" class="primary">수정</a>
+        <button type="button" id="delete-diary-btn" class="danger">삭제</button>
       </div>
     ` : `
       <div class="detail-actions">
@@ -190,6 +193,22 @@
   // 이미지 클릭 → 새 탭에서 원본 보기 (간단 라이트박스 대용)
   document.querySelectorAll('.detail-media img').forEach((img) => {
     img.addEventListener('click', () => window.open(img.dataset.url, '_blank'));
+  });
+
+  // 삭제
+  document.getElementById('delete-diary-btn')?.addEventListener('click', async () => {
+    if (!confirm('이 일기를 삭제할까요? 되돌릴 수 없습니다.')) return;
+    const btn = document.getElementById('delete-diary-btn');
+    btn.disabled = true;
+    btn.textContent = '삭제 중…';
+    try {
+      await deleteDiary(entry.id);
+      location.href = './seed.html';
+    } catch (e) {
+      alert('삭제에 실패했어요: ' + (e.message || e));
+      btn.disabled = false;
+      btn.textContent = '삭제';
+    }
   });
 
   function formatDate(d) {

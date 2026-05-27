@@ -2,7 +2,7 @@
 import { supabase } from '../auth.js';
 
 export const CATEGORIES = {
-  reflection: { label: '오늘의 성찰', icon: '🕯' },
+  reflection: { label: '오늘 잇고', icon: '🕯' },
   family:     { label: '가족 케어링',   icon: '🏡' },
   health:     { label: '건강',         icon: '💪' },
   finance:    { label: '재정',         icon: '💰' },
@@ -70,6 +70,7 @@ export async function getFeaturedStory() {
   const { data, error } = await supabase.from('contents')
     .select('id, category, title, excerpt, body, cover_image_url, author_type, created_at, profiles:creator_id(name)')
     .eq('is_published', true)
+    .neq('category', 'memorial')
     .eq('format', 'story')
     .order('created_at', { ascending: false })
     .limit(1)

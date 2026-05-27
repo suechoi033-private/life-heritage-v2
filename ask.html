@@ -140,6 +140,11 @@
       margin-bottom: 10px;
       word-break: break-word;
     }
+    .answer-body.clamp { display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
+    .answer-more { background: none; border: none; color: var(--primary); font-size: 13px; font-weight: 700; cursor: pointer; padding: 2px 0 8px; font-family: inherit; }
+    .answer-more-all { display: block; width: 100%; margin: 14px 0 0; padding: 13px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--bg-alt); color: var(--ink-soft); font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; }
+    .answer-more-all:hover { border-color: var(--primary-soft); }
+    .like-n { font-weight: 600; color: var(--ink-muted); font-size: 12.5px; }
     .answer-actions {
       display: flex;
       gap: 14px;
@@ -511,7 +516,7 @@
   document.getElementById('modal-question-text').textContent = todaysQ.question_text;
 
   // ── 답변 목록 ────────────────────────────
-  let state = { sort: 'newest', answers: [], myAnswer: null };
+  let state = { sort: 'newest', answers: [], myAnswer: null, shown: 8 };
 
   await loadAnswers();
 
@@ -588,8 +593,19 @@
       return;
     }
 
-    area.innerHTML = `<div class="answer-list">${visible.map(renderAnswerRow).join('')}</div>`;
+    const sliced = visible.slice(0, state.shown);
+    const moreCount = visible.length - sliced.length;
+    const moreBtn = moreCount > 0
+      ? `<button type="button" class="answer-more-all" id="answer-more-all">답변 ${moreCount}개 더 보기</button>`
+      : '';
+    area.innerHTML = `<div class="answer-list">${sliced.map(renderAnswerRow).join('')}</div>${moreBtn}`;
     bindAnswerEvents();
+    const moreAll = document.getElementById('answer-more-all');
+    if (moreAll) moreAll.addEventListener('click', () => { state.shown += 8; renderAnswers(); });
+    area.querySelectorAll('.answer-body.clamp').forEach(el => {
+      const mb = el.nextElementSibling;
+      if (mb && mb.classList.contains('answer-more') && el.scrollHeight > el.clientHeight + 2) mb.hidden = false;
+    });
   }
 
   function renderAnswerRow(a) {
@@ -605,10 +621,11 @@
           </div>
           <span class="answer-time">${formatRelative(a.created_at)}</span>
         </div>
-        <div class="answer-body">${escapeHtml(a.content)}</div>
+        <div class="answer-body clamp">${escapeHtml(a.content)}</div>
+        <button type="button" class="answer-more" data-more="${a.id}" hidden>더보기</button>
         <div class="answer-actions">
           <button type="button" class="like-btn ${a._myLike ? 'active' : ''}" data-like="${a.id}">
-            ${a._myLike ? '❤️' : '🤍'} <span>${a._likes}</span>
+            ${a._myLike ? '💚' : '🤍'} 나도 그랬어요${a._likes > 0 ? ` <span class="like-n">· ${a._likes > 9 ? '여러 분' : a._likes + '명'}이 함께</span>` : ''}
           </button>
           <button type="button" class="comment-btn" data-toggle-comments="${a.id}">
             💬 <span>${a._comments}</span>
@@ -632,6 +649,13 @@
     document.querySelectorAll('[data-toggle-comments]').forEach(btn => {
       btn.addEventListener('click', () => toggleComments(btn.dataset.toggleComments));
     });
+    document.querySelectorAll('[data-more]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const body = btn.previousElementSibling;
+        if (body.classList.contains('clamp')) { body.classList.remove('clamp'); btn.textContent = '접기'; }
+        else { body.classList.add('clamp'); btn.textContent = '더보기'; }
+      });
+    });
     document.querySelectorAll('[data-edit-answer]').forEach(btn => {
       btn.addEventListener('click', () => openWriteModal(true));
     });
@@ -645,6 +669,7 @@
     btn.addEventListener('click', () => {
       document.querySelectorAll('.sort-toggle button').forEach(b => b.classList.toggle('active', b === btn));
       state.sort = btn.dataset.sort;
+      state.shown = 8;
       renderAnswers();
     });
   });
