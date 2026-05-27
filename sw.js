@@ -1,10 +1,11 @@
 // 잇다 PWA Service Worker
 // 전략: 앱 셸 캐시 (네트워크 우선 + 캐시 폴백), 푸시 알림 수신
 
-const CACHE_VERSION = 'itda-v3-2026-05-26-ceremony';
+const CACHE_VERSION = 'itda-v3-2026-05-26-onboarding';
 const APP_SHELL = [
   './',
   './index.html',
+  './onboarding.html',
   './ceremony.html',
   './seed.html',
   './nest.html',

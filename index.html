@@ -361,40 +361,13 @@ if (user) {
 } else {
   // 비로그인 온보딩
   cardsEl.innerHTML = `
-    <div class="card-onboard">
-      <div class="card-onboard-title">라이프 · 케어링 · 커뮤니티<br>한 곳에서</div>
-      <div class="card-onboard-desc">잇다는 삶을 성찰하고 미래를 준비하는 통합 플랫폼입니다.</div>
-      <div class="onboard-options">
-        <a href="./signup.html?mode=seed" class="onboard-opt">
-          <div class="onboard-opt-icon">🌱</div>
-          <div class="onboard-opt-text">
-            매일 기록하고 목표를 세우고 싶어요
-            <span class="onboard-opt-sub">라이프 — 일기 · 3·6·12·60개월 계획</span>
-          </div>
-        </a>
-        <a href="./signup.html?mode=nest" class="onboard-opt">
-          <div class="onboard-opt-icon">🪺</div>
-          <div class="onboard-opt-text">
-            가족 케어링을 함께 기록하고 싶어요
-            <span class="onboard-opt-sub">케어링 — 케어링 일지 · 가족 초대 · 응급</span>
-          </div>
-        </a>
-        <a href="./signup.html?mode=forest" class="onboard-opt">
-          <div class="onboard-opt-icon">🌳</div>
-          <div class="onboard-opt-text">
-            먼저 둘러보고 싶어요
-            <span class="onboard-opt-sub">커뮤니티 — 콘텐츠 · 게시판 · 추모</span>
-          </div>
-        </a>
-      </div>
-      <div class="onboard-note">이미 계정이 있으시면 <a href="./login.html" style="color:var(--primary);font-weight:700;">로그인</a></div>
-    </div>
-
-    <a href="./ceremony.html" class="card-seed" style="margin-top:14px;">
-      <div class="card-eyebrow">🌿 살아서 하는 장례식</div>
-      <div class="card-seed-title">내가 떠난 자리에서 들릴 말을, 살아서 듣는다면? 나만의 자리를 1분 만에 설계해보세요.</div>
-      <div class="card-cta">내 자리 설계하기 <span>→</span></div>
+    <a href="./onboarding.html" class="card-seed">
+      <div class="card-eyebrow">🌿 1분 · 정답은 없어요</div>
+      <div class="card-seed-title">지금, 어느 단계에 와 계세요? 일곱 번만 답하면, 지금 맞는 첫걸음을 같이 찾아드려요.</div>
+      <div class="card-cta">시작하기 <span>→</span></div>
     </a>
+
+    <div class="onboard-note" style="margin-top:14px;text-align:center;">이미 계정이 있으시면 <a href="./login.html" style="color:var(--primary);font-weight:700;">로그인</a></div>
 
     <a href="./forest.html" class="card-forest" style="margin-top:14px;">
       <div class="card-forest-icon">🌳</div>
