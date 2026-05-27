@@ -6,13 +6,13 @@ on:
   workflow_dispatch:
     inputs:
       target:
-        description: '배포 대상'
+        description: '배포 대상 (보통 functions. migrations는 이미 SQL Editor로 적용했으면 충돌하니 쓰지 말 것)'
         type: choice
-        default: all
+        default: functions
         options:
+          - functions
           - all
           - migrations
-          - functions
           - function-secrets
 
 jobs:
@@ -29,7 +29,9 @@ jobs:
         with:
           version: latest
 
-      - name: Link project
+      # 프로젝트 연결 — 마이그레이션(db push)에만 필요. 함수 배포는 --project-ref로 충분.
+      - name: Link project (migrations only)
+        if: ${{ inputs.target == 'all' || inputs.target == 'migrations' }}
         run: supabase link --project-ref "$PROJECT_REF" --password "$DB_PASSWORD"
 
       # 마이그레이션 적용 (DDL — one-way)
