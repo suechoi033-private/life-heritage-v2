@@ -59,7 +59,8 @@
 |---|---|---|
 | 사업전략 | `life-heritage-strategy` | 시장·경쟁·BM·우선순위·의사결정 프레임·가설/검증 |
 | 운영 | `life-heritage-ops` | 실행계획·일정·KPI·리스크·프로세스·행정 |
-| 마케팅 | `life-heritage-marketing` | 콘텐츠·채널·카피·PR·acquisition 퍼널 |
+| 마케팅 | `life-heritage-marketing` | 콘텐츠·채널·PR·acquisition 퍼널·카피 전략(무엇을·왜) |
+| 카피라이터 | `life-heritage-copywriter` | 줄 단위 카피 craft(어떻게·단어·리듬)·UI 마이크로카피·민감 주제 문구 마감 |
 | Product Engineer | `life-heritage-pe` | 제품 구현·디자인 시스템·데이터 안전·배포 |
 
 ## 5. 팀 작동 방식 (Convene Pattern)
