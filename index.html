@@ -345,7 +345,7 @@ const cardsEl = document.getElementById('home-cards');
 if (user) {
   cardsEl.innerHTML = `
     <a href="./ask.html" class="card-seed">
-      <div class="card-eyebrow">🕯 오늘의 질문</div>
+      <div class="card-eyebrow">🕯 오늘 잇고</div>
       <div class="card-seed-title">${todayQ?.question_text || '오늘 하루, 어떻게 보내셨나요?'}</div>
       <div class="card-cta">답변 남기기 <span>→</span></div>
     </a>
@@ -382,7 +382,7 @@ if (user) {
 
 // ── 콘텐츠 피드 (잇다에디터 + 유저, '추모' 제외) ──
 const CATEGORY_LABELS = {
-  reflection: '오늘의 성찰', family: '가족 케어링', health: '건강',
+  reflection: '오늘 잇고', family: '가족 케어링', health: '건강',
   finance: '재정', death_prep: '죽음 준비', memorial: '추모',
 };
 const CATEGORY_THEME = {

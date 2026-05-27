@@ -2,7 +2,7 @@
 import { supabase } from '../auth.js';
 
 export const CATEGORIES = {
-  reflection: { label: '오늘의 성찰', icon: '🕯' },
+  reflection: { label: '오늘 잇고', icon: '🕯' },
   family:     { label: '가족 케어링',   icon: '🏡' },
   health:     { label: '건강',         icon: '💪' },
   finance:    { label: '재정',         icon: '💰' },

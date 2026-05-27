@@ -644,7 +644,7 @@
   }
 
   function renderAnswers(items) {
-    if (!items.length) return setEmpty('아직 답변한 질문이 없어요', '커뮤니티에서 오늘의 질문에 답해보세요', './forest.html');
+    if (!items.length) return setEmpty('아직 답변한 질문이 없어요', '커뮤니티에서 오늘 잇고에 답해보세요', './forest.html');
     document.getElementById('activity-body').innerHTML = items.map((a) => `
       <a class="activity-card" href="./ask.html">
         <div class="activity-meta">
