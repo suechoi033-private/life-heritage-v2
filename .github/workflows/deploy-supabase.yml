@@ -6,13 +6,13 @@ on:
   workflow_dispatch:
     inputs:
       target:
-        description: '배포 대상'
+        description: '배포 대상 (보통 functions. migrations는 이미 SQL Editor로 적용했으면 충돌하니 쓰지 말 것)'
         type: choice
-        default: all
+        default: functions
         options:
+          - functions
           - all
           - migrations
-          - functions
           - function-secrets
 
 jobs:

@@ -201,14 +201,17 @@ async function extractWithClaude(b64: string, mediaType: string) {
   if (!SUPPORTED_IMG.includes(mediaType)) {
     throw new Error('지원하지 않는 이미지 형식입니다. JPEG·PNG로 다시 올려주세요.');
   }
+  if (b64.length > 5_000_000) {
+    throw new Error('사진 용량이 너무 큽니다. 더 작게(또는 다시) 촬영해 올려주세요.');
+  }
   const prompt = `이 이미지는 한국 병원/약국의 처방전 또는 약 봉투입니다.
 다음을 JSON으로만 출력하세요(설명·코드블록 금지):
 {
-  "ocr_text": "이미지에서 읽은 전체 텍스트",
   "rx_date": "YYYY-MM-DD 또는 null (처방일/조제일)",
   "drugs": [{ "name": "약품명(제품명, 용량 포함 가능)", "dose": "1회 투약량 또는 null", "frequency": "1일 투여횟수 또는 null", "days": "총 투약일수 또는 null" }]
 }
-약품명은 식별 가능한 제품명 위주로 정확히 적으세요. 읽을 수 없으면 drugs는 빈 배열.`;
+약품명은 식별 가능한 제품명 위주로 정확히 적으세요. 읽을 수 없으면 drugs는 빈 배열.
+전체 OCR 원문은 출력하지 마세요(drugs만 정확히).`;
 
   const res = await fetchWithTimeout('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -219,7 +222,7 @@ async function extractWithClaude(b64: string, mediaType: string) {
     },
     body: JSON.stringify({
       model: 'claude-sonnet-4-6',
-      max_tokens: 1500,
+      max_tokens: 4096,
       messages: [{
         role: 'user',
         content: [
