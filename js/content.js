@@ -90,12 +90,17 @@ export async function deleteContent(id) {
   if (error) throw error;
 }
 
-// 홈 피드용 — 신규 콘텐츠(추모 제외) + 표지/포맷/작성자
+// 홈 피드용 — 잇다 에디터 정보 글(=공식 정보·가이드)만.
+//  · category='reflection'(오늘 잇고 큐레이션)은 forest 전용으로 제외
+//  · author_type='official' 만. 사용자 글 중 리액션 많은 건 별도 함수로 분리.
+//  · 추모 카테고리 제외
 export async function listHomeFeed(limit = 12) {
   const { data, error } = await supabase.from('contents')
     .select('id, category, title, body, excerpt, cover_image_url, format, author_type, creator_id, created_at, profiles:creator_id(name, avatar_url)')
     .eq('is_published', true)
+    .eq('author_type', 'official')
     .neq('category', 'memorial')
+    .neq('category', 'reflection')
     .order('created_at', { ascending: false })
     .limit(limit);
   if (error) throw error;

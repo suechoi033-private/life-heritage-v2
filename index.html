@@ -604,7 +604,7 @@ function subscribeRealtime() {
   supabase.channel('home-feed')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'contents' }, (p) => {
       const r = p.new || {};
-      if (r.is_published === false || r.category === 'memorial') return;
+      if (r.is_published === false || r.category === 'memorial' || r.category === 'reflection' || r.author_type !== 'official') return;
       _newCount++;
       pill.hidden = false;
       pill.textContent = `🆕 새 글 ${_newCount}개 · 보기`;
