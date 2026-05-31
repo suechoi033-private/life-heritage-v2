@@ -30,11 +30,16 @@ const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') || '';
 let _token: { value: string; expiresAt: number } | null = null;
 
 async function getSpotifyToken(): Promise<string> {
-  if (_token && _token.expiresAt > Date.now() + 30_000) return _token.value;
+  if (_token && _token.expiresAt > Date.now() + 30_000) {
+    console.log('[spotify-search] token cache hit');
+    return _token.value;
+  }
   if (!SPOTIFY_CLIENT_ID || !SPOTIFY_CLIENT_SECRET) {
+    console.error('[spotify-search] missing creds', { hasId: !!SPOTIFY_CLIENT_ID, hasSecret: !!SPOTIFY_CLIENT_SECRET });
     throw new Error('SPOTIFY_CLIENT_ID/SECRET 미설정');
   }
   const creds = btoa(`${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`);
+  console.log('[spotify-search] requesting token', { idPrefix: SPOTIFY_CLIENT_ID.slice(0, 6), idLen: SPOTIFY_CLIENT_ID.length, secLen: SPOTIFY_CLIENT_SECRET.length });
   const r = await fetch('https://accounts.spotify.com/api/token', {
     method: 'POST',
     headers: {
@@ -44,13 +49,16 @@ async function getSpotifyToken(): Promise<string> {
     body: 'grant_type=client_credentials',
   });
   if (!r.ok) {
-    throw new Error(`spotify token: ${r.status} ${await r.text()}`);
+    const body = await r.text();
+    console.error('[spotify-search] token endpoint failed', { status: r.status, body: body.slice(0, 500) });
+    throw new Error(`spotify token: ${r.status} ${body.slice(0, 200)}`);
   }
   const data = await r.json();
   _token = {
     value: data.access_token,
     expiresAt: Date.now() + (data.expires_in * 1000),
   };
+  console.log('[spotify-search] token ok', { expiresIn: data.expires_in });
   return _token.value;
 }
 
