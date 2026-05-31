@@ -15,7 +15,7 @@
     .song-shell { max-width: 480px; margin: 0 auto; padding: 24px 18px 80px; }
     .song-eyebrow { font-size: 11.5px; font-weight: 800; color: var(--primary); letter-spacing: 0.08em; margin-bottom: 8px; }
     .song-title { font-family: var(--font-serif); font-size: 22px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.4; color: var(--ink); margin: 0 0 8px; }
-    .song-intro { font-size: 13.5px; color: var(--ink-soft); line-height: 1.7; margin: 0 0 24px; }
+    .song-intro { font-size: 13.5px; color: var(--ink-soft); line-height: 1.7; margin: 0 0 22px; }
 
     .saved-block { background: var(--bg-alt); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 22px; }
     .saved-label { font-size: 11px; font-weight: 800; color: var(--primary); letter-spacing: 0.06em; margin-bottom: 8px; }
@@ -23,29 +23,48 @@
     .saved-img { width: 56px; height: 56px; border-radius: 8px; object-fit: cover; flex-shrink: 0; background: var(--line); }
     .saved-meta { min-width: 0; flex: 1; }
     .saved-name { font-size: 14.5px; font-weight: 800; color: var(--ink); line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .saved-artists { font-size: 12.5px; color: var(--ink-muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .saved-embed { width: 100%; border: none; border-radius: 10px; overflow: hidden; height: 80px; }
+    .saved-service { font-size: 11.5px; color: var(--ink-muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .saved-embed { width: 100%; border: none; border-radius: 10px; overflow: hidden; }
+    .saved-embed.spotify { height: 152px; }
+    .saved-embed.apple   { height: 175px; }
+    .saved-embed.youtube { height: 220px; }
     .saved-actions { display: flex; gap: 8px; margin-top: 12px; }
     .btn-line { flex: 1; padding: 9px; border-radius: 10px; border: 1px solid var(--line); background: #fff; font-size: 13px; font-weight: 700; font-family: inherit; color: var(--ink-soft); cursor: pointer; text-decoration: none; text-align: center; }
     .btn-line:hover { border-color: var(--primary); color: var(--primary); }
     .btn-line.danger:hover { border-color: var(--danger); color: var(--danger); }
 
-    .search-block { margin-top: 6px; }
-    .search-input { width: 100%; padding: 13px 14px; border: 1px solid var(--line); border-radius: 12px; font-size: 14.5px; font-family: inherit; background: #fff; color: var(--ink); box-sizing: border-box; transition: border-color 0.15s; }
-    .search-input:focus { outline: none; border-color: var(--primary); }
-    .search-hint { font-size: 12px; color: var(--ink-muted); margin-top: 8px; }
+    .paste-block { margin-top: 6px; }
+    .paste-input {
+      width: 100%; padding: 13px 14px;
+      border: 1px solid var(--line); border-radius: 12px;
+      font-size: 14.5px; font-family: inherit;
+      background: #fff; color: var(--ink);
+      box-sizing: border-box; transition: border-color 0.15s;
+    }
+    .paste-input:focus { outline: none; border-color: var(--primary); }
+    .paste-hint { font-size: 12px; color: var(--ink-muted); margin-top: 10px; line-height: 1.6; }
+    .paste-hint b { color: var(--ink-soft); }
 
-    .results { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
-    .track-card { display: flex; align-items: center; gap: 12px; padding: 10px; background: #fff; border: 1px solid var(--line); border-radius: 12px; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s; text-align: left; width: 100%; font-family: inherit; }
-    .track-card:hover { border-color: var(--primary); box-shadow: 0 2px 10px rgba(47,107,79,0.06); }
-    .track-img { width: 48px; height: 48px; border-radius: 6px; object-fit: cover; flex-shrink: 0; background: var(--line); }
-    .track-meta { min-width: 0; flex: 1; }
-    .track-name { font-size: 14px; font-weight: 800; color: var(--ink); line-height: 1.35; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .track-artists { font-size: 12px; color: var(--ink-muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .track-pick { font-size: 12px; font-weight: 700; color: var(--primary); flex-shrink: 0; padding: 4px 10px; border: 1px solid var(--primary-soft); border-radius: 999px; background: var(--primary-soft); }
+    .how-to { background: var(--bg-alt); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin-top: 16px; font-size: 12.5px; line-height: 1.7; color: var(--ink-soft); }
+    .how-to-title { font-weight: 800; color: var(--ink); margin-bottom: 6px; font-size: 13px; }
+    .how-to ol { margin: 0; padding-left: 18px; }
+    .how-to li { margin-bottom: 3px; }
 
-    .state-empty { padding: 16px; text-align: center; color: var(--ink-muted); font-size: 13px; }
-    .state-error { padding: 12px 14px; border-radius: 10px; background: var(--danger-soft); color: var(--danger); font-size: 12.5px; }
+    .preview-card { background: #fff; border: 1.5px solid var(--primary); border-radius: 14px; padding: 14px; margin-top: 14px; }
+    .preview-eyebrow { font-size: 11px; font-weight: 800; color: var(--primary); letter-spacing: 0.06em; margin-bottom: 10px; }
+    .preview-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .preview-img { width: 48px; height: 48px; border-radius: 6px; object-fit: cover; flex-shrink: 0; background: var(--line); }
+    .preview-name { font-size: 14px; font-weight: 800; color: var(--ink); line-height: 1.35; overflow: hidden; text-overflow: ellipsis; }
+    .preview-service { font-size: 11.5px; color: var(--ink-muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .preview-embed { width: 100%; border: none; border-radius: 10px; overflow: hidden; margin: 10px 0; }
+    .preview-embed.spotify { height: 152px; }
+    .preview-embed.apple   { height: 175px; }
+    .preview-embed.youtube { height: 220px; }
+    .btn-primary { width: 100%; padding: 12px; border-radius: 10px; border: 0; background: var(--primary); color: #fff; font-size: 14px; font-weight: 800; font-family: inherit; cursor: pointer; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-primary:disabled { opacity: 0.6; cursor: wait; }
+
+    .state-error { padding: 12px 14px; border-radius: 10px; background: var(--danger-soft); color: var(--danger); font-size: 12.5px; margin-top: 14px; }
     .loading { color: var(--ink-muted); font-size: 12.5px; text-align: center; padding: 14px; }
   </style>
 </head>
@@ -61,18 +80,35 @@
 
   <div id="saved-area"><div class="loading">불러오는 중…</div></div>
 
-  <div class="search-block">
-    <div class="saved-label" style="margin-bottom: 8px;">곡 검색 · SPOTIFY</div>
-    <input type="text" class="search-input" id="search-input" placeholder="곡 제목 또는 아티스트 (예: imagine john lennon)" autocomplete="off" autocapitalize="off" spellcheck="false">
-    <div class="search-hint">검색은 Spotify의 데이터를 사용합니다. 무료 계정도 검색·미리듣기 가능.</div>
-    <div id="results" class="results"></div>
+  <div class="paste-block">
+    <div class="saved-label" style="margin-bottom: 8px;">곡 링크 붙여넣기</div>
+    <input type="url" class="paste-input" id="paste-input" placeholder="Spotify · Apple Music · YouTube 링크 paste" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <div class="paste-hint">
+      예: <b>https://open.spotify.com/track/...</b><br>
+      <b>https://music.apple.com/kr/album/.../...?i=...</b><br>
+      <b>https://youtu.be/...</b>
+    </div>
+
+    <div class="how-to">
+      <div class="how-to-title">곡 링크 복사하는 법</div>
+      <ol>
+        <li><b>Spotify·Apple Music·YouTube</b> 앱에서 곡 검색</li>
+        <li>곡 우측 메뉴(⋯ 또는 공유) → <b>"링크 복사"</b></li>
+        <li>여기 입력창에 paste</li>
+      </ol>
+    </div>
+
+    <div id="preview"></div>
   </div>
 </main>
 
 <script type="module">
   import { supabase } from './auth.js';
   import { renderNav } from './nav.js';
-  import { searchSpotify, getMyFinalSong, saveMyFinalSong, removeMyFinalSong, spotifyEmbedUrl } from './js/spotify.js';
+  import {
+    detectService, extractTrackId, buildEmbedUrl, fetchSongMetadata,
+    getMyFinalSong, saveMyFinalSong, removeMyFinalSong, embedUrlForSavedSong,
+  } from './js/spotify.js';
 
   await renderNav({ active: 'root', infoIcon: false, title: '내 한 곡', quickWrite: false });
 
@@ -80,34 +116,35 @@
   if (!session) { window.location.href = './login.html'; throw new Error('로그인 필요'); }
 
   const savedArea = document.getElementById('saved-area');
-  const searchInput = document.getElementById('search-input');
-  const resultsEl = document.getElementById('results');
+  const pasteInput = document.getElementById('paste-input');
+  const previewEl = document.getElementById('preview');
 
   function escapeHtml(s) {
     return (s || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   }
 
+  const SERVICE_LABEL = { spotify: 'SPOTIFY', apple: 'APPLE MUSIC', youtube: 'YOUTUBE' };
+
   async function renderSaved() {
     try {
       const song = await getMyFinalSong();
-      if (!song) {
-        savedArea.innerHTML = '';
-        return;
-      }
+      if (!song) { savedArea.innerHTML = ''; return; }
+      const svc = detectService(song.external_url || '') || 'spotify';
+      const embed = embedUrlForSavedSong(song);
       savedArea.innerHTML = `
         <div class="saved-block">
           <div class="saved-label">✦ 내 마지막 한 곡</div>
           <div class="saved-row">
             ${song.image_url ? `<img class="saved-img" src="${escapeHtml(song.image_url)}" alt="">` : '<div class="saved-img"></div>'}
             <div class="saved-meta">
-              <div class="saved-name">${escapeHtml(song.name)}</div>
-              <div class="saved-artists">${escapeHtml(song.artists)}</div>
+              <div class="saved-name">${escapeHtml(song.name || '곡')}</div>
+              <div class="saved-service">${SERVICE_LABEL[svc] || svc.toUpperCase()}</div>
             </div>
           </div>
-          <iframe class="saved-embed" src="${spotifyEmbedUrl(song.spotify_track_id)}" allow="encrypted-media; autoplay; clipboard-write; fullscreen; picture-in-picture" loading="lazy"></iframe>
+          ${embed ? `<iframe class="saved-embed ${svc}" src="${escapeHtml(embed)}" allow="encrypted-media; autoplay; clipboard-write; fullscreen; picture-in-picture" loading="lazy"></iframe>` : ''}
           <div class="saved-actions">
-            ${song.external_url ? `<a class="btn-line" href="${escapeHtml(song.external_url)}" target="_blank" rel="noopener">Spotify에서 듣기 →</a>` : ''}
-            <button type="button" class="btn-line danger" id="btn-remove-song">삭제</button>
+            ${song.external_url ? `<a class="btn-line" href="${escapeHtml(song.external_url)}" target="_blank" rel="noopener">원본에서 듣기 →</a>` : ''}
+            <button type="button" class="btn-line danger" id="btn-remove-song">삭제·바꾸기</button>
           </div>
         </div>`;
       document.getElementById('btn-remove-song')?.addEventListener('click', async () => {
@@ -124,64 +161,70 @@
     }
   }
 
-  let searchTimer = null;
-  let lastSearched = '';
+  let lastUrl = '';
 
-  function doSearch() {
-    const q = searchInput.value.trim();
-    if (q === lastSearched) return;
-    lastSearched = q;
-    if (q.length < 2) {
-      resultsEl.innerHTML = '';
+  async function processPaste() {
+    const url = pasteInput.value.trim();
+    if (url === lastUrl) return;
+    lastUrl = url;
+    if (!url) { previewEl.innerHTML = ''; return; }
+
+    const svc = detectService(url);
+    if (!svc) {
+      previewEl.innerHTML = `<div class="state-error">지원하는 음악 서비스 링크를 붙여넣어 주세요 — Spotify · Apple Music · YouTube</div>`;
       return;
     }
-    resultsEl.innerHTML = '<div class="loading">검색 중…</div>';
-    searchSpotify(q).then((tracks) => {
-      if (q !== lastSearched) return; // 그새 다른 검색
-      if (!tracks.length) {
-        resultsEl.innerHTML = '<div class="state-empty">결과가 없어요. 다른 단어로 검색해 보세요.</div>';
-        return;
-      }
-      resultsEl.innerHTML = tracks.map((t, i) => `
-        <button type="button" class="track-card" data-idx="${i}">
-          ${t.image ? `<img class="track-img" src="${escapeHtml(t.image)}" alt="">` : '<div class="track-img"></div>'}
-          <div class="track-meta">
-            <div class="track-name">${escapeHtml(t.name)}</div>
-            <div class="track-artists">${escapeHtml(t.artists)}</div>
+
+    previewEl.innerHTML = '<div class="loading">불러오는 중…</div>';
+    const meta = await fetchSongMetadata(url);
+    const embed = buildEmbedUrl(url);
+    const trackId = extractTrackId(url);
+
+    if (url !== lastUrl) return; // 그새 다른 링크
+
+    previewEl.innerHTML = `
+      <div class="preview-card">
+        <div class="preview-eyebrow">✦ 미리보기 — ${SERVICE_LABEL[svc] || svc.toUpperCase()}</div>
+        <div class="preview-row">
+          ${meta?.image ? `<img class="preview-img" src="${escapeHtml(meta.image)}" alt="">` : '<div class="preview-img"></div>'}
+          <div class="preview-meta" style="min-width:0;flex:1;">
+            <div class="preview-name">${escapeHtml(meta?.name || '곡 한 곡')}</div>
+            <div class="preview-service">${SERVICE_LABEL[svc] || svc.toUpperCase()}</div>
           </div>
-          <span class="track-pick">고르기</span>
-        </button>`).join('');
-      resultsEl.querySelectorAll('button[data-idx]').forEach((btn) => {
-        btn.addEventListener('click', async () => {
-          const idx = Number(btn.dataset.idx);
-          const track = tracks[idx];
-          btn.disabled = true;
-          btn.querySelector('.track-pick').textContent = '저장 중…';
-          try {
-            await saveMyFinalSong(track);
-            searchInput.value = '';
-            lastSearched = '';
-            resultsEl.innerHTML = '';
-            await renderSaved();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          } catch (e) {
-            alert('저장에 실패했어요: ' + (e.message || e));
-            btn.disabled = false;
-            btn.querySelector('.track-pick').textContent = '고르기';
-          }
+        </div>
+        ${embed ? `<iframe class="preview-embed ${svc}" src="${escapeHtml(embed)}" allow="encrypted-media; autoplay; clipboard-write; fullscreen; picture-in-picture" loading="lazy"></iframe>` : ''}
+        <button type="button" class="btn-primary" id="btn-save-pasted">이 곡으로 저장하기</button>
+      </div>`;
+
+    document.getElementById('btn-save-pasted')?.addEventListener('click', async () => {
+      const btn = document.getElementById('btn-save-pasted');
+      btn.disabled = true; btn.textContent = '저장 중…';
+      try {
+        await saveMyFinalSong({
+          id: trackId || '',
+          name: meta?.name || '',
+          artists: '',
+          image: meta?.image || '',
+          external_url: url,
         });
-      });
-    }).catch((e) => {
-      resultsEl.innerHTML = `<div class="state-error">${escapeHtml(e.message || String(e))}</div>`;
+        pasteInput.value = ''; lastUrl = '';
+        previewEl.innerHTML = '';
+        await renderSaved();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (e) {
+        alert('저장에 실패했어요: ' + (e.message || e));
+        btn.disabled = false; btn.textContent = '이 곡으로 저장하기';
+      }
     });
   }
 
-  searchInput.addEventListener('input', () => {
-    clearTimeout(searchTimer);
-    searchTimer = setTimeout(doSearch, 350);
+  let pasteTimer = null;
+  pasteInput.addEventListener('input', () => {
+    clearTimeout(pasteTimer);
+    pasteTimer = setTimeout(processPaste, 250);
   });
-  searchInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') { e.preventDefault(); clearTimeout(searchTimer); doSearch(); }
+  pasteInput.addEventListener('paste', () => {
+    setTimeout(processPaste, 0); // paste 직후 값 잡힘
   });
 
   renderSaved();

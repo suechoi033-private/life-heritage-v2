@@ -266,11 +266,11 @@
       const sub = document.getElementById('msc-sub');
       if (song) {
         cta.classList.add('has-song');
-        title.textContent = `♬ ${song.name}`;
-        sub.textContent = `${song.artists} · 내가 골라둔 한 곡 (바꾸기 →)`;
+        title.textContent = `♬ ${song.name || '내가 골라둔 한 곡'}`;
+        sub.textContent = '내 마지막에 흐를 한 곡 (바꾸기 →)';
       } else {
         title.textContent = '내 마지막 한 곡 골라두기';
-        sub.textContent = "'내 장례식에 흐를 한 곡' — 가장 사랑한 것에 대한 응답";
+        sub.textContent = '좋아하는 곡 링크 하나만 붙여 두면 끝 · Spotify · Apple Music · YouTube';
       }
       cta.hidden = false;
     } catch (_) { /* 로그인 안 됐거나 실패 시 그냥 숨김 유지 */ }
