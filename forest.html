@@ -141,32 +141,44 @@
       font-style: italic;
       opacity: 0.92;
     }
-    /* 내 마지막 한 곡 진입 카드 */
-    .my-song-cta {
-      display: flex; align-items: center; gap: 12px;
-      padding: 13px 14px;
-      margin: 6px 0 14px;
-      background: var(--warm-soft);
-      border: 1px solid var(--line);
-      border-radius: 14px;
+    /* 오늘 잇다가 고른 글 — 큐레이션 hero */
+    .curation-hero {
+      display: block;
+      background: linear-gradient(135deg, #FAF6EE, #F2EBDD);
+      border: 1px solid var(--warm-soft);
+      border-radius: 18px;
+      padding: 18px 18px 16px;
+      margin: 6px 0 18px;
       text-decoration: none;
       color: inherit;
       transition: border-color 0.15s, transform 0.1s;
     }
-    .my-song-cta:hover { border-color: var(--warm); }
-    .my-song-cta:active { transform: scale(0.99); }
-    .my-song-cta.has-song { background: #fff; }
-    .msc-mark {
-      width: 38px; height: 38px; border-radius: 999px;
-      background: var(--warm); color: #fff;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 18px; font-weight: 800; flex-shrink: 0;
+    .curation-hero:hover  { border-color: var(--warm); }
+    .curation-hero:active { transform: scale(0.995); }
+    .curation-hero-eyebrow {
+      display: block;
+      font-size: 11px; font-weight: 800; letter-spacing: 0.08em;
+      color: var(--warm); margin-bottom: 8px;
     }
-    .my-song-cta.has-song .msc-mark { background: var(--primary); }
-    .msc-body { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 2px; }
-    .msc-title { font-size: 14px; font-weight: 800; color: var(--ink); line-height: 1.35; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .msc-sub { font-size: 11.5px; color: var(--ink-muted); line-height: 1.5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .msc-arrow { color: var(--ink-faint); font-size: 18px; flex-shrink: 0; }
+    .curation-hero-title {
+      display: block;
+      font-family: var(--font-serif);
+      font-size: 19px; font-weight: 800;
+      line-height: 1.45;
+      color: var(--ink);
+      margin-bottom: 8px;
+    }
+    .curation-hero-snippet {
+      display: block;
+      font-size: 13px; line-height: 1.7; color: var(--ink-soft);
+      margin-bottom: 10px;
+      display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .curation-hero-cta {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 12px; font-weight: 800; color: var(--warm);
+    }
   </style>
 </head>
 <body>
@@ -179,14 +191,12 @@
 
   <div class="forest-chips" id="forest-chips"></div>
 
-  <!-- 내 마지막 한 곡 진입 (저장 여부에 따라 카피·내용 다름) -->
-  <a id="my-song-cta" class="my-song-cta" href="./my-song.html" hidden>
-    <span class="msc-mark">♬</span>
-    <span class="msc-body">
-      <span class="msc-title" id="msc-title">내 마지막 한 곡 골라두기</span>
-      <span class="msc-sub" id="msc-sub">'내 장례식에 흐를 한 곡' — 죽음 준비가 아니라, 가장 사랑한 것에 대한 답</span>
-    </span>
-    <span class="msc-arrow">›</span>
+  <!-- 오늘 잇다가 고른 글 (큐레이션 hero — 7일 회전) -->
+  <a id="curation-hero" class="curation-hero" href="#" hidden>
+    <span class="curation-hero-eyebrow">🌿 오늘 잇다가 고른 글</span>
+    <span class="curation-hero-title" id="curation-hero-title"></span>
+    <span class="curation-hero-snippet" id="curation-hero-snippet"></span>
+    <span class="curation-hero-cta">읽어보기 ›</span>
   </a>
 
   <div id="forest-body">
@@ -267,29 +277,34 @@
   import { renderNav } from './nav.js';
   import { registerPWA } from './js/pwa.js';
   import { getTodaysQuestion, hasAnsweredToday, previewAnswers } from './js/answers.js';
-  import { listMyPlaylist } from './js/spotify.js';
 
   await renderNav({ active: 'forest', infoIcon: false, title: '커뮤니티' });
   registerPWA();
 
-  // 나의 장례식 플레이리스트 진입 카드 — 저장된 곡 수에 따라 카피 변경
+  // 오늘 잇다가 고른 글 — 7일 회전. 베타 시작일 2026-06-03 기준.
   (async () => {
     try {
-      const songs = await listMyPlaylist();
-      const cta = document.getElementById('my-song-cta');
-      if (!cta) return;
-      const title = document.getElementById('msc-title');
-      const sub = document.getElementById('msc-sub');
-      if (songs.length) {
-        cta.classList.add('has-song');
-        title.textContent = `♬ 나의 장례식 플레이리스트`;
-        sub.textContent = `지금 ${songs.length}곡 (더하기·관리 →)`;
-      } else {
-        title.textContent = '나의 장례식 플레이리스트 만들기';
-        sub.textContent = '좋아하는 곡 링크 하나로 시작 · Spotify · Apple Music · YouTube';
-      }
-      cta.hidden = false;
-    } catch (_) { /* 로그인 안 됐거나 실패 시 그냥 숨김 유지 */ }
+      const HERO_LAUNCH_MS = Date.UTC(2026, 5, 3, -9, 0, 0); // KST 6/3 00:00
+      const dayDiff = Math.floor((Date.now() - HERO_LAUNCH_MS) / 86400000);
+      const heroDay = (((dayDiff % 7) + 7) % 7) + 1; // 1..7
+      const { data } = await supabase
+        .from('contents')
+        .select('id, title, body')
+        .eq('hero_day', heroDay)
+        .eq('is_published', true)
+        .maybeSingle();
+      if (!data) return;
+      const hero = document.getElementById('curation-hero');
+      const snippet = (data.body || '')
+        .replace(/[#*>_`\[\]]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .slice(0, 140);
+      document.getElementById('curation-hero-title').textContent = data.title;
+      document.getElementById('curation-hero-snippet').textContent = snippet + '…';
+      hero.href = `./content-detail.html?id=${data.id}`;
+      hero.hidden = false;
+    } catch (_) { /* 없으면 그냥 숨김 */ }
   })();
 
   // 베타 한정: reflection 1종만 활성, 나머지는 '준비 중' placeholder
@@ -394,11 +409,15 @@
     try {
       const q = await getTodaysQuestion();
       if (!q) return '';
-      const [mine, others] = await Promise.all([
-        hasAnsweredToday(q.id),
+      const isSong = q.answer_kind === 'song';
+      const [mine, others, songCountRow] = await Promise.all([
+        isSong ? Promise.resolve(null) : hasAnsweredToday(q.id),
         previewAnswers(q.id, 4),
+        isSong
+          ? supabase.from('user_songs').select('id', { count: 'exact', head: true }).eq('kind', 'final')
+          : Promise.resolve({ count: 0 }),
       ]);
-      const userAnswered = !!mine;
+      const userAnswered = isSong ? ((songCountRow?.count ?? 0) > 0) : !!mine;
 
       // 시드 답변(페르소나) + 실제 답변 병합
       const seeds = (q.seed_answers && Array.isArray(q.seed_answers.answers)) ? q.seed_answers.answers : [];
@@ -411,7 +430,9 @@
 
       const statusHtml = userAnswered
         ? `<span class="question-card-status">✓ 오늘 답변 완료 · 모두 보기</span>`
-        : `<span class="question-card-status">✏ 내 한 줄을 적으면 ${total}개의 답이 모두 보여요 →</span>`;
+        : isSong
+          ? `<span class="question-card-status">♬ 한 곡 골라두면 ${total}개의 답이 모두 보여요 →</span>`
+          : `<span class="question-card-status">✏ 내 한 줄을 적으면 ${total}개의 답이 모두 보여요 →</span>`;
 
       // entice peek: 답 안 한 사람에겐 첫 1개만 풀 노출, 나머지 흐림 처리
       let previewHtml = '';
@@ -441,7 +462,9 @@
                   ${escapeHtml((a.content || '').slice(0, 30))}…
                 </div>
               `).join('')}
-              <div class="qc-entice">잇다 한 줄 ─ "당신의 한 줄로, ${total - 1}개의 답이 마저 열려요."</div>
+              <div class="qc-entice">${isSong
+                ? `잇다 한 곡 ─ "당신의 한 곡으로, ${total - 1}개의 답이 마저 열려요."`
+                : `잇다 한 줄 ─ "당신의 한 줄로, ${total - 1}개의 답이 마저 열려요."`}</div>
             </div>`;
         }
       }

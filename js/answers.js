@@ -7,19 +7,20 @@ export async function getTodaysQuestion() {
     const { data, error } = await supabase.rpc('get_todays_question');
     if (error) throw error;
     const q = data?.[0] || null;
-    if (q && !('seed_answers' in q)) {
+    if (q && (!('seed_answers' in q) || !('answer_kind' in q))) {
       const { data: extra } = await supabase
         .from('daily_questions')
-        .select('seed_answers')
+        .select('seed_answers, answer_kind')
         .eq('id', q.id)
         .maybeSingle();
       q.seed_answers = extra?.seed_answers || { answers: [] };
+      q.answer_kind  = extra?.answer_kind  || 'text';
     }
     return q;
   } catch (_) {
     const { data } = await supabase
       .from('daily_questions')
-      .select('id, question_text, category, seed_answers')
+      .select('id, question_text, category, seed_answers, answer_kind')
       .order('id', { ascending: true })
       .limit(1);
     return data?.[0] || null;

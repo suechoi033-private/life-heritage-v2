@@ -473,7 +473,7 @@
   if (urlQuestionId) {
     const { data: pastQ, error: pastErr } = await supabase
       .from('daily_questions')
-      .select('id, display_order, category, question_text')
+      .select('id, display_order, category, question_text, answer_kind')
       .eq('id', urlQuestionId)
       .single();
     if (pastErr || !pastQ) {
@@ -514,6 +514,30 @@
   document.getElementById('q-title').textContent = todaysQ.question_text;
   document.getElementById('q-category').textContent = CATEGORY_LABEL[todaysQ.category] || todaysQ.category;
   document.getElementById('modal-question-text').textContent = todaysQ.question_text;
+
+  // ── 답변 종류가 'song'이면 my-song.html로 안내 (텍스트 답변 X) ──────
+  if (todaysQ.answer_kind === 'song') {
+    const writeBtn = document.getElementById('write-btn');
+    writeBtn.textContent = '♬ 나의 플레이리스트로 답하기 →';
+    writeBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      window.location.href = './my-song.html';
+    }, { capture: true });
+
+    const area = document.getElementById('answer-list-area');
+    area.innerHTML = `
+      <div style="background:var(--warm-soft);border:1px solid var(--line);border-radius:14px;padding:18px 18px 16px;margin-top:8px;">
+        <div style="font-size:12.5px;font-weight:800;color:var(--warm);letter-spacing:0.05em;margin-bottom:6px;">♬ 이 질문은 곡으로 답해요</div>
+        <div style="font-size:14px;color:var(--ink);line-height:1.65;margin-bottom:12px;">
+          한 줄 글 대신, 곡 링크 하나로 답을 남겨요.<br>
+          Spotify · Apple Music · YouTube 어디서든.
+        </div>
+        <a href="./my-song.html" style="display:inline-block;padding:10px 18px;background:var(--warm);color:#fff;border-radius:999px;font-size:13px;font-weight:800;text-decoration:none;">나의 장례식 플레이리스트 만들기 →</a>
+      </div>
+    `;
+    return; // 텍스트 답변 흐름 스킵
+  }
 
   // ── 답변 목록 ────────────────────────────
   let state = { sort: 'newest', answers: [], myAnswer: null, shown: 8 };
