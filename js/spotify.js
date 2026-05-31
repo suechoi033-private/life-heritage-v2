@@ -20,9 +20,12 @@ export async function searchSpotify(q) {
     body: JSON.stringify({ q: query }),
   });
   if (!r.ok) {
-    let msg = '';
-    try { msg = (await r.json())?.error || ''; } catch { /* noop */ }
-    throw new Error(`검색 실패 (${r.status}${msg ? ' · ' + msg : ''})`);
+    let detail = '';
+    try {
+      const j = await r.json();
+      detail = [j?.error, j?.status, j?.msg].filter(Boolean).join(' · ');
+    } catch { /* noop */ }
+    throw new Error(`검색 실패 (${r.status}${detail ? ' · ' + detail : ''})`);
   }
   const data = await r.json();
   return data.tracks || [];
