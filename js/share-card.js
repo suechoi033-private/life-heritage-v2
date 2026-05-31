@@ -177,3 +177,189 @@ export async function shareSentenceCard(sentence, { meta = '' } = {}) {
 
   return { method: clipped ? 'clipboard' : 'download' };
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 전체-콘텐츠 카드 (제목 + 본문 + 잇다™ 워드마크). 4:5 (1080×1350), 인스타 카드뉴스 결.
+// ─────────────────────────────────────────────────────────────────────────────
+const W2 = 1080;
+const H2 = 1350;
+
+function stripMarkdown(s) {
+  return (s || '')
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/`[^`]*`/g, ' ')
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/[#>*_~]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+export async function renderContentCard({ title = '', body = '', meta = '' } = {}) {
+  await ensureFont();
+  const canvas = document.createElement('canvas');
+  canvas.width = W2;
+  canvas.height = H2;
+  const ctx = canvas.getContext('2d');
+
+  // 배경
+  ctx.fillStyle = BG;
+  ctx.fillRect(0, 0, W2, H2);
+
+  // 외곽 테두리 (저장·인쇄 시 여백 구분)
+  ctx.strokeStyle = LINE;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(30, 30, W2 - 60, H2 - 60);
+
+  const PAD = 80;
+  let y = 0;
+
+  // 상단 잇다™ 발행 칩 (TM 명시)
+  const chipTxt = '✦ 잇다™ 발행';
+  ctx.font = "800 26px 'Nanum Myeongjo', serif";
+  const chipW = ctx.measureText(chipTxt).width + 36;
+  const chipH = 44;
+  const chipX = PAD;
+  const chipY = 110;
+  ctx.fillStyle = PRIMARY;
+  const r = chipH / 2;
+  ctx.beginPath();
+  ctx.moveTo(chipX + r, chipY);
+  ctx.lineTo(chipX + chipW - r, chipY);
+  ctx.arc(chipX + chipW - r, chipY + r, r, -Math.PI / 2, Math.PI / 2);
+  ctx.lineTo(chipX + r, chipY + chipH);
+  ctx.arc(chipX + r, chipY + r, r, Math.PI / 2, -Math.PI / 2);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#FFFFFF';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(chipTxt, chipX + 18, chipY + chipH / 2 + 2);
+  y = chipY + chipH + 50;
+
+  // 제목 (있을 때만) — 줄당 3줄까지, 폰트 자동 축소
+  const innerMaxW = W2 - PAD * 2;
+  ctx.textBaseline = 'alphabetic';
+  if (title && title.trim()) {
+    let tSize = 56;
+    let tLines;
+    for (;;) {
+      ctx.font = `800 ${tSize}px 'Nanum Myeongjo', serif`;
+      tLines = wrapLines(ctx, title.trim(), innerMaxW);
+      if (tLines.length <= 3 || tSize <= 38) break;
+      tSize -= 4;
+    }
+    ctx.fillStyle = INK;
+    const lineH = Math.round(tSize * 1.32);
+    for (const line of tLines) {
+      ctx.fillText(line, PAD, y + tSize);
+      y += lineH;
+    }
+    y += 14;
+  }
+
+  // 메타 (작성자·날짜)
+  if (meta) {
+    ctx.font = "400 24px 'Nanum Myeongjo', serif";
+    ctx.fillStyle = INK_MUTED;
+    ctx.fillText(meta, PAD, y + 22);
+    y += 40;
+  }
+
+  // 구분선
+  ctx.strokeStyle = LINE;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(PAD, y + 24);
+  ctx.lineTo(W2 - PAD, y + 24);
+  ctx.stroke();
+  y += 56;
+
+  // 본문 — 폰트 자동 축소 + 넘치면 줄 단위 말줄임표
+  const bodyTop = y;
+  const bodyBottom = H2 - 200;   // 하단 워드마크 영역 보호
+  const bodyMaxH = bodyBottom - bodyTop;
+
+  const cleanBody = stripMarkdown(body);
+  let bSize = 38;
+  let bLines, bLineH;
+  for (;;) {
+    ctx.font = `400 ${bSize}px 'Nanum Myeongjo', serif`;
+    bLines = wrapLines(ctx, cleanBody, innerMaxW);
+    bLineH = Math.round(bSize * 1.55);
+    if (bLines.length * bLineH <= bodyMaxH || bSize <= 24) break;
+    bSize -= 2;
+  }
+  const maxLines = Math.max(1, Math.floor(bodyMaxH / bLineH));
+  if (bLines.length > maxLines) {
+    bLines = bLines.slice(0, maxLines);
+    const last = bLines[bLines.length - 1] || '';
+    bLines[bLines.length - 1] = last.length > 1 ? last.slice(0, -1) + '…' : '…';
+  }
+  ctx.fillStyle = INK;
+  let by = bodyTop + bSize;
+  for (const line of bLines) {
+    ctx.fillText(line, PAD, by);
+    by += bLineH;
+  }
+
+  // 하단 잇다™ 워드마크 + URL/태그라인 (TM 풀)
+  ctx.fillStyle = PRIMARY;
+  ctx.font = "800 44px 'Nanum Myeongjo', serif";
+  ctx.fillText('잇다™', PAD, H2 - 105);
+  ctx.fillStyle = INK_MUTED;
+  ctx.font = "400 24px -apple-system, 'Pretendard', sans-serif";
+  ctx.fillText('ittda.kr · 질문에 답할수록 내 삶이 또렷해집니다.', PAD, H2 - 68);
+
+  return canvas;
+}
+
+export async function shareContentCard({ title = '', body = '', meta = '' } = {}) {
+  const url = appUrl();
+  const cleanBody = stripMarkdown(body);
+  const captionTitle = title && title.trim() ? `${title.trim()}\n\n` : '';
+  const captionBody  = cleanBody.slice(0, 200);
+  const caption = `${captionTitle}${captionBody}\n\n잇다™에서 더 보기 → ${url}`;
+
+  const canvas = await renderContentCard({ title, body, meta });
+  const blob = await canvasToBlob(canvas);
+  const file = new File([blob], 'itda-card.png', { type: 'image/png' });
+
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], text: caption });
+      return { method: 'share' };
+    } catch (e) {
+      if (e && e.name === 'AbortError') return { method: 'cancelled' };
+    }
+  }
+
+  try {
+    const dlUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = dlUrl;
+    a.download = 'itda-card.png';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(dlUrl), 4000);
+  } catch (_) { /* 무시 */ }
+
+  let clipped = false;
+  try {
+    await navigator.clipboard.writeText(caption);
+    clipped = true;
+  } catch (_) { /* 무시 */ }
+
+  if (window.Kakao && window.Kakao.isInitialized && window.Kakao.isInitialized()) {
+    try {
+      window.Kakao.Share.sendDefault({
+        objectType: 'text',
+        text: caption,
+        link: { mobileWebUrl: url, webUrl: url },
+      });
+      return { method: 'kakao' };
+    } catch (_) { /* 무시 */ }
+  }
+
+  return { method: clipped ? 'clipboard' : 'download' };
+}

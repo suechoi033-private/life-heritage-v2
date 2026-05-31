@@ -153,7 +153,7 @@
     getPost, listComments, createComment, deleteComment, deletePost,
     toggleReaction, getReactionState, reportTarget, REPORT_REASONS,
   } from './js/community.js';
-  import { openShareSheet } from './js/share-sheet.js';
+  import { shareContent } from './js/share-sheet.js';
 
   await renderNav({ active: 'forest', infoIcon: false, title: '게시글' });
 
@@ -222,11 +222,11 @@
     `;
 
     // 좋아요
-    // 카드뉴스 공유
+    // 카드뉴스 공유 — 글 전체를 잇다™ 카드 한 장으로
     document.getElementById('btn-share-card')?.addEventListener('click', () => {
       const author = post.profiles?.name || '';
       const date = formatDate(post.created_at);
-      openShareSheet({
+      shareContent({
         title: post.title || '',
         body: post.body || '',
         meta: [author, date].filter(Boolean).join(' · '),

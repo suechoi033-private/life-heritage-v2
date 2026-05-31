@@ -352,7 +352,7 @@
   import { getContent, CATEGORIES, isBookmarked, toggleBookmark, getEmpathy, toggleEmpathy, deleteContent } from './js/content.js';
   import { toggleReaction, getReactionState, reportTarget, REPORT_REASONS, createPost } from './js/community.js';
   import { getSignedUrl, getPublicUrl } from './js/media-upload.js';
-  import { openShareSheet } from './js/share-sheet.js';
+  import { shareContent } from './js/share-sheet.js';
 
   await renderNav({ active: 'forest', infoIcon: false, title: '콘텐츠', quickWrite: false });
 
@@ -533,11 +533,11 @@
     }
   }
 
-  // 카드뉴스 공유
+  // 카드뉴스 공유 — 글 전체를 잇다™ 카드 한 장으로
   document.getElementById('btn-share-card')?.addEventListener('click', () => {
     const author = content.profiles?.name || (content.author_type === 'official' ? '잇다 에디터' : '');
     const date = formatDate(content.created_at);
-    openShareSheet({
+    shareContent({
       title: content.title || '',
       body: content.body || content.excerpt || '',
       meta: [author, date].filter(Boolean).join(' · '),
