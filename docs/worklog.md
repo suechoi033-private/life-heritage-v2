@@ -12,6 +12,15 @@
 
 ## 2026-05-31
 
+**긴급 — forest 회복: SW 활성화 자동화 + 모든 외부 의존 try/catch 분리** (이번 세션, 베타 D-3)
+- 증상: 사장님 폰 PWA에서 forest.html을 열면 curation hero가 안 눌리고 그 아래 "🌳 커뮤니티를 준비 중" 정적 empty state가 그대로 보임. 직전 세션의 738586e(`answers.js previewAnswers` 중복 export 제거)는 push 됐지만 PWA에 안 들어옴 = SW가 옛 캐시를 잡고 있음이 가장 유력.
+- 진단: (a) `sw.js`에 `message` 이벤트 리스너 없음 → 페이지에서 `SKIP_WAITING` 보내도 무시. (b) 새 SW activate 후 자동 reload 없어 PWA가 옛 HTML 계속 잡음. (c) forest.html에서 hero IIFE 안의 await가 막히면 chips·loadFeed 도달 자체가 안 됨 — 정적 empty state 그대로 노출.
+- 수정:
+  - `sw.js`: `message` 리스너 추가(SKIP_WAITING 처리). `CACHE_VERSION` → `itda-v3-2026-05-31-forest-rescue-v3`.
+  - `forest.html`: hero 로직을 fire-and-forget IIFE로 완전 분리(이미 그렇지만 element null-guard 강화) + chips·seg·fab·forest-body 모두 `?.` optional chain / null check / `?.addEventListener`로 방어. nav.js 실패해도 본문 계속. `controllerchange` 리스너 등록 후 새 SW가 잡을 때 1회만 자동 `location.reload()` — 옛 PWA가 새 코드로 강제 진입.
+  - 사장님 SQL 미적용 시(=`contents.hero_day` 컬럼 없음, contents 빈 테이블 등)에도 hero는 조용히 숨김 유지, 본문은 try/catch로 empty state 노출, 화면이 멈추지 않음.
+- 사장님 액션: PWA 닫고 다시 열기 1회 → 자동 reload 1회 → 새 코드 진입. 그래도 안 보이면 사파리에서 직접 URL 열고 새로고침. SQL 3종(F2 contents seed / day2_song / contents_hero_day) 미실행 상태여도 forest는 정상 동작(hero만 안 보임).
+
 **커뮤니티 재설계 실구현 — 큐레이션 hero + day 2 song 질문** (이번 세션)
 - **forest.html**: 상단 `my-song-cta` 카드 제거 → `curation-hero` 추가. 2026-06-03을 day 1 기준으로 ((today - launch) % 7) + 1 = hero_day. contents.hero_day=N인 행 1편 노출. 사장님이 "장례식 플레이리스트" 단어가 첫 인상에 부담된다는 피드백 반영.
 - **DB migrate (사장님 실행)**:

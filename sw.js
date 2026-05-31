@@ -1,7 +1,7 @@
 // 잇다 PWA Service Worker
 // 전략: 앱 셸 캐시 (네트워크 우선 + 캐시 폴백), 푸시 알림 수신
 
-const CACHE_VERSION = 'itda-v3-2026-05-31-answers-dedup-v1';
+const CACHE_VERSION = 'itda-v3-2026-05-31-forest-rescue-v3';
 const APP_SHELL = [
   './',
   './index.html',
@@ -39,6 +39,13 @@ self.addEventListener('install', (event) => {
       .then((cache) => cache.addAll(APP_SHELL).catch(() => null))
       .then(() => self.skipWaiting())
   );
+});
+
+// 페이지에서 보내는 SKIP_WAITING 메시지 처리 — 새 SW 즉시 활성화
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener('activate', (event) => {

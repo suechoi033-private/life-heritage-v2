@@ -278,33 +278,66 @@
   import { registerPWA } from './js/pwa.js';
   import { getTodaysQuestion, hasAnsweredToday, previewAnswers } from './js/answers.js';
 
-  await renderNav({ active: 'forest', infoIcon: false, title: '커뮤니티' });
-  registerPWA();
+  // 1) 내비 — 실패해도 본문 로직은 계속 진행
+  try { await renderNav({ active: 'forest', infoIcon: false, title: '커뮤니티' }); }
+  catch (e) { console.warn('[forest] nav 실패, 본문 계속', e); }
+  try { registerPWA(); } catch (_) {}
+
+  // 새 서비스워커가 대기 중이면 즉시 적용 + 활성화되면 한 번만 자동 reload
+  // (PWA가 옛 HTML을 잡고 있는 상황을 강제로 풀어준다)
+  if ('serviceWorker' in navigator) {
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (reloaded) return;
+      reloaded = true;
+      window.location.reload();
+    });
+    navigator.serviceWorker.getRegistration().then((reg) => {
+      if (!reg) return;
+      if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+      reg.addEventListener('updatefound', () => {
+        const nw = reg.installing;
+        nw?.addEventListener('statechange', () => {
+          if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+            nw.postMessage({ type: 'SKIP_WAITING' });
+          }
+        });
+      });
+      // 최신 SW가 올라왔는지 능동 확인
+      reg.update().catch(() => {});
+    }).catch(() => {});
+  }
 
   // 오늘 잇다가 고른 글 — 7일 회전. 베타 시작일 2026-06-03 기준.
+  // SQL 미적용(=hero_day 컬럼 없음) 또는 시드 없음 → 조용히 숨김 유지.
   (async () => {
+    const hero = document.getElementById('curation-hero');
+    if (!hero) return;
     try {
       const HERO_LAUNCH_MS = Date.UTC(2026, 5, 3, -9, 0, 0); // KST 6/3 00:00
       const dayDiff = Math.floor((Date.now() - HERO_LAUNCH_MS) / 86400000);
       const heroDay = (((dayDiff % 7) + 7) % 7) + 1; // 1..7
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('contents')
         .select('id, title, body')
         .eq('hero_day', heroDay)
         .eq('is_published', true)
         .maybeSingle();
-      if (!data) return;
-      const hero = document.getElementById('curation-hero');
+      if (error || !data) return;
       const snippet = (data.body || '')
         .replace(/[#*>_`\[\]]/g, '')
         .replace(/\s+/g, ' ')
         .trim()
         .slice(0, 140);
-      document.getElementById('curation-hero-title').textContent = data.title;
-      document.getElementById('curation-hero-snippet').textContent = snippet + '…';
+      const titleEl   = document.getElementById('curation-hero-title');
+      const snipEl    = document.getElementById('curation-hero-snippet');
+      if (titleEl) titleEl.textContent = data.title || '';
+      if (snipEl)  snipEl.textContent  = snippet + '…';
       hero.href = `./content-detail.html?id=${data.id}`;
       hero.hidden = false;
-    } catch (_) { /* 없으면 그냥 숨김 */ }
+    } catch (e) {
+      console.warn('[forest] hero 로드 실패, 숨김 유지', e);
+    }
   })();
 
   // 베타 한정: reflection 1종만 활성, 나머지는 '준비 중' placeholder
@@ -322,32 +355,34 @@
   let activeSeg = params.get('seg') === 'community' ? 'community' : 'content';
   let activeCat = params.get('category') || 'all';
 
-  // 카테고리 칩 렌더
+  // 카테고리 칩 렌더 (null guard — chips 컨테이너 없어도 본문은 계속)
   const chipsEl = document.getElementById('forest-chips');
-  chipsEl.innerHTML = CATEGORIES.map(c =>
-    `<button class="forest-chip ${c.key === activeCat ? 'active' : ''} ${c.soon ? 'is-soon' : ''}" data-cat="${c.key}" ${c.soon ? 'aria-disabled="true"' : ''}>${c.soon ? '곧 · ' + c.label : c.label}</button>`
-  ).join('');
-  chipsEl.addEventListener('click', (e) => {
-    const btn = e.target.closest('.forest-chip');
-    if (!btn) return;
-    if (btn.getAttribute('aria-disabled') === 'true') return; // 베타: 준비 중 보드는 클릭 무시
-    activeCat = btn.dataset.cat;
-    chipsEl.querySelectorAll('.forest-chip').forEach(b => b.classList.toggle('active', b.dataset.cat === activeCat));
-    loadFeed();
-  });
+  if (chipsEl) {
+    chipsEl.innerHTML = CATEGORIES.map(c =>
+      `<button class="forest-chip ${c.key === activeCat ? 'active' : ''} ${c.soon ? 'is-soon' : ''}" data-cat="${c.key}" ${c.soon ? 'aria-disabled="true"' : ''}>${c.soon ? '곧 · ' + c.label : c.label}</button>`
+    ).join('');
+    chipsEl.addEventListener('click', (e) => {
+      const btn = e.target.closest('.forest-chip');
+      if (!btn) return;
+      if (btn.getAttribute('aria-disabled') === 'true') return; // 베타: 준비 중 보드는 클릭 무시
+      activeCat = btn.dataset.cat;
+      chipsEl.querySelectorAll('.forest-chip').forEach(b => b.classList.toggle('active', b.dataset.cat === activeCat));
+      loadFeed();
+    });
+  }
 
-  document.getElementById('seg-content').addEventListener('click',   () => switchSeg('content'));
-  document.getElementById('seg-community').addEventListener('click', () => switchSeg('community'));
+  document.getElementById('seg-content')?.addEventListener('click',   () => switchSeg('content'));
+  document.getElementById('seg-community')?.addEventListener('click', () => switchSeg('community'));
 
   function switchSeg(seg) {
     activeSeg = seg;
-    document.getElementById('seg-content').classList.toggle('active',   seg === 'content');
-    document.getElementById('seg-community').classList.toggle('active', seg === 'community');
+    document.getElementById('seg-content')?.classList.toggle('active',   seg === 'content');
+    document.getElementById('seg-community')?.classList.toggle('active', seg === 'community');
     loadFeed();
   }
 
   // FAB 분기
-  document.getElementById('fab-forest').addEventListener('click', () => {
+  document.getElementById('fab-forest')?.addEventListener('click', () => {
     if (activeSeg === 'community') {
       window.location.href = './post-write.html';
     } else {
@@ -371,6 +406,7 @@
 
   async function loadFeed() {
     const body = document.getElementById('forest-body');
+    if (!body) return;
     body.innerHTML = `<div class="empty-state"><div class="empty-icon">⏳</div><div class="empty-desc">불러오는 중...</div></div>`;
 
     try {
