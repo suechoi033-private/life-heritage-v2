@@ -240,13 +240,14 @@ OOO님, 폼 응답 감사합니다. 30분이면 충분해요.
 
 > ※ 사업가설 d(매칭 파트너)는 본 라운드 밖. 별도 파트너 대화 트랙에서 W4까지 미팅 최소 1건 목표.
 
-### 4-3. 기록 시트 (구글 시트 3개 · 창업자 소유, Claude 생성)
+### 4-3. 기록 시트 + 폼 (창업자 소유)
 
-| 시트 | URL | 용도 |
+| 자산 | URL | 용도 |
 |---|---|---|
-| 마스터 TODO & 트래커 | https://docs.google.com/spreadsheets/d/1d-T9lUf1LX3RMkxbuzsX0xwzsV_3lsVRvODGfVwj1tQ/edit | 본 라운드 33개 작업 상태판. 매일 체크. |
-| 모집 트래커 (지인 50명) | https://docs.google.com/spreadsheets/d/1KhP_MdFvq1XrAOJsHxiNzU-uu198ppuUmetcf4M5EYc/edit | 후보 50명 입력 + 발송·응답·확정 흐름 추적 |
-| 인터뷰·사용성 기록 | https://docs.google.com/spreadsheets/d/1Tu04F65RD-fndK1t2NZaj4QOh8vE7M5IV9lSGCU0hu4/edit | **탭1 `폼 응답`**(폼 자동 누적, 8문항+타임스탬프) + **탭2 `인터뷰 기록 (20명)`**(창업자 5분 양식 직접 작성) |
+| 마스터 TODO & 트래커 | https://docs.google.com/spreadsheets/d/1d-T9lUf1LX3RMkxbuzsX0xwzsV_3lsVRvODGfVwj1tQ/edit | 본 라운드 33개 작업 상태판. 현재 명단 12명 입력 + L열 `발송 메시지` 수식 작동 검증 완료. |
+| 모집 트래커 (지인 50명) | https://docs.google.com/spreadsheets/d/1KhP_MdFvq1XrAOJsHxiNzU-uu198ppuUmetcf4M5EYc/edit | 별도 트래커 시트 (대안). 컬럼: # / 이름 / 관계 / 분류 / 연락수단 / 발송일 / 응답 / 확정일시 / 채널 / 상태 / 비고 |
+| 인터뷰·사용성 기록 | https://docs.google.com/spreadsheets/d/1Tu04F65RD-fndK1t2NZaj4QOh8vE7M5IV9lSGCU0hu4/edit | **탭1 `폼 응답`**(폼 자동 누적, D0에 연결 예정) + **탭2 `인터뷰 기록 (20명)`**(창업자 5분 양식 직접 작성) |
+| 구글 폼 (8문항, 편집) | https://docs.google.com/forms/d/19QXdHUaKgefRecv73lfIC_cShYKesj57RqtwXRXClvQ/edit | 페르소나 자동 분류 폼 (§3-1 ②). D0에 ① share URL 발급, ② 인터뷰 시트에 응답 연결, ③ 시트 Find&Replace로 카톡 본문 박제. |
 
 - 모집 트래커 컬럼: `# / 이름 / 관계 / 분류(A/B/C/D) / 연락수단 / 발송일 / 응답 / 확정일시 / 채널(통화/화상/대면) / 상태 / 비고`
 - 상태값: `후보` / `발송` / `수락` / `확정` / `완료` / `거절` / `노쇼` / `대기`
@@ -278,8 +279,9 @@ OOO님, 폼 응답 감사합니다. 30분이면 충분해요.
 
 ### 진행 로그 (매주 한 줄)
 
-| 주차 | 한 것 | 다음 주 할 것 | 막힌 것 |
+| 주차 | 한 것 | 다음 할 것 | 막힌 것 |
 |---|---|---|---|
+| **Pre-W1 (5/31 일)** | 결정 5개 확정 · 시트 3개 셋업 · 카톡 마스터 카피(평어/경어, 옵션3 1인칭 진심) · 발송 도우미 수식(관계·받침·가족식 호칭·직책 자동) 적용·검증 · 명단 12명 시드 입력 · 구글 폼 8문항 만들기 시작(편집 URL 수령) | (D0 = 6/1 월) 명단 50명 완성 · 관계·연락수단·연령대 채우기 · 폼 share URL 발급·박제 · 폼 → 인터뷰·사용성 시트에 응답 연결 | 폼 share URL 미수령 → 카톡 본문 폼 링크 자리 `[구글 폼 URL]` 미박제. D1 발송 전 필수. |
 | W1 D4 (6/5) | (작성 예정) | | |
 
 ---

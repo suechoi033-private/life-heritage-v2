@@ -79,5 +79,8 @@
 
 - 제품: 잇다 라이브 (https://suechoi033-private.github.io/life-heritage-v2/), 디자인 v3(화이트+에버그린+나눔명조) 적용
 - 시드 콘텐츠: **공식 8편 발행 완료**(2026-05-31). 1편(seed-10 창업자 수기)은 본문 빈칸 채운 후 공개 예정.
-- 다음 관문: **지인 20명 검증** — 운영안 `docs/interviews/EXECUTION-PLAN.md` (D0 = 2026-06-01), 결정문 `docs/decisions/0002-friend-test-20.md`
+- 다음 관문: **지인 50명 카톡 일괄 발송 → 20명 완주 검증** — 운영안 `docs/interviews/EXECUTION-PLAN.md` (v3), 결정문 `docs/decisions/0002-friend-test-20.md`
+  - Pre-W1 (5/31 일): 결정 5개 · 시트 3개 · 카톡 카피(평어/경어, 1인칭 진심) · 발송 도우미 수식 · 폼 8문항 · 명단 12명 시드 완료
+  - D0 (6/1 월): 명단 50명 완성 + 폼 share URL 박제 + 폼 응답 시트 연결
+  - D1 (6/2 화): 25명 1차 카톡 발송 시작
 - 추모(memorial) 기능은 보류(숨김) — 인터뷰로 방향 확정 후 결정
