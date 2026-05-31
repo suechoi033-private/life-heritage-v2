@@ -98,7 +98,8 @@ Deno.serve(async (req) => {
     const r = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
     if (!r.ok) {
       const msg = await r.text();
-      return json({ error: 'spotify_error', status: r.status, msg }, 502);
+      console.error('[spotify-search] search failed', { status: r.status, q, msg: msg.slice(0, 500) });
+      return json({ error: 'spotify_error', status: r.status, msg: msg.slice(0, 300) }, 502);
     }
     const data = await r.json();
     const tracks = (data?.tracks?.items || []).map((t: any) => ({
@@ -111,8 +112,10 @@ Deno.serve(async (req) => {
       external_url: t.external_urls?.spotify || '',
       uri: t.uri,
     }));
+    console.log('[spotify-search] ok', { q, count: tracks.length });
     return json({ tracks });
   } catch (e: any) {
+    console.error('[spotify-search] exception', { q, msg: e?.message || String(e) });
     return json({ error: e?.message || String(e) }, 500);
   }
 });
