@@ -448,6 +448,7 @@
 <script type="module">
   import { supabase } from './auth.js';
 
+  (async function main() {
   const { data: { session } } = await supabase.auth.getSession();
   const currentUser = session?.user || null;
   const currentUserName = currentUser?.user_metadata?.name || currentUser?.email?.split('@')[0] || null;
@@ -946,6 +947,13 @@
       .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
+  })().catch((e) => {
+    console.error('[ask] fatal', e);
+    const loading = document.getElementById('loading');
+    if (loading) {
+      loading.innerHTML = `<div class="empty-icon">⚠️</div><p>화면을 띄우지 못했어요.<br>${(e && e.message) || ''}</p>`;
+    }
+  });
 </script>
 
 </body>
