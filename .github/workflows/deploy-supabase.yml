@@ -44,6 +44,7 @@ jobs:
         if: ${{ inputs.target == 'all' || inputs.target == 'functions' }}
         run: |
           supabase functions deploy analyze-rx --project-ref "$PROJECT_REF"
+          supabase functions deploy spotify-search --project-ref "$PROJECT_REF"
           # 필요 시 주석 해제하여 함께 배포:
           # supabase functions deploy push-notify --project-ref "$PROJECT_REF"
           # supabase functions deploy kakao-signin --project-ref "$PROJECT_REF"
@@ -55,12 +56,16 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
+          SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
+          SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
         run: |
           ARGS=""
           [ -n "$ANTHROPIC_API_KEY" ] && ARGS="$ARGS ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY"
           [ -n "$DATA_GO_KR_KEY" ] && ARGS="$ARGS DATA_GO_KR_KEY=$DATA_GO_KR_KEY"
+          [ -n "$SPOTIFY_CLIENT_ID" ] && ARGS="$ARGS SPOTIFY_CLIENT_ID=$SPOTIFY_CLIENT_ID"
+          [ -n "$SPOTIFY_CLIENT_SECRET" ] && ARGS="$ARGS SPOTIFY_CLIENT_SECRET=$SPOTIFY_CLIENT_SECRET"
           if [ -n "$ARGS" ]; then
             supabase secrets set $ARGS --project-ref "$PROJECT_REF"
           else
-            echo "설정할 시크릿이 없습니다(ANTHROPIC_API_KEY/DATA_GO_KR_KEY 미설정). 건너뜀."
+            echo "설정할 시크릿이 없습니다. 건너뜀."
           fi

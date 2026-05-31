@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>내 마지막 한 곡 · 잇다</title>
+  <meta name="description" content="내 마지막에 흐를 한 곡, 미리 한 곡 골라두기">
+  <link rel="stylesheet" href="./auth-styles.css">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png">
+  <meta name="theme-color" content="#2F6B4F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <style>
+    .song-shell { max-width: 480px; margin: 0 auto; padding: 24px 18px 80px; }
+    .song-eyebrow { font-size: 11.5px; font-weight: 800; color: var(--primary); letter-spacing: 0.08em; margin-bottom: 8px; }
+    .song-title { font-family: var(--font-serif); font-size: 22px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.4; color: var(--ink); margin: 0 0 8px; }
+    .song-intro { font-size: 13.5px; color: var(--ink-soft); line-height: 1.7; margin: 0 0 24px; }
+
+    .saved-block { background: var(--bg-alt); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 22px; }
+    .saved-label { font-size: 11px; font-weight: 800; color: var(--primary); letter-spacing: 0.06em; margin-bottom: 8px; }
+    .saved-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .saved-img { width: 56px; height: 56px; border-radius: 8px; object-fit: cover; flex-shrink: 0; background: var(--line); }
+    .saved-meta { min-width: 0; flex: 1; }
+    .saved-name { font-size: 14.5px; font-weight: 800; color: var(--ink); line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .saved-artists { font-size: 12.5px; color: var(--ink-muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .saved-embed { width: 100%; border: none; border-radius: 10px; overflow: hidden; height: 80px; }
+    .saved-actions { display: flex; gap: 8px; margin-top: 12px; }
+    .btn-line { flex: 1; padding: 9px; border-radius: 10px; border: 1px solid var(--line); background: #fff; font-size: 13px; font-weight: 700; font-family: inherit; color: var(--ink-soft); cursor: pointer; text-decoration: none; text-align: center; }
+    .btn-line:hover { border-color: var(--primary); color: var(--primary); }
+    .btn-line.danger:hover { border-color: var(--danger); color: var(--danger); }
+
+    .search-block { margin-top: 6px; }
+    .search-input { width: 100%; padding: 13px 14px; border: 1px solid var(--line); border-radius: 12px; font-size: 14.5px; font-family: inherit; background: #fff; color: var(--ink); box-sizing: border-box; transition: border-color 0.15s; }
+    .search-input:focus { outline: none; border-color: var(--primary); }
+    .search-hint { font-size: 12px; color: var(--ink-muted); margin-top: 8px; }
+
+    .results { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+    .track-card { display: flex; align-items: center; gap: 12px; padding: 10px; background: #fff; border: 1px solid var(--line); border-radius: 12px; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s; text-align: left; width: 100%; font-family: inherit; }
+    .track-card:hover { border-color: var(--primary); box-shadow: 0 2px 10px rgba(47,107,79,0.06); }
+    .track-img { width: 48px; height: 48px; border-radius: 6px; object-fit: cover; flex-shrink: 0; background: var(--line); }
+    .track-meta { min-width: 0; flex: 1; }
+    .track-name { font-size: 14px; font-weight: 800; color: var(--ink); line-height: 1.35; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .track-artists { font-size: 12px; color: var(--ink-muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .track-pick { font-size: 12px; font-weight: 700; color: var(--primary); flex-shrink: 0; padding: 4px 10px; border: 1px solid var(--primary-soft); border-radius: 999px; background: var(--primary-soft); }
+
+    .state-empty { padding: 16px; text-align: center; color: var(--ink-muted); font-size: 13px; }
+    .state-error { padding: 12px 14px; border-radius: 10px; background: var(--danger-soft); color: var(--danger); font-size: 12.5px; }
+    .loading { color: var(--ink-muted); font-size: 12.5px; text-align: center; padding: 14px; }
+  </style>
+</head>
+<body>
+
+<main class="song-shell" id="main-content">
+  <div class="song-eyebrow">MY SONG · 내 마지막 한 곡</div>
+  <h1 class="song-title">내 마지막에 흐를<br>한 곡을 골라 두기</h1>
+  <p class="song-intro">
+    '내 장례식에 어떤 노래를 틀고 싶어?' 그 질문은 사실, 내가 어떤 사람으로 기억되고 싶은지에 대한 답입니다.
+    오늘 한 곡 고르는 일은 죽음 준비가 아니라, 내가 가장 사랑한 것에 대한 응답.
+  </p>
+
+  <div id="saved-area"><div class="loading">불러오는 중…</div></div>
+
+  <div class="search-block">
+    <div class="saved-label" style="margin-bottom: 8px;">곡 검색 · SPOTIFY</div>
+    <input type="text" class="search-input" id="search-input" placeholder="곡 제목 또는 아티스트 (예: imagine john lennon)" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <div class="search-hint">검색은 Spotify의 데이터를 사용합니다. 무료 계정도 검색·미리듣기 가능.</div>
+    <div id="results" class="results"></div>
+  </div>
+</main>
+
+<script type="module">
+  import { supabase } from './auth.js';
+  import { renderNav } from './nav.js';
+  import { searchSpotify, getMyFinalSong, saveMyFinalSong, removeMyFinalSong, spotifyEmbedUrl } from './js/spotify.js';
+
+  await renderNav({ active: 'root', infoIcon: false, title: '내 한 곡', quickWrite: false });
+
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) { window.location.href = './login.html'; throw new Error('로그인 필요'); }
+
+  const savedArea = document.getElementById('saved-area');
+  const searchInput = document.getElementById('search-input');
+  const resultsEl = document.getElementById('results');
+
+  function escapeHtml(s) {
+    return (s || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+
+  async function renderSaved() {
+    try {
+      const song = await getMyFinalSong();
+      if (!song) {
+        savedArea.innerHTML = '';
+        return;
+      }
+      savedArea.innerHTML = `
+        <div class="saved-block">
+          <div class="saved-label">✦ 내 마지막 한 곡</div>
+          <div class="saved-row">
+            ${song.image_url ? `<img class="saved-img" src="${escapeHtml(song.image_url)}" alt="">` : '<div class="saved-img"></div>'}
+            <div class="saved-meta">
+              <div class="saved-name">${escapeHtml(song.name)}</div>
+              <div class="saved-artists">${escapeHtml(song.artists)}</div>
+            </div>
+          </div>
+          <iframe class="saved-embed" src="${spotifyEmbedUrl(song.spotify_track_id)}" allow="encrypted-media; autoplay; clipboard-write; fullscreen; picture-in-picture" loading="lazy"></iframe>
+          <div class="saved-actions">
+            ${song.external_url ? `<a class="btn-line" href="${escapeHtml(song.external_url)}" target="_blank" rel="noopener">Spotify에서 듣기 →</a>` : ''}
+            <button type="button" class="btn-line danger" id="btn-remove-song">삭제</button>
+          </div>
+        </div>`;
+      document.getElementById('btn-remove-song')?.addEventListener('click', async () => {
+        if (!confirm('지금 곡을 지우고 다른 곡으로 바꿀까요?')) return;
+        try {
+          await removeMyFinalSong();
+          await renderSaved();
+        } catch (e) {
+          alert('삭제에 실패했어요: ' + (e.message || e));
+        }
+      });
+    } catch (e) {
+      savedArea.innerHTML = `<div class="state-error">불러오기 실패: ${escapeHtml(e.message || String(e))}</div>`;
+    }
+  }
+
+  let searchTimer = null;
+  let lastSearched = '';
+
+  function doSearch() {
+    const q = searchInput.value.trim();
+    if (q === lastSearched) return;
+    lastSearched = q;
+    if (q.length < 2) {
+      resultsEl.innerHTML = '';
+      return;
+    }
+    resultsEl.innerHTML = '<div class="loading">검색 중…</div>';
+    searchSpotify(q).then((tracks) => {
+      if (q !== lastSearched) return; // 그새 다른 검색
+      if (!tracks.length) {
+        resultsEl.innerHTML = '<div class="state-empty">결과가 없어요. 다른 단어로 검색해 보세요.</div>';
+        return;
+      }
+      resultsEl.innerHTML = tracks.map((t, i) => `
+        <button type="button" class="track-card" data-idx="${i}">
+          ${t.image ? `<img class="track-img" src="${escapeHtml(t.image)}" alt="">` : '<div class="track-img"></div>'}
+          <div class="track-meta">
+            <div class="track-name">${escapeHtml(t.name)}</div>
+            <div class="track-artists">${escapeHtml(t.artists)}</div>
+          </div>
+          <span class="track-pick">고르기</span>
+        </button>`).join('');
+      resultsEl.querySelectorAll('button[data-idx]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const idx = Number(btn.dataset.idx);
+          const track = tracks[idx];
+          btn.disabled = true;
+          btn.querySelector('.track-pick').textContent = '저장 중…';
+          try {
+            await saveMyFinalSong(track);
+            searchInput.value = '';
+            lastSearched = '';
+            resultsEl.innerHTML = '';
+            await renderSaved();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          } catch (e) {
+            alert('저장에 실패했어요: ' + (e.message || e));
+            btn.disabled = false;
+            btn.querySelector('.track-pick').textContent = '고르기';
+          }
+        });
+      });
+    }).catch((e) => {
+      resultsEl.innerHTML = `<div class="state-error">${escapeHtml(e.message || String(e))}</div>`;
+    });
+  }
+
+  searchInput.addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(doSearch, 350);
+  });
+  searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); clearTimeout(searchTimer); doSearch(); }
+  });
+
+  renderSaved();
+</script>
+
+</body>
+</html>
