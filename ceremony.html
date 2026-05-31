@@ -152,8 +152,8 @@
   import { supabase } from './auth.js';
   import { renderNav } from './nav.js';
   import {
-    detectService, extractTrackId, buildEmbedUrl, fetchSongMetadata,
-    getMyFinalSong, saveMyFinalSong, removeMyFinalSong, embedUrlForSavedSong,
+    detectService, extractTrackId, fetchSongMetadata,
+    listMyPlaylist, addToPlaylist, removeFromPlaylist,
   } from './js/spotify.js';
 
   await renderNav({ active: 'seed', infoIcon: false, title: '살아서 하는 장례식', quickWrite: false });
@@ -262,9 +262,9 @@
     },
     {
       key: 'song', type: 'song',
-      eyebrow: '8. 흐를 한 곡',
-      title: '그 자리에 흐를<br>한 곡을 골라 두세요.',
-      sub: "'내 마지막에 흐를 한 곡' — 가장 사랑한 것에 대한 응답. (건너뛰어도 돼요)",
+      eyebrow: '8. 나의 장례식 플레이리스트',
+      title: '나의 장례식<br>플레이리스트를 만들어요.',
+      sub: "그 자리에 흐를 곡을 한 곡씩 더해 두세요. (건너뛰어도 돼요)",
     },
     {
       key: 'wish', type: 'text',
@@ -406,119 +406,140 @@
     nextBtn.disabled = s.type !== 'text' && s.type !== 'song' && !isAnswered(s.key);
   }
 
-  // ───────── song 질문 마운트 ─────────
-  const SERVICE_LABEL = { spotify: 'SPOTIFY', apple: 'APPLE MUSIC', youtube: 'YOUTUBE' };
+  // ───────── song 질문 마운트 (플레이리스트) ─────────
+  const SERVICE_LABEL = { spotify: 'Spotify', apple: 'Apple Music', youtube: 'YouTube' };
   async function mountSongQuestion(root) {
     if (!root) return;
-    let saved = null;
-    try { saved = await getMyFinalSong(); } catch (_) { /* noop */ }
-    renderSongUI(root, saved);
-  }
-  function renderSongUI(root, saved) {
-    const svc = saved ? (detectService(saved.external_url || '') || 'spotify') : null;
-    const embed = saved ? embedUrlForSavedSong(saved) : null;
     root.innerHTML = `
       <style>
-        .cer-song-saved { background:#fff; border:1px solid var(--line); border-radius:12px; padding:14px; margin-bottom:14px; }
-        .cer-song-saved-label { font-size:11px; font-weight:800; color:var(--primary); letter-spacing:0.06em; margin-bottom:8px; }
-        .cer-song-row { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
-        .cer-song-img { width:48px; height:48px; border-radius:6px; object-fit:cover; background:var(--line); flex-shrink:0; }
-        .cer-song-name { font-size:14px; font-weight:800; color:var(--ink); line-height:1.35; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-        .cer-song-svc { font-size:11px; color:var(--ink-muted); margin-top:2px; letter-spacing:0.04em; }
-        .cer-song-embed { width:100%; border:none; border-radius:10px; height:152px; overflow:hidden; }
-        .cer-song-embed.apple { height:175px; } .cer-song-embed.youtube { height:200px; }
-        .cer-song-actions { display:flex; gap:8px; margin-top:10px; }
-        .cer-song-btn { flex:1; padding:9px; border-radius:10px; border:1px solid var(--line); background:#fff; font-size:12.5px; font-weight:700; font-family:inherit; color:var(--ink-soft); cursor:pointer; }
-        .cer-song-btn.danger:hover { border-color:var(--danger); color:var(--danger); }
-        .cer-song-paste-input { width:100%; padding:12px 13px; border:1px solid var(--line); border-radius:10px; font-size:14px; font-family:inherit; background:#fff; color:var(--ink); box-sizing:border-box; }
-        .cer-song-paste-input:focus { outline:none; border-color:var(--primary); }
-        .cer-song-hint { font-size:12px; color:var(--ink-muted); margin-top:8px; line-height:1.55; }
-        .cer-song-hint b { color:var(--ink-soft); }
-        .cer-song-preview { margin-top:12px; background:#fff; border:1.5px solid var(--primary); border-radius:12px; padding:12px; }
-        .cer-song-preview .cer-song-embed { margin:8px 0; }
-        .cer-song-save { width:100%; padding:11px; border-radius:10px; border:0; background:var(--primary); color:#fff; font-size:13.5px; font-weight:800; font-family:inherit; cursor:pointer; margin-top:8px; }
-        .cer-song-save:disabled { opacity:0.6; cursor:wait; }
-        .cer-song-err { padding:10px 12px; border-radius:8px; background:var(--danger-soft); color:var(--danger); font-size:12px; margin-top:10px; }
+        .cer-pl-block { background:#fff; border:1px solid var(--line); border-radius:12px; padding:12px; margin-bottom:14px; }
+        .cer-pl-head { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:8px; }
+        .cer-pl-label { font-size:11px; font-weight:800; color:var(--primary); letter-spacing:0.06em; }
+        .cer-pl-count { font-size:11px; color:var(--ink-muted); font-weight:700; }
+        .cer-pl-list { display:flex; flex-direction:column; gap:6px; }
+        .cer-pl-empty { font-size:12.5px; color:var(--ink-muted); text-align:center; padding:14px 8px; line-height:1.6; }
+        .cer-pl-row { display:flex; align-items:center; gap:9px; padding:7px; background:var(--bg-alt); border-radius:8px; }
+        .cer-pl-img { width:38px; height:38px; border-radius:5px; object-fit:cover; background:var(--line); flex-shrink:0; }
+        .cer-pl-meta { min-width:0; flex:1; }
+        .cer-pl-name { font-size:13px; font-weight:700; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .cer-pl-sub { font-size:11px; color:var(--ink-muted); margin-top:1px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .cer-pl-sub b { color:var(--primary); font-weight:800; }
+        .cer-pl-btn { width:28px; height:28px; border-radius:6px; border:1px solid var(--line); background:#fff; display:flex; align-items:center; justify-content:center; font-size:12px; color:var(--ink-soft); cursor:pointer; text-decoration:none; font-family:inherit; flex-shrink:0; }
+        .cer-pl-btn:hover { border-color:var(--primary); color:var(--primary); }
+        .cer-pl-btn.danger:hover { border-color:var(--danger); color:var(--danger); }
+        .cer-pl-actions { display:flex; gap:3px; flex-shrink:0; }
+        .cer-paste-input { width:100%; padding:12px 13px; border:1px solid var(--line); border-radius:10px; font-size:14px; font-family:inherit; background:#fff; color:var(--ink); box-sizing:border-box; }
+        .cer-paste-input:focus { outline:none; border-color:var(--primary); }
+        .cer-paste-hint { font-size:12px; color:var(--ink-muted); margin-top:8px; line-height:1.55; }
+        .cer-paste-hint b { color:var(--ink-soft); }
+        .cer-prev { margin-top:10px; background:#fff; border:1.5px solid var(--primary); border-radius:10px; padding:10px; }
+        .cer-prev-row { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+        .cer-prev-name { font-size:13px; font-weight:800; color:var(--ink); overflow:hidden; text-overflow:ellipsis; }
+        .cer-prev-svc { font-size:11px; color:var(--ink-muted); margin-top:1px; }
+        .cer-add-btn { width:100%; padding:10px; border-radius:8px; border:0; background:var(--primary); color:#fff; font-size:13px; font-weight:800; font-family:inherit; cursor:pointer; }
+        .cer-add-btn:disabled { opacity:0.6; cursor:wait; }
+        .cer-err { padding:9px 11px; border-radius:8px; background:var(--danger-soft); color:var(--danger); font-size:12px; margin-top:10px; }
       </style>
-      ${saved ? `
-        <div class="cer-song-saved">
-          <div class="cer-song-saved-label">✦ 골라둔 한 곡</div>
-          <div class="cer-song-row">
-            ${saved.image_url ? `<img class="cer-song-img" src="${escapeHtml(saved.image_url)}" alt="">` : '<div class="cer-song-img"></div>'}
-            <div style="min-width:0;flex:1;">
-              <div class="cer-song-name">${escapeHtml(saved.name || '곡')}</div>
-              <div class="cer-song-svc">${SERVICE_LABEL[svc] || svc.toUpperCase()}</div>
-            </div>
-          </div>
-          ${embed ? `<iframe class="cer-song-embed ${svc}" src="${escapeHtml(embed)}" allow="encrypted-media; autoplay; clipboard-write; picture-in-picture" loading="lazy"></iframe>` : ''}
-          <div class="cer-song-actions">
-            <button type="button" class="cer-song-btn" data-cer-song-change>곡 바꾸기</button>
-            <button type="button" class="cer-song-btn danger" data-cer-song-remove>삭제</button>
-          </div>
-        </div>` : ''}
-      <input type="url" class="cer-song-paste-input" id="cer-song-paste" placeholder="Spotify · Apple Music · YouTube 링크 paste" autocomplete="off" autocapitalize="off" spellcheck="false">
-      <div class="cer-song-hint">
-        곡을 듣는 앱(Spotify/Apple Music/YouTube)에서 <b>공유 → 링크 복사</b> → 여기 paste.
+      <div class="cer-pl-block">
+        <div class="cer-pl-head">
+          <span class="cer-pl-label">✦ 내 플레이리스트</span>
+          <span class="cer-pl-count" id="cer-pl-count"></span>
+        </div>
+        <div id="cer-pl-list"><div class="cer-pl-empty">불러오는 중…</div></div>
       </div>
-      <div id="cer-song-preview"></div>
+      <input type="url" class="cer-paste-input" id="cer-paste-input" placeholder="Spotify · Apple Music · YouTube 링크 paste" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <div class="cer-paste-hint">
+        곡을 듣는 앱에서 <b>공유 → 링크 복사</b> → 여기 paste. 한 곡씩 더할 수 있어요.
+      </div>
+      <div id="cer-prev-mount"></div>
     `;
 
-    root.querySelector('[data-cer-song-remove]')?.addEventListener('click', async () => {
-      if (!confirm('지금 곡을 지울까요?')) return;
-      try { await removeMyFinalSong(); renderSongUI(root, null); }
-      catch (e) { alert('삭제 실패: ' + (e.message || e)); }
-    });
-    root.querySelector('[data-cer-song-change]')?.addEventListener('click', () => {
-      root.querySelector('#cer-song-paste')?.focus();
-    });
+    const listMount = root.querySelector('#cer-pl-list');
+    const countMount = root.querySelector('#cer-pl-count');
+    const pasteInput = root.querySelector('#cer-paste-input');
+    const prevMount = root.querySelector('#cer-prev-mount');
 
-    const pasteInput = root.querySelector('#cer-song-paste');
-    const previewEl = root.querySelector('#cer-song-preview');
+    async function renderList() {
+      try {
+        const songs = await listMyPlaylist();
+        countMount.textContent = songs.length ? `${songs.length}곡` : '';
+        if (!songs.length) {
+          listMount.innerHTML = `<div class="cer-pl-empty">아직 곡이 없어요.<br>아래에 좋아하는 곡 링크를 paste해 첫 곡을 더해 보세요.</div>`;
+          return;
+        }
+        listMount.innerHTML = songs.map((s) => {
+          const svc = detectService(s.external_url || '') || 'spotify';
+          const sub = `${escapeHtml(s.artists || '')}${s.artists ? ' · ' : ''}<b>${escapeHtml(SERVICE_LABEL[svc] || svc)}</b>`;
+          return `
+            <div class="cer-pl-row">
+              ${s.image_url ? `<img class="cer-pl-img" src="${escapeHtml(s.image_url)}" alt="">` : '<div class="cer-pl-img"></div>'}
+              <div class="cer-pl-meta">
+                <div class="cer-pl-name">${escapeHtml(s.name || '곡')}</div>
+                <div class="cer-pl-sub">${sub}</div>
+              </div>
+              <div class="cer-pl-actions">
+                ${s.external_url ? `<a class="cer-pl-btn" href="${escapeHtml(s.external_url)}" target="_blank" rel="noopener" aria-label="듣기">▶</a>` : ''}
+                <button type="button" class="cer-pl-btn danger" data-del="${s.id}" aria-label="삭제">✕</button>
+              </div>
+            </div>`;
+        }).join('');
+        listMount.querySelectorAll('button[data-del]').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            if (!confirm('이 곡을 플레이리스트에서 지울까요?')) return;
+            try { await removeFromPlaylist(btn.dataset.del); await renderList(); }
+            catch (e) { alert('삭제 실패: ' + (e.message || e)); }
+          });
+        });
+      } catch (e) {
+        listMount.innerHTML = `<div class="cer-err">불러오기 실패: ${escapeHtml(e.message || String(e))}</div>`;
+      }
+    }
+
     let lastUrl = '';
     async function processPaste() {
       const url = pasteInput.value.trim();
       if (url === lastUrl) return;
       lastUrl = url;
-      if (!url) { previewEl.innerHTML = ''; return; }
-      const svc2 = detectService(url);
-      if (!svc2) {
-        previewEl.innerHTML = `<div class="cer-song-err">지원하는 음악 서비스 링크를 붙여넣어 주세요 — Spotify · Apple Music · YouTube</div>`;
+      if (!url) { prevMount.innerHTML = ''; return; }
+      const svc = detectService(url);
+      if (!svc) {
+        prevMount.innerHTML = `<div class="cer-err">지원하는 음악 서비스 링크를 붙여넣어 주세요 — Spotify · Apple Music · YouTube</div>`;
         return;
       }
-      previewEl.innerHTML = `<div style="text-align:center;color:var(--ink-muted);font-size:12.5px;padding:12px;">불러오는 중…</div>`;
+      prevMount.innerHTML = `<div class="cer-pl-empty">불러오는 중…</div>`;
       const meta = await fetchSongMetadata(url);
-      const embed2 = buildEmbedUrl(url);
       const trackId = extractTrackId(url);
       if (url !== lastUrl) return;
-      previewEl.innerHTML = `
-        <div class="cer-song-preview">
-          <div class="cer-song-row">
-            ${meta?.image ? `<img class="cer-song-img" src="${escapeHtml(meta.image)}" alt="">` : '<div class="cer-song-img"></div>'}
+      prevMount.innerHTML = `
+        <div class="cer-prev">
+          <div class="cer-prev-row">
+            ${meta?.image ? `<img class="cer-pl-img" src="${escapeHtml(meta.image)}" alt="">` : '<div class="cer-pl-img"></div>'}
             <div style="min-width:0;flex:1;">
-              <div class="cer-song-name">${escapeHtml(meta?.name || '곡')}</div>
-              <div class="cer-song-svc">${SERVICE_LABEL[svc2] || svc2.toUpperCase()}</div>
+              <div class="cer-prev-name">${escapeHtml(meta?.name || '곡')}</div>
+              <div class="cer-prev-svc">${SERVICE_LABEL[svc] || svc}</div>
             </div>
           </div>
-          ${embed2 ? `<iframe class="cer-song-embed ${svc2}" src="${escapeHtml(embed2)}" allow="encrypted-media; autoplay; clipboard-write; picture-in-picture" loading="lazy"></iframe>` : ''}
-          <button type="button" class="cer-song-save" id="cer-song-save-btn">이 곡으로 저장</button>
+          <button type="button" class="cer-add-btn" id="cer-add-btn">플레이리스트에 추가</button>
         </div>`;
-      previewEl.querySelector('#cer-song-save-btn')?.addEventListener('click', async () => {
-        const btn = previewEl.querySelector('#cer-song-save-btn');
-        btn.disabled = true; btn.textContent = '저장 중…';
+      prevMount.querySelector('#cer-add-btn')?.addEventListener('click', async () => {
+        const btn = prevMount.querySelector('#cer-add-btn');
+        btn.disabled = true; btn.textContent = '추가 중…';
         try {
-          await saveMyFinalSong({ id: trackId || '', name: meta?.name || '', artists: '', image: meta?.image || '', external_url: url });
+          await addToPlaylist({ id: trackId || '', name: meta?.name || '', artists: '', image: meta?.image || '', external_url: url });
           pasteInput.value = ''; lastUrl = '';
-          previewEl.innerHTML = '';
-          mountSongQuestion(root);  // saved 상태로 재렌더
+          prevMount.innerHTML = '';
+          await renderList();
         } catch (e) {
-          alert('저장 실패: ' + (e.message || e));
-          btn.disabled = false; btn.textContent = '이 곡으로 저장';
+          alert('추가 실패: ' + (e.message || e));
+          btn.disabled = false; btn.textContent = '플레이리스트에 추가';
         }
       });
     }
     let pasteTimer = null;
     pasteInput.addEventListener('input', () => { clearTimeout(pasteTimer); pasteTimer = setTimeout(processPaste, 200); });
     pasteInput.addEventListener('paste', () => setTimeout(processPaste, 0));
+
+    renderList();
   }
 
   backBtn.addEventListener('click', () => {
@@ -557,10 +578,12 @@
     const recos = VENUES[plan.venue] || [];
     const food = FOODS[plan.food];
 
-    // 골라둔 한 곡 (있으면)
-    let song = null;
-    try { song = await getMyFinalSong(); } catch (_) { /* noop */ }
-    const songLabel = song ? `♬ ${song.name || '내가 골라둔 한 곡'}` : '';
+    // 골라둔 플레이리스트 (있으면)
+    let playlist = [];
+    try { playlist = await listMyPlaylist(); } catch (_) { /* noop */ }
+    const songLabel = playlist.length
+      ? `♬ ${escapeHtml(playlist[0].name || '내 플레이리스트')}` + (playlist.length > 1 ? ` 외 ${playlist.length - 1}곡` : '')
+      : '';
 
     resultEl.innerHTML = `
       <div class="cer-result-head">
@@ -576,7 +599,7 @@
         ${row('나눌 것', programLabels.join(' · '))}
         ${row('장소', venueLabel)}
         ${row('음식', foodLabel)}
-        ${songLabel ? row('흐를 한 곡', escapeHtml(songLabel)) : ''}
+        ${songLabel ? row('플레이리스트', songLabel) : ''}
       </div>
 
       <div class="cer-notice">

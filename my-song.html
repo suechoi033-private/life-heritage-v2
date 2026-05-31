@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>내 마지막 한 곡 · 잇다</title>
-  <meta name="description" content="내 마지막에 흐를 한 곡, 미리 한 곡 골라두기">
+  <title>나의 장례식 플레이리스트 · 잇다</title>
+  <meta name="description" content="나의 장례식 플레이리스트 — 마지막에 흐를 곡들을 미리 모아두기">
   <link rel="stylesheet" href="./auth-styles.css">
   <link rel="manifest" href="./manifest.json">
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
@@ -17,23 +17,36 @@
     .song-title { font-family: var(--font-serif); font-size: 22px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.4; color: var(--ink); margin: 0 0 8px; }
     .song-intro { font-size: 13.5px; color: var(--ink-soft); line-height: 1.7; margin: 0 0 22px; }
 
-    .saved-block { background: var(--bg-alt); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 22px; }
-    .saved-label { font-size: 11px; font-weight: 800; color: var(--primary); letter-spacing: 0.06em; margin-bottom: 8px; }
-    .saved-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-    .saved-img { width: 56px; height: 56px; border-radius: 8px; object-fit: cover; flex-shrink: 0; background: var(--line); }
-    .saved-meta { min-width: 0; flex: 1; }
-    .saved-name { font-size: 14.5px; font-weight: 800; color: var(--ink); line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .saved-service { font-size: 11.5px; color: var(--ink-muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.04em; }
-    .saved-embed { width: 100%; border: none; border-radius: 10px; overflow: hidden; }
-    .saved-embed.spotify { height: 152px; }
-    .saved-embed.apple   { height: 175px; }
-    .saved-embed.youtube { height: 220px; }
-    .saved-actions { display: flex; gap: 8px; margin-top: 12px; }
-    .btn-line { flex: 1; padding: 9px; border-radius: 10px; border: 1px solid var(--line); background: #fff; font-size: 13px; font-weight: 700; font-family: inherit; color: var(--ink-soft); cursor: pointer; text-decoration: none; text-align: center; }
-    .btn-line:hover { border-color: var(--primary); color: var(--primary); }
-    .btn-line.danger:hover { border-color: var(--danger); color: var(--danger); }
+    .pl-block { background: var(--bg-alt); border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-bottom: 18px; }
+    .pl-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; }
+    .pl-label { font-size: 11.5px; font-weight: 800; color: var(--primary); letter-spacing: 0.06em; }
+    .pl-count { font-size: 11.5px; color: var(--ink-muted); font-weight: 700; }
+    .pl-list { display: flex; flex-direction: column; gap: 8px; }
+    .pl-empty { font-size: 12.5px; color: var(--ink-muted); text-align: center; padding: 18px 10px; }
 
-    .paste-block { margin-top: 6px; }
+    .pl-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px; background: #fff;
+      border: 1px solid var(--line); border-radius: 10px;
+    }
+    .pl-img { width: 44px; height: 44px; border-radius: 6px; object-fit: cover; flex-shrink: 0; background: var(--line); }
+    .pl-meta { min-width: 0; flex: 1; }
+    .pl-name { font-size: 13.5px; font-weight: 700; color: var(--ink); line-height: 1.35; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .pl-sub { font-size: 11.5px; color: var(--ink-muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .pl-sub b { color: var(--primary); font-weight: 800; }
+    .pl-actions { display: flex; gap: 4px; flex-shrink: 0; }
+    .pl-btn {
+      width: 32px; height: 32px; border-radius: 8px;
+      border: 1px solid var(--line); background: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; color: var(--ink-soft); cursor: pointer;
+      text-decoration: none; font-family: inherit;
+    }
+    .pl-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .pl-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
+
+    .add-block { margin-top: 6px; }
+    .add-label { font-size: 11.5px; font-weight: 800; color: var(--ink-soft); letter-spacing: 0.06em; margin-bottom: 8px; }
     .paste-input {
       width: 100%; padding: 13px 14px;
       border: 1px solid var(--line); border-radius: 12px;
@@ -45,7 +58,7 @@
     .paste-hint { font-size: 12px; color: var(--ink-muted); margin-top: 10px; line-height: 1.6; }
     .paste-hint b { color: var(--ink-soft); }
 
-    .how-to { background: var(--bg-alt); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin-top: 16px; font-size: 12.5px; line-height: 1.7; color: var(--ink-soft); }
+    .how-to { background: var(--bg-alt); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin-top: 14px; font-size: 12.5px; line-height: 1.7; color: var(--ink-soft); }
     .how-to-title { font-weight: 800; color: var(--ink); margin-bottom: 6px; font-size: 13px; }
     .how-to ol { margin: 0; padding-left: 18px; }
     .how-to li { margin-bottom: 3px; }
@@ -56,11 +69,7 @@
     .preview-img { width: 48px; height: 48px; border-radius: 6px; object-fit: cover; flex-shrink: 0; background: var(--line); }
     .preview-name { font-size: 14px; font-weight: 800; color: var(--ink); line-height: 1.35; overflow: hidden; text-overflow: ellipsis; }
     .preview-service { font-size: 11.5px; color: var(--ink-muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.04em; }
-    .preview-embed { width: 100%; border: none; border-radius: 10px; overflow: hidden; margin: 10px 0; }
-    .preview-embed.spotify { height: 152px; }
-    .preview-embed.apple   { height: 175px; }
-    .preview-embed.youtube { height: 220px; }
-    .btn-primary { width: 100%; padding: 12px; border-radius: 10px; border: 0; background: var(--primary); color: #fff; font-size: 14px; font-weight: 800; font-family: inherit; cursor: pointer; }
+    .btn-primary { width: 100%; padding: 12px; border-radius: 10px; border: 0; background: var(--primary); color: #fff; font-size: 14px; font-weight: 800; font-family: inherit; cursor: pointer; margin-top: 4px; }
     .btn-primary:hover { background: var(--primary-hover); }
     .btn-primary:disabled { opacity: 0.6; cursor: wait; }
 
@@ -71,22 +80,29 @@
 <body>
 
 <main class="song-shell" id="main-content">
-  <div class="song-eyebrow">MY SONG · 내 마지막 한 곡</div>
-  <h1 class="song-title">내 마지막에 흐를<br>한 곡을 골라 두기</h1>
+  <div class="song-eyebrow">MY PLAYLIST · 나의 장례식 플레이리스트</div>
+  <h1 class="song-title">나의 장례식<br>플레이리스트</h1>
   <p class="song-intro">
-    '내 장례식에 어떤 노래를 틀고 싶어?' 그 질문은 사실, 내가 어떤 사람으로 기억되고 싶은지에 대한 답입니다.
-    오늘 한 곡 고르는 일은 죽음 준비가 아니라, 내가 가장 사랑한 것에 대한 응답.
+    '내 장례식에 어떤 노래가 흘렀으면 좋겠어?' 그 질문은 사실, 내가 어떤 사람으로 기억되고 싶은지에 대한 답입니다.
+    한 곡씩 더해가는 일은 죽음 준비가 아니라, 내가 가장 사랑한 것에 대한 응답.
   </p>
 
-  <div id="saved-area"><div class="loading">불러오는 중…</div></div>
+  <div class="pl-block">
+    <div class="pl-head">
+      <span class="pl-label">✦ 내 플레이리스트</span>
+      <span class="pl-count" id="pl-count"></span>
+    </div>
+    <div id="pl-list"><div class="loading">불러오는 중…</div></div>
+  </div>
 
-  <div class="paste-block">
-    <div class="saved-label" style="margin-bottom: 8px;">곡 링크 붙여넣기</div>
+  <div class="add-block">
+    <div class="add-label">곡 추가하기</div>
     <input type="url" class="paste-input" id="paste-input" placeholder="Spotify · Apple Music · YouTube 링크 paste" autocomplete="off" autocapitalize="off" spellcheck="false">
     <div class="paste-hint">
       예: <b>https://open.spotify.com/track/...</b><br>
       <b>https://music.apple.com/kr/album/.../...?i=...</b><br>
-      <b>https://youtu.be/...</b>
+      <b>https://youtu.be/...</b><br>
+      플레이리스트 링크(open.spotify.com/playlist/... 또는 music.apple.com/.../playlist/...)도 가능.
     </div>
 
     <div class="how-to">
@@ -107,62 +123,66 @@
   import { renderNav } from './nav.js';
   import {
     detectService, extractTrackId, buildEmbedUrl, fetchSongMetadata,
-    getMyFinalSong, saveMyFinalSong, removeMyFinalSong, embedUrlForSavedSong,
+    listMyPlaylist, addToPlaylist, removeFromPlaylist,
   } from './js/spotify.js';
 
-  await renderNav({ active: 'root', infoIcon: false, title: '내 한 곡', quickWrite: false });
+  await renderNav({ active: 'root', infoIcon: false, title: '내 플레이리스트', quickWrite: false });
 
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) { window.location.href = './login.html'; throw new Error('로그인 필요'); }
 
-  const savedArea = document.getElementById('saved-area');
+  const listEl = document.getElementById('pl-list');
+  const countEl = document.getElementById('pl-count');
   const pasteInput = document.getElementById('paste-input');
   const previewEl = document.getElementById('preview');
+
+  const SERVICE_LABEL = { spotify: 'Spotify', apple: 'Apple Music', youtube: 'YouTube' };
 
   function escapeHtml(s) {
     return (s || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   }
 
-  const SERVICE_LABEL = { spotify: 'SPOTIFY', apple: 'APPLE MUSIC', youtube: 'YOUTUBE' };
-
-  async function renderSaved() {
+  async function renderList() {
     try {
-      const song = await getMyFinalSong();
-      if (!song) { savedArea.innerHTML = ''; return; }
-      const svc = detectService(song.external_url || '') || 'spotify';
-      const embed = embedUrlForSavedSong(song);
-      savedArea.innerHTML = `
-        <div class="saved-block">
-          <div class="saved-label">✦ 내 마지막 한 곡</div>
-          <div class="saved-row">
-            ${song.image_url ? `<img class="saved-img" src="${escapeHtml(song.image_url)}" alt="">` : '<div class="saved-img"></div>'}
-            <div class="saved-meta">
-              <div class="saved-name">${escapeHtml(song.name || '곡')}</div>
-              <div class="saved-service">${SERVICE_LABEL[svc] || svc.toUpperCase()}</div>
+      const songs = await listMyPlaylist();
+      countEl.textContent = songs.length ? `${songs.length}곡` : '';
+      if (!songs.length) {
+        listEl.innerHTML = `<div class="pl-empty">아직 곡이 없어요.<br>아래 입력창에 좋아하는 곡 링크를 paste해 첫 곡을 더해 보세요.</div>`;
+        return;
+      }
+      listEl.innerHTML = songs.map((s) => {
+        const svc = detectService(s.external_url || '') || 'spotify';
+        const sub = `${escapeHtml(s.artists || '')}${s.artists ? ' · ' : ''}<b>${escapeHtml(SERVICE_LABEL[svc] || svc)}</b>`;
+        return `
+          <div class="pl-row">
+            ${s.image_url ? `<img class="pl-img" src="${escapeHtml(s.image_url)}" alt="">` : '<div class="pl-img"></div>'}
+            <div class="pl-meta">
+              <div class="pl-name">${escapeHtml(s.name || '곡')}</div>
+              <div class="pl-sub">${sub}</div>
             </div>
-          </div>
-          ${embed ? `<iframe class="saved-embed ${svc}" src="${escapeHtml(embed)}" allow="encrypted-media; autoplay; clipboard-write; fullscreen; picture-in-picture" loading="lazy"></iframe>` : ''}
-          <div class="saved-actions">
-            ${song.external_url ? `<a class="btn-line" href="${escapeHtml(song.external_url)}" target="_blank" rel="noopener">원본에서 듣기 →</a>` : ''}
-            <button type="button" class="btn-line danger" id="btn-remove-song">삭제·바꾸기</button>
-          </div>
-        </div>`;
-      document.getElementById('btn-remove-song')?.addEventListener('click', async () => {
-        if (!confirm('지금 곡을 지우고 다른 곡으로 바꿀까요?')) return;
-        try {
-          await removeMyFinalSong();
-          await renderSaved();
-        } catch (e) {
-          alert('삭제에 실패했어요: ' + (e.message || e));
-        }
+            <div class="pl-actions">
+              ${s.external_url ? `<a class="pl-btn" href="${escapeHtml(s.external_url)}" target="_blank" rel="noopener" aria-label="원본에서 듣기">▶</a>` : ''}
+              <button type="button" class="pl-btn danger" data-del="${s.id}" aria-label="삭제">✕</button>
+            </div>
+          </div>`;
+      }).join('');
+      listEl.querySelectorAll('button[data-del]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (!confirm('이 곡을 플레이리스트에서 지울까요?')) return;
+          try {
+            await removeFromPlaylist(btn.dataset.del);
+            await renderList();
+          } catch (e) {
+            alert('삭제 실패: ' + (e.message || e));
+          }
+        });
       });
     } catch (e) {
-      savedArea.innerHTML = `<div class="state-error">불러오기 실패: ${escapeHtml(e.message || String(e))}</div>`;
+      listEl.innerHTML = `<div class="state-error">불러오기 실패: ${escapeHtml(e.message || String(e))}</div>`;
     }
   }
 
   let lastUrl = '';
-
   async function processPaste() {
     const url = pasteInput.value.trim();
     if (url === lastUrl) return;
@@ -177,30 +197,27 @@
 
     previewEl.innerHTML = '<div class="loading">불러오는 중…</div>';
     const meta = await fetchSongMetadata(url);
-    const embed = buildEmbedUrl(url);
     const trackId = extractTrackId(url);
-
-    if (url !== lastUrl) return; // 그새 다른 링크
+    if (url !== lastUrl) return;
 
     previewEl.innerHTML = `
       <div class="preview-card">
-        <div class="preview-eyebrow">✦ 미리보기 — ${SERVICE_LABEL[svc] || svc.toUpperCase()}</div>
+        <div class="preview-eyebrow">✦ 미리보기 — ${SERVICE_LABEL[svc] || svc}</div>
         <div class="preview-row">
           ${meta?.image ? `<img class="preview-img" src="${escapeHtml(meta.image)}" alt="">` : '<div class="preview-img"></div>'}
-          <div class="preview-meta" style="min-width:0;flex:1;">
-            <div class="preview-name">${escapeHtml(meta?.name || '곡 한 곡')}</div>
-            <div class="preview-service">${SERVICE_LABEL[svc] || svc.toUpperCase()}</div>
+          <div style="min-width:0;flex:1;">
+            <div class="preview-name">${escapeHtml(meta?.name || '곡')}</div>
+            <div class="preview-service">${SERVICE_LABEL[svc] || svc}</div>
           </div>
         </div>
-        ${embed ? `<iframe class="preview-embed ${svc}" src="${escapeHtml(embed)}" allow="encrypted-media; autoplay; clipboard-write; fullscreen; picture-in-picture" loading="lazy"></iframe>` : ''}
-        <button type="button" class="btn-primary" id="btn-save-pasted">이 곡으로 저장하기</button>
+        <button type="button" class="btn-primary" id="btn-add">플레이리스트에 추가</button>
       </div>`;
 
-    document.getElementById('btn-save-pasted')?.addEventListener('click', async () => {
-      const btn = document.getElementById('btn-save-pasted');
-      btn.disabled = true; btn.textContent = '저장 중…';
+    document.getElementById('btn-add')?.addEventListener('click', async () => {
+      const btn = document.getElementById('btn-add');
+      btn.disabled = true; btn.textContent = '추가 중…';
       try {
-        await saveMyFinalSong({
+        await addToPlaylist({
           id: trackId || '',
           name: meta?.name || '',
           artists: '',
@@ -209,11 +226,11 @@
         });
         pasteInput.value = ''; lastUrl = '';
         previewEl.innerHTML = '';
-        await renderSaved();
+        await renderList();
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } catch (e) {
-        alert('저장에 실패했어요: ' + (e.message || e));
-        btn.disabled = false; btn.textContent = '이 곡으로 저장하기';
+        alert('추가 실패: ' + (e.message || e));
+        btn.disabled = false; btn.textContent = '플레이리스트에 추가';
       }
     });
   }
@@ -223,11 +240,9 @@
     clearTimeout(pasteTimer);
     pasteTimer = setTimeout(processPaste, 250);
   });
-  pasteInput.addEventListener('paste', () => {
-    setTimeout(processPaste, 0); // paste 직후 값 잡힘
-  });
+  pasteInput.addEventListener('paste', () => setTimeout(processPaste, 0));
 
-  renderSaved();
+  renderList();
 </script>
 
 </body>

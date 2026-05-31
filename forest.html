@@ -251,26 +251,26 @@
   import { renderNav } from './nav.js';
   import { registerPWA } from './js/pwa.js';
   import { getTodaysQuestion, hasAnsweredToday, previewAnswers } from './js/answers.js';
-  import { getMyFinalSong } from './js/spotify.js';
+  import { listMyPlaylist } from './js/spotify.js';
 
   await renderNav({ active: 'forest', infoIcon: false, title: '커뮤니티' });
   registerPWA();
 
-  // 내 마지막 한 곡 진입 카드 — 저장 여부에 따라 카피 변경
+  // 나의 장례식 플레이리스트 진입 카드 — 저장된 곡 수에 따라 카피 변경
   (async () => {
     try {
-      const song = await getMyFinalSong();
+      const songs = await listMyPlaylist();
       const cta = document.getElementById('my-song-cta');
       if (!cta) return;
       const title = document.getElementById('msc-title');
       const sub = document.getElementById('msc-sub');
-      if (song) {
+      if (songs.length) {
         cta.classList.add('has-song');
-        title.textContent = `♬ ${song.name || '내가 골라둔 한 곡'}`;
-        sub.textContent = '내 마지막에 흐를 한 곡 (바꾸기 →)';
+        title.textContent = `♬ 나의 장례식 플레이리스트`;
+        sub.textContent = `지금 ${songs.length}곡 (더하기·관리 →)`;
       } else {
-        title.textContent = '내 마지막 한 곡 골라두기';
-        sub.textContent = '좋아하는 곡 링크 하나만 붙여 두면 끝 · Spotify · Apple Music · YouTube';
+        title.textContent = '나의 장례식 플레이리스트 만들기';
+        sub.textContent = '좋아하는 곡 링크 하나로 시작 · Spotify · Apple Music · YouTube';
       }
       cta.hidden = false;
     } catch (_) { /* 로그인 안 됐거나 실패 시 그냥 숨김 유지 */ }
