@@ -22,6 +22,8 @@ alter table public.daily_questions
   add column if not exists answer_kind text not null default 'text';
 
 -- (2) song 질문이 아직 없다면: display_order 시프트 + 삽입
+--     UNIQUE(display_order) 제약 때문에 한 칸씩 올리면 충돌 →
+--     음수로 한 번 밀어두고 다시 양수+1로 옮긴다.
 do $do$
 declare
   v_song_text constant text := '당신의 장례식에 흐를 한 곡이 있다면, 어떤 곡인가요?';
@@ -29,10 +31,15 @@ begin
   if not exists (
     select 1 from public.daily_questions where question_text = v_song_text
   ) then
-    -- 기존 day 2 이상 한 칸씩 뒤로
+    -- day 2 이상을 잠깐 음수로
     update public.daily_questions
-       set display_order = display_order + 1
+       set display_order = -display_order
      where display_order >= 2;
+
+    -- 다시 양수로 + 1
+    update public.daily_questions
+       set display_order = -display_order + 1
+     where display_order < 0;
 
     -- day 2 자리에 song 질문 삽입
     insert into public.daily_questions
