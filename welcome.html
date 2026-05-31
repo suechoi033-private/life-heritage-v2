@@ -268,6 +268,7 @@
     <div class="step-dot" data-step="2"></div>
     <div class="step-dot" data-step="3"></div>
     <div class="step-dot" data-step="4"></div>
+    <div class="step-dot" data-step="5"></div>
   </div>
 
   <!-- ── Step 1: 인사 ─── -->
@@ -370,7 +371,26 @@
 
     <div class="btn-row">
       <button type="button" class="btn-ghost" data-back="3">이전</button>
-      <button type="button" class="btn-primary" id="finish-onboarding">잇다 시작하기 →</button>
+      <button type="button" class="btn-primary" id="finish-onboarding">다음 →</button>
+    </div>
+  </section>
+
+  <!-- ── Step 5: 마지막 — 잇다의 약속 ─── -->
+  <section class="pane" data-pane="5">
+    <span class="step-label">STEP 5 · 마지막으로</span>
+    <h1 style="font-family: var(--font-serif); letter-spacing: -0.02em;">이따가 하지 말고<br>지금.</h1>
+    <p class="lead" style="font-family: var(--font-serif); font-size: 15.5px; font-weight: 700; line-height: 1.75;">
+      잇다는 인생의 마지막을 준비하는 일을,<br>
+      조금 더 가볍게 만들기 위한 도구입니다.
+    </p>
+    <p style="font-size: 13.5px; color: var(--ink-muted); line-height: 1.75; margin: 18px 0 28px;">
+      나에 대해 질문을 던지고, 죽음까지도 이야기하는 것은<br>
+      나와 가족에 대한 사랑의 실천입니다.
+    </p>
+    <a href="./about.html" class="btn-ghost" style="display:inline-block; text-decoration:none; padding: 12px 18px; border-radius: 12px; font-size: 13.5px; font-weight: 700; color: var(--ink-soft); border: 1px solid var(--line); margin-bottom: 22px;">잇다 이야기 보기 →</a>
+    <div class="btn-row">
+      <button type="button" class="btn-ghost" data-back="4">이전</button>
+      <button type="button" class="btn-primary" id="enter-itda">잇다 시작하기 →</button>
     </div>
   </section>
 </main>
@@ -465,7 +485,8 @@
   document.getElementById('step3-next').addEventListener('click', () => showStep(4));
 
   // ── Step 4: 마무리 → my.html ──
-  document.getElementById('finish-onboarding').addEventListener('click', () => persistAndGo('./index.html'));
+  document.getElementById('finish-onboarding').addEventListener('click', () => showStep(5));
+  document.getElementById('enter-itda').addEventListener('click', () => persistAndGo('./index.html'));
 
   // ── 건너뛰기 ──
   document.getElementById('skip-onboarding').addEventListener('click', () => persistAndGo('./index.html'));

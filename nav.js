@@ -32,13 +32,14 @@ const PROTECTED_TABS = new Set(['seed', 'nest', 'root']);
 export async function renderNav(opts = {}) {
   const rawActive = opts.active || '';
   const active = LEGACY_ACTIVE_MAP[rawActive] || rawActive;
-  const { infoIcon = true, title = '', quickWrite = true } = opts;
+  const { infoIcon = true, title = '', quickWrite = true, footer = true } = opts;
 
   const { data: { session } } = await supabase.auth.getSession();
   const loggedIn = !!session;
 
   _renderTopBar({ loggedIn, infoIcon, title, quickWrite });
   _renderBottomTabs({ active, loggedIn });
+  if (footer) _renderFooter();
 
   document.body.classList.add('has-bottom-nav');
 }
@@ -114,6 +115,63 @@ function _renderBottomTabs({ active, loggedIn }) {
   }).join('');
 
   document.body.appendChild(nav);
+}
+
+// 콘텐츠 끝 푸터 — 모든 페이지 공통. 회사정보·잇다 이야기·약관/개인정보 링크.
+function _renderFooter() {
+  if (document.getElementById('itda-footer')) return;
+
+  const f = document.createElement('footer');
+  f.id = 'itda-footer';
+  f.className = 'itda-footer';
+  f.innerHTML = `
+    <a class="itda-footer-link" href="./about.html">잇다 이야기</a>
+    <span class="itda-footer-sep">·</span>
+    <a class="itda-footer-link" href="#" data-itda-terms>이용약관</a>
+    <span class="itda-footer-sep">·</span>
+    <a class="itda-footer-link" href="#" data-itda-privacy>개인정보</a>
+    <div class="itda-footer-copy">© 라이프헤리티지 · ITDA</div>
+  `;
+
+  // 바텀 내비 위에 자연스럽게 들어가도록, main 다음(또는 body 끝, 바텀 내비 앞)에 삽입.
+  const bottomNav = document.getElementById('itda-bottom-nav');
+  if (bottomNav) {
+    document.body.insertBefore(f, bottomNav);
+  } else {
+    document.body.appendChild(f);
+  }
+
+  if (!document.getElementById('itda-footer-style')) {
+    const st = document.createElement('style');
+    st.id = 'itda-footer-style';
+    st.textContent = `
+      .itda-footer {
+        max-width: 480px;
+        margin: 40px auto 24px;
+        padding: 18px 22px 22px;
+        text-align: center;
+        font-size: 12px;
+        color: var(--ink-muted);
+        line-height: 1.8;
+        border-top: 1px solid var(--line);
+      }
+      .itda-footer-link {
+        color: var(--ink-soft);
+        text-decoration: none;
+        font-weight: 600;
+        transition: color 0.15s;
+      }
+      .itda-footer-link:hover { color: var(--primary); }
+      .itda-footer-sep { color: var(--line); margin: 0 4px; }
+      .itda-footer-copy {
+        margin-top: 8px;
+        font-size: 11px;
+        color: var(--ink-muted);
+        letter-spacing: 0.02em;
+      }
+    `;
+    document.head.appendChild(st);
+  }
 }
 
 // 하위 호환
