@@ -486,8 +486,32 @@
     todaysQ = pastQ;
     isPastQuestion = true;
   } else {
-    const { data: qData, error: qErr } = await supabase.rpc('get_todays_question');
-    if (qErr || !qData || qData.length === 0) {
+    // RPC가 응답이 없을 수 있어 5초 타임아웃 + display_order 폴백
+    const RPC_TIMEOUT_MS = 5000;
+    let qData = null, qErr = null;
+    try {
+      const rpcResult = await Promise.race([
+        supabase.rpc('get_todays_question'),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('RPC timeout')), RPC_TIMEOUT_MS)),
+      ]);
+      qData = rpcResult.data; qErr = rpcResult.error;
+    } catch (e) { qErr = e; }
+
+    // 폴백: 직접 daily_questions에서 가입 N일째 질문 가져오기
+    if (!qData || qData.length === 0) {
+      const days = currentUser?.created_at
+        ? Math.max(1, Math.ceil((Date.now() - new Date(currentUser.created_at)) / 86400000))
+        : 1;
+      const { data: fb, error: fbErr } = await supabase
+        .from('daily_questions')
+        .select('id, display_order, category, question_text, answer_kind')
+        .eq('display_order', days)
+        .maybeSingle();
+      if (fb) { qData = [fb]; qErr = null; }
+      else { qErr = qErr || fbErr || new Error('질문이 없어요'); }
+    }
+
+    if (!qData || qData.length === 0) {
       document.getElementById('loading').innerHTML = `
         <div class="empty-icon">⚠️</div>
         <p>오늘의 질문을 불러오지 못했어요.<br>${escapeHtml(qErr?.message || '잠시 후 다시 시도해주세요.')}</p>
