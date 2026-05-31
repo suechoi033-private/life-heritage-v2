@@ -153,6 +153,7 @@
     getPost, listComments, createComment, deleteComment, deletePost,
     toggleReaction, getReactionState, reportTarget, REPORT_REASONS,
   } from './js/community.js';
+  import { openShareSheet } from './js/share-sheet.js';
 
   await renderNav({ active: 'forest', infoIcon: false, title: '게시글' });
 
@@ -197,6 +198,7 @@
           ❤ <span id="like-count">${reaction.count}</span>
         </button>
         <button class="post-action" id="btn-comment-focus">💬 ${comments.length}</button>
+        <button class="post-action" id="btn-share-card" aria-label="카드뉴스로 공유">✦ 공유</button>
         <div class="action-spacer"></div>
         ${isOwner ? `
           <a class="post-action" href="./post-write.html?id=${post.id}">✏ 수정</a>
@@ -220,6 +222,17 @@
     `;
 
     // 좋아요
+    // 카드뉴스 공유
+    document.getElementById('btn-share-card')?.addEventListener('click', () => {
+      const author = post.profiles?.name || '';
+      const date = formatDate(post.created_at);
+      openShareSheet({
+        title: post.title || '',
+        body: post.body || '',
+        meta: [author, date].filter(Boolean).join(' · '),
+      });
+    });
+
     document.getElementById('btn-like').addEventListener('click', async () => {
       if (!session) { window.location.href = './login.html'; return; }
       try {

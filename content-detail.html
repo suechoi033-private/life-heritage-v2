@@ -352,6 +352,7 @@
   import { getContent, CATEGORIES, isBookmarked, toggleBookmark, getEmpathy, toggleEmpathy, deleteContent } from './js/content.js';
   import { toggleReaction, getReactionState, reportTarget, REPORT_REASONS, createPost } from './js/community.js';
   import { getSignedUrl, getPublicUrl } from './js/media-upload.js';
+  import { openShareSheet } from './js/share-sheet.js';
 
   await renderNav({ active: 'forest', infoIcon: false, title: '콘텐츠', quickWrite: false });
 
@@ -463,6 +464,7 @@
       <button class="action-btn bookmark ${bookmarked ? 'active' : ''}" id="btn-bookmark">
         🔖 ${bookmarked ? '저장됨' : '저장'}
       </button>
+      <button class="action-btn" id="btn-share-card" aria-label="카드뉴스로 공유">✦ 공유</button>
       <div class="action-btn-spacer"></div>
       ${canManage ? '' : `
         <button class="action-report" id="btn-report">🚩 신고</button>
@@ -530,6 +532,17 @@
       });
     }
   }
+
+  // 카드뉴스 공유
+  document.getElementById('btn-share-card')?.addEventListener('click', () => {
+    const author = content.profiles?.name || (content.author_type === 'official' ? '잇다 에디터' : '');
+    const date = formatDate(content.created_at);
+    openShareSheet({
+      title: content.title || '',
+      body: content.body || content.excerpt || '',
+      meta: [author, date].filter(Boolean).join(' · '),
+    });
+  });
 
   // 좋아요
   document.getElementById('btn-like').addEventListener('click', async () => {
