@@ -153,7 +153,7 @@
   import { renderNav } from './nav.js';
   import {
     detectService, extractTrackId, fetchSongMetadata,
-    listMyPlaylist, addToPlaylist, removeFromPlaylist,
+    listMyPlaylist, addToPlaylist, removeFromPlaylist, backfillMissingMetadata,
   } from './js/spotify.js';
 
   await renderNav({ active: 'seed', infoIcon: false, title: '살아서 하는 장례식', quickWrite: false });
@@ -459,10 +459,14 @@
     const pasteInput = root.querySelector('#cer-paste-input');
     const prevMount = root.querySelector('#cer-prev-mount');
 
-    async function renderList() {
+    async function renderList(isBackfillRetry) {
       try {
         const songs = await listMyPlaylist();
         countMount.textContent = songs.length ? `${songs.length}곡` : '';
+        if (!isBackfillRetry && songs.some(s => !s.name && s.external_url)) {
+          const changed = await backfillMissingMetadata(songs);
+          if (changed) { return renderList(true); }
+        }
         if (!songs.length) {
           listMount.innerHTML = `<div class="cer-pl-empty">아직 곡이 없어요.<br>아래에 좋아하는 곡 링크를 paste해 첫 곡을 더해 보세요.</div>`;
           return;
@@ -525,7 +529,7 @@
         const btn = prevMount.querySelector('#cer-add-btn');
         btn.disabled = true; btn.textContent = '추가 중…';
         try {
-          await addToPlaylist({ id: trackId || '', name: meta?.name || '', artists: '', image: meta?.image || '', external_url: url });
+          await addToPlaylist({ id: trackId || '', name: meta?.name || '', artists: meta?.artists || '', image: meta?.image || '', external_url: url });
           pasteInput.value = ''; lastUrl = '';
           prevMount.innerHTML = '';
           await renderList();

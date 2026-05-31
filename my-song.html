@@ -123,7 +123,7 @@
   import { renderNav } from './nav.js';
   import {
     detectService, extractTrackId, buildEmbedUrl, fetchSongMetadata,
-    listMyPlaylist, addToPlaylist, removeFromPlaylist,
+    listMyPlaylist, addToPlaylist, removeFromPlaylist, backfillMissingMetadata,
   } from './js/spotify.js';
 
   await renderNav({ active: 'root', infoIcon: false, title: '내 플레이리스트', quickWrite: false });
@@ -142,10 +142,15 @@
     return (s || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   }
 
-  async function renderList() {
+  async function renderList(isBackfillRetry) {
     try {
       const songs = await listMyPlaylist();
       countEl.textContent = songs.length ? `${songs.length}곡` : '';
+      // 이름 비어있는 곡 자동 백필 (한 번만 재시도)
+      if (!isBackfillRetry && songs.some(s => !s.name && s.external_url)) {
+        const changed = await backfillMissingMetadata(songs);
+        if (changed) { return renderList(true); }
+      }
       if (!songs.length) {
         listEl.innerHTML = `<div class="pl-empty">아직 곡이 없어요.<br>아래 입력창에 좋아하는 곡 링크를 paste해 첫 곡을 더해 보세요.</div>`;
         return;
@@ -220,7 +225,7 @@
         await addToPlaylist({
           id: trackId || '',
           name: meta?.name || '',
-          artists: '',
+          artists: meta?.artists || '',
           image: meta?.image || '',
           external_url: url,
         });

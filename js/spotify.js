@@ -64,7 +64,7 @@ export function buildEmbedUrl(url) {
   return null;
 }
 
-// 메타데이터 (oEmbed)
+// 메타데이터 (각 서비스 공식 무료 API)
 export async function fetchSongMetadata(url) {
   const svc = detectService(url);
   if (!svc) return null;
@@ -82,7 +82,25 @@ export async function fetchSongMetadata(url) {
       const d = await r.json();
       return { ...base, name: d.title || '', image: d.thumbnail_url || '' };
     }
-    return base; // Apple Music: 공식 oEmbed 없음
+    if (svc === 'apple') {
+      // iTunes Lookup API — 무료·무인증·CORS OK
+      const m = url.match(PATTERNS.apple);
+      if (!m) return base;
+      const country = (m[1] || 'kr').toLowerCase();
+      const trackId = m[4] || m[3];   // ?i= 우선, 없으면 album/playlist id
+      if (!trackId) return base;
+      const r = await fetch(`https://itunes.apple.com/lookup?id=${trackId}&entity=song&country=${country}`);
+      if (!r.ok) return base;
+      const d = await r.json();
+      const result = (d?.results || [])[0];
+      if (!result) return base;
+      const name = result.trackName || result.collectionName || '';
+      const artist = result.artistName || '';
+      // 100x100 → 300x300 더 큰 이미지로
+      const image = (result.artworkUrl100 || '').replace('100x100bb', '300x300bb');
+      return { ...base, name, image, artists: artist };
+    }
+    return base;
   } catch {
     return base;
   }
@@ -137,6 +155,35 @@ export async function removeFromPlaylist(rowId) {
   if (!user || !rowId) return;
   await supabase.from('user_songs').delete()
     .eq('user_id', user.id).eq('id', rowId);
+}
+
+// 메타데이터 업데이트 (이름·아티스트·이미지 부족한 곡 백필용)
+export async function updateSongMetadata(rowId, patch) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user || !rowId) return;
+  await supabase.from('user_songs').update(patch)
+    .eq('user_id', user.id).eq('id', rowId);
+}
+
+// 이름 비어있는 곡들 자동 백필 (한 번 렌더에 한 번 호출). 변경 있으면 true.
+export async function backfillMissingMetadata(songs) {
+  const targets = (songs || []).filter(s => !s.name && s.external_url);
+  if (!targets.length) return false;
+  let changed = false;
+  for (const s of targets) {
+    try {
+      const meta = await fetchSongMetadata(s.external_url);
+      if (meta?.name || meta?.image) {
+        await updateSongMetadata(s.id, {
+          name:      meta.name      || s.name      || '',
+          artists:   meta.artists   || s.artists   || '',
+          image_url: meta.image     || s.image_url || '',
+        });
+        changed = true;
+      }
+    } catch (_) { /* 한 곡 실패해도 다른 곡 계속 */ }
+  }
+  return changed;
 }
 
 // 임베드 URL (개별 곡)
