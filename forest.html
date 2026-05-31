@@ -179,6 +179,27 @@
       display: inline-flex; align-items: center; gap: 6px;
       font-size: 12px; font-weight: 800; color: var(--warm);
     }
+
+    /* 페이지네이션 */
+    .pagination {
+      display: flex; justify-content: center; gap: 6px;
+      margin: 18px 0 8px;
+      flex-wrap: wrap;
+    }
+    .page-num {
+      min-width: 34px; height: 34px; padding: 0 10px;
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 999px;
+      font-size: 13px; font-weight: 700;
+      color: var(--ink-soft);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .page-num:hover:not(.active) { border-color: var(--primary-soft); }
+    .page-num.active {
+      background: var(--primary); color: #fff; border-color: var(--primary);
+    }
   </style>
 </head>
 <body>
@@ -354,6 +375,16 @@
   const params = new URLSearchParams(location.search);
   let activeSeg = params.get('seg') === 'community' ? 'community' : 'content';
   let activeCat = params.get('category') || 'all';
+  let currentPage = Math.max(1, parseInt(params.get('page') || '1', 10));
+
+  // 베타 시작 2026-06-03 KST 00:00.
+  // 첫날 3편 → 매일 1편씩 unlock. 한 페이지 3편씩 페이지네이션.
+  const PER_PAGE = 3;
+  const BETA_LAUNCH_MS = Date.UTC(2026, 5, 2, 15, 0, 0); // KST 6/3 00:00 (UTC -9h)
+  function getUnlockedCount() {
+    const days = Math.floor((Date.now() - BETA_LAUNCH_MS) / 86400000);
+    return Math.max(3, 3 + days);
+  }
 
   // 카테고리 칩 렌더 (null guard — chips 컨테이너 없어도 본문은 계속)
   const chipsEl = document.getElementById('forest-chips');
@@ -366,6 +397,7 @@
       if (!btn) return;
       if (btn.getAttribute('aria-disabled') === 'true') return; // 베타: 준비 중 보드는 클릭 무시
       activeCat = btn.dataset.cat;
+      currentPage = 1;
       chipsEl.querySelectorAll('.forest-chip').forEach(b => b.classList.toggle('active', b.dataset.cat === activeCat));
       loadFeed();
     });
@@ -376,6 +408,7 @@
 
   function switchSeg(seg) {
     activeSeg = seg;
+    currentPage = 1;
     document.getElementById('seg-content')?.classList.toggle('active',   seg === 'content');
     document.getElementById('seg-community')?.classList.toggle('active', seg === 'community');
     loadFeed();
@@ -417,16 +450,21 @@
       }
 
       if (activeSeg === 'content') {
+        const unlocked = getUnlockedCount();
+        const offset = (currentPage - 1) * PER_PAGE;
+        const end    = Math.min(offset + PER_PAGE, unlocked) - 1;
         let q = supabase.from('contents')
           .select('id, category, title, body, format, author_type, creator_id, view_count, like_count, created_at, profiles:creator_id(name, avatar_url)')
           .eq('is_published', true)
-          .order('created_at', { ascending: false })
-          .limit(20);
+          .order('created_at', { ascending: false });
         if (activeCat !== 'all') q = q.eq('category', activeCat);
-        else q = q.neq('category', 'memorial'); // 추모 보류·숨김 — 전체 피드에서 제외
+        else q = q.neq('category', 'memorial');
+        if (end >= offset) q = q.range(offset, end);
+        else q = q.range(0, -1); // 빈 결과
         const { data, error } = await q;
         if (error) throw error;
-        renderContentList(data || [], topHtml);
+        const totalPages = Math.max(1, Math.ceil(unlocked / PER_PAGE));
+        renderContentList(data || [], topHtml, { page: currentPage, totalPages });
       } else {
         const { data, error } = await supabase.from('community_posts')
           .select('id, board_id, title, body, view_count, comment_count, reaction_count, created_at')
@@ -517,7 +555,7 @@
     }
   }
 
-  function renderContentList(items, topHtml = '') {
+  function renderContentList(items, topHtml = '', pager = null) {
     const body = document.getElementById('forest-body');
     if (!items.length && !topHtml) {
       body.innerHTML = `
@@ -528,7 +566,7 @@
         </div>`;
       return;
     }
-    body.innerHTML = topHtml + items.map(c => `
+    const cardsHtml = items.map(c => `
       <a class="content-card" href="./content-detail.html?id=${c.id}">
         ${c.format === 'story' ? `<span class="content-card-badge badge-official">📖 이야기</span>` : ''}
         ${c.author_type === 'official'
@@ -543,6 +581,30 @@
         </div>
       </a>
     `).join('');
+    body.innerHTML = topHtml + cardsHtml + paginationHtml(pager);
+    wirePagination();
+  }
+
+  function paginationHtml(pager) {
+    if (!pager || pager.totalPages <= 1) return '';
+    const { page, totalPages } = pager;
+    const nums = [];
+    for (let i = 1; i <= totalPages; i++) {
+      nums.push(`<button class="page-num ${i === page ? 'active' : ''}" data-page="${i}">${i}</button>`);
+    }
+    return `<nav class="pagination" aria-label="페이지">${nums.join('')}</nav>`;
+  }
+
+  function wirePagination() {
+    document.querySelectorAll('.pagination .page-num').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const p = parseInt(btn.dataset.page, 10);
+        if (!p || p === currentPage) return;
+        currentPage = p;
+        loadFeed();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    });
   }
 
   function renderPostList(items) {
