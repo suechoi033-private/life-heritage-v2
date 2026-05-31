@@ -1,21 +1,45 @@
 // 오늘의 성찰 질문 + 답변 헬퍼
 import { supabase } from '../auth.js';
 
-// 오늘의 질문 (서버 RPC 활용)
+// 오늘의 질문 + 시드 답변 (entice peek용). RPC 결과에 seed_answers가 없으면 별도 조회.
 export async function getTodaysQuestion() {
   try {
     const { data, error } = await supabase.rpc('get_todays_question');
     if (error) throw error;
-    return data?.[0] || null;
+    const q = data?.[0] || null;
+    if (q && !('seed_answers' in q)) {
+      const { data: extra } = await supabase
+        .from('daily_questions')
+        .select('seed_answers')
+        .eq('id', q.id)
+        .maybeSingle();
+      q.seed_answers = extra?.seed_answers || { answers: [] };
+    }
+    return q;
   } catch (_) {
-    // RPC 미존재 시 fallback
     const { data } = await supabase
       .from('daily_questions')
-      .select('id, question_text, category')
+      .select('id, question_text, category, seed_answers')
       .order('id', { ascending: true })
       .limit(1);
     return data?.[0] || null;
   }
+}
+
+// 답변 미리보기 (앤티스 peek 포함). userHasAnswered = true 면 풀 reveal.
+//   answers: 실제 사용자 답 (visibility=public)
+//   seed:    daily_questions.seed_answers 페르소나 답
+// 반환: { answers, total, locked } — locked=true 면 첫 1개만 보이게 frontend 처리.
+export async function previewAnswers(questionId, limit = 3) {
+  const { data, error } = await supabase
+    .from('daily_answers')
+    .select('id, content, created_at, user_id, visibility, profiles:user_id(name)')
+    .eq('question_id', questionId)
+    .eq('visibility', 'public')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return data || [];
 }
 
 // 본인이 오늘 질문에 답했는지

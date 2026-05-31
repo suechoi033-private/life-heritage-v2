@@ -23,6 +23,8 @@
       scrollbar-width: none;
     }
     .forest-chips::-webkit-scrollbar { display: none; }
+    .forest-chip.is-soon { opacity: 0.45; cursor: not-allowed; }
+    .forest-chip.is-soon:hover { background: inherit; }
     .forest-chip {
       flex-shrink: 0;
       padding: 7px 14px;
@@ -124,6 +126,20 @@
     .question-card-preview-name {
       font-weight: 800;
       margin-right: 4px;
+    }
+    /* entice peek — 답 안 한 사용자에게 다른 답을 흐리게 보여줘 작성 욕구 자극 */
+    .question-card-preview .qc-blur {
+      filter: blur(4px);
+      opacity: 0.55;
+      user-select: none;
+    }
+    .question-card-preview .qc-entice {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px dashed rgba(255,255,255,0.3);
+      font-size: 11.5px;
+      font-style: italic;
+      opacity: 0.92;
     }
     /* 내 마지막 한 곡 진입 카드 */
     .my-song-cta {
@@ -276,13 +292,15 @@
     } catch (_) { /* 로그인 안 됐거나 실패 시 그냥 숨김 유지 */ }
   })();
 
+  // 베타 한정: reflection 1종만 활성, 나머지는 '준비 중' placeholder
+  // (콘텐츠 안정화 후 점진 활성화 — '곧 · ___' 표시로 빈 보드 신호 미리 보냄)
   const CATEGORIES = [
     { key: 'all',        label: '전체' },
     { key: 'reflection', label: '오늘 잇고' },
-    { key: 'family',     label: '가족 케어링' },
-    { key: 'health',     label: '건강' },
-    { key: 'finance',    label: '재정' },
-    { key: 'death_prep', label: '죽음 준비' },
+    { key: 'family',     label: '가족', soon: true },
+    { key: 'health',     label: '건강', soon: true },
+    { key: 'finance',    label: '재정', soon: true },
+    { key: 'death_prep', label: '죽음 준비', soon: true },
   ];
 
   const params = new URLSearchParams(location.search);
@@ -292,11 +310,12 @@
   // 카테고리 칩 렌더
   const chipsEl = document.getElementById('forest-chips');
   chipsEl.innerHTML = CATEGORIES.map(c =>
-    `<button class="forest-chip ${c.key === activeCat ? 'active' : ''}" data-cat="${c.key}">${c.label}</button>`
+    `<button class="forest-chip ${c.key === activeCat ? 'active' : ''} ${c.soon ? 'is-soon' : ''}" data-cat="${c.key}" ${c.soon ? 'aria-disabled="true"' : ''}>${c.soon ? '곧 · ' + c.label : c.label}</button>`
   ).join('');
   chipsEl.addEventListener('click', (e) => {
     const btn = e.target.closest('.forest-chip');
     if (!btn) return;
+    if (btn.getAttribute('aria-disabled') === 'true') return; // 베타: 준비 중 보드는 클릭 무시
     activeCat = btn.dataset.cat;
     chipsEl.querySelectorAll('.forest-chip').forEach(b => b.classList.toggle('active', b.dataset.cat === activeCat));
     loadFeed();
@@ -377,21 +396,55 @@
       if (!q) return '';
       const [mine, others] = await Promise.all([
         hasAnsweredToday(q.id),
-        previewAnswers(q.id, 2),
+        previewAnswers(q.id, 4),
       ]);
-      const statusHtml = mine
-        ? `<span class="question-card-status">✓ 오늘 답변 완료</span>`
-        : `<span class="question-card-status">✏ 답변 남기기 →</span>`;
-      const previewHtml = others.length ? `
-        <div class="question-card-preview">
-          ${others.map((a) => `
-            <div>
-              <span class="question-card-preview-name">${escapeHtml(a.profiles?.name || '익명')}</span>
-              ${escapeHtml((a.content || '').replace(/\s+/g, ' ').slice(0, 70))}
-            </div>
-          `).join('')}
-        </div>
-      ` : '';
+      const userAnswered = !!mine;
+
+      // 시드 답변(페르소나) + 실제 답변 병합
+      const seeds = (q.seed_answers && Array.isArray(q.seed_answers.answers)) ? q.seed_answers.answers : [];
+      const realAnswers = (others || []).map(a => ({
+        persona: a.profiles?.name || '익명',
+        content: (a.content || '').replace(/\s+/g, ' ').slice(0, 140),
+      }));
+      const merged = [...realAnswers, ...seeds];
+      const total = merged.length;
+
+      const statusHtml = userAnswered
+        ? `<span class="question-card-status">✓ 오늘 답변 완료 · 모두 보기</span>`
+        : `<span class="question-card-status">✏ 내 한 줄을 적으면 ${total}개의 답이 모두 보여요 →</span>`;
+
+      // entice peek: 답 안 한 사람에겐 첫 1개만 풀 노출, 나머지 흐림 처리
+      let previewHtml = '';
+      if (merged.length) {
+        if (userAnswered) {
+          previewHtml = `
+            <div class="question-card-preview">
+              ${merged.slice(0, 4).map(a => `
+                <div>
+                  <span class="question-card-preview-name">${escapeHtml(a.persona)}</span>
+                  ${escapeHtml(a.content)}
+                </div>
+              `).join('')}
+            </div>`;
+        } else {
+          const first = merged[0];
+          const rest  = merged.slice(1, 4);
+          previewHtml = `
+            <div class="question-card-preview">
+              <div>
+                <span class="question-card-preview-name">${escapeHtml(first.persona)}</span>
+                ${escapeHtml(first.content)}
+              </div>
+              ${rest.map(a => `
+                <div class="qc-blur">
+                  <span class="question-card-preview-name">${escapeHtml(a.persona)}</span>
+                  ${escapeHtml((a.content || '').slice(0, 30))}…
+                </div>
+              `).join('')}
+              <div class="qc-entice">잇다 한 줄 ─ "당신의 한 줄로, ${total - 1}개의 답이 마저 열려요."</div>
+            </div>`;
+        }
+      }
       return `
         <a class="question-card" href="./ask.html">
           <div class="question-card-eyebrow">🕯 오늘 잇고</div>
