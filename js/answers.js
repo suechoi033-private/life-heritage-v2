@@ -61,19 +61,6 @@ export async function hasAnsweredToday(questionId) {
   return data;
 }
 
-// 답변 미리보기 (커뮤니티 카드용)
-export async function previewAnswers(questionId, limit = 3) {
-  const { data, error } = await supabase
-    .from('daily_answers')
-    .select('id, content, created_at, user_id, visibility, profiles:user_id(name)')
-    .eq('question_id', questionId)
-    .eq('visibility', 'public')
-    .order('created_at', { ascending: false })
-    .limit(limit);
-  if (error) throw error;
-  return data || [];
-}
-
 // 답변 → 일기로 저장 (S5-2)
 // 답변 작성 직후 또는 이미 작성된 답변을 일기로 변환할 때 호출
 export async function saveAnswerAsDiary({
