@@ -118,6 +118,60 @@ export function prescriptionImageUrl(storagePath, expiresIn = 600) {
   return getSignedUrl(BUCKET, storagePath, expiresIn);
 }
 
+// ── 관리 항목(care_conditions) — 기간을 갖는 병명/약 ───
+// 만성으로 보는 카테고리(기본 '계속')
+const CHRONIC_CATEGORIES = new Set(['hypertension', 'diabetes', 'dyslipidemia']);
+
+// 기간 프리셋 → 종료일(YYYY-MM-DD) 또는 null(계속)
+export function periodToEndDate(preset, startISO, prescriptionDays) {
+  const start = startISO ? new Date(startISO) : new Date();
+  const plus = (days) => { const d = new Date(start); d.setDate(d.getDate() + days); return d.toISOString().slice(0, 10); };
+  switch (preset) {
+    case 'ongoing': return null;
+    case 'rx_days': return prescriptionDays ? plus(prescriptionDays) : null;
+    case '3m': return plus(90);
+    case '6m': return plus(180);
+    case '1y': return plus(365);
+    default: return null;
+  }
+}
+
+// 활성(오늘 기준 진행 중) 관리 항목
+export async function listActiveConditions(subjectId) {
+  const today = new Date().toISOString().slice(0, 10);
+  const { data, error } = await supabase.from('care_conditions')
+    .select('*')
+    .eq('subject_id', subjectId)
+    .or(`end_date.is.null,end_date.gte.${today}`)
+    .order('start_date', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function addCondition(subjectId, { tag, end_date, source_prescription_id = null }) {
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
+  if (!user) throw new Error('로그인 필요');
+  const { data, error } = await supabase.from('care_conditions').insert({
+    subject_id: subjectId,
+    label: tag.label,
+    cond_key: tag.key,
+    efficacy: tag.efficacy || null,
+    end_date: end_date || null,
+    source_prescription_id,
+    created_by: user.id,
+  }).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function endCondition(id) {
+  const today = new Date().toISOString().slice(0, 10);
+  const { error } = await supabase.from('care_conditions').update({ end_date: today }).eq('id', id);
+  if (error) throw error;
+}
+
+export function isChronicCategory(cat) { return CHRONIC_CATEGORIES.has(cat); }
+
 // ── 추정 관리 영역 (진단 아님) ───────────────────────
 // 약물 적응증(효능) 텍스트의 키워드로 케어 카테고리를 추정한다.
 // 결정적(deterministic) 규칙 — AI 진단이 아니라 일반 정보 매핑.
