@@ -425,7 +425,7 @@
   const BETA_LAUNCH_MS = Date.UTC(2026, 5, 2, 15, 0, 0); // KST 6/3 00:00 (UTC -9h)
   function getUnlockedCount() {
     const days = Math.floor((Date.now() - BETA_LAUNCH_MS) / 86400000);
-    return Math.max(1, 1 + days); // day 1=1편, +1/day
+    return Math.max(6, 6 + days); // baseline 6편, +1/day
   }
 
   // 카테고리 칩 렌더 (null guard — chips 컨테이너 없어도 본문은 계속)
