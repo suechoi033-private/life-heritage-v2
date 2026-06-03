@@ -33,6 +33,9 @@
       margin-bottom: 14px;
     }
 
+    /* 연결된 대화 모드: 제목 필드 숨김 (콘텐츠에 짧게 잇는 메모는 제목 부담 없이) */
+    body.is-linked-thread .form-group.title-group { display: none; }
+
     .action-bar {
       position: sticky; bottom: 0; background: var(--bg);
       padding: 14px 0 calc(14px + env(safe-area-inset-bottom, 0px));
@@ -61,9 +64,9 @@
       <label class="form-label" for="board">게시판</label>
       <select id="board" class="board-select" required></select>
     </div>
-    <div class="form-group">
+    <div class="form-group title-group">
       <label class="form-label" for="title">제목</label>
-      <input type="text" class="title-input" id="title" placeholder="게시글 제목" required maxlength="120">
+      <input type="text" class="title-input" id="title" placeholder="게시글 제목" maxlength="120">
     </div>
     <div class="form-group">
       <label class="form-label" for="body">내용</label>
@@ -106,12 +109,26 @@
     document.getElementById('btn-delete').style.display = '';
   }
 
+  // "연결된 대화" 모드 판정: 콘텐츠에 잇는 짧은 메모 자리.
+  // 신규 작성(content_id 쿼리) + 기존 글 수정(content_thread_id 보유) 모두 포함.
+  // 일반 글쓰기(forest 공용 composer)에는 영향 없음.
+  const isLinkedThread = !!state.content_thread_id;
+  if (isLinkedThread) {
+    document.body.classList.add('is-linked-thread');
+    // 제목은 본문에서 자동 추출하므로 사용자 입력 강제 안 함
+    document.getElementById('title').removeAttribute('required');
+    // 본문 placeholder도 무게 줄임 — 짧은 한 줄 메모도 환영
+    document.getElementById('body').setAttribute('placeholder', '이 글을 읽고 떠오른 한 마디를 남겨 보세요');
+    // 페이지 타이틀도 맥락에 맞게
+    document.title = '연결된 대화 · 잇다';
+  }
+
   // 연결된 콘텐츠 표시
   if (state.content_thread_id) {
     const { data: c } = await supabase.from('contents').select('title, category').eq('id', state.content_thread_id).maybeSingle();
     if (c) {
       document.getElementById('linked-content-banner').innerHTML = `
-        <div class="linked-banner">🔗 콘텐츠 "${escapeHtml(c.title)}"에 연결된 대화로 작성됩니다</div>`;
+        <div class="linked-banner">🔗 콘텐츠 "${escapeHtml(c.title)}"에 잇는 대화입니다</div>`;
     }
   }
 
@@ -146,11 +163,16 @@
       return;
     }
 
-    const payload = {
-      board_id,
-      title: document.getElementById('title').value.trim(),
-      body: document.getElementById('body').value,
-    };
+    const bodyVal = document.getElementById('body').value;
+    let title = document.getElementById('title').value.trim();
+
+    // 연결된 대화 모드에서 제목이 비었으면 본문 첫 줄에서 자동 추출.
+    // (title 컬럼이 NOT NULL일 수 있으므로 빈 문자열 대신 의미 있는 값을 채운다.)
+    if (isLinkedThread && !title) {
+      title = deriveTitleFromBody(bodyVal);
+    }
+
+    const payload = { board_id, title, body: bodyVal };
 
     try {
       let p;
@@ -162,6 +184,18 @@
       btn.disabled = false; btn.textContent = '발행';
     }
   });
+
+  // 본문 첫 줄(또는 첫 문장)에서 최대 50자 추출. 빈 본문이면 안전한 기본 라벨.
+  function deriveTitleFromBody(raw) {
+    const text = String(raw || '').replace(/\r\n?/g, '\n').trim();
+    if (!text) return '연결된 대화';
+    // 1) 첫 줄, 2) 그 안에서 문장 종결(. ! ? 。)까지 우선
+    const firstLine = text.split('\n').find((l) => l.trim().length > 0) || text;
+    const stopMatch = firstLine.match(/^(.+?[.!?。])\s/);
+    const head = (stopMatch ? stopMatch[1] : firstLine).trim();
+    // 50자 컷, 잘릴 때만 줄임표
+    return head.length > 50 ? head.slice(0, 50) + '…' : head;
+  }
 
   function escapeHtml(s) { return (s || '').replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 </script>
