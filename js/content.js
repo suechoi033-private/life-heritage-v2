@@ -154,6 +154,33 @@ export async function addContentComment(contentId, body) {
   return data;
 }
 
+// 콘텐츠 인라인 댓글 — 본인 글만 수정 (RLS: comments_owner_update)
+export async function updateContentComment(commentId, body) {
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
+  if (!user) throw new Error('로그인 필요');
+  const text = (body || '').trim();
+  if (!text) throw new Error('내용을 입력해주세요');
+  const { data, error } = await supabase.from('comments')
+    .update({ body: text })
+    .eq('id', commentId)
+    .eq('user_id', user.id)
+    .select('id, body, created_at, user_id, profiles:user_id(name, avatar_url)')
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+// 콘텐츠 인라인 댓글 — 본인 글만 삭제 (soft delete, RLS: comments_owner_update)
+export async function deleteContentComment(commentId) {
+  const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;
+  if (!user) throw new Error('로그인 필요');
+  const { error } = await supabase.from('comments')
+    .update({ is_deleted: true })
+    .eq('id', commentId)
+    .eq('user_id', user.id);
+  if (error) throw error;
+}
+
 // ===== 북마크 =====
 export async function isBookmarked(contentId) {
   const { data: { session } } = await supabase.auth.getSession(); const user = session?.user ?? null;

@@ -264,6 +264,28 @@
     .hcc-bubble { flex: 1; min-width: 0; }
     .hcc-name { font-size: 12px; font-weight: 800; color: var(--ink-soft); }
     .hcc-body { font-size: 13.5px; color: var(--ink); line-height: 1.5; word-break: break-word; }
+    .hcc-tools { display: flex; gap: 10px; margin-top: 4px; }
+    .hcc-tools button {
+      background: none; border: none; padding: 0;
+      font-family: inherit; font-size: 11.5px; font-weight: 700;
+      color: var(--ink-muted); cursor: pointer;
+    }
+    .hcc-tools button:hover { color: var(--primary); }
+    .hcc-edit-form { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+    .hcc-edit-input {
+      width: 100%; padding: 8px 10px; border: 1.5px solid var(--line); border-radius: 10px;
+      font-family: inherit; font-size: 13.5px; line-height: 1.5; background: #fff;
+      resize: vertical; min-height: 38px;
+    }
+    .hcc-edit-input:focus { outline: none; border-color: var(--primary); }
+    .hcc-edit-actions { display: flex; gap: 8px; }
+    .hcc-edit-actions button {
+      border: none; border-radius: 999px; padding: 6px 12px;
+      font-family: inherit; font-size: 12px; font-weight: 800; cursor: pointer;
+    }
+    .hcc-edit-save { background: var(--primary); color: #fff; }
+    .hcc-edit-cancel { background: var(--bg-alt); color: var(--ink-soft); border: 1px solid var(--line) !important; }
+    .hcc-edit-save:disabled { opacity: .5; }
     .hcc-empty { font-size: 13px; color: var(--ink-muted); padding: 6px 0 10px; }
     .hcc-form { display: flex; gap: 8px; padding: 8px 0 12px; }
     .hcc-input {
@@ -307,7 +329,7 @@
 import { supabase } from './auth.js';
 import { renderNav } from './nav.js';
 import { registerPWA } from './js/pwa.js';
-import { getFeaturedStory, listHomeFeed, getEngagementMap, listContentComments, addContentComment } from './js/content.js';
+import { getFeaturedStory, listHomeFeed, getEngagementMap, listContentComments, addContentComment, updateContentComment, deleteContentComment } from './js/content.js';
 import { toggleReaction } from './js/community.js';
 
 await renderNav({ active: 'home', infoIcon: true });
@@ -550,10 +572,66 @@ async function toggleComments(id) {
 
 function commentItemHtml(c) {
   const name = c.profiles?.name || '잇다 사용자';
-  return `<div class="hcc-item">
+  const isOwner = currentUserId && c.user_id === currentUserId;
+  const tools = isOwner
+    ? `<div class="hcc-tools">
+         <button type="button" data-action="edit-card-comment" data-id="${c.id}">수정</button>
+         <button type="button" data-action="delete-card-comment" data-id="${c.id}">삭제</button>
+       </div>`
+    : '';
+  return `<div class="hcc-item" data-comment-id="${c.id}">
     <span class="hcc-avatar">${escapeHtml(name[0] || '·')}</span>
-    <div class="hcc-bubble"><div class="hcc-name">${escapeHtml(name)}</div><div class="hcc-body">${escapeHtml(c.body)}</div></div>
+    <div class="hcc-bubble">
+      <div class="hcc-name">${escapeHtml(name)}</div>
+      <div class="hcc-body" data-role="body">${escapeHtml(c.body)}</div>
+      ${tools}
+    </div>
   </div>`;
+}
+
+function openCardCommentEdit(itemEl) {
+  if (!itemEl || itemEl.querySelector('.hcc-edit-form')) return;
+  const bodyEl = itemEl.querySelector('[data-role="body"]');
+  const toolsEl = itemEl.querySelector('.hcc-tools');
+  const current = bodyEl?.textContent || '';
+  if (bodyEl) bodyEl.hidden = true;
+  if (toolsEl) toolsEl.hidden = true;
+  const form = document.createElement('div');
+  form.className = 'hcc-edit-form';
+  form.innerHTML = `
+    <textarea class="hcc-edit-input" maxlength="500" rows="2"></textarea>
+    <div class="hcc-edit-actions">
+      <button type="button" class="hcc-edit-save">저장</button>
+      <button type="button" class="hcc-edit-cancel">취소</button>
+    </div>`;
+  const ta = form.querySelector('textarea');
+  ta.value = current;
+  itemEl.querySelector('.hcc-bubble').appendChild(form);
+  ta.focus();
+  ta.setSelectionRange(ta.value.length, ta.value.length);
+
+  const close = (newBody) => {
+    if (typeof newBody === 'string' && bodyEl) bodyEl.textContent = newBody;
+    form.remove();
+    if (bodyEl) bodyEl.hidden = false;
+    if (toolsEl) toolsEl.hidden = false;
+  };
+  form.querySelector('.hcc-edit-cancel').addEventListener('click', () => close());
+  form.querySelector('.hcc-edit-save').addEventListener('click', async (ev) => {
+    const text = ta.value.trim();
+    if (!text) return;
+    if (text === current) { close(); return; }
+    const btn = ev.currentTarget;
+    btn.disabled = true;
+    try {
+      const id = itemEl.dataset.commentId;
+      const updated = await updateContentComment(id, text);
+      close(updated.body);
+    } catch (e) {
+      btn.disabled = false;
+      alert(e.message || '댓글 수정에 실패했어요.');
+    }
+  });
 }
 
 function renderCommentPanel(panel, id, list) {
@@ -582,6 +660,37 @@ function renderCommentPanel(panel, id, list) {
       alert(e.message || '댓글 등록 실패');
     } finally {
       send.disabled = false;
+    }
+  });
+
+  // 댓글 수정/삭제 — 본인 댓글만 (UI는 owner에게만 노출됨)
+  // 이 위임은 .hcard-comments[data-for] 패널 안에서만 동작하므로 다른 곳(post-detail 등)에 영향 0.
+  panel.querySelector('.hcc-list')?.addEventListener('click', async (ev) => {
+    const editBtn = ev.target.closest('[data-action="edit-card-comment"]');
+    const delBtn  = ev.target.closest('[data-action="delete-card-comment"]');
+    if (!editBtn && !delBtn) return;
+    ev.stopPropagation();
+    const itemEl = ev.target.closest('.hcc-item');
+    if (!itemEl) return;
+    if (editBtn) {
+      openCardCommentEdit(itemEl);
+      return;
+    }
+    if (delBtn) {
+      if (!confirm('이 댓글을 삭제할까요?')) return;
+      delBtn.disabled = true;
+      try {
+        await deleteContentComment(delBtn.dataset.id);
+        itemEl.remove();
+        bumpCommentCount(id, -1);
+        const listEl = panel.querySelector('.hcc-list');
+        if (listEl && !listEl.querySelector('.hcc-item')) {
+          listEl.innerHTML = '<div class="hcc-empty">첫 댓글을 남겨보세요.</div>';
+        }
+      } catch (e) {
+        delBtn.disabled = false;
+        alert(e.message || '댓글 삭제에 실패했어요.');
+      }
     }
   });
 }
