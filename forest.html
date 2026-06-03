@@ -180,17 +180,58 @@
       font-size: 12px; font-weight: 800; color: var(--warm);
     }
 
+    /* 게시판 (잇다 에디터 지난 글) */
+    .board {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 4px 14px;
+      margin: 6px 0 4px;
+    }
+    .board-head {
+      display: flex; justify-content: space-between; align-items: baseline;
+      padding: 12px 0 10px;
+      border-bottom: 1px solid var(--line);
+    }
+    .board-head-title { font-size: 13px; font-weight: 800; color: var(--ink); }
+    .board-head-count { font-size: 11.5px; color: var(--ink-muted); font-weight: 700; }
+    .board-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 13px 0;
+      border-bottom: 1px solid var(--line);
+      text-decoration: none; color: inherit;
+    }
+    .board-row:last-child { border-bottom: none; }
+    .board-row:active { background: var(--bg-alt); }
+    .board-cat {
+      flex-shrink: 0;
+      padding: 2px 8px; border-radius: 999px;
+      background: var(--primary-soft); color: var(--primary);
+      font-size: 10.5px; font-weight: 800; letter-spacing: 0.02em;
+    }
+    .board-title {
+      flex: 1; min-width: 0;
+      font-size: 14px; font-weight: 700; color: var(--ink);
+      line-height: 1.5;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .board-row:hover .board-title { color: var(--primary); }
+    .board-date {
+      flex-shrink: 0;
+      font-size: 11.5px; color: var(--ink-muted); font-weight: 700;
+    }
+
     /* 페이지네이션 */
     .pagination {
-      display: flex; justify-content: center; gap: 6px;
-      margin: 18px 0 8px;
+      display: flex; justify-content: center; gap: 4px;
+      margin: 16px 0 8px;
       flex-wrap: wrap;
     }
     .page-num {
-      min-width: 34px; height: 34px; padding: 0 10px;
+      min-width: 32px; height: 32px; padding: 0 8px;
       border: 1px solid var(--line);
       background: #fff;
-      border-radius: 999px;
+      border-radius: 8px;
       font-size: 13px; font-weight: 700;
       color: var(--ink-soft);
       cursor: pointer;
@@ -200,6 +241,7 @@
     .page-num.active {
       background: var(--primary); color: #fff; border-color: var(--primary);
     }
+    .page-arrow { font-size: 15px; }
   </style>
 </head>
 <body>
@@ -379,11 +421,11 @@
 
   // 베타 시작 2026-06-03 KST 00:00.
   // 첫날 3편 → 매일 1편씩 unlock. 한 페이지 3편씩 페이지네이션.
-  const PER_PAGE = 3;
+  const PER_PAGE = 10;
   const BETA_LAUNCH_MS = Date.UTC(2026, 5, 2, 15, 0, 0); // KST 6/3 00:00 (UTC -9h)
   function getUnlockedCount() {
     const days = Math.floor((Date.now() - BETA_LAUNCH_MS) / 86400000);
-    return Math.max(3, 3 + days);
+    return Math.max(1, 1 + days); // day 1=1편, +1/day
   }
 
   // 카테고리 칩 렌더 (null guard — chips 컨테이너 없어도 본문은 계속)
@@ -464,7 +506,7 @@
         const { data, error } = await q;
         if (error) throw error;
         const totalPages = Math.max(1, Math.ceil(unlocked / PER_PAGE));
-        renderContentList(data || [], topHtml, { page: currentPage, totalPages });
+        renderContentList(data || [], topHtml, { page: currentPage, totalPages, totalUnlocked: unlocked });
       } else {
         const { data, error } = await supabase.from('community_posts')
           .select('id, board_id, title, body, view_count, comment_count, reaction_count, created_at')
@@ -566,33 +608,47 @@
         </div>`;
       return;
     }
-    const cardsHtml = items.map(c => `
-      <a class="content-card" href="./content-detail.html?id=${c.id}">
-        ${c.format === 'story' ? `<span class="content-card-badge badge-official">📖 이야기</span>` : ''}
-        ${c.author_type === 'official'
-          ? `<span class="content-card-badge badge-official">✓ 잇다 에디터</span>`
-          : `<span class="content-card-badge badge-user">먼저 겪은 분의 기록</span>`}
-        <span style="font-size:11px;color:var(--ink-muted);font-weight:700;">${labelFor(c.category)}</span>
-        <div class="content-card-title">${escapeHtml(c.title)}</div>
-        <div class="content-card-meta">
-          ${c.profiles?.name ? `<span class="content-card-author">${escapeHtml(c.profiles.name)}</span>` : ''}
-          <span>조회 ${c.view_count ?? 0}</span>
-          <span>${formatDate(c.created_at)}</span>
+    const startIdx = pager ? (pager.page - 1) * PER_PAGE : 0;
+    const rowsHtml = items.length ? `
+      <div class="board">
+        <div class="board-head">
+          <span class="board-head-title">지난 잇다 에디터 글</span>
+          <span class="board-head-count">${pager ? `${pager.totalUnlocked}편 · ${pager.totalPages}쪽` : ''}</span>
         </div>
-      </a>
-    `).join('');
-    body.innerHTML = topHtml + cardsHtml + paginationHtml(pager);
+        ${items.map((c, i) => `
+          <a class="board-row" href="./content-detail.html?id=${c.id}">
+            <span class="board-cat">${labelFor(c.category)}</span>
+            <span class="board-title">${escapeHtml(c.title)}</span>
+            <span class="board-date">${unlockDateLabel(startIdx + i)}</span>
+          </a>
+        `).join('')}
+      </div>` : '';
+    body.innerHTML = topHtml + rowsHtml + paginationHtml(pager);
     wirePagination();
+  }
+
+  // 게시판 발행 날짜 — 글 인덱스(0=가장 최신) 기준 N일 전.
+  function unlockDateLabel(idx) {
+    if (idx === 0) return '오늘';
+    if (idx === 1) return '어제';
+    if (idx === 2) return '그제';
+    return `${idx}일 전`;
   }
 
   function paginationHtml(pager) {
     if (!pager || pager.totalPages <= 1) return '';
     const { page, totalPages } = pager;
-    const nums = [];
-    for (let i = 1; i <= totalPages; i++) {
-      nums.push(`<button class="page-num ${i === page ? 'active' : ''}" data-page="${i}">${i}</button>`);
+    const WINDOW = 5;
+    let start = Math.max(1, page - Math.floor(WINDOW / 2));
+    let end   = Math.min(totalPages, start + WINDOW - 1);
+    start = Math.max(1, end - WINDOW + 1);
+    const btns = [];
+    if (page > 1) btns.push(`<button class="page-num page-arrow" data-page="${page - 1}" aria-label="이전">‹</button>`);
+    for (let i = start; i <= end; i++) {
+      btns.push(`<button class="page-num ${i === page ? 'active' : ''}" data-page="${i}">${i}</button>`);
     }
-    return `<nav class="pagination" aria-label="페이지">${nums.join('')}</nav>`;
+    if (page < totalPages) btns.push(`<button class="page-num page-arrow" data-page="${page + 1}" aria-label="다음">›</button>`);
+    return `<nav class="pagination" aria-label="페이지">${btns.join('')}</nav>`;
   }
 
   function wirePagination() {
