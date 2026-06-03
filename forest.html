@@ -403,15 +403,10 @@
     }
   })();
 
-  // 베타 한정: reflection 1종만 활성, 나머지는 '준비 중' placeholder
-  // (콘텐츠 안정화 후 점진 활성화 — '곧 · ___' 표시로 빈 보드 신호 미리 보냄)
+  // 베타 한정: reflection 1종만 활성. '곧 · ___' placeholder 칩은 사장님 요청으로 제거.
   const CATEGORIES = [
     { key: 'all',        label: '전체' },
     { key: 'reflection', label: '오늘 잇고' },
-    { key: 'family',     label: '가족', soon: true },
-    { key: 'health',     label: '건강', soon: true },
-    { key: 'finance',    label: '재정', soon: true },
-    { key: 'death_prep', label: '죽음 준비', soon: true },
   ];
 
   const params = new URLSearchParams(location.search);
