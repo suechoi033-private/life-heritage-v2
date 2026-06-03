@@ -35,7 +35,7 @@ export async function getContent(id) {
   const [{ data: media }, { data: thread }] = await Promise.all([
     supabase.from('content_media').select('storage_path, media_type').eq('content_id', id).order('sort_order'),
     supabase.from('community_posts')
-      .select('id, title, comment_count, reaction_count, created_at, user_id, profiles:user_id(name)')
+      .select('id, title, body, comment_count, reaction_count, created_at, user_id, profiles:user_id(name)')
       .eq('content_thread_id', id).eq('is_deleted', false)
       .order('created_at', { ascending: false }).limit(10),
   ]);

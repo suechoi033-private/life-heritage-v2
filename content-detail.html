@@ -471,10 +471,10 @@
       `}
     </div>
 
-    <div class="discussion-head">이 콘텐츠에 대한 대화</div>
+    <div class="discussion-head">이 콘텐츠에 잇는 대화</div>
     ${content.discussion_posts.length ? content.discussion_posts.map((p) => `
       <a class="discussion-thread" href="./post-detail.html?id=${p.id}">
-        <div class="discussion-thread-title">${escapeHtml(p.title)}</div>
+        <div class="discussion-thread-title">${escapeHtml(threadLabel(p))}</div>
         <div class="discussion-thread-meta">
           ${p.profiles?.name ? `<span>${escapeHtml(p.profiles.name)}</span>` : ''}
           <span>💬 ${p.comment_count ?? 0}</span>
@@ -485,7 +485,7 @@
     `).join('') : '<div class="empty-state" style="padding:20px;"><div class="empty-desc">첫 대화를 시작해 보세요.</div></div>'}
 
     ${session ? `
-      <div class="cta-block" style="margin-top:14px;"><button id="btn-start-thread">＋ 이 콘텐츠로 대화 시작</button></div>
+      <div class="cta-block" style="margin-top:14px;"><button id="btn-start-thread">＋ 이 콘텐츠에 한 마디 잇기</button></div>
     ` : ''}
   `;
 
@@ -819,6 +819,15 @@
   function formatDate(d) { return new Date(d).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }); }
   function escapeHtml(s) { return (s || '').replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
   function escapeAttr(s) { return escapeHtml(s).replace(/`/g, '&#96;'); }
+  // 연결된 대화 카드 라벨: title이 있으면 그대로, 없으면 본문 첫 줄(최대 50자) 폴백.
+  function threadLabel(p) {
+    const t = (p?.title || '').trim();
+    if (t) return t;
+    const body = String(p?.body || '').replace(/\r\n?/g, '\n').trim();
+    if (!body) return '(빈 메모)';
+    const firstLine = body.split('\n').find((l) => l.trim().length > 0) || body;
+    return firstLine.length > 50 ? firstLine.slice(0, 50) + '…' : firstLine;
+  }
 </script>
 
 </body>
