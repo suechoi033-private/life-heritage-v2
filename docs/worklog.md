@@ -12,6 +12,11 @@
 
 ## 2026-06-03
 
+**상주진술서 시드 콘텐츠 작성 + 잇다 에디터 발행 마이그레이션** (마케터 세션, 사장님 요청)
+- `docs/content/seed-13-sangju-statement.md` 신규 — "상주진술서, 가장 막막한 순간에 가장 정확한 기록이 자산이 됩니다" (lifecycle 1+2, family/death_prep/finance 걸침, YMYL 감수 대상). 사장님이 준 Naver 블로그(`bumosarang_/224231328435`) + WebSearch 다중 출처(국가법령정보센터·정부24·대한의사협회지·의협신문·대한응급의학회지·보험사 공식 페이지) 교차확인. WebFetch는 모두 403/차단으로 검색 스니펫 다중 비교로 사실 확보. "단일 법정 양식이 아닌 실무 통칭"임을 첫머리에 명시. 검안의·경찰·보험사 세 갈래에서 공통으로 묻는 다섯 가지(언제·정황·병력·약·사망 직전 처치) 정리. 잇다 케어링(일지·관리 항목·처방전 사진 분석·형제 공유)과 자연 연결. seed-01·03·04 상호 링크. 발행 전 감수: 법의학 전문의·손해사정사·장례지도사·"상주진술서" 명칭 표현.
+- `supabase/migrations/20260603_seed13_sangju_statement_insert.sql` 신규 — `contents` 테이블에 INSERT(category='family', author_type='official', is_published=true). `$b$...$b$` 달러 인용, `where not exists (title)` 멱등. **사장님 액션 필요: Supabase SQL Editor에서 1회 실행** → 홈/forest/콘텐츠 상세에 노출.
+- 한 곳 톤 정리: "사장님 자신을 위해서도" → "당신 자신을 위해서도"(독자 시점 일관).
+
 **홈 카드 인라인 댓글 — 작성자 본인 수정·삭제 추가** (PE 세션, 사장님 요청)
 - 증상: 홈 피드 콘텐츠 카드(예: "디지털 계정·자산 정리 …") 아래 인라인 한 줄 댓글에 작성자가 자기 댓글을 수정/삭제할 수단이 없었음. post-detail의 일반 댓글은 이미 삭제 가능.
 - **UI 추가** (`index.html`): `commentItemHtml`이 `c.user_id === currentUserId`일 때만 댓글 본문 아래에 「수정 · 삭제」 인라인 톤다운 버튼 노출(과시·경쟁 없는 11.5px 글씨, ink-muted → hover시 primary). 수정 클릭 시 본문 자리에 textarea + 저장/취소 인라인 편집 모드, 저장 시 DB update 후 본문만 갱신(낙관적). 삭제는 confirm 한 번 → soft delete(`is_deleted=true`) → 아이템 제거 + 카드 💬 카운트 -1, 비면 "첫 댓글을 남겨보세요" 복귀. 이벤트는 `.hcard-comments` 패널 안에서만 위임돼 post-detail/content-detail discussion-thread 댓글에 영향 0.
