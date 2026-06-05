@@ -20,6 +20,7 @@
   1) 작업 브랜치 → 2) `main` → 3) `gh-pages` 순으로 푸시.
 - `main`이 앞서 있으면 **강제 푸시 금지**. `git fetch origin main` 후 rebase로 합친다.
 - 앱 동작/화면이 바뀌면 `sw.js`의 `CACHE_VERSION`을 올려 캐시를 갱신한다(docs만 바꿀 땐 불필요).
+- **`main`/`gh-pages`로 푸시하기 전 `bash scripts/deploy-preflight.sh`를 돌린다.** 위 규칙(CACHE_VERSION 갱신·force push 금지·새 화면 APP_SHELL 등록)을 자동 점검한다. 차단(exit 1)되면 고친 뒤 푸시한다.
 
 ## 제품 원칙 (요약 — 자세히는 헌장)
 
