@@ -32,7 +32,7 @@ const PROTECTED_TABS = new Set(['seed', 'nest', 'root']);
 export async function renderNav(opts = {}) {
   const rawActive = opts.active || '';
   const active = LEGACY_ACTIVE_MAP[rawActive] || rawActive;
-  const { infoIcon = true, title = '', quickWrite = true, footer = true } = opts;
+  const { infoIcon = false, title = '', quickWrite = true, footer = true } = opts;
 
   const { data: { session } } = await supabase.auth.getSession();
   const loggedIn = !!session;
