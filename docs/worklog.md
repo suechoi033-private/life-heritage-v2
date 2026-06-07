@@ -65,6 +65,14 @@
 - `docs/interview-guide.md`: "리텐션 행동 추적" 섹션 신설. LQ1(무엇이 2회차 방문을 만드나 — D3/D7 재방문·2회차 작성·어느 기능) + LQ2(초대가 실제 일어나나 — 발송률·수락률·혼자vs함께 D7차이). 초대는 케어링에만 존재 → 케어링 초대 하나로 LQ2 측정.
 - `docs/retention-test-tracker.csv` 신규 — 20명 수기 추적 템플릿(첫방문·마지막방문·2회차 작성·재방문·초대·추천의향).
 
+**리텐션 테스트 자동 계측 구축 — 페이지뷰 로깅 + 분석 SQL** (PE 세션, 사장님 요청)
+- 사장님 질문: 초대 명단 20명이 언제 가입/어느 페이지/어떤 기능 쓰는지 수기로는 불가능. 자동 측정 가능 범위 확인 요청.
+- 진단: 쓰기 행동(케어일지·답변·일기·글·초대)은 각 테이블 `created_at`+`user_id`로 **이미 자동 추적**. 갭은 "페이지뷰·순수 재방문"뿐(분석툴·이벤트 테이블 없었음). → 페이지뷰 로깅만 추가하면 LQ1·LQ2 거의 전부 자동.
+- `supabase/migrations/20260605_app_events.sql` 신규 + **MCP로 라이브 적용 완료**. `app_events`(user_id·event_type·path·meta·created_at), RLS: 본인 INSERT/SELECT만, UPDATE/DELETE 없음(불변 로그), 익명 삽입 차단.
+- `auth.js`: `logPageView()` 추가 + 모듈 로드(페이지 진입) 시 자동 1회 기록. 모든 페이지가 공유 import하므로 페이지별 수정 0. 로그인 사용자만 기록, 계측 실패는 조용히 무시(앱 동작 비방해).
+- `docs/retention-test-report.sql` 신규 — 초대 이메일 VALUES만 넣으면 사람별 [가입·페이지뷰·활동일수·기능별 작성·2회차 도달(LQ1)·초대 보냄/수락(LQ2)·혼자vs함께(가설③)] 한 표 출력. 실DB로 문법·결과 검증 완료.
+- `docs/interview-guide.md` 측정방법 갱신(수기→자동), `sw.js` CACHE_VERSION → `itda-v3-2026-06-05-pageview-logging-v1`.
+
 ## 2026-06-03
 
 **seed-13 Zinsser 정신 문장 정돈 + DB 갱신 마이그레이션** (카피라이터 세션, 사장님 요청)

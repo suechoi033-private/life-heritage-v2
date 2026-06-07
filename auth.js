@@ -113,6 +113,31 @@ export async function redirectIfAuthed(redirectTo = './index.html') {
 }
 
 // =========================================================
+// 페이지뷰 로깅 (리텐션 테스트 계측)
+// 로그인 사용자가 페이지에 진입할 때마다 app_events에 1건 기록.
+// 측정 실패는 앱 동작을 절대 방해하지 않도록 조용히 무시한다.
+// =========================================================
+export async function logPageView(extra = {}) {
+  try {
+    const { data } = await supabase.auth.getSession();
+    const user = data?.session?.user;
+    if (!user) return; // 로그인 사용자만 기록 (익명 방문은 RLS상 기록 안 됨)
+    const path = (window.location.pathname.split('/').pop() || 'index.html');
+    await supabase.from('app_events').insert({
+      user_id: user.id,
+      event_type: 'pageview',
+      path,
+      meta: { ref: document.referrer || null, ...extra },
+    });
+  } catch (_) { /* 계측 실패는 무시 */ }
+}
+
+// 모듈 로드(=페이지 진입) 시 자동 1회 기록.
+if (typeof window !== 'undefined') {
+  logPageView();
+}
+
+// =========================================================
 // Korean-friendly error messages
 // =========================================================
 export function friendlyError(error) {
