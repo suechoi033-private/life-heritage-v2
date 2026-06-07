@@ -474,10 +474,10 @@
   <div class="sort-bar">
     <label for="sort-select" style="font-size:13.5px;color:var(--ink-muted);font-weight:600;">정렬</label>
     <select class="sort-select" id="sort-select" aria-label="정렬 기준">
-      <option value="dist">거리순</option>
       <option value="grade">평가등급순</option>
-      <option value="cost">본인부담 낮은순</option>
+      <option value="vacancy">정원 여유순</option>
     </select>
+    <span id="result-info" style="font-size:12.5px;color:var(--ink-muted);margin-left:auto;"></span>
     <button type="button" class="compare-badge" id="compare-badge" hidden>
       🗂 비교담기 <span id="compare-count">0</span>/3
     </button>
@@ -486,85 +486,17 @@
   <!-- 신뢰 배너 -->
   <div class="trust-banner">
     <span>✓</span>
-    <span><strong>공단 공개데이터</strong> 기반 · 잇다 에디터 방문 기록 포함 · 데이터 기준일은 각 시설 카드에 표시</span>
+    <span><strong>국민건강보험공단 공개데이터</strong> 기반 · 평가기준일은 각 시설 카드에 표시 · 정확한 정보는 시설 직접 확인 필요</span>
   </div>
 
   <!-- 시설 목록 -->
   <div class="facility-list" id="facility-list">
 
-    <!-- 시드 카드 A — 에디터 방문 완료 예시 -->
-    <div class="facility-card">
-      <div class="facility-card-top">
-        <div>
-          <span class="facility-grade grade-a">A등급</span>
-          <span class="facility-type">요양원</span>
-        </div>
-        <span class="facility-location">서초구 · 2.4km</span>
-      </div>
-      <div class="facility-name">○○실버케어요양원</div>
-      <div class="facility-meta">
-        <span>정원 60 · 현원 54 · <strong style="color:var(--success);">여유 6</strong></span>
-        <span>요양보호사 1 : 2.1</span>
-        <span>시설급여 · 단기보호</span>
-      </div>
-      <div class="facility-cost">본인부담 추정 약 78만원/월</div>
-      <hr class="facility-divider">
-      <div class="facility-trust">✓ 잇다 에디터 방문 (2026.05)</div>
-      <div class="facility-excerpt">"들어섰을 때 냄새가 거의 없었다. 복도 끝까지 직원 분이 어르신 이름으로 불렀다…"</div>
-      <div class="facility-actions">
-        <button type="button" class="btn-compare" data-id="seed-a" aria-label="비교 담기">☐ 비교담기</button>
-        <a href="./nursing-home-detail.html?id=seed-a" class="btn-detail">상세 보기 →</a>
-      </div>
-    </div>
-
-    <!-- 시드 카드 B -->
-    <div class="facility-card">
-      <div class="facility-card-top">
-        <div>
-          <span class="facility-grade grade-b">B등급</span>
-          <span class="facility-type">요양원</span>
-        </div>
-        <span class="facility-location">노원구 · 5.1km</span>
-      </div>
-      <div class="facility-name">△△노인요양원</div>
-      <div class="facility-meta">
-        <span>정원 45 · 현원 45 · <strong style="color:var(--warm);">대기 중</strong></span>
-        <span>요양보호사 1 : 2.4</span>
-        <span>시설급여</span>
-      </div>
-      <div class="facility-cost">본인부담 추정 약 65만원/월</div>
-      <hr class="facility-divider">
-      <div class="facility-trust" style="color:var(--ink-muted);">에디터 방문 예정</div>
-      <div class="facility-excerpt">"주변 산책로가 가까워 어르신들 야외활동이 잦다는 이야기를 들었습니다."</div>
-      <div class="facility-actions">
-        <button type="button" class="btn-compare" data-id="seed-b" aria-label="비교 담기">☐ 비교담기</button>
-        <a href="./nursing-home-detail.html?id=seed-b" class="btn-detail">상세 보기 →</a>
-      </div>
-    </div>
-
-    <!-- 시드 카드 C -->
-    <div class="facility-card">
-      <div class="facility-card-top">
-        <div>
-          <span class="facility-grade grade-a">A등급</span>
-          <span class="facility-type">요양원</span>
-        </div>
-        <span class="facility-location">강남구 · 3.0km</span>
-      </div>
-      <div class="facility-name">□□케어하우스</div>
-      <div class="facility-meta">
-        <span>정원 80 · 현원 77 · <strong style="color:var(--success);">여유 3</strong></span>
-        <span>요양보호사 1 : 2.0</span>
-        <span>시설급여 · 단기보호 · 치매전담</span>
-      </div>
-      <div class="facility-cost">본인부담 추정 약 90만원/월</div>
-      <hr class="facility-divider">
-      <div class="facility-trust">✓ 잇다 에디터 방문 (2026.04)</div>
-      <div class="facility-excerpt">"치매전담실 어르신들을 위한 인지 프로그램이 매일 오전에 운영되고 있었다…"</div>
-      <div class="facility-actions">
-        <button type="button" class="btn-compare" data-id="seed-c" aria-label="비교 담기">☐ 비교담기</button>
-        <a href="./nursing-home-detail.html?id=seed-c" class="btn-detail">상세 보기 →</a>
-      </div>
+    <!-- DYNAMIC: cards rendered by JS -->
+    <div class="empty-state" id="initial-hint">
+      <div style="font-size:32px;margin-bottom:12px;">🔍</div>
+      <strong style="font-size:15px;color:var(--ink-soft);">지역을 선택하고 검색하세요</strong>
+      <p>시도를 선택한 뒤 검색 버튼을 누르면<br>공단 데이터 기반 시설 목록이 표시됩니다.</p>
     </div>
 
   </div>
@@ -601,7 +533,41 @@
 
 <script type="module">
   import { renderNav } from '../nav.js';
-  await renderNav({ active: 'info' });
+  import { SUPABASE_URL, supabase } from '../auth.js';
+  await renderNav({ active: 'forest' });
+
+  const EDGE_URL = `${SUPABASE_URL}/functions/v1/ltc-search`;
+
+  // ── 시군구 목록 (시도별) ──
+  const SIGUNGU_MAP = {
+    '서울': ['강남구','강동구','강북구','강서구','관악구','광진구','구로구','금천구','노원구','도봉구','동대문구','동작구','마포구','서대문구','서초구','성동구','성북구','송파구','양천구','영등포구','용산구','은평구','종로구','중구','중랑구'],
+    '경기': ['고양시','과천시','광명시','광주시','구리시','군포시','김포시','남양주시','동두천시','부천시','성남시','수원시','시흥시','안산시','안성시','안양시','양주시','여주시','오산시','용인시','의왕시','의정부시','이천시','파주시','평택시','포천시','하남시','화성시','가평군','양평군','연천군'],
+    '인천': ['계양구','남동구','동구','미추홀구','부평구','서구','연수구','중구','강화군','옹진군'],
+    '부산': ['강서구','금정구','기장군','남구','동구','동래구','부산진구','북구','사상구','사하구','서구','수영구','연제구','영도구','중구','해운대구'],
+    '대구': ['남구','달서구','달성군','동구','북구','서구','수성구','중구'],
+    '광주': ['광산구','남구','동구','북구','서구'],
+    '대전': ['대덕구','동구','서구','유성구','중구'],
+    '울산': ['남구','동구','북구','중구','울주군'],
+    '세종': ['세종시'],
+    '강원': ['강릉시','고성군','동해시','삼척시','속초시','양구군','양양군','영월군','원주시','인제군','정선군','철원군','춘천시','태백시','평창군','홍천군','화천군','횡성군'],
+    '충북': ['괴산군','단양군','보은군','영동군','옥천군','음성군','제천시','증평군','진천군','청주시','충주시'],
+    '충남': ['계룡시','공주시','금산군','논산시','당진시','보령시','부여군','서산시','서천군','아산시','예산군','천안시','청양군','태안군','홍성군'],
+    '전북': ['고창군','군산시','김제시','남원시','무주군','부안군','순창군','완주군','익산시','임실군','장수군','전주시','정읍시','진안군'],
+    '전남': ['강진군','고흥군','곡성군','광양시','구례군','나주시','담양군','목포시','무안군','보성군','순천시','신안군','여수시','영광군','영암군','완도군','장성군','장흥군','진도군','함평군','해남군','화순군'],
+    '경북': ['경산시','경주시','고령군','구미시','군위군','김천시','문경시','봉화군','상주시','성주군','안동시','영덕군','영양군','영주시','영천시','예천군','울릉군','울진군','의성군','청도군','청송군','칠곡군','포항시'],
+    '경남': ['거제시','거창군','고성군','김해시','남해군','밀양시','사천시','산청군','양산시','의령군','진주시','창녕군','창원시','통영시','하동군','함안군','함양군','합천군'],
+    '제주': ['서귀포시','제주시'],
+  };
+
+  // ── 시도 선택 → 시군구 목록 갱신 ──
+  const sidoSel = document.getElementById('filter-sido');
+  const sigunguSel = document.getElementById('filter-sigungu');
+
+  sidoSel.addEventListener('change', () => {
+    const list = SIGUNGU_MAP[sidoSel.value] ?? [];
+    sigunguSel.innerHTML = '<option value="">구·시·군 전체</option>' +
+      list.map(s => `<option value="${s}">${s}</option>`).join('');
+  });
 
   // ── 필터 칩 토글 ──
   document.querySelectorAll('.filter-chips').forEach(group => {
@@ -624,13 +590,11 @@
     document.getElementById('compare-count').textContent = count;
     const badge = document.getElementById('compare-badge');
     const floatBar = document.getElementById('compare-float');
-    const floatCount = document.getElementById('compare-float-count');
-
+    document.getElementById('compare-float-count').textContent = count;
     if (count > 0) {
       badge.removeAttribute('hidden');
       badge.classList.add('has-items');
       floatBar.removeAttribute('hidden');
-      floatCount.textContent = count;
     } else {
       badge.setAttribute('hidden', '');
       badge.classList.remove('has-items');
@@ -662,13 +626,132 @@
   document.getElementById('btn-go-compare').addEventListener('click', goCompare);
 
   function goCompare() {
-    if (compareSet.size < 2) {
-      alert('비교하려면 2곳 이상 담아주세요.');
+    if (compareSet.size < 2) { alert('비교하려면 2곳 이상 담아주세요.'); return; }
+    window.location.href = `./nursing-home-compare.html?ids=${encodeURIComponent([...compareSet].join(','))}`;
+  }
+
+  // ── 검색 ──
+  const listEl = document.getElementById('facility-list');
+
+  async function doSearch() {
+    const sido     = sidoSel.value;
+    const sigungu  = sigunguSel.value;
+    const gradeVal = document.querySelector('#chips-grade .filter-chip.active')?.dataset?.val ?? 'ab';
+    const dementia = document.getElementById('chk-dementia').checked;
+    const vacancy  = document.getElementById('chk-vacancy').checked;
+
+    // 로딩 상태
+    listEl.innerHTML = `
+      <div class="empty-state">
+        <div style="font-size:28px;margin-bottom:12px;animation:spin 1s linear infinite;display:inline-block;">⟳</div>
+        <p>공단 데이터를 불러오는 중입니다…</p>
+      </div>
+      <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+    `;
+
+    const { data: { session } } = await supabase.auth.getSession();
+
+    let result;
+    try {
+      const res = await fetch(EDGE_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session ? { 'Authorization': `Bearer ${session.access_token}` } : {}),
+        },
+        body: JSON.stringify({ sido, sigungu, grade: gradeVal, dementia: String(dementia), vacancy: String(vacancy), limit: '30' }),
+      });
+      result = await res.json();
+    } catch (err) {
+      listEl.innerHTML = `<div class="empty-state"><p style="color:var(--danger);">네트워크 오류가 발생했어요. 잠시 후 다시 시도해 주세요.</p></div>`;
       return;
     }
-    const ids = [...compareSet].join(',');
-    window.location.href = `./nursing-home-compare.html?ids=${encodeURIComponent(ids)}`;
+
+    if (result.error === 'API_KEY_NOT_CONFIGURED') {
+      listEl.innerHTML = `
+        <div class="empty-state">
+          <div style="font-size:28px;margin-bottom:10px;">🔑</div>
+          <strong style="color:var(--ink-soft);">API 키 설정이 필요합니다</strong>
+          <p style="font-size:13px;">data.go.kr에서 장기요양기관 API를 신청한 뒤<br>
+          <code style="background:var(--bg-alt);padding:2px 6px;border-radius:4px;font-size:12px;">supabase secrets set NHIS_API_KEY=&lt;인증키&gt;</code><br>
+          를 실행하면 실제 데이터가 표시됩니다.</p>
+        </div>
+      `;
+      return;
+    }
+
+    if (!result.ok || !result.items) {
+      listEl.innerHTML = `<div class="empty-state"><p style="color:var(--danger);">데이터를 불러오지 못했어요 (${result.error ?? '알 수 없는 오류'}). 잠시 후 다시 시도해 주세요.</p></div>`;
+      return;
+    }
+
+    const items = result.items;
+    if (items.length === 0) {
+      listEl.innerHTML = `
+        <div class="empty-state">
+          <div style="font-size:28px;margin-bottom:12px;">😔</div>
+          <strong style="font-size:15px;color:var(--ink-soft);">검색 결과가 없습니다</strong>
+          <p>조건을 바꿔 다시 검색해 보세요.<br>평가등급 필터를 '전체'로 넓혀보시거나<br>시군구 선택을 해제해 보세요.</p>
+        </div>
+      `;
+      return;
+    }
+
+    // 정렬
+    const sortVal = document.getElementById('sort-select').value;
+    if (sortVal === 'grade') {
+      const ORDER = { A: 1, B: 2, C: 3, D: 4, E: 5 };
+      items.sort((a, b) => (ORDER[a.grade?.[0]] ?? 9) - (ORDER[b.grade?.[0]] ?? 9));
+    } else if (sortVal === 'vacancy') {
+      items.sort((a, b) => (b.vacancy ?? 0) - (a.vacancy ?? 0));
+    }
+
+    listEl.innerHTML = items.map(f => {
+      const gradeKey = (f.grade?.[0] ?? '').toLowerCase();
+      const gradeClass = ['a','b','c','d','e'].includes(gradeKey) ? `grade-${gradeKey}` : 'grade-c';
+      const gradeText = f.grade ? `${f.grade}등급` : '등급 미상';
+      const typeText  = f.type  || '요양원';
+      const location  = [f.sigungu, f.sido].filter(Boolean).join(' · ') || f.addr?.split(' ').slice(0,2).join(' ') || '';
+      const vacancyHtml = f.capacity > 0
+        ? (f.vacancy > 0
+          ? `<strong style="color:var(--success);">여유 ${f.vacancy}</strong>`
+          : `<strong style="color:var(--warm);">대기 중</strong>`)
+        : '';
+      const metaParts = [];
+      if (f.capacity) metaParts.push(`정원 ${f.capacity}${vacancyHtml ? ' · 현원 ' + f.current + ' · ' + vacancyHtml : ''}`);
+      if (f.dementiaRoom) metaParts.push('치매전담실');
+      if (f.tel) metaParts.push(`<a href="tel:${f.tel}" style="color:var(--primary);text-decoration:none;">${f.tel}</a>`);
+
+      return `
+        <div class="facility-card">
+          <div class="facility-card-top">
+            <div>
+              <span class="facility-grade ${gradeClass}">${gradeText}</span>
+              <span class="facility-type">${typeText}</span>
+            </div>
+            ${location ? `<span class="facility-location">${location}</span>` : ''}
+          </div>
+          <div class="facility-name">${f.name || '(이름 없음)'}</div>
+          ${metaParts.length ? `<div class="facility-meta">${metaParts.map(p => `<span>${p}</span>`).join('')}</div>` : ''}
+          ${f.addr ? `<div style="font-size:12.5px;color:var(--ink-muted);margin-bottom:8px;">${f.addr}</div>` : ''}
+          ${f.evalDate ? `<div style="font-size:12px;color:var(--ink-muted);">평가기준일 ${f.evalDate}</div>` : ''}
+          <div class="facility-actions">
+            <button type="button" class="btn-compare" data-id="${f.id || f.name}" aria-label="비교 담기">☐ 비교담기</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // 검색 결과 수 표시
+    const resultInfo = document.getElementById('result-info');
+    if (resultInfo) resultInfo.textContent = `${items.length}개 시설 표시 중 (전체 약 ${result.total}개)`;
   }
+
+  document.getElementById('btn-search').addEventListener('click', doSearch);
+  document.getElementById('sort-select').addEventListener('change', () => {
+    // 이미 결과가 있으면 재정렬 위해 재검색
+    if (listEl.querySelector('.facility-card')) doSearch();
+  });
 </script>
 
 <script src="../scroll-top.js" defer></script>
