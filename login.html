@@ -30,6 +30,9 @@
 
   <div id="alert" class="hidden"></div>
 
+  <!-- 가장 쉬운 로그인: 카카오를 맨 위 큰 버튼으로 -->
+  <div id="social-auth"></div>
+
   <form id="login-form" class="auth-form">
     <div class="field">
       <label for="email">이메일</label>
@@ -43,8 +46,6 @@
 
     <button type="submit" class="auth-submit">로그인</button>
   </form>
-
-  <div id="social-auth"></div>
 
   <div class="auth-links">
     <a href="./forgot.html">비밀번호를 잊으셨나요?</a>
@@ -127,6 +128,8 @@
   renderSocialAuthButtons(document.getElementById('social-auth'), {
     redirectAfter: redirectAfterLogin,
     inviteCode: friendInvite || careInvite,
+    dividerText: '또는 이메일로 로그인',
+    kakaoLabel: '카카오로 로그인',
   });
 
   const form = document.getElementById('login-form');

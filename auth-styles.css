@@ -529,6 +529,9 @@ body.has-bottom-nav {
   border-radius: 4px;
 }
 
+/* 시니어 친화: 주 버튼(카카오)은 더 크게 */
+.social-btn-primary { padding: 16px; font-size: 16.5px; }
+.social-btn-primary .social-btn-icon { font-size: 18px; }
 .social-btn-kakao { background: #FEE500; border-color: #FEE500; color: #181600; }
 .social-btn-kakao:hover { background: #FDD835; border-color: #FDD835; }
 .social-btn-google .social-btn-icon { color: #4285F4; font-family: Arial, sans-serif; }

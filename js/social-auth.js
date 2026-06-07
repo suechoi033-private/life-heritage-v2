@@ -106,18 +106,27 @@ export async function signInWithApple(opts = {}) {
 // 소셜 로그인 버튼 렌더링 (공용)
 // ========================================
 export function renderSocialAuthButtons(container, opts = {}) {
-  const { redirectAfter = './index.html', inviteCode = '' } = opts;
+  const {
+    redirectAfter = './index.html',
+    inviteCode = '',
+    dividerText = '',                    // 있으면 버튼 아래에 구분선 표시
+    kakaoLabel = '카카오로 계속하기',
+  } = opts;
+  // 카카오를 가장 쉬운 주 경로로: 맨 위 큰 버튼. 구분선은 아래(이메일 폼과의 사이).
+  const divider = dividerText
+    ? `<div class="social-auth-divider" style="margin-top:14px;"><span>${dividerText}</span></div>`
+    : '';
   container.innerHTML = `
     <div class="social-auth-wrap">
-      <div class="social-auth-divider"><span>또는</span></div>
-      <button type="button" class="social-btn social-btn-kakao" data-provider="kakao">
+      <button type="button" class="social-btn social-btn-kakao social-btn-primary" data-provider="kakao">
         <span class="social-btn-icon">💬</span>
-        <span>카카오로 계속하기</span>
+        <span>${kakaoLabel}</span>
       </button>
       <button type="button" class="social-btn social-btn-google" data-provider="google">
         <span class="social-btn-icon">G</span>
         <span>Google로 계속하기</span>
       </button>
+      ${divider}
     </div>
   `;
 

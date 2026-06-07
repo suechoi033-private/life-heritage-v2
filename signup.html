@@ -38,6 +38,9 @@
 
   <div id="alert" class="hidden"></div>
 
+  <!-- 가장 쉬운 가입: 카카오를 맨 위 큰 버튼으로 -->
+  <div id="social-auth"></div>
+
   <form id="signup-form" class="auth-form">
     <div class="field">
       <label for="name">이름 또는 불리고 싶은 이름</label>
@@ -58,8 +61,6 @@
 
     <button type="submit" class="auth-submit">가입하기</button>
   </form>
-
-  <div id="social-auth"></div>
 
   <div class="auth-bottom">
     이미 가입하셨나요? <a href="./login.html">로그인</a>
@@ -138,6 +139,8 @@
   renderSocialAuthButtons(document.getElementById('social-auth'), {
     redirectAfter: redirectAfterSignup,
     inviteCode: friendInvite || careInvite,
+    dividerText: '또는 이메일로 가입',
+    kakaoLabel: '카카오로 시작하기',
   });
 
   const form = document.getElementById('signup-form');
