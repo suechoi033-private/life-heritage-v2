@@ -346,7 +346,7 @@
   let state = { stage: 'pre', category: null };
 
   // 콘텐츠가 준비된 카테고리 (확장 시 추가)
-  const ENABLED_KEYS = new Set(['advance-directive', 'funeral-prepay', 'long-term-care']);
+  const ENABLED_KEYS = new Set(['advance-directive', 'funeral-prepay', 'long-term-care', 'nursing-home']);
 
   function render() {
     // 카테고리 사이드바
@@ -382,6 +382,7 @@
       'advance-directive': './info/advance-directive.html',
       'funeral-prepay':    './info/funeral-prepay.html',
       'long-term-care':    './info/long-term-care.html',
+      'nursing-home':      './info/nursing-home.html',
     };
     if (ENABLED[cat.key]) {
       window.location.href = ENABLED[cat.key];
