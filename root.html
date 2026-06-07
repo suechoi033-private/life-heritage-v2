@@ -359,31 +359,6 @@
   </div>
   <div class="account-menu" id="account-menu" role="menu" hidden></div>
 
-  <!-- 통계 4칸 -->
-  <div class="stat-grid" id="stat-grid">
-    <a class="stat-cell" href="./seed.html"><div class="stat-num" id="stat-diary">·</div><div class="stat-label">일기</div></a>
-    <a class="stat-cell" href="#" data-tab="answers"><div class="stat-num" id="stat-answers">·</div><div class="stat-label">답변</div></a>
-    <a class="stat-cell" href="#" data-tab="posts"><div class="stat-num" id="stat-posts">·</div><div class="stat-label">게시글</div></a>
-    <a class="stat-cell" href="#" data-tab="family"><div class="stat-num" id="stat-family">·</div><div class="stat-label">가족</div></a>
-    <a class="stat-cell" href="#" data-tab="friends"><div class="stat-num" id="stat-friends">·</div><div class="stat-label">친구</div></a>
-  </div>
-
-  <!-- 활동 -->
-  <div class="section-head">
-    <div class="section-title">내 활동</div>
-  </div>
-  <div class="activity-tabs" role="tablist">
-    <button class="activity-tab active" data-tab="diary">일기</button>
-    <button class="activity-tab" data-tab="answers">답변</button>
-    <button class="activity-tab" data-tab="posts">게시글</button>
-    <button class="activity-tab" data-tab="comments">댓글</button>
-    <button class="activity-tab" data-tab="family">가족</button>
-    <button class="activity-tab" data-tab="friends">친구</button>
-  </div>
-  <div id="activity-body">
-    <div class="empty-activity">불러오는 중...</div>
-  </div>
-
   <!-- 메뉴 -->
   <div class="my-menu">
     <a href="./invite.html">
@@ -587,30 +562,35 @@
     });
   }
 
-  // 통계
-  try {
-    const c = await getMyCounts();
-    document.getElementById('stat-diary').textContent   = c.diary;
-    document.getElementById('stat-answers').textContent = c.answers;
-    document.getElementById('stat-posts').textContent   = c.posts;
-    document.getElementById('stat-family').textContent  = c.family;
-    document.getElementById('stat-friends').textContent = c.friends;
-  } catch (_) {}
+  // 통계 + 활동 — 통계 그리드가 있을 때만(마이페이지에서 활동 섹션을 숨김)
+  if (document.getElementById('stat-grid')) {
+    try {
+      const c = await getMyCounts();
+      document.getElementById('stat-diary').textContent   = c.diary;
+      document.getElementById('stat-answers').textContent = c.answers;
+      document.getElementById('stat-posts').textContent   = c.posts;
+      document.getElementById('stat-family').textContent  = c.family;
+      document.getElementById('stat-friends').textContent = c.friends;
+    } catch (_) {}
 
-  // stat-cell 클릭 → 해당 탭으로
-  document.querySelectorAll('.stat-cell[data-tab]').forEach((el) => {
-    el.addEventListener('click', (e) => {
-      e.preventDefault();
-      switchTab(el.dataset.tab);
-      document.getElementById('activity-body').scrollIntoView({ behavior: 'smooth' });
+    // stat-cell 클릭 → 해당 탭으로
+    document.querySelectorAll('.stat-cell[data-tab]').forEach((el) => {
+      el.addEventListener('click', (e) => {
+        e.preventDefault();
+        switchTab(el.dataset.tab);
+        document.getElementById('activity-body').scrollIntoView({ behavior: 'smooth' });
+      });
     });
-  });
 
-  // 활동 탭
+    // 활동 탭
+    document.querySelectorAll('.activity-tab').forEach((b) => {
+      b.addEventListener('click', () => switchTab(b.dataset.tab));
+    });
+    loadActivity();
+  }
+
+  // 활동 탭 상태
   let activeTab = 'diary';
-  document.querySelectorAll('.activity-tab').forEach((b) => {
-    b.addEventListener('click', () => switchTab(b.dataset.tab));
-  });
 
   function switchTab(tab) {
     activeTab = tab;
@@ -620,6 +600,7 @@
 
   async function loadActivity() {
     const body = document.getElementById('activity-body');
+    if (!body) return;
     body.innerHTML = `<div class="empty-activity">불러오는 중...</div>`;
     try {
       if (activeTab === 'diary')    return renderDiary(await listMyDiary({ limit: 15 }));
@@ -740,9 +721,6 @@
   function escapeHtml(s) {
     return (s || '').replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   }
-
-  // 초기 로드
-  loadActivity();
 
   // 알림 권한
   const notifyBtn = document.getElementById('btn-notify-enable');
