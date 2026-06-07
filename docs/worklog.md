@@ -10,6 +10,27 @@
 
 ---
 
+## 2026-06-07
+
+**요양원·요양병원 찾기 v1 정적 셸 구현 + 커뮤니티·케어링 버그 수정** (PE 세션, 사장님 요청)
+
+- `info/nursing-home.html` 신규 (792dfd8) — 필터바(시도/시군구 select, 유형/평가 칩, 치매전담실·정원여유 체크박스), 정렬바, 비교뱃지, 신뢰배너(공단 공식 데이터 출처), 시드 시설 카드 3개(A/B/C등급, 토큰 색상), 비교 플로트바(최대 3개, localStorage), `nursing-home-detail.html?id=` 라우팅. 호스피스 칩은 `.disabled` 처리(향후 콘텐츠 페이지 연결 예정).
+- `info.html` 수정 — `nursing-home` ENABLED_KEYS 추가 + ENABLED 라우팅 맵 등록. 이제 "곁에" 탭 → 요양원·요양병원 클릭 시 전용 페이지로 이동.
+- `forest.html` 수정 — 오늘의 글 카드 마지막 줄 "잇다 한 줄 ─" 문구 전체 삭제 (qc-entice div 제거).
+- `sw.js` CACHE_VERSION 갱신 → `itda-v3-2026-06-07-nursing-home-v1`.
+
+**커뮤니티 게시판 "미리 준비" + "기타" 추가** (사장님 요청)
+- Supabase `boards` 테이블에 신규 행 2개 INSERT: `preparation` (미리 준비, sort_order=35), `other` (기타, sort_order=95).
+- `post-write.html`은 `listBoards()`로 동적 렌더링 → HTML 변경 없이 즉시 반영.
+- 마이그레이션: `supabase/migrations/20260607_care_emergency_rls_fix_and_boards.sql`.
+
+**케어링 응급연락처 2종 버그 수정** (사장님 요청)
+- 근본 원인 ①: `care_emergency_contacts` RLS 정책(`care_emergency_via_member`)이 `care_members`만 허용 → `care_subjects.user_id`가 본인인 owner가 INSERT/SELECT 불가. 신규 정책 `care_emergency_access`로 교체 (owner OR member 허용).
+- 근본 원인 ②: 응급 연락처 진입점이 `nest.html` 🚨 버튼 하나뿐 — `care.html` 가족 탭에서는 접근 불가.
+- `care.html` 가족 탭 최상단에 "응급 연락처 관리" 배너 링크 추가 (`#emerg-contacts-link`). `loadFamilyTab()`에서 `./care-emergency.html?subject=${subjectId}`로 href 동적 설정.
+
+---
+
 ## 2026-06-06
 
 **전체 서비스 화면 와이어프레임 + v1 배치 지도** (오케스트레이터 세션, 사장님 요청)

@@ -1091,6 +1091,14 @@
 
     <!-- Tab: family -->
     <section class="tab-panel hidden" data-panel="family">
+      <a id="emerg-contacts-link" href="#" style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--danger-soft);border:1.5px solid rgba(201,79,79,0.2);border-radius:var(--radius-sm);margin-bottom:14px;text-decoration:none;color:var(--danger);">
+        <span style="font-size:20px;flex-shrink:0;">🚨</span>
+        <span style="flex:1;min-width:0;">
+          <span style="display:block;font-size:13.5px;font-weight:800;">응급 연락처 관리</span>
+          <span style="display:block;font-size:12px;color:var(--ink-soft);margin-top:2px;">주치의·요양보호사·가족 등을 등록해두면 응급 시 빠르게 호출할 수 있어요.</span>
+        </span>
+        <span style="color:var(--ink-muted);font-size:17px;">›</span>
+      </a>
       <div class="write-cta-row">
         <h3 id="family-title">함께 돌보는 사람들</h3>
         <button type="button" class="primary-cta hidden" id="create-invite-btn">＋ 초대 코드 만들기</button>
@@ -2268,6 +2276,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     $('family-title').textContent = `${getDisplayName(subject)} 케어링 — 가족·도우미`;
     $('family-desc').textContent = '코드 하나로 가족 여러 명이 모두 참여할 수 있어요. 카톡·문자로 전달하세요.';
+    $('emerg-contacts-link').href = `./care-emergency.html?subject=${subjectId}`;
 
     $('create-invite-btn').classList.remove('hidden');
     $('family-self-leave').classList.toggle('hidden', isOwner);
