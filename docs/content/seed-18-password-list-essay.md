@@ -1,7 +1,7 @@
 ---
 title: "유서가 아니라, 비밀번호 목록을 먼저 썼습니다"
 slug: password-list-essay
-seed_no: 14
+seed_no: 18
 format: essay
 category: reflection
 category_note: >

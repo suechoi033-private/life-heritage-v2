@@ -1,7 +1,7 @@
 ---
 title: "안심상속 원스톱 서비스, 부모님 살아계실 때 알아두면 달라지는 것"
 slug: safe-inheritance-onestop
-seed_no: 16
+seed_no: 20
 format: guide
 category: family
 category_note: >

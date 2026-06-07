@@ -1,7 +1,7 @@
 ---
 title: "아버지 통장을 못 찾아, 두 달을 헤맸습니다"
 slug: inheritance-passbook-essay
-seed_no: 13
+seed_no: 17
 format: essay
 category: reflection
 category_note: >

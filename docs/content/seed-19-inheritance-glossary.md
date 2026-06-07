@@ -1,7 +1,7 @@
 ---
 title: "상속 용어 한눈에 — 처음 마주한 사람을 위한 사전"
 slug: inheritance-glossary
-seed_no: 15
+seed_no: 19
 format: glossary
 category: family
 category_note: >

@@ -63,27 +63,27 @@
 4. 4주 후 §5 지표로 go/확장/중단 판단
 
 **브리지 콘텐츠 4편 초안 작성** (카피라이터)
-- `docs/content/seed-13-inheritance-passbook-essay.md` (E1, 에세이, 감수 불필요): "아버지 통장을 못 찾아 두 달을 헤맸다". 사별 직후 상속인 시점. 전환 문단(70~80% 지점)에서 "나는 내 아이에게는 이걸 겪게 하고 싶지 않다"를 이미 떠오른 생각의 naming으로. 두 갈래 CTA(유산정리/디지털 보관함). *(기존 고품질 초안 검토·유지)*
-- `docs/content/seed-14-password-list-essay.md` (E2, 에세이, 감수 불필요): "유서가 아니라, 비밀번호 목록을 먼저 썼습니다". E1의 반대편 시점(이미 전환한 화자, lifecycle 3). 전환점: "유서는 무거워서 미룬다 → 비밀번호 목록이라는 가벼운 입구". CTA(디지털 보관함/생전기록). *(기존 고품질 초안 검토·유지)*
-- `docs/content/seed-15-inheritance-glossary.md` (S, 용어사전, 감수 불필요): "상속 용어 한눈에". 상속순위·법정상속인·유류분·상속포기·한정승인·상속재산분할·증여세·상속공제·안심상속원스톱·대습상속 등 20여 개. 정의+공식 출처 링크만, 1인칭 조언 0. 숫자는 본문 금지→국세청 홈택스 링크. 미검증 deep-link는 "(출처 확인 필요)" 플레이스홀더(지어내지 않음). 각 항목→관련 가이드 내부링크.
-- `docs/content/seed-16-safe-inheritance-onestop.md` (G3★, 가이드, **감수 권장 — review_required: true**): "안심상속 원스톱 서비스, 부모님 살아계실 때 알아두면 달라지는 것". §6 검증 실험 1 테스트 글. 제도 안내 중심·숫자 회피, 브리지 4단 적용, 두 갈래 CTA에 A/B 계측 예정. seed-01 검증 출처 재사용. 감수 전 발행 금지 상태로 둠.
+- `docs/content/seed-17-inheritance-passbook-essay.md` (E1, 에세이, 감수 불필요): "아버지 통장을 못 찾아 두 달을 헤맸다". 사별 직후 상속인 시점. 전환 문단(70~80% 지점)에서 "나는 내 아이에게는 이걸 겪게 하고 싶지 않다"를 이미 떠오른 생각의 naming으로. 두 갈래 CTA(유산정리/디지털 보관함). *(기존 고품질 초안 검토·유지)*
+- `docs/content/seed-18-password-list-essay.md` (E2, 에세이, 감수 불필요): "유서가 아니라, 비밀번호 목록을 먼저 썼습니다". E1의 반대편 시점(이미 전환한 화자, lifecycle 3). 전환점: "유서는 무거워서 미룬다 → 비밀번호 목록이라는 가벼운 입구". CTA(디지털 보관함/생전기록). *(기존 고품질 초안 검토·유지)*
+- `docs/content/seed-19-inheritance-glossary.md` (S, 용어사전, 감수 불필요): "상속 용어 한눈에". 상속순위·법정상속인·유류분·상속포기·한정승인·상속재산분할·증여세·상속공제·안심상속원스톱·대습상속 등 20여 개. 정의+공식 출처 링크만, 1인칭 조언 0. 숫자는 본문 금지→국세청 홈택스 링크. 미검증 deep-link는 "(출처 확인 필요)" 플레이스홀더(지어내지 않음). 각 항목→관련 가이드 내부링크.
+- `docs/content/seed-20-safe-inheritance-onestop.md` (G3★, 가이드, **감수 권장 — review_required: true**): "안심상속 원스톱 서비스, 부모님 살아계실 때 알아두면 달라지는 것". §6 검증 실험 1 테스트 글. 제도 안내 중심·숫자 회피, 브리지 4단 적용, 두 갈래 CTA에 A/B 계측 예정. seed-01 검증 출처 재사용. 감수 전 발행 금지 상태로 둠.
 - 공통: YMYL §4 준수(1인칭 조언 금지, YMYL 라벨+출처 섹션, 출처 URL 미창작), seed-01 frontmatter 구조 정합. **창업자 검토 대기.**
 
 **G3 두 갈래 CTA 클릭 계측 셋업 (실험 1 측정 장치)** (PE)
 - `js/cta-bridge.js` 신규: 익명 `session_key`(sessionStorage 난수, 쿠키 아님)·UTM/referrer 수집·`recordCtaClick()`로 `cta_clicks` INSERT. 전부 비차단(fire-and-forget) — 테이블 미적용/실패여도 글 읽기·이동 영향 0. 비로그인 유입자도 측정(상속 검색자 대부분 비회원).
 - `content-detail.html` 수정: 본문 마크다운의 펜스 마커 `@itda-bridge-cta`(+JSON)를 두 갈래 버튼으로 치환(`renderBridgeCtas`), `data-branch`로 지금/미래 구분 계측. DOMPurify가 language class를 떼므로 sentinel로 식별, 파싱 실패 시 원본 유지(안전 폴백). 디자인 토큰만((지금)=흰배경+라인 / (미래)=`--primary-soft` 강조, 둘 다 조용함, 인라인 hex 0).
 - `supabase/migrations/20260607_cta_clicks_event_log.sql`(미적용): anon INSERT 허용·SELECT 차단(집계는 service_role), `cta_branch` CHECK(now/future), 세션·실험·콘텐츠 인덱스. 하단 주석에 미래÷지금 비율 산출 쿼리 2종(raw / 세션 dedup) 포함.
-- 정합성 연결: seed-16(G3) 본문의 blockquote CTA → `@itda-bridge-cta` 마커로 교체(측정 가능화). E1/E2/S는 측정 대상 아니라 blockquote 유지. 목적지 임시값(지금=`info.html`, 미래=`self.html`) — 확정 창업자 결정.
+- 정합성 연결: seed-20(G3) 본문의 blockquote CTA → `@itda-bridge-cta` 마커로 교체(측정 가능화). E1/E2/S는 측정 대상 아니라 blockquote 유지. 목적지 임시값(지금=`info.html`, 미래=`self.html`) — 확정 창업자 결정.
 - **창업자 승인 필요(one-way door)**: ① `cta_clicks` 테이블 적용(백업 후 SQL Editor 1회 실행) ② G3 발행 + CTA 목적지 확정 ③ 라이브 배포(main/gh-pages·sw.js 캐시버전) — 모두 미실행, 발행 직전 상태까지만.
 
 **브리지 콘텐츠 발행 셋업 (창업자 결정 2026-06-07: 진행)**
 - 창업자 결정: 4편 모두 발행(코드 배포 진행, SQL은 창업자가 SQL Editor에서 실행). **G3는 헌장 YMYL 감수 규칙과 충돌 — 팀이 명확히 반대 의견을 제시**(잘못된 법률·재정 정보 한 줄이 신뢰 전체를 흔들 수 있음). 창업자 최종 결정 존중하되 위험완화 적용.
 - G3 위험완화: ① 사실 주장을 발행된 seed-01과 대조 — 새 미검증 주장 없음(오히려 구체 숫자·1인칭 조언 회피, seed-01보다 보수적). 신규 사실은 "행정안전부 운영"(정확) 하나. ② 하단 모순 문구("감수 전 발행 안 함") 삭제, 가짜 감수 표기 대신 정직한 면책(공식 출처 기반 명시)으로 교체. ③ frontmatter `published_without_review: true`로 정직 기록, 감수자 확보 후 교체 예정.
 - 깨진 내부 링크 정리: 4편의 `[…](./seed-*.md)` 내부 상호링크 9개를 라벨 텍스트로 변환(앱은 `?id=UUID` 라우팅이라 .md 링크는 404). 외부 공식 출처 링크는 보존.
-- 발행 마이그레이션: `scripts/gen_bridge_seed_sql.py`로 4편의 본문(frontmatter·선두 H1·개발주석 제거) → `supabase/migrations/20260607_seed13_16_bridge_contents.sql` 생성(멱등·`$b$` 인용·`is_published=true`·`author_type='official'`). **미적용 — 창업자가 SQL Editor 실행.**
+- 발행 마이그레이션: `scripts/gen_bridge_seed_sql.py`로 4편의 본문(frontmatter·선두 H1·개발주석 제거) → `supabase/migrations/20260607_seed17_20_bridge_contents.sql` 생성(멱등·`$b$` 인용·`is_published=true`·`author_type='official'`). **미적용 — 창업자가 SQL Editor 실행.**
 - 코드 배포: `sw.js CACHE_VERSION → itda-v3-2026-06-07-bridge-cta-v1`. 작업 브랜치→main→gh-pages 배포(렌더러 라이브화).
 - CTA 목적지 임시값: 지금=`info.html`, 미래=`self.html`(자기준비 허브). 전용 "90일 체크리스트" 페이지 생기면 교체(reversible).
-- **창업자 실행 필요(SQL Editor 1회씩)**: ① `20260607_cta_clicks_event_log.sql`(계측 테이블) ② `20260607_seed13_16_bridge_contents.sql`(콘텐츠 발행). 둘 다 실행해야 글이 라이브에 뜨고 클릭이 집계됨.
+- **창업자 실행 필요(SQL Editor 1회씩)**: ① `20260607_cta_clicks_event_log.sql`(계측 테이블) ② `20260607_seed17_20_bridge_contents.sql`(콘텐츠 발행). 둘 다 실행해야 글이 라이브에 뜨고 클릭이 집계됨.
 
 ---
 

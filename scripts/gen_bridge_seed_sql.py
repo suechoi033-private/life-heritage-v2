@@ -12,14 +12,14 @@ import pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 CONTENT = ROOT / "docs" / "content"
-OUT = ROOT / "supabase" / "migrations" / "20260607_seed13_16_bridge_contents.sql"
+OUT = ROOT / "supabase" / "migrations" / "20260607_seed17_20_bridge_contents.sql"
 
 # (파일, category) — contents.category 제약: finance/health/family/death_prep/memorial/reflection
 FILES = [
-    ("seed-13-inheritance-passbook-essay.md", "reflection"),
-    ("seed-14-password-list-essay.md", "reflection"),
-    ("seed-15-inheritance-glossary.md", "family"),
-    ("seed-16-safe-inheritance-onestop.md", "family"),
+    ("seed-17-inheritance-passbook-essay.md", "reflection"),
+    ("seed-18-password-list-essay.md", "reflection"),
+    ("seed-19-inheritance-glossary.md", "family"),
+    ("seed-20-safe-inheritance-onestop.md", "family"),
 ]
 
 
@@ -47,7 +47,7 @@ def main():
         raise SystemExit("본문에 $b$ 토큰 존재 — 인용 충돌. 중단.")
     parts = [
         "-- =============================================================",
-        "-- 상속 브리지 콘텐츠 발행 — seed-13/14/15/16 (4편)",
+        "-- 상속 브리지 콘텐츠 발행 — seed-17/18/19/20 (4편)",
         "--   E1·E2 에세이(감수 불필요) / S 용어사전(감수 불필요) /",
         "--   G3 안심상속 가이드(YMYL — 창업자 결정 2026-06-07로 감수 전 발행).",
         "--   설계: author_type='official', is_published=true, 멱등(같은 title skip).",
