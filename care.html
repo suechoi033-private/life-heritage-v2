@@ -1136,7 +1136,7 @@
       </a>
       <div class="write-cta-row">
         <h3 id="family-title">함께 돌보는 사람들</h3>
-        <button type="button" class="primary-cta hidden" id="create-invite-btn">＋ 초대 코드 만들기</button>
+        <button type="button" class="primary-cta hidden" id="create-invite-btn">＋ 가족 초대하기</button>
       </div>
       <p class="modal-sub" id="family-desc" style="margin-top:0;"></p>
       <div id="family-list"></div>
@@ -1354,12 +1354,12 @@
 <div class="modal-backdrop hidden" id="invite-modal">
   <div class="modal">
     <div class="modal-header" style="padding: 20px 22px 0;">
-      <div class="modal-title">초대 코드 만들기</div>
+      <div class="modal-title">가족 초대하기</div>
       <button type="button" class="modal-close" data-close-modal="invite-modal">×</button>
     </div>
     <div class="modal-body">
       <p class="modal-sub" id="invite-modal-sub" style="margin-top: 12px;">
-        코드 하나로 가족 여러 명이 참여할 수 있어요. 30일간 유효합니다.
+        초대 링크 하나로 가족 여러 명이 함께할 수 있어요. 링크는 30일간 유효합니다.
       </p>
 
       <div id="invite-form-area">
@@ -1375,25 +1375,31 @@
           <input type="text" id="invite-name" placeholder="예: 동생, 김간병인" maxlength="40">
         </div>
         <div style="padding: 8px 0 32px;">
-          <button type="button" class="primary-cta" id="generate-code-btn" style="width: 100%;">코드 생성하기</button>
+          <button type="button" class="primary-cta" id="generate-code-btn" style="width: 100%;">초대 링크 만들기</button>
         </div>
       </div>
 
       <div id="invite-result-area" class="hidden">
-        <div style="background: var(--bg-alt); border-radius: 14px; padding: 28px 20px; text-align: center; margin-bottom: 18px;">
-          <div style="font-size: 12px; color: var(--ink-muted); letter-spacing: 0.1em; margin-bottom: 10px;">초대 코드</div>
-          <div id="generated-code-display" style="font-family: 'SF Mono', monospace; font-size: 36px; font-weight: 800; letter-spacing: 0.18em; color: var(--ink);">------</div>
-          <div id="generated-code-meta" style="font-size: 12.5px; color: var(--ink-muted); margin-top: 12px;"></div>
-        </div>
-        <p style="font-size: 13.5px; color: var(--ink-soft); line-height: 1.7; margin-bottom: 18px;">
-          아래 <strong>"💬 공유하기"</strong>로 링크를 보내세요. 받은 분이 링크를 열고 가입·로그인만 하면 <strong>자동으로 합류</strong>돼요. (링크가 안 될 때만 위 코드를 직접 입력하면 됩니다.)
+        <p style="font-size: 16px; color: var(--ink); font-weight: 700; text-align: center; margin: 4px 0 6px;">초대가 만들어졌어요 🌼</p>
+        <p style="font-size: 14px; color: var(--ink-soft); line-height: 1.75; text-align: center; margin-bottom: 20px;">
+          아래 버튼으로 <strong>초대 링크를 보내세요.</strong><br>받은 분은 링크를 누르고 가입(또는 로그인)만 하면 <strong>자동으로 합류</strong>돼요.<br>코드를 외우거나 입력할 필요가 없습니다.
         </p>
-        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-          <button type="button" class="subject-btn" id="copy-code-btn" style="flex: 1; min-width: 130px;">📋 코드 복사</button>
-          <button type="button" class="subject-btn" id="share-code-btn" style="flex: 1; min-width: 130px;">💬 공유하기</button>
-          <button type="button" class="primary-cta" id="close-invite-btn" style="flex: 1; min-width: 100px;">완료</button>
+        <!-- 히어로: 링크 보내기 -->
+        <button type="button" class="primary-cta" id="share-code-btn" style="width: 100%; font-size: 16.5px; padding: 16px;">💬 카카오톡으로 초대 보내기</button>
+        <button type="button" class="subject-btn" id="copy-link-btn" style="width: 100%; margin-top: 8px;">🔗 초대 링크 복사하기</button>
+        <p id="share-fallback-hint" class="hidden" style="font-size: 12.5px; color: var(--primary); margin-top: 10px; text-align: center;"></p>
+        <!-- 폴백: 코드 (작게, 링크가 안 될 때만) -->
+        <div style="background: var(--bg-alt); border-radius: 12px; padding: 14px 16px; margin-top: 18px; text-align: center;">
+          <div style="font-size: 12px; color: var(--ink-muted);">링크가 안 열릴 때만 — 직접 입력용 코드</div>
+          <div style="margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+            <span id="generated-code-display" style="font-family: 'SF Mono', monospace; font-size: 22px; font-weight: 800; letter-spacing: 0.14em; color: var(--ink-soft);">------</span>
+            <button type="button" class="log-action-btn" id="copy-code-btn">복사</button>
+          </div>
+          <div id="generated-code-meta" style="font-size: 11.5px; color: var(--ink-muted); margin-top: 8px;"></div>
         </div>
-        <p id="share-fallback-hint" class="hidden" style="font-size: 12px; color: var(--ink-muted); margin-top: 10px; text-align: center;"></p>
+        <div style="padding-top: 18px;">
+          <button type="button" class="subject-btn" id="close-invite-btn" style="width: 100%;">완료</button>
+        </div>
         <div style="padding-bottom: 32px;"></div>
       </div>
     </div>
@@ -2542,37 +2548,52 @@ document.addEventListener('DOMContentLoaded', () => {
     copyCode($('generated-code-display').textContent);
   });
 
-  $('share-code-btn').addEventListener('click', async () => {
-    const code = $('generated-code-display').textContent;
-    const subject = state.subjects.find(s => s.id === state.currentSubjectId);
-    // 공유 메시지는 항상 공개 배포 도메인 사용 (localhost 방지)
-    // 배포: GitHub Pages (https://suechoi033-private.github.io/life-heritage-v2/)
+  // 공유 링크/메시지 빌더 (링크가 주인공) — 항상 공개 배포 도메인 사용(localhost 방지)
+  function buildInviteLink(code) {
     const baseUrl = new URL('./signup.html', window.location.href);
     const PUBLIC_ORIGIN = window.location.hostname === 'localhost'
       ? 'https://suechoi033-private.github.io/life-heritage-v2'
       : baseUrl.href.replace(/\/signup\.html$/, '');
-    const shareText = `[잇다] ${subject?.name || ''} 케어링에 함께해주세요.\n\n아래 링크에서 가입(또는 로그인)하시면 자동으로 합류돼요.\n${PUBLIC_ORIGIN}/signup.html?invite=${code}\n\n(혹시 자동 처리가 안 되면 직접 입력하세요. 초대 코드: ${code}, 30일간 유효)`;
+    return `${PUBLIC_ORIGIN}/signup.html?invite=${code}`;
+  }
+  function buildShareText(code) {
+    const subject = state.subjects.find(s => s.id === state.currentSubjectId);
+    const link = buildInviteLink(code);
+    return `[잇다] ${subject?.name || ''} 돌봄에 함께해주세요.\n\n아래 링크를 누르고 가입(또는 로그인)만 하면 자동으로 합류됩니다.\n${link}\n\n(링크가 안 열리면 코드 ${code} 를 앱에서 직접 입력하세요. 30일간 유효)`;
+  }
+  function showShareHint(msg) {
     const hintEl = $('share-fallback-hint');
-    hintEl.classList.add('hidden');
+    hintEl.textContent = msg;
+    hintEl.classList.remove('hidden');
+  }
+
+  $('copy-link-btn').addEventListener('click', async () => {
+    const code = $('generated-code-display').textContent;
+    try {
+      await navigator.clipboard.writeText(buildInviteLink(code));
+      showShareHint('초대 링크 복사됨 — 카톡 등에 붙여넣어 보내세요.');
+    } catch (e) {
+      showShareHint('복사가 안 됐어요. 아래 코드를 대신 알려주세요.');
+    }
+  });
+
+  $('share-code-btn').addEventListener('click', async () => {
+    const code = $('generated-code-display').textContent;
+    const shareText = buildShareText(code);
+    $('share-fallback-hint').classList.add('hidden');
 
     if (navigator.share) {
       try {
-        await navigator.share({
-          title: '잇다 · 함께 돌보기 초대',
-          text: shareText,
-        });
+        await navigator.share({ title: '잇다 · 함께 돌보기 초대', text: shareText });
       } catch (e) {
         if (e.name === 'AbortError') return;
-        // 공유 실패 → 클립보드 폴백
         await navigator.clipboard.writeText(shareText);
-        hintEl.textContent = '초대 메시지 복사됨 — 카톡에 붙여넣기 하세요.';
-        hintEl.classList.remove('hidden');
+        showShareHint('초대 메시지 복사됨 — 카톡에 붙여넣기 하세요.');
       }
     } else {
       // Web Share 미지원 (대부분 데스크탑)
       await navigator.clipboard.writeText(shareText);
-      hintEl.textContent = '초대 메시지 복사됨 — 카톡 등에 붙여넣기 하세요.';
-      hintEl.classList.remove('hidden');
+      showShareHint('초대 메시지 복사됨 — 카톡 등에 붙여넣기 하세요.');
     }
   });
 

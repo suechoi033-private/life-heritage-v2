@@ -21,6 +21,15 @@
 
 ## 2026-06-07
 
+**가족 초대 = 링크 수락 중심으로 재설계 + RPC 재테스트 (80대 친화)** (PE 세션, 사장님 요청)
+- 백엔드 재테스트: `accept_care_invite` RPC를 트랜잭션 안에서 5개 시나리오 시뮬레이션(정상 수락·중복·본인초대·잘못된코드·소문자입력) 전부 통과, 데이터는 롤백. 기존 수락데이터 정합성도 확인(고아 멤버 0, inviter 누락 0). **백엔드는 무결.**
+- 문제는 *표현*이 6자리 코드 중심이었던 것 → 링크 중심으로 전환:
+  - `care.html` 초대 결과화면 재구성: "💬 카카오톡으로 초대 보내기"가 히어로 버튼, "🔗 초대 링크 복사" 추가, 6자리 코드는 "링크가 안 될 때만" 작은 폴백으로 강등. 라벨 전반 "초대 코드 만들기"→"가족 초대하기", "코드 생성"→"초대 링크 만들기". 공유 메시지/링크 빌더 공통화(`buildInviteLink`/`buildShareText`).
+  - 신규 RPC `preview_care_invite(p_code)` (SECURITY DEFINER, anon 실행 가능) — `supabase/migrations/20260607_care_invite_preview.sql`. 로그인 전에도 "○○님이 □□님 돌봄에 가족으로 초대"를 보여줘 80대가 안심하고 가입하도록.
+  - `signup.html`·`login.html` 초대 랜딩 문구를 "초대 코드 XXX 받으셨네요" → 미리보기 기반 "○○님이 □□님 돌봄에 초대하셨어요. 이름·이메일만 넣으면 바로 합류"로. 이름은 `esc()`로 escape(XSS 방지).
+- 리텐션 리포트에 **직접 초대 26명 분모** 반영(`invited_seed=26`) — 전환율 계산 + 추천 유입 시 100% 초과 가능(입소문 신호) 명시. 추천으로 들어온 사람도 가입만 하면 자동 추적(profiles).
+- `sw.js` CACHE_VERSION → `itda-v3-2026-06-07-invite-link-first-v1`.
+
 **리텐션 리포트 자동화 — 수동 명단 폐기, 가입자 자동 추적** (PE 세션, 사장님 요청)
 - 사장님 우려("테스터 20명 이메일을 미리 모를 수 없다 / 손으로 명단 못 넣는다")에 대응. DB 확인 결과 **가입 시 실명+이메일이 이미 수집·자동 저장**되고 있었음: `signup.html`의 name·email 입력 모두 `required`, `auth.users` → `public.profiles`로 트리거(`handle_new_user`)가 자동 복사(17/17 전원 name·email 채워짐 확인).
 - 리포트를 **수동 명단 의존 → 가입일 기준 자동 코호트**로 전환: `docs/retention-test-report.sql`·`.claude/commands/retention-report.md` 재작성. `test_start`(KST) 한 줄만 초대 보낸 날로 맞추면, 그 이후 가입자가 이름·이메일·가입수단과 함께 자동 집계. `@itda.net` 내부계정 제외. 명단 입력 단계 완전 삭제.

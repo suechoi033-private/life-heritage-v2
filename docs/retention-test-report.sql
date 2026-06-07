@@ -20,7 +20,8 @@
 
 with params as (
   select
-    timestamptz '2026-06-08 00:00:00+09' as test_start   -- ← 테스트 시작일(KST). 이 줄만 수정.
+    timestamptz '2026-06-08 00:00:00+09' as test_start,   -- ← 테스트 시작일(KST). 이 줄만 수정.
+    26                                     as invited_seed  -- ← 처음 직접 초대한 인원(전환율 분모). 추천으로 들어온 사람은 여기 안 셈.
 ),
 people as (
   select
@@ -87,3 +88,32 @@ select
 
 from people pe
 order by pe.signed_up_at;
+
+
+-- ============================================================
+-- 요약 한 줄 (전환율·핵심 지표). 위 표와 함께 같이 실행하면 맨 아래에 나온다.
+-- ============================================================
+with params as (
+  select timestamptz '2026-06-08 00:00:00+09' as test_start,  -- ← 위와 같은 값으로 맞춰두기
+         26 as invited_seed
+),
+people as (
+  select p.id as user_id, p.created_at as signed_up_at
+  from public.profiles p, params
+  where p.created_at >= params.test_start and p.email not ilike '%@itda.net'
+)
+select
+  (select invited_seed from params)                                       as 직접초대,
+  (select count(*) from people)                                           as 총가입,
+  round(100.0 * (select count(*) from people)
+        / nullif((select invited_seed from params),0))                    as "가입전환율(%) ※추천유입시 100%↑",
+  (select count(*) from people p where exists (
+     select 1 from (
+       select user_id, count(*) c from public.care_logs       group by user_id
+       union all select user_id, count(*) from public.daily_answers   group by user_id
+       union all select user_id, count(*) from public.diary_entries   group by user_id
+       union all select user_id, count(*) from public.community_posts group by user_id
+     ) t where t.user_id = p.user_id and t.c >= 2))                       as "2회차도달(LQ1)",
+  (select count(distinct m.invited_by) from public.care_members m
+     join people p on p.user_id = m.invited_by
+     where m.user_id is distinct from m.invited_by)                       as "초대보낸사람(LQ2)";

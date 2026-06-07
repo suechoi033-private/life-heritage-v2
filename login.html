@@ -60,8 +60,15 @@
 </footer>
 
 <script type="module">
-  import { signIn, redirectIfAuthed, friendlyError, rememberAccount } from './auth.js';
+  import { signIn, redirectIfAuthed, friendlyError, rememberAccount, supabase } from './auth.js';
   import { renderSocialAuthButtons } from './js/social-auth.js';
+
+  // 사용자 입력을 innerHTML에 넣기 전 escape
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
 
   // ── 초대 코드 캡처 (케어링 초대 + 친구 초대 둘 다) ────────────────────────
   const params = new URLSearchParams(location.search);
@@ -101,7 +108,15 @@
     redirectAfterLogin = `./care.html?accept=${encodeURIComponent(careInvite)}`;
     await redirectIfAuthed(redirectAfterLogin);
     const lead = document.querySelector('.auth-lead');
-    if (lead) lead.innerHTML = `<strong style="color: var(--primary);">초대 코드 ${careInvite}</strong>를 받으셨네요. 로그인하시면 자동으로 합류됩니다.`;
+    if (lead) lead.innerHTML = `<strong style="color: var(--primary);">가족 돌봄에 초대받으셨어요.</strong> 로그인하시면 자동으로 합류됩니다.`;
+    try {
+      const { data: pv } = await supabase.rpc('preview_care_invite', { p_code: careInvite });
+      const info = pv && pv[0];
+      if (info && lead) {
+        const roleTxt = info.role === 'helper' ? '돌봄을 돕는 분으로' : '가족으로';
+        lead.innerHTML = `<strong style="color: var(--primary);">${esc(info.inviter_name)}</strong>님이 <strong>${esc(info.subject_name)}</strong>님 돌봄에 ${roleTxt} 초대하셨어요.<br>로그인하시면 자동으로 합류됩니다.`;
+      }
+    } catch (_) { /* 미리보기 실패 시 기본 문구 유지 */ }
     const signupLinks = document.querySelectorAll('a[href="./signup.html"]');
     signupLinks.forEach(a => { a.href = `./signup.html?invite=${careInvite}`; });
   } else {

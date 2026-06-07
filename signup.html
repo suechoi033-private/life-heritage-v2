@@ -84,6 +84,13 @@
 
   let redirectAfterSignup = './index.html';
 
+  // 이름 등 사용자 입력을 innerHTML에 넣기 전 escape
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
   // 초대받은 기존 회원용 상단 로그인 배너
   function showInviteLoginBanner(loginHref) {
     const banner = document.getElementById('invite-login-banner');
@@ -108,7 +115,17 @@
     const { data } = await supabase.auth.getSession();
     if (data?.session) { window.location.href = redirectAfterSignup; throw new Error('redirecting'); }
     const lead = document.querySelector('.auth-lead');
-    if (lead) lead.innerHTML = `<strong style="color: var(--primary);">초대 코드 ${careInvite}</strong>를 받으셨네요. 가입하시면 자동으로 합류됩니다.`;
+    // 기본 문구(미리보기 실패해도 유지)
+    if (lead) lead.innerHTML = `<strong style="color: var(--primary);">가족 돌봄에 초대받으셨어요.</strong> 아래에 이름과 이메일만 넣으면 바로 함께하게 됩니다.`;
+    // "누가 누구를" 미리보기로 안심시키기 (80대 신뢰)
+    try {
+      const { data: pv } = await supabase.rpc('preview_care_invite', { p_code: careInvite });
+      const info = pv && pv[0];
+      if (info && lead) {
+        const roleTxt = info.role === 'helper' ? '돌봄을 돕는 분으로' : '가족으로';
+        lead.innerHTML = `<strong style="color: var(--primary);">${esc(info.inviter_name)}</strong>님이 <strong>${esc(info.subject_name)}</strong>님 돌봄에 ${roleTxt} 초대하셨어요.<br>아래에 이름과 이메일만 넣으면 바로 함께하게 됩니다.`;
+      }
+    } catch (_) { /* 미리보기 실패 시 기본 문구 유지 */ }
     showInviteLoginBanner(`./login.html?invite=${careInvite}`);
   } else if (safeNext) {
     redirectAfterSignup = safeNext;
