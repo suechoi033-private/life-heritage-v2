@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>납골당(봉안당) 미리 알아두기 — 좋은 곳 고르는 법과 준비 시점 · 잇다</title>
+  <link rel="stylesheet" href="../auth-styles.css">
+  <style>
+    .shell {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 32px 20px 80px;
+      flex: 1;
+      width: 100%;
+    }
+    @media (min-width: 640px) { .shell { padding: 56px 32px 120px; } }
+
+    .top-bar {
+      background: var(--bg);
+      border-bottom: 1px solid var(--line);
+      padding: 14px 20px;
+    }
+    .top-bar-inner {
+      max-width: 1080px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .breadcrumb {
+      font-size: 13px;
+      color: var(--ink-muted);
+      margin-bottom: 12px;
+    }
+    .breadcrumb a { color: var(--ink-muted); text-decoration: none; }
+    .breadcrumb a:hover { color: var(--primary); }
+
+    .header { margin-bottom: 32px; }
+    .kicker {
+      display: inline-block;
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      color: var(--primary);
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      line-height: 1.4;
+      margin-bottom: 14px;
+    }
+    @media (min-width: 640px) { h1 { font-size: 34px; } }
+    .lead {
+      color: var(--ink-soft);
+      font-size: 15.5px;
+      line-height: 1.8;
+    }
+
+    /* ── 섹션 공통 ──── */
+    section.block { margin-bottom: 44px; }
+    h2 {
+      font-family: var(--font-serif);
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--ink);
+    }
+    h3 {
+      font-size: 16px;
+      font-weight: 800;
+      margin: 20px 0 10px;
+    }
+
+    p, li {
+      font-size: 15px;
+      color: var(--ink-soft);
+      line-height: 1.8;
+    }
+    p { margin-bottom: 14px; }
+
+    /* ── TOC ──── */
+    .toc {
+      padding: 16px 20px;
+      background: var(--bg-alt);
+      border-radius: 12px;
+      margin-bottom: 36px;
+    }
+    .toc-title {
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .toc ol {
+      padding-left: 18px;
+      margin: 0;
+    }
+    .toc li {
+      font-size: 14px;
+      line-height: 1.9;
+    }
+    .toc a {
+      color: var(--ink-soft);
+      text-decoration: none;
+    }
+    .toc a:hover { color: var(--primary); }
+
+    /* ── Callout boxes ──── */
+    .callout {
+      padding: 18px 22px;
+      border-radius: 12px;
+      margin-bottom: 18px;
+      font-size: 14.5px;
+      line-height: 1.7;
+    }
+    .callout.warm {
+      background: var(--primary-soft);
+      color: var(--ink-soft);
+    }
+    .callout.warm strong { color: var(--primary); display: block; margin-bottom: 4px; font-size: 14px; }
+
+    .callout.warning {
+      background: var(--danger-soft);
+      color: var(--ink-soft);
+    }
+    .callout.warning strong { color: var(--danger); display: block; margin-bottom: 4px; font-size: 14px; }
+
+    /* ── 봉안 방식 카드 ──── */
+    .method-grid {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    @media (min-width: 720px) {
+      .method-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    .method-card {
+      padding: 18px 20px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--bg);
+    }
+    .method-name {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--ink);
+      margin-bottom: 6px;
+    }
+    .method-desc {
+      font-size: 13.5px;
+      color: var(--ink-muted);
+      line-height: 1.6;
+    }
+
+    /* ── 두 열 비교 ──── */
+    .compare-grid {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    @media (min-width: 640px) {
+      .compare-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    .compare-card {
+      background: var(--bg-alt);
+      border-radius: 14px;
+      padding: 18px 22px;
+    }
+    .compare-label {
+      font-size: 12.5px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: var(--primary);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+    .compare-card p {
+      font-size: 14px;
+      color: var(--ink-soft);
+      line-height: 1.7;
+      margin-bottom: 0;
+    }
+
+    /* ── Step(numbered) list ──── */
+    .step-list {
+      list-style: none;
+      padding: 0;
+      counter-reset: step;
+    }
+    .step-list li {
+      position: relative;
+      padding: 18px 22px 18px 60px;
+      background: var(--bg-alt);
+      border-radius: 14px;
+      margin-bottom: 12px;
+      counter-increment: step;
+    }
+    .step-list li::before {
+      content: counter(step);
+      position: absolute;
+      left: 18px;
+      top: 18px;
+      width: 30px;
+      height: 30px;
+      background: var(--primary);
+      color: #FFF;
+      border-radius: 50%;
+      font-size: 14px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-sans);
+    }
+    .step-list strong {
+      display: block;
+      color: var(--ink);
+      font-size: 15.5px;
+      margin-bottom: 4px;
+    }
+    .step-list .step-desc {
+      font-size: 14px;
+      color: var(--ink-muted);
+      line-height: 1.7;
+    }
+
+    /* ── 서류 테이블 ──── */
+    .doc-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 18px;
+      font-size: 14.5px;
+    }
+    .doc-table thead tr {
+      background: var(--bg-alt);
+    }
+    .doc-table th {
+      text-align: left;
+      padding: 12px 16px;
+      font-weight: 700;
+      color: var(--ink);
+      border-bottom: 2px solid var(--line);
+      font-size: 13.5px;
+    }
+    .doc-table td {
+      padding: 12px 16px;
+      color: var(--ink-soft);
+      border-bottom: 1px solid var(--line);
+      line-height: 1.65;
+      vertical-align: top;
+    }
+    .doc-table tr:last-child td { border-bottom: none; }
+
+    .tip {
+      font-size: 13.5px;
+      color: var(--ink-muted);
+      line-height: 1.7;
+      padding: 14px 18px;
+      border-left: 3px solid var(--primary);
+      background: var(--primary-soft);
+      border-radius: 0 10px 10px 0;
+      margin-bottom: 18px;
+    }
+
+    /* ── Checklist ──── */
+    .checklist {
+      list-style: none;
+      padding: 0;
+    }
+    .checklist li {
+      position: relative;
+      padding: 12px 0 12px 32px;
+      border-bottom: 1px solid var(--line);
+    }
+    .checklist li::before {
+      content: "☐";
+      position: absolute;
+      left: 4px;
+      top: 13px;
+      font-size: 17px;
+      color: var(--primary);
+      font-weight: 700;
+    }
+    .checklist li:last-child { border-bottom: none; }
+
+    /* ── External links ──── */
+    .ext-links {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .ext-link {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      background: var(--bg-alt);
+      border-radius: 12px;
+      text-decoration: none;
+      color: var(--ink);
+      font-size: 14.5px;
+      transition: background 0.15s ease;
+    }
+    .ext-link:hover { background: var(--primary-soft); }
+    .ext-link-meta {
+      font-size: 12.5px;
+      color: var(--ink-muted);
+      margin-top: 2px;
+    }
+    .ext-link span:last-child { color: var(--primary); font-weight: 700; }
+
+    /* ── YMYL 안내 ──── */
+    .ymyl-notice {
+      margin-top: 36px;
+      padding: 18px 22px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      font-size: 13px;
+      color: var(--ink-muted);
+      line-height: 1.7;
+    }
+  </style>
+</head>
+<body>
+
+<nav class="top-bar">
+  <div class="top-bar-inner">
+    <a href="/" class="logo"><span class="logo-mark">●</span> 잇다</a>
+    <div id="top-bar-links"></div>
+  </div>
+</nav>
+
+<main class="shell">
+  <div class="breadcrumb">
+    <a href="../info.html">정보</a> · 미리 · <span style="color: var(--ink-soft);">납골당</span>
+  </div>
+
+  <header class="header">
+    <span class="kicker">정보 · 미리</span>
+    <h1>납골당(봉안당) 미리 알아두기<br>— 좋은 곳 고르는 법과 준비 시점</h1>
+    <p class="lead">
+      언제 알아봐야 할지, 어떻게 고를지 몰라 막막하다면 — 납골당(봉안당) 선택의 기본부터 준비 시점까지 순서대로 정리했습니다.
+    </p>
+  </header>
+
+  <nav class="toc">
+    <div class="toc-title">이 페이지 안에서</div>
+    <ol>
+      <li><a href="#name">납골당과 봉안당 — 같은 말입니다</a></li>
+      <li><a href="#public-private">공설과 사설, 어떻게 다른가요</a></li>
+      <li><a href="#criteria">선택할 때 따져볼 8가지</a></li>
+      <li><a href="#documents">필요한 서류</a></li>
+      <li><a href="#visit">방문 시 확인할 것들</a></li>
+      <li><a href="#timing">언제 알아보는 게 좋을까요</a></li>
+      <li><a href="#action">지금 당장 할 수 있는 한 가지</a></li>
+    </ol>
+  </nav>
+
+  <!-- ── 1. 납골당과 봉안당 ──────── -->
+  <section class="block" id="name">
+    <h2>납골당과 봉안당 — 같은 말입니다</h2>
+    <p>
+      법적·공식 명칭은 <strong>봉안당</strong>, 일상에서는 '납골당'이 더 익숙합니다. 화장한 유골(유분)을 안치하는 실내 시설입니다.
+    </p>
+    <h3>봉안 방식 3가지</h3>
+    <div class="method-grid">
+      <div class="method-card">
+        <div class="method-name">봉안당(실내)</div>
+        <div class="method-desc">건물 안 안치단에 유골함. 날씨 무관, 관리 편리. 가장 많이 선택.</div>
+      </div>
+      <div class="method-card">
+        <div class="method-name">봉안묘(실외)</div>
+        <div class="method-desc">소규모 묘지 형태. 자연 경관 좋은 곳에 많음.</div>
+      </div>
+      <div class="method-card">
+        <div class="method-name">봉안탑·봉안벽</div>
+        <div class="method-desc">탑이나 벽면 안치. 공간 효율적.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 2. 공설과 사설 ──────── -->
+  <section class="block" id="public-private">
+    <h2>공설과 사설, 어떻게 다른가요</h2>
+    <div class="compare-grid">
+      <div class="compare-card">
+        <div class="compare-label">공설</div>
+        <p>2022년 이후 신규 신청 사실상 중단(서울시립 기준). 서울 주민등록 6개월 이상 자격 요건. 자리가 드물어 현실적으로 사설 먼저 알아보는 경우 많음. 최신 현황은 서울시설공단(sisul.or.kr)에 직접 문의.</p>
+      </div>
+      <div class="compare-card">
+        <div class="compare-label">사설</div>
+        <p>개인 안치단 기본형 200만~800만 원, 가족단·특별실은 더 비쌈. 연 관리비 5만 원 내외 별도. 서울 1시간권에 경기 양주·파주·분당·광주 등 사설 시설 다수.</p>
+      </div>
+    </div>
+    <div class="callout warm">
+      <strong>공설과 사설, 종교별 전용관</strong>
+      기독교·불교·천주교·비종교 전용 공간을 운영하는 시설도 있습니다. 가족의 신앙에 맞는지 함께 확인하세요.
+    </div>
+  </section>
+
+  <!-- ── 3. 선택할 때 따져볼 8가지 ──────── -->
+  <section class="block" id="criteria">
+    <h2>선택할 때 따져볼 8가지</h2>
+    <ol class="step-list">
+      <li>
+        <strong>위치와 교통</strong>
+        <div class="step-desc">가족이 자주 방문할 수 있는 거리. 대중교통 접근성 확인.</div>
+      </li>
+      <li>
+        <strong>비용 (안치비 + 관리비)</strong>
+        <div class="step-desc">안치비와 연 관리비, 계약 기간(15년·영구 등) 함께 확인.</div>
+      </li>
+      <li>
+        <strong>운영 주체</strong>
+        <div class="step-desc">공설(안정적, 자리 드뭄) vs 사설(접근 좋으나 지속 운영 여부 확인).</div>
+      </li>
+      <li>
+        <strong>시설 수준과 관리 상태</strong>
+        <div class="step-desc">직접 방문해 청결함·조명·환기·안치단 상태 확인.</div>
+      </li>
+      <li>
+        <strong>편의시설</strong>
+        <div class="step-desc">주차장·화장실·휴식 공간. 명절 방문 인원 고려.</div>
+      </li>
+      <li>
+        <strong>종교별 전용관 여부</strong>
+        <div class="step-desc">불교·기독교·천주교·비종교 구분 공간.</div>
+      </li>
+      <li>
+        <strong>자연장 연계 여부</strong>
+        <div class="step-desc">수목장·잔디장 등 자연장지와 연계 시설도 있음.</div>
+      </li>
+      <li>
+        <strong>생전 예약 가능 여부</strong>
+        <div class="step-desc">일부 사설은 생전 계약 가능. 원하는 위치·층수 미리 결정.</div>
+      </li>
+    </ol>
+    <div class="callout warning">
+      <strong>"영구"라도 관리비 미납 처리 조항을 확인하세요</strong>
+      계약서에 관리비 미납 시 처리 방침, 계약 기간 만료 후 갱신 조건을 반드시 짚어두세요.
+    </div>
+  </section>
+
+  <!-- ── 4. 필요한 서류 ──────── -->
+  <section class="block" id="documents">
+    <h2>필요한 서류</h2>
+    <table class="doc-table">
+      <thead>
+        <tr>
+          <th>상황</th>
+          <th>필요 서류</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>화장 후 새로 안치</td>
+          <td>화장증명서 + 계약자 신분증 사본</td>
+        </tr>
+        <tr>
+          <td>기존 묘지에서 이장</td>
+          <td>개장신고필증 + 이장신고서</td>
+        </tr>
+        <tr>
+          <td>생전 예약 계약</td>
+          <td>시설마다 다름 — 직접 확인</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="tip">
+      화장증명서는 화장 당일 화장장에서 발급. 서류 발급 기관과 제출처가 다르니 안치 시설에 미리 필요 목록을 받아두세요.
+    </div>
+  </section>
+
+  <!-- ── 5. 방문 시 확인할 것들 ──────── -->
+  <section class="block" id="visit">
+    <h2>방문 시 확인할 것들</h2>
+    <ul class="checklist">
+      <li>실제로 대중교통/차로 가보며 이동 시간·편의 확인</li>
+      <li>층수, 위치, 조명, 환기 — 가족이 자주 찾아왔을 때 편안한지</li>
+      <li>직원의 응대 방식 — 과도한 권유·비교 압박이 없는지</li>
+      <li>계약서의 '기간 만료' 조항 — 계약 후 안치단 처리 방식, 갱신 조건</li>
+      <li>관리비 미납 시 처리 방침</li>
+    </ul>
+  </section>
+
+  <!-- ── 6. 언제 알아보는 게 좋을까요 ──────── -->
+  <section class="block" id="timing">
+    <h2>언제 알아보는 게 좋을까요</h2>
+    <p>
+      전문가들은 <strong>60대 초반부터 미리</strong> 알아보길 권합니다. 급할 때 결정하면 위치·비용을 원하는 대로 고르기 어렵습니다.
+    </p>
+    <p>
+      가장 이상적인 방식: <strong>가족이 함께 방문해서 결정</strong>. 미리 정해두는 것이 가족에게 짐을 덜어주는 준비입니다.
+    </p>
+  </section>
+
+  <!-- ── 7. 지금 당장 할 수 있는 한 가지 ──────── -->
+  <section class="block" id="action">
+    <h2>지금 당장 할 수 있는 한 가지</h2>
+    <p>
+      오늘 집에서 15분, 인터넷 지도에 '봉안당'을 검색해 보세요. 집이나 가족이 사는 곳에서 1시간 이내로 오갈 수 있는 시설이 몇 곳인지, 이름과 위치만 확인해 두는 것으로 충분합니다.
+    </p>
+    <div class="callout warm">
+      <strong>이 글을 읽고 나서</strong>
+      공유할 만한 경험이나 정보가 있다면 다른 분들을 위해 잇다에 글을 남겨주세요.
+    </div>
+  </section>
+
+  <!-- ── 외부 링크 ──────── -->
+  <section class="block" id="links">
+    <h2>참고 링크</h2>
+    <div class="ext-links">
+      <a href="https://www.sisul.or.kr/" target="_blank" rel="noopener" class="ext-link">
+        <div>
+          <div>서울시설공단 장사시설</div>
+          <div class="ext-link-meta">서울 공설 봉안당 현황 문의</div>
+        </div>
+        <span>바로가기 →</span>
+      </a>
+      <a href="tel:129" class="ext-link">
+        <div>
+          <div>보건복지부 콜센터 ☎ 129</div>
+          <div class="ext-link-meta">장사 관련 제도 문의</div>
+        </div>
+        <span>전화 →</span>
+      </a>
+      <a href="https://www.myhome.go.kr/" target="_blank" rel="noopener" class="ext-link">
+        <div>
+          <div>마이홈포털 (myhome.go.kr)</div>
+          <div class="ext-link-meta">공설 장사시설 정보</div>
+        </div>
+        <span>바로가기 →</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- ── YMYL 안내 ──────── -->
+  <div class="ymyl-notice">
+    이 글은 일반적인 정보입니다. 비용·서류·자격 요건은 지역·시설·시점에 따라 달라질 수 있습니다. 구체적 계약 전 해당 시설 및 관련 기관(보건복지부 콜센터 ☎129)에 직접 문의하세요. 전문가 감수 예정.
+  </div>
+
+  <div style="margin-top: 36px; padding-top: 28px; border-top: 1px solid var(--line);">
+    <div style="margin-top: 16px;">
+      <a href="../info.html" style="font-size: 13px; color: var(--ink-muted); text-decoration: none;">← 정보 다른 주제</a>
+    </div>
+  </div>
+</main>
+
+<footer class="auth-footer">
+  © 2026 라이프헤리티지 · 잇다
+</footer>
+
+<script type="module">
+  import { renderTopBar } from '../nav.js';
+  await renderTopBar({ active: 'info' });
+</script>
+
+<script src="../scroll-top.js" defer></script>
+
+</body>
+</html>
