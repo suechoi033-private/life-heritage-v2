@@ -8,6 +8,15 @@
 - 출처는 git 커밋. 다른 세션 작업이 빠져 있으면 `git log --date=short` 에서 백필한다.
 - 커밋 해시는 추적용 참고. 세부는 커밋 메시지/PR 참조.
 
+**"— 잇다 한 줄" 시그니처 DB 전수 삭제** (사장님 요청)
+- 콘텐츠 상세 페이지 하단에 "— 잇다 한 줄" 서명이 여전히 노출되는 문제 발견(스크린샷 제보).
+- 기존 `20260531_remove_itda_oneline_signature.sql` 마이그레이션은 미적용 상태였음.
+- `contents` 테이블 전 카테고리 대상 `regexp_replace` UPDATE 실행 — 23개 행 정리, 서명 잔존 0건 확인.
+
+**main → 배포** (사장님 요청)
+- `claude/hospice-recommendation-design-T31Wg` → `main` fast-forward merge 후 push. GitHub Pages는 main 브랜치 직접 서빙 (gh-pages 브랜치 없음).
+- 배포 완료 후 `요양원·요양병원 찾기` 페이지는 `info.html` → "요양원·요양병원" 카드 클릭 시 접근 가능.
+
 ---
 
 ## 2026-06-07
