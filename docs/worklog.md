@@ -21,6 +21,16 @@
 
 ## 2026-06-07
 
+**3-탭 네비(정보|콘텐츠|커뮤니티) + 디자인 통일성 정비** (PE 세션, 사장님 요청)
+- `forest.html`: 커뮤니티 탭 활성 시 필터 칩(전체·오늘 잇고) 자동 숨김(`chipsEl.hidden = seg === 'community'`). 커뮤니티 탭은 사용자 작성 포스트만 노출.
+- `info.html`: 상단에 `[정보|콘텐츠|커뮤니티]` 3-탭 세그먼트 추가. `.shell` 최대 너비 480px. 대형 헤더(kicker·h1·lead) 제거. 미리/곁에/떠난뒤 탭을 `tab-segment` pill 스타일로 변경. `.category-item` 테두리·패딩 조정.
+- `sw.js CACHE_VERSION → itda-v3-2026-06-07-design-unify-community-chips-v1`.
+
+**실 API 연동 — 장기요양기관 검색 Edge Function** (PE 세션, 사장님 요청)
+- Supabase Edge Function `ltc-search` 신규 생성·배포. 국민건강보험공단 장기요양기관 검색 API(B550928) CORS 프록시. POST `{ sido, sigungu, grade, dementia, vacancy, page, limit }` 지원.
+- `info/nursing-home.html`: 하드코딩 시드 카드 → Edge Function 실시간 조회로 대체.
+- **⚠️ 미완: `NHIS_API_KEY` Supabase secret 미설정 → 실제 조회 불가**. data.go.kr 인증키 복사 후 `supabase secrets set NHIS_API_KEY=<키>` 실행 필요.
+
 **디지털 자산 노트 신규 + 나의 삶(self.html) 노트 카드 404 수정** (PE 세션, 사장님 제보)
 - 제보: 나의 삶에서 "디지털 자산 노트" 카드 클릭 → GitHub Pages 404. 원인 — self.html의 노트 카드 5개 중 4개가 없는 페이지(`note/digital·funeral·messages·family-lock.html`)로 연결돼 있었음(`note/will.html`만 존재).
 - `note/digital.html` 신규 생성: will.html 패턴(인증·통합 네비·디자인 토큰·localStorage V1). 8개 카테고리(은행·통장/보험/휴대폰·잠금/온라인 계정/정기결제·구독/부동산·자동차/대출·빚/남기는 한마디), 입력 즉시 자동저장·진행바, 안심상속·관련 에세이 내부링크.

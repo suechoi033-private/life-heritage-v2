@@ -430,10 +430,10 @@
     return Math.max(6, 6 + days); // baseline 6편, +1/day
   }
 
-  // 카테고리 칩 렌더 — 📚 정보 칩은 탭 무관하게 항상 첫 칸
+  // 카테고리 칩 렌더 — 콘텐츠 탭 전용 필터. 커뮤니티 탭에서는 숨김.
   const chipsEl = document.getElementById('forest-chips');
   if (chipsEl) {
-    chipsEl.hidden = false;
+    chipsEl.hidden = activeSeg === 'community';
     chipsEl.innerHTML =
       CATEGORIES.map(c =>
         `<button class="forest-chip ${c.key === activeCat ? 'active' : ''}" data-cat="${c.key}">${c.label}</button>`
@@ -457,6 +457,8 @@
     currentPage = 1;
     document.getElementById('seg-content')?.classList.toggle('active',   seg === 'content');
     document.getElementById('seg-community')?.classList.toggle('active', seg === 'community');
+    // 칩바는 콘텐츠 탭 전용 — 커뮤니티 탭에서 숨김
+    if (chipsEl) chipsEl.hidden = seg === 'community';
     // 큐레이션 히어로는 커뮤니티 탭에서 숨김
     const hero = document.getElementById('curation-hero');
     if (hero && seg !== 'content') hero.hidden = true;
