@@ -56,6 +56,13 @@
 - `sw.js` CACHE_VERSION → `itda-v3-2026-06-07-pretest-qa-v1`.
 - 후속: 카카오 JS 키 받는 대로 `auth.js`에 전역 주입 + 재배포. 사장님 액션: Supabase Auth에서 Confirm email OFF.
 
+**요양원·요양병원 찾기 — 공공데이터 실 API 연동** (PE 세션, 사장님 요청)
+
+- `supabase/functions/ltc-search/index.ts` 신규 배포 (Supabase Edge Function v1) — 공공데이터포털 국민건강보험공단 장기요양기관 검색 API CORS 프록시. POST `{ sido, sigungu, grade, dementia, vacancy, page, limit }` 수신 → `NHIS_API_KEY` 시크릿으로 B550928 API 호출 → 필드명 정규화(복수 후보 fallback, 공식 문서가 로그인 후 열람이라 대응) → 서버 측 후처리 필터(AB등급·치매전담실·정원여유) 후 반환. API 키 미설정 시 503 + 설정 안내.
+- `info/nursing-home.html` 업데이트 — 정적 시드 카드 3개 제거 → 동적 API 로딩으로 교체. 시도 선택 시 시군구 목록 자동 갱신, 검색 버튼 클릭 시 Edge Function 호출, 로딩/비어있음/API키미설정/오류 상태 분기. 정렬(평가등급순·정원여유순) 실시간 재정렬. 결과 건수 표시.
+- `sw.js` CACHE_VERSION → `itda-v3-2026-06-07-ltc-api-v1`.
+- **사장님 할 일**: data.go.kr에서 B550928(국민건강보험공단) > 장기요양기관 서비스 신청 → 발급 인증키를 `supabase secrets set NHIS_API_KEY=<인증키>` 로 등록하면 실제 데이터 표시.
+
 **요양원·요양병원 찾기 v1 정적 셸 구현 + 커뮤니티·케어링 버그 수정** (PE 세션, 사장님 요청)
 
 - `info/nursing-home.html` 신규 (792dfd8) — 필터바(시도/시군구 select, 유형/평가 칩, 치매전담실·정원여유 체크박스), 정렬바, 비교뱃지, 신뢰배너(공단 공식 데이터 출처), 시드 시설 카드 3개(A/B/C등급, 토큰 색상), 비교 플로트바(최대 3개, localStorage), `nursing-home-detail.html?id=` 라우팅. 호스피스 칩은 `.disabled` 처리(향후 콘텐츠 페이지 연결 예정).
