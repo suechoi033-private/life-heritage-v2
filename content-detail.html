@@ -335,6 +335,65 @@
       cursor: pointer; font-family: inherit;
     }
     .empathy-btn.active { background: var(--primary); color: #fff; }
+
+    /* ── 두 갈래 브리지 CTA (상속→생전준비) ──────────────
+       조용한 두 선택지. 과시·경쟁 톤 금지. 토큰만 사용. */
+    .bridge-cta {
+      margin: 28px 0 22px;
+      padding: 20px;
+      background: var(--bg-alt);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+    .bridge-cta-lead {
+      font-family: var(--font-serif);
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--ink-soft);
+      margin: 0 0 16px;
+    }
+    .bridge-cta-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .bridge-cta-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      width: 100%;
+      padding: 15px 18px;
+      border-radius: var(--radius-sm);
+      text-decoration: none;
+      font-family: inherit;
+      cursor: pointer;
+      text-align: left;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+    .bridge-cta-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+    .bridge-cta-kicker { font-size: 11.5px; font-weight: 800; letter-spacing: 0.02em; }
+    .bridge-cta-title { font-size: 14.5px; font-weight: 700; line-height: 1.45; }
+    .bridge-cta-arrow { flex-shrink: 0; font-size: 15px; }
+    /* (지금) — 차분한 기본형: 흰 배경 + 라인 */
+    .bridge-cta-btn.branch-now {
+      background: #fff;
+      border: 1.5px solid var(--line);
+      color: var(--ink);
+    }
+    .bridge-cta-btn.branch-now:hover { border-color: var(--ink-soft); }
+    .bridge-cta-btn.branch-now .bridge-cta-kicker { color: var(--ink-muted); }
+    .bridge-cta-btn.branch-now .bridge-cta-arrow { color: var(--ink-muted); }
+    /* (미래) — 본진 방향: 에버그린 강조(여전히 조용하게) */
+    .bridge-cta-btn.branch-future {
+      background: var(--primary-soft);
+      border: 1.5px solid var(--primary-soft);
+      color: var(--primary);
+    }
+    .bridge-cta-btn.branch-future:hover { border-color: var(--primary); }
+    .bridge-cta-btn.branch-future .bridge-cta-kicker { color: var(--primary); }
+    .bridge-cta-btn.branch-future .bridge-cta-arrow { color: var(--primary); }
+    .bridge-cta-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
   </style>
 </head>
 <body>
@@ -353,6 +412,7 @@
   import { toggleReaction, getReactionState, reportTarget, REPORT_REASONS, createPost } from './js/community.js';
   import { getSignedUrl, getPublicUrl } from './js/media-upload.js';
   import { shareContent } from './js/share-sheet.js';
+  import { recordCtaClick } from './js/cta-bridge.js';
 
   await renderNav({ active: 'forest', infoIcon: false, title: '콘텐츠', quickWrite: false });
 
@@ -645,6 +705,8 @@
       });
       // 잇다 기능을 언급한 CTA 인용구는 해당 탭으로 바로 이동(탭 가능)하게 만든다.
       linkifyCtaBlockquotes(el);
+      // 본문의 두 갈래 브리지 CTA 마커를 실제 컴포넌트로 치환 + 클릭 계측 연결.
+      renderBridgeCtas(el);
     } catch (_) {
       el.style.whiteSpace = 'pre-wrap';
       el.textContent = raw;
@@ -671,6 +733,77 @@
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); }
       });
     });
+  }
+
+  // ── 두 갈래 브리지 CTA ───────────────────────────────
+  // 본문 마크다운에 아래 펜스 블록을 넣으면 이 자리에 두 갈래 CTA가 렌더된다.
+  // (지금)·(미래) 두 버튼을 글·세션 단위로 구분 계측 → 미래÷지금 비율(§5).
+  //
+  //   ```
+  //   @itda-bridge-cta
+  //   { "experiment": "exp1-g3",
+  //     "lead": "이 글을 끝까지 읽은 당신에게, 두 갈래 길이 있습니다.",
+  //     "now":    { "title": "사별 후 90일 체크리스트", "href": "./info.html?topic=after-90" },
+  //     "future": { "title": "내가 떠난 뒤 가족이 안 헤매게 — 지금 정리해두기", "href": "./self.html" } }
+  //   ```
+  //
+  // DOMPurify가 code 블록의 class(language-*)를 떼므로, 언어 대신 첫 줄 sentinel(@itda-bridge-cta)로 식별.
+  // JSON 파싱 실패 시 원본 코드블록을 그대로 둔다(안전 폴백).
+  function renderBridgeCtas(el) {
+    const SENTINEL = '@itda-bridge-cta';
+    el.querySelectorAll('pre > code').forEach((code) => {
+      const raw = (code.textContent || '').trim();
+      if (!raw.startsWith(SENTINEL)) return;
+      let cfg;
+      try {
+        cfg = JSON.parse(raw.slice(SENTINEL.length).trim());
+      } catch (_) {
+        return; // 파싱 실패 → 원본 유지(폴백)
+      }
+      if (!cfg || !cfg.now || !cfg.future) return;
+      const pre = code.closest('pre');
+      if (!pre) return;
+
+      const experiment = typeof cfg.experiment === 'string' ? cfg.experiment : null;
+      const wrap = document.createElement('div');
+      wrap.className = 'bridge-cta';
+      wrap.innerHTML = `
+        ${cfg.lead ? `<p class="bridge-cta-lead">${escapeHtml(cfg.lead)}</p>` : ''}
+        <div class="bridge-cta-options">
+          ${branchBtnHtml('now', cfg.now)}
+          ${branchBtnHtml('future', cfg.future)}
+        </div>`;
+
+      wrap.querySelectorAll('.bridge-cta-btn').forEach((btn) => {
+        const branch = btn.dataset.branch;        // 'now' | 'future'
+        const href = btn.getAttribute('href') || '#';
+        const label = btn.dataset.label || '';
+        btn.addEventListener('click', () => {
+          // 계측은 비차단(fire-and-forget). 이동은 기본 <a> 동작에 맡긴다.
+          recordCtaClick({ contentId: content.id, branch, label, href, experiment });
+        });
+      });
+
+      pre.replaceWith(wrap);
+    });
+  }
+
+  // 외부(http/https)면 새 탭, 내부 경로면 같은 탭. 키커는 분기에 따라 고정.
+  function branchBtnHtml(branch, opt) {
+    const title = String(opt?.title || '');
+    const href = String(opt?.href || '#');
+    const external = /^https?:/i.test(href);
+    const kicker = branch === 'now' ? '지금' : '미래';
+    const targetAttr = external ? ' target="_blank" rel="noopener noreferrer"' : '';
+    return `
+      <a class="bridge-cta-btn branch-${branch}" href="${escapeAttr(href)}"
+         data-branch="${branch}" data-label="${escapeAttr(title)}"${targetAttr}>
+        <span class="bridge-cta-text">
+          <span class="bridge-cta-kicker">${kicker}</span>
+          <span class="bridge-cta-title">${escapeHtml(title)}</span>
+        </span>
+        <span class="bridge-cta-arrow" aria-hidden="true">→</span>
+      </a>`;
   }
 
   // ── 읽기 예상 시간 ──────────────────────────────
