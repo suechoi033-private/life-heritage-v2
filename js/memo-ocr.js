@@ -46,7 +46,7 @@ export async function ocrMemo(file) {
   const { data, error } = await supabase.functions.invoke('ocr-memo', {
     body: { image, media_type: compressed.type || 'image/jpeg' },
   });
-  if (error) throw new Error('읽기 실패: ' + (error.message || error));
+  if (error) throw new Error(error.message || String(error));
   if (data?.error) throw new Error(data.error);
 
   return {
