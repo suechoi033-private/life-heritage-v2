@@ -418,8 +418,6 @@
   if (activeSeg === 'community') {
     document.getElementById('seg-content')?.classList.remove('active');
     document.getElementById('seg-community')?.classList.add('active');
-    const chipsContainer = document.getElementById('forest-chips');
-    if (chipsContainer) chipsContainer.hidden = true;
   }
 
   // 베타 시작 2026-06-03 KST 00:00.
@@ -431,17 +429,18 @@
     return Math.max(6, 6 + days); // baseline 6편, +1/day
   }
 
-  // 카테고리 칩 렌더 (null guard — chips 컨테이너 없어도 본문은 계속)
+  // 카테고리 칩 렌더 — 📚 정보 칩은 탭 무관하게 항상 첫 칸
   const chipsEl = document.getElementById('forest-chips');
   if (chipsEl) {
+    chipsEl.hidden = false;
     chipsEl.innerHTML =
+      `<a href="./info.html" class="forest-chip" style="text-decoration:none;">📚 정보</a>` +
       CATEGORIES.map(c =>
         `<button class="forest-chip ${c.key === activeCat ? 'active' : ''}" data-cat="${c.key}">${c.label}</button>`
       ).join('');
     chipsEl.addEventListener('click', (e) => {
       const btn = e.target.closest('button.forest-chip');
       if (!btn) return;
-      if (btn.getAttribute('aria-disabled') === 'true') return; // 베타: 준비 중 보드는 클릭 무시
       activeCat = btn.dataset.cat;
       currentPage = 1;
       chipsEl.querySelectorAll('button.forest-chip').forEach(b => b.classList.toggle('active', b.dataset.cat === activeCat));
@@ -457,10 +456,8 @@
     currentPage = 1;
     document.getElementById('seg-content')?.classList.toggle('active',   seg === 'content');
     document.getElementById('seg-community')?.classList.toggle('active', seg === 'community');
-    // 콘텐츠 탭 전용 UI 숨김
-    const chipsContainer = document.getElementById('forest-chips');
+    // 큐레이션 히어로는 커뮤니티 탭에서 숨김
     const hero = document.getElementById('curation-hero');
-    if (chipsContainer) chipsContainer.hidden = (seg !== 'content');
     if (hero && seg !== 'content') hero.hidden = true;
     loadFeed();
   }
@@ -671,30 +668,8 @@
 
   function renderPostList(items) {
     const body = document.getElementById('forest-body');
-
-    const nursingBanner = `
-      <a href="./info/nursing-home.html" style="
-        display:flex;align-items:center;gap:12px;
-        padding:14px 16px;
-        background:var(--primary-soft);
-        border:1.5px solid rgba(47,107,79,0.18);
-        border-radius:var(--radius);
-        text-decoration:none;
-        color:inherit;
-        margin-bottom:16px;
-        transition:border-color 0.15s;
-      ">
-        <span style="font-size:26px;flex-shrink:0;">🏥</span>
-        <span style="flex:1;min-width:0;">
-          <span style="display:block;font-size:14px;font-weight:800;color:var(--primary);">요양시설 찾기</span>
-          <span style="display:block;font-size:12.5px;color:var(--ink-soft);margin-top:2px;line-height:1.5;">공단 평가등급 A~E 기반 · 지역·유형·치매전담실 필터</span>
-        </span>
-        <span style="color:var(--primary);font-size:18px;">›</span>
-      </a>
-    `;
-
     if (!items.length) {
-      body.innerHTML = nursingBanner + `
+      body.innerHTML = `
         <div class="empty-state">
           <div class="empty-icon">💬</div>
           <div class="empty-title">첫 대화를 시작해 보세요</div>
@@ -702,7 +677,7 @@
         </div>`;
       return;
     }
-    body.innerHTML = nursingBanner + items.map(p => `
+    body.innerHTML = items.map(p => `
       <a class="content-card" href="./post-detail.html?id=${p.id}">
         <div class="content-card-title">${escapeHtml(p.title)}</div>
         <div class="content-card-meta">
