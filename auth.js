@@ -15,6 +15,12 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   },
 });
 
+// 카카오 JavaScript 키(공개키). social-auth.js가 window.__KAKAO_JS_KEY__로 읽는다.
+// auth.js는 소셜 버튼이 있는 모든 페이지(signup/login/onboarding)에 import되므로 여기서 전역 주입.
+if (typeof window !== 'undefined') {
+  window.__KAKAO_JS_KEY__ = '37a03a521d798c59721467e0528ea375';
+}
+
 // =========================================================
 // Auth helpers
 // =========================================================
