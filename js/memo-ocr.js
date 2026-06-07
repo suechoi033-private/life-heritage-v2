@@ -4,7 +4,7 @@
 import { supabase } from '../auth.js';
 
 // 업로드 전 이미지 축소·압축 (Claude 5MB 한도·전송 속도). 긴 변 1600px, JPEG.
-async function compressImage(file, maxDim = 1600, quality = 0.82) {
+async function compressImage(file, maxDim = 1600, quality = 0.92) {
   if (!file.type.startsWith('image/')) return file;
   try {
     const bitmap = await createImageBitmap(file);

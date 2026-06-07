@@ -81,12 +81,13 @@ async function extractWithClaude(b64: string, mediaType: string) {
   const prompt = `이 이미지는 가족을 돌보는 보호자가 손으로 쓴 한국어 "돌봄 일지 메모"입니다.
 (예: 치매 어르신을 돌보며 그날의 식사·약·기분·병원·유의할 점을 적은 수기 메모)
 
-당신의 일은 **글자를 그대로 옮겨 적고(전사), 내용을 칸별로 분류**하는 것입니다.
-의학적 판단·진단·해석을 하지 말고, 적힌 내용을 충실히 옮기세요. 없는 내용을 지어내지 마세요.
+당신의 일은 **손글씨를 한 글자도 빠뜨리지 않고 정확히 옮겨 적고(전사), 내용을 칸별로 분류**하는 것입니다.
+이것은 누군가의 소중한 기록입니다. 요약하거나 바꿔 쓰지 말고, 적힌 문장을 **그대로** 옮기세요.
+의학적 판단·진단·해석을 하지 마세요. 없는 내용을 지어내지 마세요.
 
 다음을 JSON으로만 출력하세요(설명·코드블록 금지):
 {
-  "transcription": "손글씨 전체를 줄바꿈까지 살려 그대로 옮긴 원문. 읽기 어려운 글자는 […]로 표시.",
+  "transcription": "손글씨 전체 원문을 그대로 옮긴 것",
   "fields": {
     "daily_status": "식사·수면·하루 컨디션·일상 활동 (없으면 null)",
     "medications": "약 복용에 관한 내용 (없으면 null)",
@@ -98,10 +99,16 @@ async function extractWithClaude(b64: string, mediaType: string) {
   }
 }
 
-규칙:
-- 각 칸에는 해당하는 내용만 골라 자연스러운 문장으로 옮기되, 메모의 표현을 최대한 살립니다.
+⚠️ 줄바꿈 규칙 (매우 중요):
+- 메모에서 줄이 바뀐 곳은 **반드시 실제 줄바꿈(개행)** 으로 표현하세요. (JSON 문자열 안에서는 개행 이스케이프로 출력)
+- 줄을 "/", "·", ",", " - " 같은 기호로 **이어붙이지 마세요.** 원래 줄 구조를 그대로 보존합니다.
+- transcription과 각 fields 값 모두 동일하게 적용합니다.
+
+분류 규칙:
+- 각 칸에는 해당하는 줄을 **원문 그대로**(요약·의역 금지) 옮기되, 여러 줄이면 줄바꿈으로 구분합니다.
 - 어느 칸에도 분명히 속하지 않으면 free_memo에 넣습니다. 한 내용을 여러 칸에 중복하지 마세요.
-- 한국어로 출력합니다.
+- 분류가 애매하면 억지로 나누지 말고 free_memo에 원문 그대로 모아 둡니다.
+- 한국어로 출력합니다. 정말 못 읽는 글자만 […]로 표시하고, 최대한 끝까지 읽으려 노력하세요.
 - 글자를 전혀 알아볼 수 없으면 transcription은 "" , fields의 모든 값은 null로 둡니다.`;
 
   const res = await fetchWithTimeout('https://api.anthropic.com/v1/messages', {
@@ -112,8 +119,9 @@ async function extractWithClaude(b64: string, mediaType: string) {
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
+      model: 'claude-opus-4-8',
       max_tokens: 4096,
+      temperature: 0,
       messages: [{
         role: 'user',
         content: [
@@ -122,7 +130,7 @@ async function extractWithClaude(b64: string, mediaType: string) {
         ],
       }],
     }),
-  }, 40000);
+  }, 55000);
   if (!res.ok) throw new Error(`Claude 호출 실패: ${res.status} ${await res.text()}`);
   const data = await res.json();
   const text = (data.content || []).map((c: any) => c.text || '').join('').trim();
@@ -134,7 +142,12 @@ async function extractWithClaude(b64: string, mediaType: string) {
   } catch {
     const m = jsonStr.match(/\{[\s\S]*\}/);
     if (!m) throw new Error('메모 판독 결과 파싱 실패');
-    parsed = JSON.parse(m[0]);
+    // 줄바꿈을 살리다 문자열 안에 날것의 개행이 들어와 깨지는 경우를 복구
+    try {
+      parsed = JSON.parse(m[0]);
+    } catch {
+      parsed = JSON.parse(sanitizeJsonControlChars(m[0]));
+    }
   }
 
   // 정리: fields 값은 문자열 또는 null만 허용
@@ -150,6 +163,25 @@ async function extractWithClaude(b64: string, mediaType: string) {
   }
   const transcription = typeof parsed.transcription === 'string' ? parsed.transcription.trim() : '';
   return { transcription, fields };
+}
+
+// 문자열 값 안에 escape되지 않은 개행/탭이 있으면 이스케이프해 유효 JSON으로 복구
+function sanitizeJsonControlChars(s: string): string {
+  let out = '';
+  let inStr = false;
+  let esc = false;
+  for (const ch of s) {
+    if (esc) { out += ch; esc = false; continue; }
+    if (ch === '\\') { out += ch; esc = true; continue; }
+    if (ch === '"') { inStr = !inStr; out += ch; continue; }
+    if (inStr) {
+      if (ch === '\n') { out += '\\n'; continue; }
+      if (ch === '\r') { out += '\\r'; continue; }
+      if (ch === '\t') { out += '\\t'; continue; }
+    }
+    out += ch;
+  }
+  return out;
 }
 
 // ── utils ─────────────────────────────────────────────
