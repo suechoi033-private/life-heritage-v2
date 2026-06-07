@@ -294,8 +294,9 @@ const CARDS = [
     key: 'funeral',
     icon: '🕊',
     title: '장례 의향',
-    href: './note/funeral.html',
-    getStatus: (data) => data?.funeral_done ? '작성 완료' : '미작성',
+    href: '#',
+    comingSoon: true,
+    getStatus: (data) => data?.funeral_done ? '작성 완료' : '곧 열려요',
     isDone: (data) => !!data?.funeral_done,
     progress: null,
   },
@@ -303,7 +304,7 @@ const CARDS = [
     key: 'message',
     icon: '💌',
     title: '가족에게 남기는 메시지',
-    href: './note/messages.html',
+    href: './note/will.html',
     getStatus: (data) => {
       const cnt = data?.message_count || 0;
       return cnt > 0 ? `초안 ${cnt}편 보관 중` : '아직 작성 전이에요';
@@ -315,8 +316,9 @@ const CARDS = [
     key: 'lock',
     icon: '👨‍👩‍👧',
     title: '가족 잠금 공유',
-    href: './note/family-lock.html',
-    getStatus: (data) => data?.lock_shared ? '공유 중' : '아직 공유 안 됨',
+    href: '#',
+    comingSoon: true,
+    getStatus: (data) => data?.lock_shared ? '공유 중' : '곧 열려요',
     isDone: (data) => !!data?.lock_shared,
     progress: null,
     isLock: true,
@@ -347,7 +349,8 @@ try {
 // 첫 카드(하이라이트) 선정 — 미완료 중 가장 우선순위 높은 것
 let highlightIdx = 0;
 for (let i = 0; i < CARDS.length; i++) {
-  if (!CARDS[i].isDone(selfData)) { highlightIdx = i; break; }
+  // '준비 중' 카드는 시작 추천(하이라이트)으로 띄우지 않는다 — 눌러도 갈 곳이 없으니.
+  if (!CARDS[i].comingSoon && !CARDS[i].isDone(selfData)) { highlightIdx = i; break; }
 }
 
 // 모두 완료면 0번 그대로
@@ -387,7 +390,7 @@ rest.forEach(card => {
   const pct = card.progress ? card.progress(selfData) : null;
   const extraClass = card.isLock ? 'self-card-lock' : '';
   html += `
-    <a href="${card.href}" class="self-card ${extraClass}">
+    <a href="${card.href}" class="self-card ${extraClass}"${card.comingSoon ? ' data-coming="1"' : ''}>
       <div class="self-card-icon">${card.icon}</div>
       <div class="self-card-body">
         <div class="self-card-title">${card.title}</div>
@@ -407,6 +410,14 @@ html += `</div>
 `;
 
 main.innerHTML = html;
+
+// '준비 중' 카드는 아직 페이지가 없으므로 이동시키지 않고 안내만 한다(404 방지).
+main.querySelectorAll('[data-coming]').forEach((el) => {
+  el.addEventListener('click', (e) => {
+    e.preventDefault();
+    alert('곧 열려요. 차근차근 준비하고 있어요.');
+  });
+});
 
 } // end if (user)
 </script>
