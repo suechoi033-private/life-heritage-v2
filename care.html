@@ -1337,7 +1337,7 @@
           <div id="generated-code-meta" style="font-size: 12.5px; color: var(--ink-muted); margin-top: 12px;"></div>
         </div>
         <p style="font-size: 13.5px; color: var(--ink-soft); line-height: 1.7; margin-bottom: 18px;">
-          카톡·문자로 전달하세요. 받은 사람이 잇다 가입 후 <strong>"초대 코드 입력하기"</strong>에서 코드를 넣으면 자동으로 합류돼요.
+          아래 <strong>"💬 공유하기"</strong>로 링크를 보내세요. 받은 분이 링크를 열고 가입·로그인만 하면 <strong>자동으로 합류</strong>돼요. (링크가 안 될 때만 위 코드를 직접 입력하면 됩니다.)
         </p>
         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
           <button type="button" class="subject-btn" id="copy-code-btn" style="flex: 1; min-width: 130px;">📋 코드 복사</button>
@@ -1598,6 +1598,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // nest.html 등에서 ?action=add 로 진입하면 대상 추가 모달 자동 오픈
   if (_urlParams.get('action') === 'add') {
     openSubjectModal();
+  }
+  // nest.html 빈 화면 등에서 ?action=code 로 진입하면 초대 코드 입력 모달 자동 오픈
+  if (_urlParams.get('action') === 'code') {
+    openCodeEntryModal();
   }
 
   async function loadSubjects() {

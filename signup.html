@@ -176,6 +176,10 @@
       `🌼 감사합니다. ${email} 으로 인증 링크를 보냈습니다. 받은 편지함을 확인하고 링크를 눌러주세요.${inviteHint}`,
       'success'
     );
+    alertBox.insertAdjacentHTML(
+      'beforeend',
+      '<div style="margin-top:14px;"><a href="./login.html" style="color:var(--primary);font-weight:700;text-decoration:underline;">인증을 마쳤다면 여기서 로그인 →</a></div>'
+    );
     submitBtn.disabled = false;
   });
 </script>
