@@ -247,9 +247,12 @@
 <body>
 
 <main class="page-shell" id="main-content">
-  <div class="tab-segment forest-segment" role="tablist">
-    <button type="button" id="seg-content"   class="active" role="tab">콘텐츠</button>
-    <button type="button" id="seg-community" role="tab">커뮤니티</button>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px;">
+    <div class="tab-segment forest-segment" style="flex:1;margin-bottom:0;" role="tablist">
+      <button type="button" id="seg-content"   class="active" role="tab">콘텐츠</button>
+      <button type="button" id="seg-community" role="tab">커뮤니티</button>
+    </div>
+    <a href="./info.html" style="flex-shrink:0;display:inline-flex;align-items:center;gap:5px;padding:9px 14px;background:var(--primary-soft);border:1.5px solid rgba(47,107,79,0.2);border-radius:999px;font-size:12.5px;font-weight:700;color:var(--primary);text-decoration:none;white-space:nowrap;">📚 정보</a>
   </div>
 
   <div class="forest-chips" id="forest-chips"></div>
@@ -434,7 +437,6 @@
   if (chipsEl) {
     chipsEl.hidden = false;
     chipsEl.innerHTML =
-      `<a href="./info.html" class="forest-chip" style="text-decoration:none;">📚 정보</a>` +
       CATEGORIES.map(c =>
         `<button class="forest-chip ${c.key === activeCat ? 'active' : ''}" data-cat="${c.key}">${c.label}</button>`
       ).join('');
