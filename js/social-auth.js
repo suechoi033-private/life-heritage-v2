@@ -1,77 +1,27 @@
-// 잇다 — 소셜 로그인 헬퍼 (카카오 + 구글 + 애플)
-// 카카오는 Supabase 미지원이라 Edge Function 브리지 필요
-//   Supabase Edge Function: /functions/v1/kakao-signin
-//   요청: { access_token } → 응답: { session: {access_token, refresh_token} }
+// 잇다 — 소셜 로그인 헬퍼 (카카오 + 구글)
+// 카카오/구글 모두 Supabase 네이티브 OAuth(signInWithOAuth) 사용.
+// (카카오 JS SDK v2는 Kakao.Auth.login()이 없고 authorize() 리다이렉트 방식뿐이라,
+//  Supabase 네이티브 카카오 프로바이더로 통일 — 더 단순하고 안정적.)
 
 import { supabase } from '../auth.js';
 
-// 키는 호출 시점에 읽는다(window.__KAKAO_JS_KEY__는 auth.js에서 전역 주입).
-// 모듈 로드 순서와 무관하게 동작하도록 const 캐싱을 쓰지 않는다.
-function kakaoKey() {
-  return (typeof window !== 'undefined' && window.__KAKAO_JS_KEY__) || '';
-}
-
-let kakaoLoaded = false;
-
-async function loadKakaoSDK() {
-  if (kakaoLoaded) return;
-  const KAKAO_JS_KEY = kakaoKey();
-  if (!KAKAO_JS_KEY) {
-    throw new Error('카카오 로그인이 아직 설정되지 않았어요. 이메일로 가입해주세요.');
-  }
-  await new Promise((resolve, reject) => {
-    const existing = document.querySelector('script[data-kakao-sdk]');
-    if (existing) { resolve(); return; }
-    const s = document.createElement('script');
-    s.src = 'https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js';
-    s.integrity = 'sha384-TiCUE00h649CAMonG018J2ujOgDKW/kVWlChEuu4jK2vxfAAD0eZxzCKakxg55G4';
-    s.crossOrigin = 'anonymous';
-    s.dataset.kakaoSdk = 'true';
-    s.onload = resolve;
-    s.onerror = reject;
-    document.head.appendChild(s);
-  });
-  if (!window.Kakao.isInitialized()) window.Kakao.init(KAKAO_JS_KEY);
-  kakaoLoaded = true;
+// 현재 페이지 기준 같은 폴더의 redirectAfter로 절대 URL 생성
+function oauthRedirectTo(redirectAfter) {
+  return `${location.origin}${location.pathname.replace(/[^/]+$/, '')}${redirectAfter.replace('./', '')}`;
 }
 
 // ========================================
-// 카카오 로그인
+// 카카오 로그인 (Supabase 네이티브)
 // ========================================
 export async function signInWithKakao(opts = {}) {
-  await loadKakaoSDK();
-
   const { redirectAfter = './index.html', inviteCode } = opts;
-
-  return new Promise((resolve, reject) => {
-    window.Kakao.Auth.login({
-      success: async (authObj) => {
-        try {
-          // Edge Function에 access_token 전달 → Supabase 세션 발급
-          const resp = await fetch(
-            `${supabase.supabaseUrl}/functions/v1/kakao-signin`,
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ access_token: authObj.access_token }),
-            }
-          );
-          if (!resp.ok) throw new Error('Kakao 세션 발급 실패');
-          const { access_token, refresh_token } = await resp.json();
-
-          const { error } = await supabase.auth.setSession({ access_token, refresh_token });
-          if (error) throw error;
-
-          if (inviteCode) localStorage.setItem('itda:pending_invite', inviteCode);
-          window.location.href = redirectAfter;
-          resolve();
-        } catch (err) {
-          reject(err);
-        }
-      },
-      fail: reject,
-    });
+  // 초대 코드는 리다이렉트 왕복 동안 보존(care.html이 localStorage에서 읽어 자동 수락)
+  if (inviteCode) localStorage.setItem('itda:pending_invite', inviteCode);
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'kakao',
+    options: { redirectTo: oauthRedirectTo(redirectAfter) },
   });
+  if (error) throw error;
 }
 
 // ========================================
@@ -81,9 +31,7 @@ export async function signInWithGoogle(opts = {}) {
   const { redirectAfter = './index.html' } = opts;
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
-    options: {
-      redirectTo: `${location.origin}${location.pathname.replace(/[^/]+$/, '')}${redirectAfter.replace('./', '')}`,
-    },
+    options: { redirectTo: oauthRedirectTo(redirectAfter) },
   });
   if (error) throw error;
 }
@@ -95,9 +43,7 @@ export async function signInWithApple(opts = {}) {
   const { redirectAfter = './index.html' } = opts;
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'apple',
-    options: {
-      redirectTo: `${location.origin}${location.pathname.replace(/[^/]+$/, '')}${redirectAfter.replace('./', '')}`,
-    },
+    options: { redirectTo: oauthRedirectTo(redirectAfter) },
   });
   if (error) throw error;
 }
