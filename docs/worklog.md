@@ -21,6 +21,13 @@
 
 ## 2026-06-07
 
+**카카오 로그인 활성화 + 가입/로그인 카카오 주 버튼화 (시니어 친화)** (PE 세션, 사장님 요청)
+- 80대 어르신은 이메일 타이핑조차 어렵다는 사장님 우려 → "가장 쉬우면서 행동 로그 남는" 최적안 = 카카오 간편가입(타이핑 0, 닉네임=이름 자동, 행동 전부 user_id로 로그)으로 결론. 휴대폰 OTP는 한국 SMS 연동·비용·OTP 입력 마찰로 26명 테스트엔 비추.
+- 사장님이 카카오 디벨로퍼스에서 앱 생성(ID 1479845 잇다/라이프헤리티지) 후 JavaScript 키 전달 → `auth.js`에 `window.__KAKAO_JS_KEY__` 전역 주입(소셜 버튼 있는 signup/login/onboarding 모두 import). `social-auth.js`는 이미 호출시점 lazy read라 즉시 작동.
+- `signup.html`·`login.html`: 소셜 블록을 폼 위로 이동, **카카오를 맨 위 큰 주 버튼**(`.social-btn-primary`), 그 아래 구글, "또는 이메일로 가입/로그인" 구분선 후 이메일 폼. `renderSocialAuthButtons`에 `dividerText`·`kakaoLabel` 옵션 추가(onboarding은 옵션 미전달로 영향 없음).
+- `sw.js` CACHE_VERSION → `itda-v3-2026-06-07-kakao-live-v1`.
+- ⚠️ 사장님 잔여 액션(카카오 콘솔): Web 플랫폼 도메인 등록 + 카카오 로그인 ON + Redirect URI + 동의항목(닉네임/이메일). 안 켜면 키 있어도 막힘.
+
 **정보 페이지 — 웰다잉 가이드 신규 추가** (PE 세션, 사장님 요청)
 - `info/well-dying-guide.html` 신규 생성. "웰다잉(Well-Dying) — 좋은 죽음을 미리 준비한다는 것" — advance-directive.html 구조(CSS 토큰, nav.js, scroll-top.js) 동일하게 적용.
 - 7개 섹션: ① 꺼내기 어려운 주제 ② 마지막 순간만의 문제가 아님(보건사회연구원 2018–2019 참고) ③ 50대부터 시작하면 좋은 이유 ④ 실제로 할 5가지(가족대화·의향서·소중한것 기록·디지털계정·장례방식) ⑤ 정리하면 지금이 더 잘 보임 ⑥ 잇다에서 시작할 수 있는 것(사전의향서 링크·의향서 양식·디지털자산·가족편지·오늘의질문) ⑦ 실천 체크리스트 7항목.
