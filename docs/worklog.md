@@ -40,6 +40,15 @@
 - 정합성 연결: seed-16(G3) 본문의 blockquote CTA → `@itda-bridge-cta` 마커로 교체(측정 가능화). E1/E2/S는 측정 대상 아니라 blockquote 유지. 목적지 임시값(지금=`info.html`, 미래=`self.html`) — 확정 창업자 결정.
 - **창업자 승인 필요(one-way door)**: ① `cta_clicks` 테이블 적용(백업 후 SQL Editor 1회 실행) ② G3 발행 + CTA 목적지 확정 ③ 라이브 배포(main/gh-pages·sw.js 캐시버전) — 모두 미실행, 발행 직전 상태까지만.
 
+**브리지 콘텐츠 발행 셋업 (창업자 결정 2026-06-07: 진행)**
+- 창업자 결정: 4편 모두 발행(코드 배포 진행, SQL은 창업자가 SQL Editor에서 실행). **G3는 헌장 YMYL 감수 규칙과 충돌 — 팀이 명확히 반대 의견을 제시**(잘못된 법률·재정 정보 한 줄이 신뢰 전체를 흔들 수 있음). 창업자 최종 결정 존중하되 위험완화 적용.
+- G3 위험완화: ① 사실 주장을 발행된 seed-01과 대조 — 새 미검증 주장 없음(오히려 구체 숫자·1인칭 조언 회피, seed-01보다 보수적). 신규 사실은 "행정안전부 운영"(정확) 하나. ② 하단 모순 문구("감수 전 발행 안 함") 삭제, 가짜 감수 표기 대신 정직한 면책(공식 출처 기반 명시)으로 교체. ③ frontmatter `published_without_review: true`로 정직 기록, 감수자 확보 후 교체 예정.
+- 깨진 내부 링크 정리: 4편의 `[…](./seed-*.md)` 내부 상호링크 9개를 라벨 텍스트로 변환(앱은 `?id=UUID` 라우팅이라 .md 링크는 404). 외부 공식 출처 링크는 보존.
+- 발행 마이그레이션: `scripts/gen_bridge_seed_sql.py`로 4편의 본문(frontmatter·선두 H1·개발주석 제거) → `supabase/migrations/20260607_seed13_16_bridge_contents.sql` 생성(멱등·`$b$` 인용·`is_published=true`·`author_type='official'`). **미적용 — 창업자가 SQL Editor 실행.**
+- 코드 배포: `sw.js CACHE_VERSION → itda-v3-2026-06-07-bridge-cta-v1`. 작업 브랜치→main→gh-pages 배포(렌더러 라이브화).
+- CTA 목적지 임시값: 지금=`info.html`, 미래=`self.html`(자기준비 허브). 전용 "90일 체크리스트" 페이지 생기면 교체(reversible).
+- **창업자 실행 필요(SQL Editor 1회씩)**: ① `20260607_cta_clicks_event_log.sql`(계측 테이블) ② `20260607_seed13_16_bridge_contents.sql`(콘텐츠 발행). 둘 다 실행해야 글이 라이브에 뜨고 클릭이 집계됨.
+
 ---
 
 ## 2026-06-04

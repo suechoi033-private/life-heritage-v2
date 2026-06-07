@@ -42,7 +42,7 @@ sources_verified_date: 2026-05-23
 
 나중에야 알았습니다. 흩어진 재산은 [안심상속 원스톱 서비스](https://www.gov.kr/portal/onestopSvc/safeInheritance)라는 제도로 한 번에 조회할 수 있다는 걸. 그걸 한 달 늦게 알았다는 사실이, 두고두고 분했습니다. 누가 미리 한 줄만 일러줬어도.
 
-(안심상속 원스톱 서비스에 대해서는 [별도 가이드](./seed-16-safe-inheritance-onestop.md)에 자세히 정리해 두었습니다.)
+(안심상속 원스톱 서비스에 대해서는 별도 가이드에 자세히 정리해 두었습니다.)
 
 ---
 
