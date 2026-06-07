@@ -1091,6 +1091,14 @@
 
     <!-- Tab: family -->
     <section class="tab-panel hidden" data-panel="family">
+      <a id="emerg-contacts-link" href="#" style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--danger-soft);border:1.5px solid rgba(201,79,79,0.2);border-radius:var(--radius-sm);margin-bottom:14px;text-decoration:none;color:var(--danger);">
+        <span style="font-size:20px;flex-shrink:0;">🚨</span>
+        <span style="flex:1;min-width:0;">
+          <span style="display:block;font-size:13.5px;font-weight:800;">응급 연락처 관리</span>
+          <span style="display:block;font-size:12px;color:var(--ink-soft);margin-top:2px;">주치의·요양보호사·가족 등을 등록해두면 응급 시 빠르게 호출할 수 있어요.</span>
+        </span>
+        <span style="color:var(--ink-muted);font-size:17px;">›</span>
+      </a>
       <div class="write-cta-row">
         <h3 id="family-title">함께 돌보는 사람들</h3>
         <button type="button" class="primary-cta hidden" id="create-invite-btn">＋ 초대 코드 만들기</button>
@@ -1329,7 +1337,7 @@
           <div id="generated-code-meta" style="font-size: 12.5px; color: var(--ink-muted); margin-top: 12px;"></div>
         </div>
         <p style="font-size: 13.5px; color: var(--ink-soft); line-height: 1.7; margin-bottom: 18px;">
-          카톡·문자로 전달하세요. 받은 사람이 잇다 가입 후 <strong>"초대 코드 입력하기"</strong>에서 코드를 넣으면 자동으로 합류돼요.
+          아래 <strong>"💬 공유하기"</strong>로 링크를 보내세요. 받은 분이 링크를 열고 가입·로그인만 하면 <strong>자동으로 합류</strong>돼요. (링크가 안 될 때만 위 코드를 직접 입력하면 됩니다.)
         </p>
         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
           <button type="button" class="subject-btn" id="copy-code-btn" style="flex: 1; min-width: 130px;">📋 코드 복사</button>
@@ -1590,6 +1598,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // nest.html 등에서 ?action=add 로 진입하면 대상 추가 모달 자동 오픈
   if (_urlParams.get('action') === 'add') {
     openSubjectModal();
+  }
+  // nest.html 빈 화면 등에서 ?action=code 로 진입하면 초대 코드 입력 모달 자동 오픈
+  if (_urlParams.get('action') === 'code') {
+    openCodeEntryModal();
   }
 
   async function loadSubjects() {
@@ -2268,6 +2280,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     $('family-title').textContent = `${getDisplayName(subject)} 케어링 — 가족·도우미`;
     $('family-desc').textContent = '코드 하나로 가족 여러 명이 모두 참여할 수 있어요. 카톡·문자로 전달하세요.';
+    $('emerg-contacts-link').href = `./care-emergency.html?subject=${subjectId}`;
 
     $('create-invite-btn').classList.remove('hidden');
     $('family-self-leave').classList.toggle('hidden', isOwner);

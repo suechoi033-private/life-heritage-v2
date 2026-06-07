@@ -67,12 +67,19 @@
   }
 
   // Check if the user arrived via valid reset link
-  // Supabase automatically handles the token from URL hash
+  // Supabase automatically handles the token from URL hash (비동기)
+  let recoveryReady = false;
   supabase.auth.onAuthStateChange((event, session) => {
-    if (event === 'PASSWORD_RECOVERY') {
-      // User is in password recovery flow
-    }
+    if (event === 'PASSWORD_RECOVERY' || session) recoveryReady = true;
   });
+  // 해시 처리 대기 후, 유효 세션도 복구 이벤트도 없으면 만료/무효 링크로 판단
+  setTimeout(async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session && !recoveryReady) {
+      showAlert('재설정 링크가 만료되었거나 올바르지 않습니다. 비밀번호 찾기를 다시 요청해주세요.', 'error');
+      form.classList.add('hidden');
+    }
+  }, 1500);
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();

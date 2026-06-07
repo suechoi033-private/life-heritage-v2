@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>요양원·요양병원 찾기 — 공단 평가등급과 가족의 기록을 한자리에 · 잇다</title>
+  <link rel="stylesheet" href="../auth-styles.css">
+  <style>
+    .shell {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 32px 20px 80px;
+      flex: 1;
+      width: 100%;
+    }
+    @media (min-width: 640px) { .shell { padding: 56px 32px 120px; } }
+
+    .top-bar { background: var(--bg); border-bottom: 1px solid var(--line); padding: 14px 20px; }
+    .top-bar-inner { max-width: 1080px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+
+    .breadcrumb { font-size: 13px; color: var(--ink-muted); margin-bottom: 12px; }
+    .breadcrumb a { color: var(--ink-muted); text-decoration: none; }
+    .breadcrumb a:hover { color: var(--primary); }
+
+    .header { margin-bottom: 28px; }
+    .kicker {
+      display: inline-block;
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      color: var(--primary);
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      line-height: 1.4;
+      margin-bottom: 12px;
+    }
+    @media (min-width: 640px) { h1 { font-size: 34px; } }
+    .lead { color: var(--ink-soft); font-size: 15.5px; line-height: 1.8; margin-bottom: 0; }
+    .lead-note { font-size: 13.5px; color: var(--ink-muted); margin-top: 8px; line-height: 1.7; }
+
+    /* ── 필터 바 ── */
+    .filter-bar {
+      background: var(--bg-alt);
+      border-radius: 16px;
+      padding: 18px 20px;
+      margin: 24px 0 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .filter-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .filter-label { font-size: 12.5px; font-weight: 700; color: var(--ink-muted); min-width: 32px; }
+    .filter-select {
+      padding: 9px 14px;
+      border: 1.5px solid var(--line);
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--ink);
+      background: var(--bg);
+      cursor: pointer;
+      min-height: 44px;
+    }
+    .filter-select:focus { outline: none; border-color: var(--primary); }
+    .filter-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .filter-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 14px;
+      border: 1.5px solid var(--line);
+      border-radius: 999px;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--ink-muted);
+      background: var(--bg);
+      cursor: pointer;
+      min-height: 44px;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+    .filter-chip.active {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: var(--primary-soft);
+      font-weight: 700;
+    }
+    .filter-chip.disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    .filter-chip .chip-note {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--ink-muted);
+      background: var(--bg-alt);
+      border-radius: 999px;
+      padding: 1px 6px;
+      margin-left: 5px;
+    }
+    .filter-check-row { display: flex; flex-wrap: wrap; gap: 12px; }
+    .filter-check {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 13.5px;
+      color: var(--ink-soft);
+      cursor: pointer;
+      min-height: 44px;
+    }
+    .filter-check input[type="checkbox"] {
+      width: 18px; height: 18px;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+    .filter-apply {
+      display: inline-block;
+      padding: 11px 24px;
+      background: var(--ink);
+      color: #FFF;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      min-height: 44px;
+      transition: background 0.15s ease;
+      align-self: flex-start;
+    }
+    .filter-apply:hover { background: var(--primary); }
+
+    /* ── 정렬·비교 담기 바 ── */
+    .sort-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 0 0 16px;
+      flex-wrap: wrap;
+    }
+    .sort-select {
+      padding: 8px 12px;
+      border: 1.5px solid var(--line);
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--ink);
+      background: var(--bg);
+      cursor: pointer;
+    }
+    .compare-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border: 1.5px solid var(--line);
+      border-radius: 999px;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--ink-soft);
+      background: var(--bg);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .compare-badge.has-items {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: var(--primary-soft);
+    }
+
+    /* ── 신뢰 배너 ── */
+    .trust-banner {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: var(--primary-soft);
+      border-radius: var(--radius-sm);
+      font-size: 12.5px;
+      color: var(--ink-soft);
+      margin-bottom: 18px;
+    }
+    .trust-banner strong { color: var(--primary); }
+
+    /* ── 시설 카드 ── */
+    .facility-list { display: flex; flex-direction: column; gap: 14px; }
+    .facility-card {
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 20px 22px;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+    .facility-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(43,43,43,0.06);
+      border-color: var(--primary-soft);
+    }
+    .facility-card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .facility-grade {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+    }
+    .grade-a { background: var(--success-soft); color: var(--success); }
+    .grade-b { background: var(--success-soft); color: var(--success); }
+    .grade-c { background: var(--warm-soft); color: var(--warm); }
+    .grade-d { background: var(--warm-soft); color: var(--warm); }
+    .grade-e { background: var(--warm-soft); color: var(--warm); }
+    .facility-type { font-size: 12px; color: var(--ink-muted); margin-left: 6px; }
+    .facility-location { font-size: 13px; color: var(--ink-muted); }
+    .facility-name {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--ink);
+      letter-spacing: -0.01em;
+      margin-bottom: 6px;
+    }
+    .facility-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--ink-muted);
+      margin-bottom: 10px;
+    }
+    .facility-cost {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 10px;
+    }
+    .facility-divider { border: none; border-top: 1px solid var(--line); margin: 10px 0; }
+    .facility-excerpt {
+      font-family: var(--font-serif);
+      font-size: 14px;
+      color: var(--ink-soft);
+      line-height: 1.7;
+      font-style: italic;
+    }
+    .facility-trust {
+      font-size: 12px;
+      color: var(--primary);
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .facility-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+      align-items: center;
+    }
+    .btn-compare {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 9px 16px;
+      border: 1.5px solid var(--line);
+      border-radius: 999px;
+      font-family: inherit;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--ink-soft);
+      background: var(--bg);
+      cursor: pointer;
+      min-height: 44px;
+      transition: all 0.15s ease;
+    }
+    .btn-compare:hover, .btn-compare.in-compare {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: var(--primary-soft);
+    }
+    .btn-detail {
+      display: inline-block;
+      padding: 9px 20px;
+      background: var(--ink);
+      color: #FFF;
+      text-decoration: none;
+      font-size: 13.5px;
+      font-weight: 700;
+      border-radius: 999px;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      transition: background 0.15s ease;
+    }
+    .btn-detail:hover { background: var(--primary); }
+
+    /* ── callout ── */
+    .callout { padding: 16px 20px; border-radius: var(--radius-sm); margin: 20px 0; font-size: 14.5px; line-height: 1.7; }
+    .callout.warm { background: var(--primary-soft); color: var(--ink-soft); }
+    .callout.warm strong { color: var(--primary); display: block; margin-bottom: 3px; font-size: 13.5px; }
+
+    /* ── 하단 연결 ── */
+    .bottom-link {
+      text-align: center;
+      margin-top: 36px;
+      padding-top: 28px;
+      border-top: 1px solid var(--line);
+      font-size: 14px;
+      color: var(--ink-muted);
+    }
+    .bottom-link a { color: var(--primary); font-weight: 700; text-decoration: none; }
+    .bottom-link a:hover { text-decoration: underline; }
+
+    /* ── 비교 플로팅 바 ── */
+    .compare-float {
+      position: fixed;
+      bottom: calc(72px + env(safe-area-inset-bottom, 0px) + 12px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--ink);
+      color: #FFF;
+      padding: 12px 22px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.22);
+      z-index: 80;
+      white-space: nowrap;
+      transition: opacity 0.2s ease;
+    }
+    .compare-float[hidden] { display: none; }
+    .compare-float-btn {
+      background: var(--primary);
+      color: #FFF;
+      border: none;
+      border-radius: 999px;
+      padding: 7px 16px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* ── empty state ── */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      background: var(--bg-alt);
+      border-radius: var(--radius);
+    }
+    .empty-state p { font-size: 14px; color: var(--ink-muted); line-height: 1.7; margin-top: 10px; }
+
+    .source-note {
+      margin-top: 48px;
+      padding: 16px 20px;
+      background: var(--bg-alt);
+      border-radius: var(--radius-sm);
+      font-size: 12.5px;
+      color: var(--ink-muted);
+      line-height: 1.7;
+    }
+  </style>
+  <link rel="manifest" href="../manifest.json">
+  <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="../icons/favicon-32.png">
+  <meta name="theme-color" content="#2F6B4F">
+</head>
+<body>
+
+<nav class="top-bar">
+  <div class="top-bar-inner">
+    <a href="../index.html" class="logo"><span class="logo-mark">●</span> 잇다</a>
+    <div id="top-bar-links"></div>
+  </div>
+</nav>
+
+<main class="shell">
+  <div class="breadcrumb">
+    <a href="../info.html">정보</a> · <a href="../info.html?stage=in">곁에</a> · <span style="color:var(--ink-soft);">요양원·요양병원</span>
+  </div>
+
+  <header class="header">
+    <span class="kicker">정보 · 곁에</span>
+    <h1>부모님께 맞는<br>요양시설 찾기</h1>
+    <p class="lead">
+      공단 평가등급과 가족의 기록을 한자리에서.<br>
+      마지막엔 꼭 직접 방문해 확인하세요.
+    </p>
+    <p class="lead-note">
+      별점·랭킹이 아니라 공단 공개 데이터(평가등급 A~E)를 기준으로,<br>
+      잇다 에디터가 직접 방문한 기록을 더해 안내해 드려요.
+    </p>
+  </header>
+
+  <!-- 필터 바 -->
+  <div class="filter-bar" id="filter-bar">
+    <div class="filter-row">
+      <span class="filter-label">지역</span>
+      <select class="filter-select" id="filter-sido" aria-label="시도 선택">
+        <option value="">시도 전체</option>
+        <option value="서울">서울</option>
+        <option value="경기">경기</option>
+        <option value="인천">인천</option>
+        <option value="부산">부산</option>
+        <option value="대구">대구</option>
+        <option value="광주">광주</option>
+        <option value="대전">대전</option>
+        <option value="울산">울산</option>
+        <option value="세종">세종</option>
+        <option value="강원">강원</option>
+        <option value="충북">충북</option>
+        <option value="충남">충남</option>
+        <option value="전북">전북</option>
+        <option value="전남">전남</option>
+        <option value="경북">경북</option>
+        <option value="경남">경남</option>
+        <option value="제주">제주</option>
+      </select>
+      <select class="filter-select" id="filter-sigungu" aria-label="시군구 선택">
+        <option value="">구·시·군 전체</option>
+      </select>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">유형</span>
+      <div class="filter-chips" id="chips-type" role="group" aria-label="시설 유형">
+        <label class="filter-chip active" data-val="nursing_home">
+          <input type="radio" name="type" value="nursing_home" checked style="display:none;"> 요양원
+        </label>
+        <label class="filter-chip" data-val="ltc_hospital">
+          <input type="radio" name="type" value="ltc_hospital" style="display:none;"> 요양병원
+        </label>
+        <label class="filter-chip disabled" data-val="hospice" title="준비 중">
+          <input type="radio" name="type" value="hospice" disabled style="display:none;"> 호스피스 <span class="chip-note">준비중</span>
+        </label>
+      </div>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">평가</span>
+      <div class="filter-chips" id="chips-grade" role="group" aria-label="평가등급">
+        <label class="filter-chip" data-val="all">
+          <input type="radio" name="grade" value="all" style="display:none;"> 전체
+        </label>
+        <label class="filter-chip active" data-val="ab">
+          <input type="radio" name="grade" value="ab" checked style="display:none;"> A·B 등급만
+        </label>
+      </div>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">조건</span>
+      <div class="filter-check-row">
+        <label class="filter-check">
+          <input type="checkbox" id="chk-dementia"> 치매전담실 운영
+        </label>
+        <label class="filter-check">
+          <input type="checkbox" id="chk-vacancy"> 정원 여유 있음
+        </label>
+      </div>
+    </div>
+    <button type="button" class="filter-apply" id="btn-search">검색</button>
+  </div>
+
+  <!-- 정렬·비교담기 바 -->
+  <div class="sort-bar">
+    <label for="sort-select" style="font-size:13.5px;color:var(--ink-muted);font-weight:600;">정렬</label>
+    <select class="sort-select" id="sort-select" aria-label="정렬 기준">
+      <option value="dist">거리순</option>
+      <option value="grade">평가등급순</option>
+      <option value="cost">본인부담 낮은순</option>
+    </select>
+    <button type="button" class="compare-badge" id="compare-badge" hidden>
+      🗂 비교담기 <span id="compare-count">0</span>/3
+    </button>
+  </div>
+
+  <!-- 신뢰 배너 -->
+  <div class="trust-banner">
+    <span>✓</span>
+    <span><strong>공단 공개데이터</strong> 기반 · 잇다 에디터 방문 기록 포함 · 데이터 기준일은 각 시설 카드에 표시</span>
+  </div>
+
+  <!-- 시설 목록 -->
+  <div class="facility-list" id="facility-list">
+
+    <!-- 시드 카드 A — 에디터 방문 완료 예시 -->
+    <div class="facility-card">
+      <div class="facility-card-top">
+        <div>
+          <span class="facility-grade grade-a">A등급</span>
+          <span class="facility-type">요양원</span>
+        </div>
+        <span class="facility-location">서초구 · 2.4km</span>
+      </div>
+      <div class="facility-name">○○실버케어요양원</div>
+      <div class="facility-meta">
+        <span>정원 60 · 현원 54 · <strong style="color:var(--success);">여유 6</strong></span>
+        <span>요양보호사 1 : 2.1</span>
+        <span>시설급여 · 단기보호</span>
+      </div>
+      <div class="facility-cost">본인부담 추정 약 78만원/월</div>
+      <hr class="facility-divider">
+      <div class="facility-trust">✓ 잇다 에디터 방문 (2026.05)</div>
+      <div class="facility-excerpt">"들어섰을 때 냄새가 거의 없었다. 복도 끝까지 직원 분이 어르신 이름으로 불렀다…"</div>
+      <div class="facility-actions">
+        <button type="button" class="btn-compare" data-id="seed-a" aria-label="비교 담기">☐ 비교담기</button>
+        <a href="./nursing-home-detail.html?id=seed-a" class="btn-detail">상세 보기 →</a>
+      </div>
+    </div>
+
+    <!-- 시드 카드 B -->
+    <div class="facility-card">
+      <div class="facility-card-top">
+        <div>
+          <span class="facility-grade grade-b">B등급</span>
+          <span class="facility-type">요양원</span>
+        </div>
+        <span class="facility-location">노원구 · 5.1km</span>
+      </div>
+      <div class="facility-name">△△노인요양원</div>
+      <div class="facility-meta">
+        <span>정원 45 · 현원 45 · <strong style="color:var(--warm);">대기 중</strong></span>
+        <span>요양보호사 1 : 2.4</span>
+        <span>시설급여</span>
+      </div>
+      <div class="facility-cost">본인부담 추정 약 65만원/월</div>
+      <hr class="facility-divider">
+      <div class="facility-trust" style="color:var(--ink-muted);">에디터 방문 예정</div>
+      <div class="facility-excerpt">"주변 산책로가 가까워 어르신들 야외활동이 잦다는 이야기를 들었습니다."</div>
+      <div class="facility-actions">
+        <button type="button" class="btn-compare" data-id="seed-b" aria-label="비교 담기">☐ 비교담기</button>
+        <a href="./nursing-home-detail.html?id=seed-b" class="btn-detail">상세 보기 →</a>
+      </div>
+    </div>
+
+    <!-- 시드 카드 C -->
+    <div class="facility-card">
+      <div class="facility-card-top">
+        <div>
+          <span class="facility-grade grade-a">A등급</span>
+          <span class="facility-type">요양원</span>
+        </div>
+        <span class="facility-location">강남구 · 3.0km</span>
+      </div>
+      <div class="facility-name">□□케어하우스</div>
+      <div class="facility-meta">
+        <span>정원 80 · 현원 77 · <strong style="color:var(--success);">여유 3</strong></span>
+        <span>요양보호사 1 : 2.0</span>
+        <span>시설급여 · 단기보호 · 치매전담</span>
+      </div>
+      <div class="facility-cost">본인부담 추정 약 90만원/월</div>
+      <hr class="facility-divider">
+      <div class="facility-trust">✓ 잇다 에디터 방문 (2026.04)</div>
+      <div class="facility-excerpt">"치매전담실 어르신들을 위한 인지 프로그램이 매일 오전에 운영되고 있었다…"</div>
+      <div class="facility-actions">
+        <button type="button" class="btn-compare" data-id="seed-c" aria-label="비교 담기">☐ 비교담기</button>
+        <a href="./nursing-home-detail.html?id=seed-c" class="btn-detail">상세 보기 →</a>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="callout warm" style="margin-top:28px;">
+    <strong>평가등급은 최소한의 거름망입니다</strong>
+    C등급 이하라면 신중하게, 그래도 마지막엔 반드시 직접 방문해 확인하세요.
+    등급이 높아도 부모님과 안 맞을 수 있습니다.
+  </div>
+
+  <div class="bottom-link">
+    요양시설 고르기가 막막하다면 →
+    <a href="../content-detail.html?slug=choosing-nursing-facility">요양시설 고르는 법 9가지</a>
+    를 먼저 읽어보세요.
+  </div>
+
+  <div class="source-note">
+    시설 정보(평가등급·정원·인력)는 국민건강보험공단 장기요양기관 공개데이터를 기반으로 합니다.
+    비용은 추정치이며 시설·등급·상황에 따라 다릅니다.
+    정확한 정보는 각 시설과 공단(☎ 1577-1000)에 직접 확인하세요.
+    에디터 방문 기록의 날짜는 각 시설 카드에 표시되어 있습니다.
+  </div>
+</main>
+
+<!-- 비교 플로팅 바 -->
+<div class="compare-float" id="compare-float" hidden>
+  <span><span id="compare-float-count">0</span>곳 담겼어요</span>
+  <button type="button" class="compare-float-btn" id="btn-go-compare">나란히 비교 →</button>
+</div>
+
+<footer class="auth-footer">
+  © 2026 라이프헤리티지 · 잇다
+</footer>
+
+<script type="module">
+  import { renderNav } from '../nav.js';
+  await renderNav({ active: 'info' });
+
+  // ── 필터 칩 토글 ──
+  document.querySelectorAll('.filter-chips').forEach(group => {
+    group.querySelectorAll('.filter-chip:not(.disabled)').forEach(chip => {
+      chip.addEventListener('click', () => {
+        group.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        const radio = chip.querySelector('input[type="radio"]');
+        if (radio) radio.checked = true;
+      });
+    });
+  });
+
+  // ── 비교 담기 ──
+  const compareSet = new Set();
+  const MAX_COMPARE = 3;
+
+  function updateCompareUI() {
+    const count = compareSet.size;
+    document.getElementById('compare-count').textContent = count;
+    const badge = document.getElementById('compare-badge');
+    const floatBar = document.getElementById('compare-float');
+    const floatCount = document.getElementById('compare-float-count');
+
+    if (count > 0) {
+      badge.removeAttribute('hidden');
+      badge.classList.add('has-items');
+      floatBar.removeAttribute('hidden');
+      floatCount.textContent = count;
+    } else {
+      badge.setAttribute('hidden', '');
+      badge.classList.remove('has-items');
+      floatBar.setAttribute('hidden', '');
+    }
+  }
+
+  document.getElementById('facility-list').addEventListener('click', e => {
+    const btn = e.target.closest('.btn-compare');
+    if (!btn) return;
+    const id = btn.dataset.id;
+    if (compareSet.has(id)) {
+      compareSet.delete(id);
+      btn.classList.remove('in-compare');
+      btn.textContent = '☐ 비교담기';
+    } else {
+      if (compareSet.size >= MAX_COMPARE) {
+        alert('비교는 최대 3곳까지 담을 수 있어요. 한 곳을 빼고 다시 시도해 주세요.');
+        return;
+      }
+      compareSet.add(id);
+      btn.classList.add('in-compare');
+      btn.textContent = '✓ 담김';
+    }
+    updateCompareUI();
+  });
+
+  document.getElementById('compare-badge').addEventListener('click', goCompare);
+  document.getElementById('btn-go-compare').addEventListener('click', goCompare);
+
+  function goCompare() {
+    if (compareSet.size < 2) {
+      alert('비교하려면 2곳 이상 담아주세요.');
+      return;
+    }
+    const ids = [...compareSet].join(',');
+    window.location.href = `./nursing-home-compare.html?ids=${encodeURIComponent(ids)}`;
+  }
+</script>
+
+<script src="../scroll-top.js" defer></script>
+
+</body>
+</html>

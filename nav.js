@@ -32,7 +32,7 @@ const PROTECTED_TABS = new Set(['seed', 'nest', 'root']);
 export async function renderNav(opts = {}) {
   const rawActive = opts.active || '';
   const active = LEGACY_ACTIVE_MAP[rawActive] || rawActive;
-  const { infoIcon = true, title = '', quickWrite = true, footer = true } = opts;
+  const { infoIcon = false, title = '', quickWrite = true, footer = true } = opts;
 
   const { data: { session } } = await supabase.auth.getSession();
   const loggedIn = !!session;
@@ -58,7 +58,7 @@ function _renderTopBar({ loggedIn, infoIcon, title, quickWrite = true }) {
 
   const actions = [];
   if (infoIcon) {
-    actions.push(`<a href="./forest.html?category=death_prep" title="안내" aria-label="안내">📚</a>`);
+    actions.push(`<a href="./info.html" title="정보 허브" aria-label="정보 허브">📚</a>`);
   }
   if (loggedIn && quickWrite) {
     actions.push(`<button id="itda-ask-btn" title="오늘 일기" aria-label="오늘 일기">✏️</button>`);

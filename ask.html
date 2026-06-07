@@ -814,6 +814,7 @@
         setStatus(`저장됨 ✓ · 일기에도 저장됨 📝 (${visLabel})`, 'var(--primary)');
       } catch (e) {
         console.warn('일기 저장 실패:', e);
+        setStatus('저장됨 ✓ · 일기 저장은 실패했어요 (잠시 후 다시 시도)', 'var(--danger)');
       }
     }
   }

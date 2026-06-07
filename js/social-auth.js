@@ -5,14 +5,19 @@
 
 import { supabase } from '../auth.js';
 
-const KAKAO_JS_KEY = window.__KAKAO_JS_KEY__ || ''; // 배포 시 주입
+// 키는 호출 시점에 읽는다(window.__KAKAO_JS_KEY__는 auth.js에서 전역 주입).
+// 모듈 로드 순서와 무관하게 동작하도록 const 캐싱을 쓰지 않는다.
+function kakaoKey() {
+  return (typeof window !== 'undefined' && window.__KAKAO_JS_KEY__) || '';
+}
 
 let kakaoLoaded = false;
 
 async function loadKakaoSDK() {
   if (kakaoLoaded) return;
+  const KAKAO_JS_KEY = kakaoKey();
   if (!KAKAO_JS_KEY) {
-    throw new Error('KAKAO_JS_KEY 미설정: window.__KAKAO_JS_KEY__를 설정하세요');
+    throw new Error('카카오 로그인이 아직 설정되지 않았어요. 이메일로 가입해주세요.');
   }
   await new Promise((resolve, reject) => {
     const existing = document.querySelector('script[data-kakao-sdk]');
@@ -112,10 +117,6 @@ export function renderSocialAuthButtons(container, opts = {}) {
       <button type="button" class="social-btn social-btn-google" data-provider="google">
         <span class="social-btn-icon">G</span>
         <span>Google로 계속하기</span>
-      </button>
-      <button type="button" class="social-btn social-btn-apple" data-provider="apple">
-        <span class="social-btn-icon"></span>
-        <span>Apple로 계속하기</span>
       </button>
     </div>
   `;
