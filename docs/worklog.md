@@ -34,8 +34,9 @@
 - `care.html` 기록 모달 — 날짜 아래 시니어 친화 큰 버튼 "손으로 쓴 메모를 사진 찍어 자동 입력". 촬영→판독→해당 칸 자동 채움+퀵카드 펼침, 원본 손글씨 사진도 기록에 함께 첨부, "확인 후 [저장]만" 안내. 칸 분류 실패 시 전체 원문을 자유 메모로 폴백.
 - 배포 배선: `.github/workflows/deploy-supabase.yml`에 `ocr-memo` 배포 추가, `supabase/DEPLOY.md` 갱신.
 - **실배포(MCP 직접)**: GitHub Actions dispatch가 통합 토큰 권한으로 막혀(403), Supabase MCP `deploy_edge_function`으로 `ocr-memo` 직접 배포. ANTHROPIC_API_KEY는 analyze-rx와 동일 프로젝트 시크릿 재사용. (실기기 사진 촬영 시 함수 미배포로 non-2xx(404) 났던 것 해소)
-- **품질 개선(실기기 피드백)**: 줄바꿈이 "/"로 합쳐지는 문제 → 프롬프트에 "실제 개행 보존, 기호로 이어붙이지 말 것" 명시. 모델 `claude-sonnet-4-6` → `claude-opus-4-8` + `temperature:0`(충실 전사·인식 정확도). 문자열 내 날것 개행으로 JSON 깨질 때 복구 sanitizer 추가. 클라 압축 품질 0.82→0.92, 함수 타임아웃 40s→55s, 대기 안내 "20~30초" 현실화. 에러 메시지 중복 접두 제거.
-- `sw.js` CACHE_VERSION → `itda-v3-2026-06-07-care-memo-ocr-v4`. PR #30·#31·#32 머지(→ main → gh-pages).
+- **품질 개선(실기기 피드백)**: 줄바꿈이 "/"로 합쳐지는 문제 → 프롬프트에 "실제 개행 보존, 기호로 이어붙이지 말 것" 명시 + `temperature:0`(충실 전사). 문자열 내 날것 개행으로 JSON 깨질 때 복구 sanitizer 추가. 클라 압축 품질 0.82→0.92. 에러 메시지 중복 접두 제거.
+- **모델 주의**: `claude-opus-4-8` 시도했으나 이 ANTHROPIC 키 계정에 Opus 접근권이 없어 500(즉시 실패) → 로그 확인 후 `claude-sonnet-4-6`으로 복귀(analyze-rx와 동일, 200 확인). Sonnet도 한국어 손글씨 인식 양호. (향후 Opus 권한 생기면 모델만 교체)
+- `sw.js` CACHE_VERSION → `itda-v3-2026-06-07-care-memo-ocr-v4`. PR #30·#31·#32·#33 머지(→ main → gh-pages).
 
 **테스트 직전 제품 QA 풀패스 — 가입·온보딩·케어·초대·홈·커뮤니티 점검 후 수정** (PE 세션, 사장님 요청)
 - 지인 20명 테스트 전 신규 사용자 경로를 3개 영역(가입·온보딩 / 케어·초대 / 홈·질문·커뮤니티) 병렬 감사. 정적 링크·모듈 참조·JS 문법 전수 통과. DB 보안 어드바이저 = 테스트 막는 P0 없음(전부 WARN).
