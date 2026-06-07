@@ -12,10 +12,9 @@
 
 ## 2026-06-05
 
-**CRS(오늘의집 연속실험 시스템)에서 잇다용 3종 도입** (PE 세션, 사장님 요청)
-- **배포 Preflight**: `scripts/deploy-preflight.sh` — 앱 파일(.html/.css/.js) 변경 시 `sw.js` CACHE_VERSION 갱신 누락, origin/main 앞섬(force push 위험), 새 화면 APP_SHELL 미등록을 배포 전 자동 차단. CLAUDE.md 배포 규칙에 호출 명시.
-- **멀티에이전트 카피 선별 플레이북**: `docs/playbooks/multi-agent-copy.md` — CRS의 R1(격리 제안)→R2(기준 선별) 패턴을 카피라이터·마케팅 에이전트 + 죽음·사별 톤 원칙에 맞게 이식. 제목·헤드라인·CTA 등에 사용.
-- **버린 것 원장**: `docs/decisions/REJECTED.md` — CRS `failed_attempts` 격. 의도적으로 안 하기로 한 것 + 이유를 한 줄씩(좋아요 경쟁·추모 노출·어드민 CMS·임의 hex 등 실제 결정으로 시드).
+**배포 Preflight 도입** (PE 세션, 사장님 요청)
+- `scripts/deploy-preflight.sh` — 앱 파일(.html/.css/.js) 변경 시 `sw.js` CACHE_VERSION 갱신 누락, origin/main 앞섬(force push 위험), 새 화면 APP_SHELL 미등록을 배포 전 자동 차단. CLAUDE.md 배포 규칙에 호출 명시. (오늘의집 CRS Phase 0 패턴에서 차용)
+- 같은 세션에서 카피 선별 플레이북·버린 것 원장도 만들었으나, 검증단계(1인·에세이 ~5편)엔 조기 최적화로 판단해 되돌림 — 1번만 유지.
 
 ## 2026-06-03
 
