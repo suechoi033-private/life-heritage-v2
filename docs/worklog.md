@@ -64,6 +64,11 @@
 - 리텐션 리포트에 **직접 초대 26명 분모** 반영(`invited_seed=26`) — 전환율 계산 + 추천 유입 시 100% 초과 가능(입소문 신호) 명시. 추천으로 들어온 사람도 가입만 하면 자동 추적(profiles).
 - `sw.js` CACHE_VERSION → `itda-v3-2026-06-07-invite-link-first-v1`.
 
+**상속 용어집(seed-19)에 내부 링크 추가** (PE 세션, 사장님 요청)
+- 글 안에서 텍스트로만 적혀 있던 "관련 가이드/관련 글" 안내를 실제 내부 링크로 연결(스크린샷 제보).
+- "사별 후 90일 체크리스트"(6곳) → 90일 가이드, "안심상속 원스톱 서비스 자세히 보기" → 원스톱 가이드, "유서가 아니라, 비밀번호 목록…" → 해당 에세이, 본문 끝 그린박스의 "잇다 '디지털 보관함'" → `self.html`로 연결.
+- 링크는 `./content-detail.html?id=<uuid>` 내부 경로(새 탭). 소스(`docs/content/seed-19-…md`)·마이그레이션(`20260607_seed17_20_bridge_contents.sql`)·라이브 DB(`contents` body) 세 곳 모두 동기화. 내부 링크 9개·중복 0건 확인.
+
 **리텐션 리포트 자동화 — 수동 명단 폐기, 가입자 자동 추적** (PE 세션, 사장님 요청)
 - 사장님 우려("테스터 20명 이메일을 미리 모를 수 없다 / 손으로 명단 못 넣는다")에 대응. DB 확인 결과 **가입 시 실명+이메일이 이미 수집·자동 저장**되고 있었음: `signup.html`의 name·email 입력 모두 `required`, `auth.users` → `public.profiles`로 트리거(`handle_new_user`)가 자동 복사(17/17 전원 name·email 채워짐 확인).
 - 리포트를 **수동 명단 의존 → 가입일 기준 자동 코호트**로 전환: `docs/retention-test-report.sql`·`.claude/commands/retention-report.md` 재작성. `test_start`(KST) 한 줄만 초대 보낸 날로 맞추면, 그 이후 가입자가 이름·이메일·가입수단과 함께 자동 집계. `@itda.net` 내부계정 제외. 명단 입력 단계 완전 삭제.
