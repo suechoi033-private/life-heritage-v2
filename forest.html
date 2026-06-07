@@ -247,12 +247,10 @@
 <body>
 
 <main class="page-shell" id="main-content">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px;">
-    <div class="tab-segment forest-segment" style="flex:1;margin-bottom:0;" role="tablist">
-      <button type="button" id="seg-content"   class="active" role="tab">콘텐츠</button>
-      <button type="button" id="seg-community" role="tab">커뮤니티</button>
-    </div>
-    <a href="./info.html" style="flex-shrink:0;display:inline-flex;align-items:center;gap:5px;padding:9px 14px;background:var(--primary-soft);border:1.5px solid rgba(47,107,79,0.2);border-radius:999px;font-size:12.5px;font-weight:700;color:var(--primary);text-decoration:none;white-space:nowrap;">📚 정보</a>
+  <div class="tab-segment forest-segment" role="tablist">
+    <button type="button" id="seg-info"      role="tab">정보</button>
+    <button type="button" id="seg-content"   class="active" role="tab">콘텐츠</button>
+    <button type="button" id="seg-community" role="tab">커뮤니티</button>
   </div>
 
   <div class="forest-chips" id="forest-chips"></div>
@@ -450,6 +448,7 @@
     });
   }
 
+  document.getElementById('seg-info')?.addEventListener('click',      () => { window.location.href = './info.html'; });
   document.getElementById('seg-content')?.addEventListener('click',   () => switchSeg('content'));
   document.getElementById('seg-community')?.addEventListener('click', () => switchSeg('community'));
 

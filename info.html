@@ -252,6 +252,13 @@
 <!-- 탑바·바텀탭은 nav.js가 동적으로 삽입 -->
 
 <main class="shell">
+  <!-- 섹션 탭바 — 정보·콘텐츠·커뮤니티 어디서나 이동 -->
+  <div class="tab-segment" style="margin-bottom:24px;" role="tablist">
+    <button type="button" class="active" aria-current="page">정보</button>
+    <button type="button" onclick="window.location.href='./forest.html'">콘텐츠</button>
+    <button type="button" onclick="window.location.href='./forest.html?seg=community'">커뮤니티</button>
+  </div>
+
   <div class="header">
     <span class="kicker">정보 · INFORMATION</span>
     <h1>정보는 한 시점이 아니라<br>시간축입니다</h1>
