@@ -3137,7 +3137,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!file) return;
     const label = $('memo-ocr-label');
     label.classList.add('busy');
-    setMemoProgress('📖 메모를 한 글자씩 읽고 있어요… 20~30초쯤 걸려요. 창을 닫지 말고 잠시만 기다려 주세요.');
+    setMemoProgress('📖 메모를 한 글자씩 읽고 있어요… 10초쯤 걸려요. 창을 닫지 말고 잠시만 기다려 주세요.');
     try {
       const { fields, transcription, compressedFile } = await ocrMemo(file);
       const filled = applyMemoFields(fields, transcription);
