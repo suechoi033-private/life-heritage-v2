@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>사전연명의료의향서 준비 체크리스트 · 잇다</title>
+  <link rel="stylesheet" href="../auth-styles.css">
+  <style>
+    body { background: var(--bg); }
+    .shell {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 20px 20px 80px;
+      flex: 1;
+      width: 100%;
+    }
+    @media (min-width: 640px) { .shell { padding: 32px 24px 100px; } }
+
+    .breadcrumb { font-size: 13px; color: var(--ink-muted); margin-bottom: 14px; }
+    .breadcrumb a { color: var(--ink-muted); text-decoration: none; }
+    .breadcrumb a:hover { color: var(--primary); }
+
+    .header { margin-bottom: 18px; }
+    .kicker {
+      display: inline-block; font-size: 12px; letter-spacing: 0.08em;
+      color: var(--primary); font-weight: 700; text-transform: uppercase; margin-bottom: 8px;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: 25px; font-weight: 800; letter-spacing: -0.01em; line-height: 1.4; margin-bottom: 10px;
+    }
+    .lead { color: var(--ink-soft); font-size: 15px; line-height: 1.75; }
+
+    /* 진행률 */
+    .progress-card {
+      background: var(--primary-soft);
+      border-radius: 16px;
+      padding: 18px 20px;
+      margin: 18px 0 22px;
+    }
+    .progress-top {
+      display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 10px;
+    }
+    .progress-label { font-size: 14px; font-weight: 700; color: var(--ink); }
+    .progress-count { font-size: 14px; font-weight: 800; color: var(--primary); }
+    .progress-track { height: 8px; background: rgba(0,0,0,0.07); border-radius: 999px; overflow: hidden; }
+    .progress-fill { height: 100%; background: var(--primary); border-radius: 999px; transition: width 0.35s ease; }
+    .progress-done-msg {
+      margin-top: 12px; font-size: 13.5px; color: var(--primary); font-weight: 700;
+      display: none;
+    }
+    .progress-card.all-done .progress-done-msg { display: block; }
+
+    /* 체크리스트 */
+    .checklist { display: flex; flex-direction: column; gap: 10px; }
+    .check-item {
+      display: flex; gap: 14px; align-items: flex-start;
+      background: var(--bg-alt);
+      border: 1.5px solid var(--line);
+      border-radius: 14px;
+      padding: 16px 18px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .check-item:hover { border-color: var(--primary-soft); }
+    .check-item.checked { background: var(--primary-soft); border-color: var(--primary); }
+
+    /* 큰 체크박스 (시니어 친화) */
+    .check-box {
+      width: 30px; height: 30px; flex-shrink: 0; margin-top: 1px;
+      border: 2px solid var(--ink-faint);
+      border-radius: 9px;
+      background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; color: #fff; line-height: 1;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .check-item.checked .check-box {
+      background: var(--primary); border-color: var(--primary);
+    }
+    .check-box::after { content: '✓'; opacity: 0; }
+    .check-item.checked .check-box::after { opacity: 1; }
+
+    .check-body { flex: 1; min-width: 0; }
+    .check-title {
+      font-size: 16px; font-weight: 800; color: var(--ink); letter-spacing: -0.01em; line-height: 1.4;
+    }
+    .check-item.checked .check-title { color: var(--primary); }
+    .check-hint {
+      font-size: 13.5px; color: var(--ink-muted); line-height: 1.65; margin-top: 5px;
+    }
+    .check-hint a { color: var(--primary); font-weight: 600; }
+
+    /* 참고 자료 */
+    .refs {
+      margin-top: 26px;
+      background: var(--bg-alt);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 20px 22px;
+    }
+    .refs h3 { font-size: 15px; font-weight: 800; margin-bottom: 12px; letter-spacing: -0.01em; }
+    .ref-link {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--line);
+      text-decoration: none; color: var(--ink);
+    }
+    .refs .ref-link:last-child { border-bottom: none; }
+    .ref-link-icon {
+      width: 38px; height: 38px; flex-shrink: 0; border-radius: 10px;
+      background: var(--primary-soft); display: flex; align-items: center; justify-content: center; font-size: 18px;
+    }
+    .ref-link-text { flex: 1; min-width: 0; }
+    .ref-link-title { font-size: 14px; font-weight: 700; line-height: 1.4; }
+    .ref-link-desc { font-size: 12.5px; color: var(--ink-muted); margin-top: 2px; line-height: 1.5; }
+    .ref-link-arrow { color: var(--ink-faint); font-size: 16px; }
+
+    .notice {
+      margin-top: 20px;
+      font-size: 12.5px; color: var(--ink-muted); line-height: 1.7;
+      padding: 14px 16px; border: 1px dashed var(--line); border-radius: 12px;
+    }
+    .notice strong { color: var(--ink-soft); }
+
+    .reset-row { margin-top: 18px; text-align: center; }
+    .reset-btn {
+      background: none; border: none; color: var(--ink-muted); font-size: 12.5px;
+      text-decoration: underline; cursor: pointer; font-family: inherit;
+    }
+  </style>
+  <link rel="manifest" href="../manifest.json">
+  <meta name="theme-color" content="#2F6B4F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="잇다">
+</head>
+<body>
+
+<main class="shell" id="main">
+  <div style="height:40px;background:var(--bg-alt);border-radius:12px;"></div>
+</main>
+
+<footer class="auth-footer">
+  © 2026 라이프헤리티지 · 잇다
+</footer>
+
+<script type="module">
+import { requireAuth } from '../auth.js';
+import { renderTopBar } from '../nav.js';
+
+const session = await requireAuth('../login.html');
+if (!session) { throw new Error('redirecting'); }
+const user = session.user;
+
+await renderTopBar({ active: 'self', title: '나의 삶' });
+
+// ── 체크리스트 항목 (info/advance-directive.html 방문 전 체크리스트 기반) ──
+const ITEMS = [
+  {
+    id: 'id_card',
+    title: '신분증 챙기기',
+    hint: '주민등록증, 운전면허증, 여권 중 하나. 본인 확인이 꼭 필요해요. (대리 작성 불가)',
+  },
+  {
+    id: 'find_agency',
+    title: '거주 지역 등록기관 1곳 정해두기',
+    hint: '<a href="https://www.lst.go.kr/" target="_blank" rel="noopener">국립연명의료관리기관</a> → 작성 가능 기관에서 검색. 보건소가 가장 보편적이에요.',
+  },
+  {
+    id: 'hours',
+    title: '운영 시간·예약 필요 여부 확인',
+    hint: '평일 09–18시가 보통이에요. 일부 기관은 사전 예약이 필요하니 미리 전화로 확인하세요.',
+  },
+  {
+    id: 'four_treatments',
+    title: '4가지 연명의료에 대한 내 생각 정리',
+    hint: '심폐소생술 · 인공호흡기 · 혈액투석 · 항암제 — 각각 받을지/받지 않을지 미리 생각해 보세요.',
+  },
+  {
+    id: 'hospice',
+    title: '호스피스 이용 의향 결정',
+    hint: '말기 진단 시 호스피스 서비스를 이용할지. 입원형·자문형·가정형 안내는 등록기관에서 함께 받아요.',
+  },
+  {
+    id: 'tell_family',
+    title: '가족에게 미리 알리기 (권장)',
+    hint: '법적 효력은 본인 의지로 충분하지만, 가족이 미리 알고 있으면 임종과정에서 의료진 결정에 혼선이 적어요.',
+  },
+  {
+    id: 'record_in_itda',
+    title: '잇다에 등록 사실·정보 정리해 두기',
+    hint: '등록 사실·등록기관·등록증 사진을 <a href="../self.html">나의 삶 정리</a>에 함께 보관해두면, 가족이 나중에 빠르게 확인할 수 있어요.',
+  },
+];
+
+const STATE_KEY = `itda:directive_checklist:${user.id}`;
+const SUMMARY_KEY = `itda:directive_checklist_summary:${user.id}`;
+
+function loadState() {
+  try { return JSON.parse(localStorage.getItem(STATE_KEY) || '{}') || {}; }
+  catch { return {}; }
+}
+function saveState(state) {
+  localStorage.setItem(STATE_KEY, JSON.stringify(state));
+  const done = ITEMS.filter((it) => state[it.id]).length;
+  // self.html 카드가 읽는 요약(진행률)
+  localStorage.setItem(SUMMARY_KEY, JSON.stringify({
+    done, total: ITEMS.length, updated: new Date().toISOString(),
+  }));
+}
+
+let state = loadState();
+
+function render() {
+  const done = ITEMS.filter((it) => state[it.id]).length;
+  const total = ITEMS.length;
+  const pct = Math.round((done / total) * 100);
+
+  const itemsHtml = ITEMS.map((it) => `
+    <div class="check-item ${state[it.id] ? 'checked' : ''}" data-id="${it.id}" role="checkbox" aria-checked="${!!state[it.id]}" tabindex="0">
+      <div class="check-box" aria-hidden="true"></div>
+      <div class="check-body">
+        <div class="check-title">${it.title}</div>
+        <div class="check-hint">${it.hint}</div>
+      </div>
+    </div>
+  `).join('');
+
+  document.getElementById('main').innerHTML = `
+    <div class="breadcrumb"><a href="../self.html">← 나의 삶 정리</a></div>
+
+    <div class="header">
+      <span class="kicker">사전연명의료의향서</span>
+      <h1>등록기관 방문 전 체크리스트</h1>
+      <p class="lead">미리 정리해두면 상담이 훨씬 매끄럽습니다. 하나씩 눌러 체크해 보세요. 진행 상황은 이 기기에 자동으로 저장돼요.</p>
+    </div>
+
+    <div class="progress-card ${done === total ? 'all-done' : ''}">
+      <div class="progress-top">
+        <span class="progress-label">준비 진행률</span>
+        <span class="progress-count">${done} / ${total} 완료</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+      <div class="progress-done-msg">✅ 방문 준비가 모두 끝났어요. 가까운 등록기관에 방문하시면 됩니다.</div>
+    </div>
+
+    <div class="checklist" id="checklist">${itemsHtml}</div>
+
+    <div class="refs">
+      <h3>📎 참고 자료</h3>
+      <a class="ref-link" href="https://www.lst.go.kr/" target="_blank" rel="noopener">
+        <span class="ref-link-icon">🏛</span>
+        <span class="ref-link-text">
+          <span class="ref-link-title">국립연명의료관리기관 — 작성 가능 기관 찾기</span>
+          <span class="ref-link-desc">우리 동네 등록기관을 검색할 수 있어요.</span>
+        </span>
+        <span class="ref-link-arrow">›</span>
+      </a>
+      <a class="ref-link" href="https://www.mohw.go.kr/board.es?mid=a10501010200&bid=0003&act=view&list_no=1487646" target="_blank" rel="noopener">
+        <span class="ref-link-icon">📄</span>
+        <span class="ref-link-text">
+          <span class="ref-link-title">보건복지부 — 사전연명의료의향서 안내</span>
+          <span class="ref-link-desc">제도·절차에 대한 공식 안내 자료.</span>
+        </span>
+        <span class="ref-link-arrow">›</span>
+      </a>
+      <a class="ref-link" href="https://drive.google.com/file/d/12aFIDU0oe6YUYqa-FGbwfmSQ0U-cVsBz/view?usp=drive_link" target="_blank" rel="noopener">
+        <span class="ref-link-icon">📝</span>
+        <span class="ref-link-text">
+          <span class="ref-link-title">의향서 서식(템플릿) 미리 보기</span>
+          <span class="ref-link-desc">방문 전 어떤 항목을 적는지 미리 살펴볼 수 있어요. (작성은 등록기관에서)</span>
+        </span>
+        <span class="ref-link-arrow">›</span>
+      </a>
+      <a class="ref-link" href="../info/advance-directive.html">
+        <span class="ref-link-icon">📖</span>
+        <span class="ref-link-text">
+          <span class="ref-link-title">사전연명의료의향서 — 미리 정해두는 마지막 의지</span>
+          <span class="ref-link-desc">작성 방법·효력·변경/철회까지 자세한 안내.</span>
+        </span>
+        <span class="ref-link-arrow">›</span>
+      </a>
+    </div>
+
+    <div class="notice">
+      <strong>잇다는 안내만 합니다.</strong> 사전연명의료의향서 등록은 공식 등록기관(보건소 등)에서 본인이 직접 작성·서명해야 효력이 생깁니다. 이 체크리스트는 방문 준비를 돕기 위한 것이며, 진행 상황은 이 기기에만 저장됩니다.
+    </div>
+
+    <div class="reset-row">
+      <button type="button" class="reset-btn" id="reset-btn">체크 전체 지우기</button>
+    </div>
+  `;
+
+  wire();
+}
+
+function toggle(id) {
+  state[id] = !state[id];
+  saveState(state);
+  render();
+}
+
+function wire() {
+  document.querySelectorAll('.check-item').forEach((el) => {
+    el.addEventListener('click', () => toggle(el.dataset.id));
+    el.addEventListener('keydown', (e) => {
+      if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggle(el.dataset.id); }
+    });
+  });
+  document.getElementById('reset-btn')?.addEventListener('click', () => {
+    if (!confirm('체크를 모두 지울까요?')) return;
+    state = {};
+    saveState(state);
+    render();
+  });
+}
+
+render();
+</script>
+
+<script src="../scroll-top.js" defer></script>
+</body>
+</html>

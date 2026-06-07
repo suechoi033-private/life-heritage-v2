@@ -261,6 +261,24 @@ const CARDS = [
     progress: null,
   },
   {
+    key: 'directive_checklist',
+    icon: '📋',
+    title: '의향서 방문 준비 체크리스트',
+    href: './note/directive-checklist.html',
+    getStatus: (data) => {
+      const total = data?.directive_checklist_total || 7;
+      const done = data?.directive_checklist_done || 0;
+      if (done >= total) return '준비 완료 · 방문하시면 돼요';
+      return done > 0 ? `${done} / ${total} 항목 완료` : '방문 전 7가지 점검하기';
+    },
+    isDone: (data) => (data?.directive_checklist_done || 0) >= (data?.directive_checklist_total || 7),
+    progress: (data) => {
+      const total = data?.directive_checklist_total || 7;
+      const done = data?.directive_checklist_done || 0;
+      return Math.round((done / total) * 100);
+    },
+  },
+  {
     key: 'digital',
     icon: '🔐',
     title: '디지털 자산 노트',
@@ -314,6 +332,15 @@ try {
     .eq('user_id', user.id);
   if (data) {
     data.forEach(row => { selfData[row.key] = row.value; });
+  }
+} catch (_) {}
+
+// 의향서 방문 준비 체크리스트 진행률 (이 기기에 저장된 값)
+try {
+  const dc = JSON.parse(localStorage.getItem(`itda:directive_checklist_summary:${user.id}`) || 'null');
+  if (dc) {
+    selfData.directive_checklist_done = dc.done;
+    selfData.directive_checklist_total = dc.total;
   }
 } catch (_) {}
 

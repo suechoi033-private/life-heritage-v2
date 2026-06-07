@@ -21,6 +21,12 @@
 
 ## 2026-06-07
 
+**나의 삶 정리 — 사전연명의료의향서 "방문 준비 체크리스트" 실작동 도구 추가** (PE 세션, 사장님 요청)
+- `info/advance-directive.html`의 정적 "방문 전 체크리스트"(7항목)를 실제 체크·저장 가능한 도구로 구현. `note/directive-checklist.html` 신규 — 큰 체크박스(시니어 친화), 진행률 바("n/7 완료"), 항목별 안내, localStorage 영구저장(`itda:directive_checklist:{uid}` + 요약 키). 전체 완료 시 "방문하시면 됩니다" 메시지.
+- `self.html`(나의 삶 정리)에 카드 "의향서 방문 준비 체크리스트" 추가 — 같은 localStorage 요약을 읽어 진행률 표시. (note_entries 테이블은 아직 미존재 → DB 없이 localStorage로 구현)
+- seed-16(웰다잉 가이드) 업데이트 반영: 참고 자료로 국립연명의료관리기관(작성기관 찾기)·보건복지부 의향서 안내·의향서 서식(템플릿, Google Drive)·잇다 의향서 가이드 링크 연결.
+- `sw.js` CACHE_VERSION → `itda-v3-2026-06-07-directive-checklist-v1`.
+
 **마이페이지 정리 — 활동 통계·"내 활동" 섹션 숨김** (PE 세션, 사장님 요청)
 - `root.html`(마이)에서 통계 4칸(일기·답변·게시글·가족·친구)과 "내 활동" 탭/목록 제거. 프로필 + 하단 메뉴(친구 초대·나의 삶 정리·책자·플레이리스트·알림·안내자료·운영자·로그아웃)만 노출.
 - 관련 JS는 통계 그리드 존재 시에만 실행하도록 가드(`if (#stat-grid)`), `loadActivity`는 `activity-body` 없으면 early-return. render 함수는 남겨두되 미호출(추후 복구 용이). `sw.js` CACHE_VERSION → `itda-v3-2026-06-07-my-hide-activity-v1`.
