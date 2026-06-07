@@ -2836,6 +2836,8 @@ document.addEventListener('DOMContentLoaded', () => {
         renderConditionChips();
       }
     }
+    // 칸 높이를 내용에 맞춤(새 글이면 최소, 수정/OCR이면 내용만큼 늘어남)
+    autoGrowAllLogTextareas();
   }
 
   // ── 추정 병명 태그 (기록↔처방전 연결) ───────
@@ -3109,6 +3111,20 @@ document.addEventListener('DOMContentLoaded', () => {
     el.classList.remove('hidden');
   }
 
+  // textarea 자동 높이 — 내용이 길어도 잘리지 않고 칸이 늘어나게
+  function autoGrowTextarea(el) {
+    if (!el || el.tagName !== 'TEXTAREA') return;
+    el.style.height = 'auto';
+    el.style.height = (el.scrollHeight + 2) + 'px';
+  }
+  function autoGrowAllLogTextareas() {
+    document.querySelectorAll('#log-form textarea').forEach(autoGrowTextarea);
+  }
+  // 입력할 때마다 높이 맞춤(시니어가 스크롤할 필요 없이)
+  $('log-form')?.addEventListener('input', (e) => {
+    if (e.target.tagName === 'TEXTAREA') autoGrowTextarea(e.target);
+  });
+
   // OCR 결과를 기록 칸에 채운다. 채운 칸이 하나라도 있으면 true.
   function applyMemoFields(fields, transcription) {
     fields = fields || {};
@@ -3116,6 +3132,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const el = $(id);
       if (!el || !text) return;
       el.value = el.value.trim() ? (el.value.trim() + '\n' + text) : text;
+      autoGrowTextarea(el);
     };
     // 퀵카드 4칸
     const quick = [
@@ -3166,6 +3183,8 @@ document.addEventListener('DOMContentLoaded', () => {
         setMemoProgress('글자를 알아보지 못했어요. 더 밝은 곳에서 메모가 똑바로 보이게 다시 찍어 주세요.', 'err');
         return;
       }
+      // 칸이 모두 펼쳐진 뒤 높이를 한 번 더 맞춰 긴 글이 잘리지 않게
+      autoGrowAllLogTextareas();
       // 원본 손글씨도 기록에 함께 보관 (가족이 실제 메모를 볼 수 있게)
       state.pendingPhotoFiles = [...(state.pendingPhotoFiles || []), compressedFile];
       renderPhotoPreviews();
