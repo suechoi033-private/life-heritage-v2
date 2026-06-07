@@ -21,6 +21,12 @@
 
 ## 2026-06-07
 
+**정보 페이지 — 실버타운 가이드 신규 추가** (PE 세션, 사장님 요청)
+- `info/silver-town-guide.html` 신규 생성. "실버타운 가이드 — 유형별 차이, 입주 조건, 비용까지 한눈에" — advance-directive.html 구조(CSS 토큰, nav.js, scroll-top.js) 동일하게 적용.
+- 8개 섹션: ① 실버타운 vs 요양시설 ② 4가지 유형(공공·실버스테이·노인복지주택·케어형) + 비교 표 ③ 입주 조건 3가지 ④ 비용 구조(보증금·월이용료·추가비용) + 민간/공공 시설 비용표 ⑤ 유형별·지역별 시설 목록 ⑥ 공공 vs 민간 선택 ⑦ 방문 전 체크리스트(보증금 위약금 포함) ⑧ 부모님과 대화 우선 + CTA.
+- 외부 링크: LH청약플러스·마이홈포털·보건복지부·국민건강보험공단. YMYL 고지 삽입. 인라인 hex 없이 CSS 토큰만 사용.
+- `sw.js` CACHE_VERSION → `itda-v3-2026-06-07-silver-town-guide-v1`.
+
 **나의 삶 정리 — 사전연명의료의향서 "방문 준비 체크리스트" 실작동 도구 추가** (PE 세션, 사장님 요청)
 - `info/advance-directive.html`의 정적 "방문 전 체크리스트"(7항목)를 실제 체크·저장 가능한 도구로 구현. `note/directive-checklist.html` 신규 — 큰 체크박스(시니어 친화), 진행률 바("n/7 완료"), 항목별 안내, localStorage 영구저장(`itda:directive_checklist:{uid}` + 요약 키). 전체 완료 시 "방문하시면 됩니다" 메시지.
 - `self.html`(나의 삶 정리)에 카드 "의향서 방문 준비 체크리스트" 추가 — 같은 localStorage 요약을 읽어 진행률 표시. (note_entries 테이블은 아직 미존재 → DB 없이 localStorage로 구현)
