@@ -85,6 +85,14 @@
       font-size: 14px; line-height: 1.7;
     }
     .recip-empty .em-icon { font-size: 30px; display: block; margin-bottom: 10px; }
+
+    .done-cta {
+      display: block; margin-top: 26px; padding: 15px; text-align: center;
+      background: var(--bg-alt); color: var(--ink-soft); border: 1px solid var(--line);
+      border-radius: 12px; font-size: 15px; font-weight: 700; text-decoration: none;
+      transition: border-color 0.15s ease;
+    }
+    .done-cta:hover { border-color: var(--primary-soft); color: var(--primary); }
   </style>
 </head>
 <body>
@@ -150,6 +158,8 @@
     <h2>정해 둔 사람</h2>
     <div class="recip-list" id="recip-list"></div>
   </div>
+
+  <a href="../self.html" class="done-cta">나의 삶으로 돌아가기</a>
 </main>
 
 <footer class="auth-footer">

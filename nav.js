@@ -6,12 +6,16 @@
 
 import { supabase } from './auth.js';
 
+// nav.js는 사이트 루트에 위치한다 → 자기 URL의 디렉터리 = 사이트 루트.
+// 이렇게 절대 경로로 만들면 note/·info/ 같은 서브폴더 페이지에서도 링크가 안 깨진다.
+const ROOT = new URL('.', import.meta.url).href;
+
 const TABS = [
-  { key: 'home',   label: '홈',       icon: '🏠', href: './index.html'  },
-  { key: 'seed',   label: '라이프',   icon: '🌱', href: './seed.html'   },
-  { key: 'nest',   label: '케어링',   icon: '🪺', href: './nest.html'   },
-  { key: 'forest', label: '커뮤니티', icon: '🌳', href: './forest.html' },
-  { key: 'root',   label: '마이',     icon: '🌿', href: './root.html'   },
+  { key: 'home',   label: '홈',       icon: '🏠', href: ROOT + 'index.html'  },
+  { key: 'seed',   label: '라이프',   icon: '🌱', href: ROOT + 'seed.html'   },
+  { key: 'nest',   label: '케어링',   icon: '🪺', href: ROOT + 'nest.html'   },
+  { key: 'forest', label: '커뮤니티', icon: '🌳', href: ROOT + 'forest.html' },
+  { key: 'root',   label: '마이',     icon: '🌿', href: ROOT + 'root.html'   },
 ];
 
 // 기존 키 → 신규 키 매핑 (점진적 마이그레이션 기간 동안)
@@ -54,16 +58,16 @@ function _renderTopBar({ loggedIn, infoIcon, title, quickWrite = true }) {
 
   const logoText = title
     ? `<span class="itda-top-bar-pagetitle">${title}</span>`
-    : `<a href="./index.html" class="logo"><span class="logo-mark">●</span> 잇다</a>`;
+    : `<a href="${ROOT}index.html" class="logo"><span class="logo-mark">●</span> 잇다</a>`;
 
   const actions = [];
   if (infoIcon) {
-    actions.push(`<a href="./info.html" title="정보 허브" aria-label="정보 허브">📚</a>`);
+    actions.push(`<a href="${ROOT}info.html" title="정보 허브" aria-label="정보 허브">📚</a>`);
   }
   if (loggedIn && quickWrite) {
     actions.push(`<button id="itda-ask-btn" title="오늘 일기" aria-label="오늘 일기">✏️</button>`);
   } else if (!loggedIn) {
-    actions.push(`<a href="./login.html" style="font-size:14px;color:var(--ink-soft);text-decoration:none;font-weight:600;padding:4px 2px;">로그인</a>`);
+    actions.push(`<a href="${ROOT}login.html" style="font-size:14px;color:var(--ink-soft);text-decoration:none;font-weight:600;padding:4px 2px;">로그인</a>`);
   }
 
   bar.innerHTML = `
@@ -75,7 +79,7 @@ function _renderTopBar({ loggedIn, infoIcon, title, quickWrite = true }) {
   const askBtn = document.getElementById('itda-ask-btn');
   if (askBtn) {
     askBtn.addEventListener('click', () => {
-      window.location.href = './seed.html?tab=diary&action=new';
+      window.location.href = ROOT + 'seed.html?tab=diary&action=new';
     });
   }
 
@@ -105,7 +109,7 @@ function _renderBottomTabs({ active, loggedIn }) {
 
   nav.innerHTML = TABS.map(t => {
     const isActive = t.key === active;
-    const href = (!loggedIn && PROTECTED_TABS.has(t.key)) ? `./login.html` : t.href;
+    const href = (!loggedIn && PROTECTED_TABS.has(t.key)) ? `${ROOT}login.html` : t.href;
     return `
       <a href="${href}" class="${isActive ? 'active' : ''}" aria-label="${t.label}" aria-current="${isActive ? 'page' : 'false'}">
         <span class="nav-icon">${t.icon}</span>
@@ -125,7 +129,7 @@ function _renderFooter() {
   f.id = 'itda-footer';
   f.className = 'itda-footer';
   f.innerHTML = `
-    <a class="itda-footer-link" href="./about.html">잇다 이야기</a>
+    <a class="itda-footer-link" href="${ROOT}about.html">잇다 이야기</a>
     <span class="itda-footer-sep">·</span>
     <a class="itda-footer-link" href="#" data-itda-terms>이용약관</a>
     <span class="itda-footer-sep">·</span>

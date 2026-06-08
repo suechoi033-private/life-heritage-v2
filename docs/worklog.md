@@ -42,6 +42,13 @@
 - `sw.js CACHE_VERSION → itda-v3-2026-06-08-vault-envelope-measure-v1`. 모듈 JS 문법 검증 통과(digital·envelope·self).
 - ⚠️ DB 추가는 one-way door지만 **추가 전용(파괴 없음)** 이며 창업자 승인하에 진행.
 
+**QA + 네비 버그 수정 (창업자 제보: 하단 '마이' 클릭 시 오류, 앞으로 이동 없음)**
+- 🐞 **근본 버그:** `nav.js` 하단탭·로고·푸터 링크가 상대경로(`./root.html` 등)라 `note/`·`info/` 서브폴더 페이지에서 `note/root.html`로 404. **모든 서브폴더 페이지 공통**(기존부터). → `nav.js`가 `import.meta.url`로 사이트 루트를 계산해 **절대경로**로 링크 생성하도록 수정(어느 깊이에서도 정확). note/·info/ 전 페이지 일괄 해결.
+- **앞으로 이동:** `note/digital.html`·`note/envelope.html` 하단에 "나의 삶으로 돌아가기" CTA 추가(브레드크럼 외 명시적 동선). digital.html 낡은 안내문("가족 잠금 공유 곧 열려요") → 봉투 출시 반영해 정리.
+- **QA 검증(코드 실측):** 신규/관련 5개 페이지(self·digital·envelope·will·directive-checklist)의 모든 href·requireAuth·location 타깃이 실존 파일로 해석되는지 스크립트 검사 — 전부 OK(동적 템플릿 2건 제외, 실타깃 존재 확인). 하단탭 8개 타깃 루트 존재, 모듈 JS 문법 4개 통과.
+- 📌 미해결(경미): note 페이지의 하드코딩 `<nav class="top-bar">` + `renderTopBar` 이중 상단바 — will.html과 동일한 기존 패턴이라 이번엔 미변경(추후 정리 후보).
+- `sw.js CACHE_VERSION → itda-v3-2026-06-08-nav-abs-paths-cta-v1`.
+
 ---
 
 ## 2026-06-07
