@@ -35,7 +35,7 @@ export async function listPosts({ boardId = null, limit = 20, offset = 0 } = {})
 
 export async function getPost(id) {
   const { data: p, error } = await supabase.from('community_posts')
-    .select('*, profiles:user_id(name, avatar_url), boards(slug, name)')
+    .select('*, profiles:user_id(name, avatar_url), boards(slug, name), contents:content_thread_id(id, title, is_published)')
     .eq('id', id)
     .maybeSingle();
   if (error) throw error;
