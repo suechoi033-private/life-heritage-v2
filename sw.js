@@ -1,7 +1,11 @@
 // 잇다 PWA Service Worker
 // 전략: 앱 셸 캐시 (네트워크 우선 + 캐시 폴백), 푸시 알림 수신
 
-const CACHE_VERSION = 'itda-v3-2026-06-08-vault-envelope-measure-v1';
+<<<<<<< HEAD
+const CACHE_VERSION = 'itda-v3-2026-06-07-kakao-scope-nickname-v1';
+=======
+const CACHE_VERSION = 'itda-v3-2026-06-07-kakao-scope-nickname-v1';
+>>>>>>> 1e94ece (카카오 KOE205 해결: 동의범위를 profile_nickname으로 한정(이메일 미요청))
 const APP_SHELL = [
   './',
   './index.html',
