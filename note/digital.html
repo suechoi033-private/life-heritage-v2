@@ -111,6 +111,48 @@
     .cat-textarea:focus { outline: none; border-color: var(--primary); }
     .cat-textarea::placeholder { color: var(--ink-faint); }
 
+    /* 마음 한 줄 — 정보 옆에 마음을 얹는다 (정보를 적으면 따라 떠오름) */
+    .cat-heart {
+      margin-top: 12px;
+      padding: 15px 16px 14px;
+      background: var(--primary-soft);
+      border-radius: 12px;
+    }
+    .cat-heart[hidden] { display: none; }
+    .cat-heart-prompt {
+      font-family: var(--font-serif);
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--primary);
+      line-height: 1.6;
+      letter-spacing: -0.01em;
+    }
+    .cat-heart-eg {
+      font-size: 12px;
+      color: var(--ink-muted);
+      line-height: 1.55;
+      margin-top: 3px;
+      margin-bottom: 10px;
+    }
+    .cat-heart-input {
+      width: 100%;
+      min-height: 58px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 15px;
+      line-height: 1.75;
+      resize: vertical;
+      box-sizing: border-box;
+      background: var(--bg);
+      color: var(--ink);
+      transition: border-color 0.15s ease;
+    }
+    .cat-heart-input:focus { outline: none; border-color: var(--primary); }
+    .cat-heart-input::placeholder { color: var(--ink-faint); }
+    .cat-heart-skip { margin-top: 7px; font-size: 11.5px; color: var(--ink-muted); }
+
     /* 좌우 레이아웃 */
     .body-grid { display: grid; gap: 28px; grid-template-columns: 1fr; }
     @media (min-width: 920px) { .body-grid { grid-template-columns: 1fr 300px; gap: 36px; } }
@@ -166,7 +208,7 @@
     <h1>어디에 무엇이 있는지,<br>한곳에 적어 둡니다</h1>
     <p class="lead">
       통장·보험·계정이 어디 있는지, 남는 사람이 두 달을 헤매지 않도록.<br>
-      한 번에 다 적지 않아도 괜찮아요. 떠오르는 것부터 한 줄씩 채우면 됩니다.
+      적다 보면, 그 옆에 마음을 한 줄 얹고 싶어질 수도 있어요. 그때 적으면 됩니다.
     </p>
   </div>
 
@@ -221,21 +263,35 @@
 
   // ── 8개 카테고리 정의 ────────────────────────────
   const CATEGORIES = [
-    { key: 'bank',     icon: '🏦', title: '은행·통장',       hint: '거래하는 은행, 주거래 통장이 어디에 있는지.' },
-    { key: 'insurance',icon: '🛡️', title: '보험',           hint: '가입한 보험과 연락처. 사망·실손 등.' },
+    { key: 'bank',     icon: '🏦', title: '은행·통장',       hint: '거래하는 은행, 주거래 통장이 어디에 있는지.',
+      heartPrompt: '이 계좌는 무엇을 위해 만든 거였나요? 목적이 있었나요?',
+      heartEg: '예: 아이 학비, 아내와의 한 달 살기, 손주 여행' },
+    { key: 'insurance',icon: '🛡️', title: '보험',           hint: '가입한 보험과 연락처. 사망·실손 등.',
+      heartPrompt: '이 보험은 누구를 생각하며 드신 건가요?',
+      heartEg: '예: 남은 가족이 덜 힘들도록, 막내가 자리 잡을 때까지' },
     { key: 'phone',    icon: '📱', title: '휴대폰·잠금',      hint: '휴대폰 잠금번호, 잠금을 푸는 방법.' },
     { key: 'accounts', icon: '🔑', title: '온라인 계정',      hint: '이메일·포털·SNS 아이디와 접근 방법.' },
     { key: 'subscription', icon: '🔁', title: '정기결제·구독', hint: '자동이체·구독 서비스 — 정리하거나 멈춰야 할 것.' },
-    { key: 'property', icon: '🏠', title: '부동산·자동차',    hint: '소유한 집·땅·차. 관련 서류가 어디 있는지.' },
+    { key: 'property', icon: '🏠', title: '부동산·자동차',    hint: '소유한 집·땅·차. 관련 서류가 어디 있는지.',
+      heartPrompt: '이 집(땅·차)에는 어떤 시간이 담겨 있나요?',
+      heartEg: '예: 아이들을 키운 집, 평생 모아 마련한 것' },
     { key: 'debt',     icon: '💳', title: '대출·빚',          hint: '갚아야 할 것이 있다면 — 가족이 모른 채 떠안지 않도록.' },
     { key: 'message',  icon: '💬', title: '남기는 한마디',     hint: '' },
   ];
 
   // ── 저장 (V1: localStorage. V2: note_entries 테이블) ──
+  // 데이터 모델: note[key] = { info, heart }. (구버전 문자열은 자동 흡수)
   const STORAGE_KEY = `itda:digital_note:${user.id}`;
+  function normalizeEntry(v) {
+    if (v && typeof v === 'object') return { info: v.info || '', heart: v.heart || '' };
+    return { info: typeof v === 'string' ? v : '', heart: '' };
+  }
   function loadNote() {
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
-    catch { return {}; }
+    let raw = {};
+    try { raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch { raw = {}; }
+    const out = {};
+    CATEGORIES.forEach((c) => { out[c.key] = normalizeEntry(raw[c.key]); });
+    return out;
   }
   function saveNote(obj) {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(obj)); } catch (_) {}
@@ -244,25 +300,37 @@
   const note = loadNote();
 
   const listEl = document.getElementById('cat-list');
-  listEl.innerHTML = CATEGORIES.map((c) => `
-    <div class="cat-card ${(note[c.key] || '').trim() ? 'filled' : ''}" data-key="${c.key}">
+  listEl.innerHTML = CATEGORIES.map((c) => {
+    const entry = note[c.key];
+    const hasInfo = (entry.info || '').trim().length > 0;
+    const hasHeart = (entry.heart || '').trim().length > 0;
+    const heartBlock = c.heartPrompt ? `
+      <div class="cat-heart" data-heart-block="${c.key}"${(hasInfo || hasHeart) ? '' : ' hidden'}>
+        <div class="cat-heart-prompt">${c.heartPrompt}</div>
+        <div class="cat-heart-eg">${c.heartEg || ''}</div>
+        <textarea class="cat-heart-input" data-heart="${c.key}"
+          placeholder="마음을 한 줄. 적고 싶을 때만 — 건너뛰어도 괜찮아요.">${escapeHtml(entry.heart)}</textarea>
+      </div>` : '';
+    return `
+    <div class="cat-card ${hasInfo ? 'filled' : ''}" data-key="${c.key}">
       <div class="cat-head">
         <span class="cat-icon" aria-hidden="true">${c.icon}</span>
         <div class="cat-text">
           <div class="cat-title">${c.title}</div>
           ${c.hint ? `<div class="cat-hint">${c.hint}</div>` : ''}
         </div>
-        <span class="cat-state ${(note[c.key] || '').trim() ? 'done' : ''}" data-state="${c.key}">
-          ${(note[c.key] || '').trim() ? '✓ 작성됨' : '비어 있음'}
+        <span class="cat-state ${hasInfo ? 'done' : ''}" data-state="${c.key}">
+          ${hasInfo ? '✓ 작성됨' : '비어 있음'}
         </span>
       </div>
       <textarea class="cat-textarea" data-input="${c.key}"
-        placeholder="떠오르는 한 줄.">${escapeHtml(note[c.key] || '')}</textarea>
-    </div>
-  `).join('');
+        placeholder="떠오르는 한 줄.">${escapeHtml(entry.info)}</textarea>
+      ${heartBlock}
+    </div>`;
+  }).join('');
 
   function countFilled() {
-    return CATEGORIES.reduce((n, c) => n + ((note[c.key] || '').trim() ? 1 : 0), 0);
+    return CATEGORIES.reduce((n, c) => n + ((note[c.key].info || '').trim() ? 1 : 0), 0);
   }
   function renderProgress() {
     const n = countFilled();
@@ -274,25 +342,37 @@
   // 입력 → 디바운스 자동 저장 + 상태 갱신
   let saveTimer = null;
   listEl.addEventListener('input', (e) => {
-    const key = e.target?.dataset?.input;
+    const infoKey = e.target?.dataset?.input;
+    const heartKey = e.target?.dataset?.heart;
+    const key = infoKey || heartKey;
     if (!key) return;
     const val = e.target.value;
-    note[key] = val;
 
-    const card = e.target.closest('.cat-card');
-    const state = card?.querySelector(`[data-state="${key}"]`);
-    const has = val.trim().length > 0;
-    if (card) card.classList.toggle('filled', has);
-    if (state) {
-      state.textContent = has ? '저장 중…' : '비어 있음';
-      state.classList.toggle('done', has);
+    if (infoKey) {
+      note[key].info = val;
+      const card = e.target.closest('.cat-card');
+      const state = card?.querySelector(`[data-state="${key}"]`);
+      const has = val.trim().length > 0;
+      if (card) card.classList.toggle('filled', has);
+      if (state) {
+        state.textContent = has ? '저장 중…' : '비어 있음';
+        state.classList.toggle('done', has);
+      }
+      // 정보를 적으면, 그 옆에 마음 한 줄이 따라 떠오른다 (에세이의 트리거)
+      const heartBlock = card?.querySelector(`[data-heart-block="${key}"]`);
+      if (heartBlock && has) heartBlock.hidden = false;
+      renderProgress();
+    } else {
+      note[key].heart = val;
     }
-    renderProgress();
 
     clearTimeout(saveTimer);
     saveTimer = setTimeout(() => {
       saveNote(note);
-      if (state) state.textContent = has ? '✓ 저장됨' : '비어 있음';
+      if (infoKey) {
+        const state = listEl.querySelector(`[data-state="${key}"]`);
+        if (state) state.textContent = (note[key].info || '').trim() ? '✓ 저장됨' : '비어 있음';
+      }
       const note2 = document.getElementById('save-note');
       if (note2) note2.textContent = `자동 저장됨 · ${new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}`;
     }, 500);
