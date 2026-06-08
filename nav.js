@@ -1,4 +1,4 @@
-// 잇다 v3 — 5탭 하단 네비 (홈 · 라이프 · 케어링 · 커뮤니티 · 마이)
+// 잇다 v3 — 5탭 하단 네비 (홈 · 라이프 · 케어링 · 콘텐츠 · 마이)
 // 사용법: import { renderNav } from './nav.js';
 //          renderNav({ active: 'seed' });
 // active: home | seed | nest | forest | root
@@ -14,7 +14,7 @@ const TABS = [
   { key: 'home',   label: '홈',       icon: '🏠', href: ROOT + 'index.html'  },
   { key: 'seed',   label: '라이프',   icon: '🌱', href: ROOT + 'seed.html'   },
   { key: 'nest',   label: '케어링',   icon: '🪺', href: ROOT + 'nest.html'   },
-  { key: 'forest', label: '커뮤니티', icon: '🌳', href: ROOT + 'info.html' },
+  { key: 'forest', label: '콘텐츠',   icon: '🌳', href: ROOT + 'info.html' },
   { key: 'root',   label: '마이',     icon: '🌿', href: ROOT + 'root.html'   },
 ];
 
