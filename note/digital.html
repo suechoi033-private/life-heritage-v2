@@ -228,7 +228,7 @@
     { key: 'subscription', icon: '🔁', title: '정기결제·구독', hint: '자동이체·구독 서비스 — 정리하거나 멈춰야 할 것.' },
     { key: 'property', icon: '🏠', title: '부동산·자동차',    hint: '소유한 집·땅·차. 관련 서류가 어디 있는지.' },
     { key: 'debt',     icon: '💳', title: '대출·빚',          hint: '갚아야 할 것이 있다면 — 가족이 모른 채 떠안지 않도록.' },
-    { key: 'message',  icon: '💬', title: '남기는 한마디',     hint: '"이 돈은 이런 마음이었다" — 물어볼 사람이 없을 때 가장 그리운 한 줄.' },
+    { key: 'message',  icon: '💬', title: '남기는 한마디',     hint: '' },
   ];
 
   // ── 저장 (V1: localStorage. V2: note_entries 테이블) ──
@@ -250,14 +250,14 @@
         <span class="cat-icon" aria-hidden="true">${c.icon}</span>
         <div class="cat-text">
           <div class="cat-title">${c.title}</div>
-          <div class="cat-hint">${c.hint}</div>
+          ${c.hint ? `<div class="cat-hint">${c.hint}</div>` : ''}
         </div>
         <span class="cat-state ${(note[c.key] || '').trim() ? 'done' : ''}" data-state="${c.key}">
           ${(note[c.key] || '').trim() ? '✓ 작성됨' : '비어 있음'}
         </span>
       </div>
       <textarea class="cat-textarea" data-input="${c.key}"
-        placeholder="떠오르는 대로 한 줄씩. 예: ○○은행 주거래, 통장은 안방 서랍.">${escapeHtml(note[c.key] || '')}</textarea>
+        placeholder="떠오르는 한 줄.">${escapeHtml(note[c.key] || '')}</textarea>
     </div>
   `).join('');
 
