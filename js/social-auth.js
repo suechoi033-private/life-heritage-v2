@@ -17,11 +17,11 @@ export async function signInWithKakao(opts = {}) {
   const { redirectAfter = './index.html', inviteCode } = opts;
   // 초대 코드는 리다이렉트 왕복 동안 보존(care.html이 localStorage에서 읽어 자동 수락)
   if (inviteCode) localStorage.setItem('itda:pending_invite', inviteCode);
-  // 동의항목은 "닉네임"만 요청. (Supabase 기본은 account_email까지 요청하는데,
-  //  비즈앱 전이라 이메일 동의를 못 켜서 KOE205가 난다 → profile_nickname으로 한정)
+  // 동의항목에서 "필수 동의"로 켠 항목은 요청 scope에 반드시 포함돼야 함(빠지면 KOE205).
+  //  → 이메일(account_email) + 닉네임(profile_nickname) 둘 다 요청. profile_image는 미사용이라 제외.
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'kakao',
-    options: { redirectTo: oauthRedirectTo(redirectAfter), scopes: 'profile_nickname' },
+    options: { redirectTo: oauthRedirectTo(redirectAfter), scopes: 'account_email profile_nickname' },
   });
   if (error) throw error;
 }
