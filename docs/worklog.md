@@ -42,6 +42,13 @@
 - `sw.js CACHE_VERSION → itda-v3-2026-06-08-vault-envelope-measure-v1`. 모듈 JS 문법 검증 통과(digital·envelope·self).
 - ⚠️ DB 추가는 one-way door지만 **추가 전용(파괴 없음)** 이며 창업자 승인하에 진행.
 
+**정보/콘텐츠/커뮤니티 허브 재정비 (창업자 제보)**
+- **기본 랜딩 = 정보:** 하단 '커뮤니티'(🌳) 탭이 forest.html(콘텐츠 기본) 대신 **info.html(정보)** 로 진입하도록 `nav.js` 변경. 정보가 허브의 front door. (⚠️ 탭 라벨은 '커뮤니티' 유지 — 라벨/목적지 불일치 가능, 창업자에 리네이밍 옵션 제시.)
+- **콘텐츠 = 잇다 공식만:** forest.html 콘텐츠 쿼리에 `author_type='official'` 필터(유저 글 3편은 숨김). 큐레이션 히어로도 official 조건 추가. → 콘텐츠(공식)/커뮤니티(유저) 분리 명확.
+- **유저 글은 커뮤니티로 일원화:** ＋ FAB가 콘텐츠 탭에서도 `post-write.html`(커뮤니티)로. 콘텐츠 탭엔 유저 작성 진입점 없음(공식 전용). (fmt 시트 코드는 미사용으로 잔존 — 되돌리기 쉬움.)
+- **커뮤니티 글 박스 → 게시판 리스트:** `renderPostList`를 큰 `.content-card` → 콘텐츠와 동일한 `.board`/`.board-row`(행 리스트)로. 헤더 "커뮤니티 · 함께 나눈 이야기"로 콘텐츠 보드와 구분.
+- `sw.js CACHE_VERSION → itda-v3-2026-06-08-info-default-content-community-split-v1`. forest·nav 문법·라우팅 타깃 검증 통과.
+
 **QA + 네비 버그 수정 (창업자 제보: 하단 '마이' 클릭 시 오류, 앞으로 이동 없음)**
 - 🐞 **근본 버그:** `nav.js` 하단탭·로고·푸터 링크가 상대경로(`./root.html` 등)라 `note/`·`info/` 서브폴더 페이지에서 `note/root.html`로 404. **모든 서브폴더 페이지 공통**(기존부터). → `nav.js`가 `import.meta.url`로 사이트 루트를 계산해 **절대경로**로 링크 생성하도록 수정(어느 깊이에서도 정확). note/·info/ 전 페이지 일괄 해결.
 - **앞으로 이동:** `note/digital.html`·`note/envelope.html` 하단에 "나의 삶으로 돌아가기" CTA 추가(브레드크럼 외 명시적 동선). digital.html 낡은 안내문("가족 잠금 공유 곧 열려요") → 봉투 출시 반영해 정리.

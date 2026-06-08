@@ -14,7 +14,7 @@ const TABS = [
   { key: 'home',   label: '홈',       icon: '🏠', href: ROOT + 'index.html'  },
   { key: 'seed',   label: '라이프',   icon: '🌱', href: ROOT + 'seed.html'   },
   { key: 'nest',   label: '케어링',   icon: '🪺', href: ROOT + 'nest.html'   },
-  { key: 'forest', label: '커뮤니티', icon: '🌳', href: ROOT + 'forest.html' },
+  { key: 'forest', label: '커뮤니티', icon: '🌳', href: ROOT + 'info.html' },
   { key: 'root',   label: '마이',     icon: '🌿', href: ROOT + 'root.html'   },
 ];
 

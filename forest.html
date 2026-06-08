@@ -386,6 +386,7 @@
         .select('id, title, body')
         .eq('hero_day', heroDay)
         .eq('is_published', true)
+        .eq('author_type', 'official')
         .maybeSingle();
       if (error || !data) return;
       const snippet = (data.body || '')
@@ -465,13 +466,9 @@
     loadFeed();
   }
 
-  // FAB 분기
+  // FAB — 유저 글은 모두 커뮤니티로(콘텐츠 탭은 잇다 공식 전용이라 작성 진입점 없음).
   document.getElementById('fab-forest')?.addEventListener('click', () => {
-    if (activeSeg === 'community') {
-      window.location.href = './post-write.html';
-    } else {
-      openFmtSheet();
-    }
+    window.location.href = './post-write.html';
   });
 
   // 형식 선택 시트
@@ -507,6 +504,7 @@
         let q = supabase.from('contents')
           .select('id, category, title, body, format, author_type, creator_id, view_count, like_count, created_at, profiles:creator_id(name, avatar_url)')
           .eq('is_published', true)
+          .eq('author_type', 'official')   // 콘텐츠 탭 = 잇다 공식 콘텐츠만. 유저 글은 커뮤니티로.
           .order('created_at', { ascending: false });
         if (activeCat !== 'all') q = q.eq('category', activeCat);
         else q = q.neq('category', 'memorial');
@@ -680,15 +678,19 @@
         </div>`;
       return;
     }
-    body.innerHTML = items.map(p => `
-      <a class="content-card" href="./post-detail.html?id=${p.id}">
-        <div class="content-card-title">${escapeHtml(p.title)}</div>
-        <div class="content-card-meta">
-          <span>💬 ${p.comment_count ?? 0}</span>
-          <span>${formatDate(p.created_at)}</span>
+    body.innerHTML = `
+      <div class="board">
+        <div class="board-head">
+          <span class="board-head-title">커뮤니티 · 함께 나눈 이야기</span>
+          <span class="board-head-count">${items.length}편</span>
         </div>
-      </a>
-    `).join('');
+        ${items.map(p => `
+          <a class="board-row" href="./post-detail.html?id=${p.id}">
+            <span class="board-title">${escapeHtml(p.title)}</span>
+            <span class="board-date">💬 ${p.comment_count ?? 0} · ${formatDate(p.created_at)}</span>
+          </a>
+        `).join('')}
+      </div>`;
   }
 
   function labelFor(cat) {
