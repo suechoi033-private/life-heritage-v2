@@ -18,8 +18,9 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Service02 엔드포인트 — 오퍼레이션명은 API 문서 기준
 const SEARCH_URL =
-  'http://apis.data.go.kr/B550928/searchLtcInsttService01/getBillGreentInsttSearchList01';
+  'https://apis.data.go.kr/B550928/searchLtcInsttService02/getLtcInsttSearchList02';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -54,11 +55,18 @@ serve(async (req) => {
   if (sigungu) params.set('sigungu', sigungu);
 
   let raw: unknown;
+  let httpStatus = 200;
   try {
     const res = await fetch(`${SEARCH_URL}?${params}`, {
       signal: AbortSignal.timeout(12_000),
     });
-    raw = await res.json();
+    httpStatus = res.status;
+    const text = await res.text();
+    try { raw = JSON.parse(text); } catch (_) { raw = text; }
+    // HTTP 에러면 raw 응답 그대로 반환해 디버깅
+    if (!res.ok) {
+      return json({ error: 'UPSTREAM_ERROR', status: httpStatus, raw }, 502);
+    }
   } catch (err) {
     return json({ error: 'UPSTREAM_TIMEOUT', message: String(err) }, 502);
   }
