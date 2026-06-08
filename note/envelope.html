@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>가족에게 건네는 봉투 · 잇다</title>
+  <link rel="stylesheet" href="../auth-styles.css">
+  <link rel="manifest" href="../manifest.json">
+  <meta name="theme-color" content="#2F6B4F">
+  <style>
+    .shell { max-width: 680px; margin: 0 auto; padding: 32px 20px 90px; flex: 1; width: 100%; }
+    @media (min-width: 640px) { .shell { padding: 48px 32px 120px; } }
+
+    .breadcrumb { font-size: 13px; color: var(--ink-muted); margin-bottom: 12px; }
+    .breadcrumb a { color: var(--ink-muted); text-decoration: none; }
+    .breadcrumb a:hover { color: var(--primary); }
+
+    .header { margin-bottom: 20px; }
+    .kicker {
+      display: inline-block; font-size: 12px; letter-spacing: 0.1em; color: var(--primary);
+      font-weight: 700; text-transform: uppercase; margin-bottom: 8px;
+    }
+    h1 {
+      font-family: var(--font-serif); font-size: 27px; font-weight: 800;
+      letter-spacing: -0.01em; line-height: 1.4; margin-bottom: 12px;
+    }
+    @media (min-width: 640px) { h1 { font-size: 31px; } }
+    .lead { color: var(--ink-soft); font-size: 15px; line-height: 1.75; }
+
+    /* 범위 고지 — 과한 약속 방지 */
+    .scope-note {
+      margin: 18px 0 26px; padding: 15px 18px; background: var(--bg-alt);
+      border: 1px dashed var(--line); border-radius: 12px;
+      font-size: 13px; color: var(--ink-muted); line-height: 1.7;
+    }
+    .scope-note strong { color: var(--ink-soft); }
+
+    /* 입력 폼 */
+    .form-card {
+      background: var(--bg); border: 1px solid var(--line); border-radius: 16px;
+      padding: 20px; margin-bottom: 26px;
+    }
+    .form-card h2 { font-size: 16px; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 16px; }
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: 13px; font-weight: 700; color: var(--ink-soft); margin-bottom: 6px; }
+    .field .opt { color: var(--ink-faint); font-weight: 600; }
+    .field input, .field select, .field textarea {
+      width: 100%; padding: 13px 15px; border: 1px solid var(--line); border-radius: 11px;
+      font-family: inherit; font-size: 15.5px; line-height: 1.6; box-sizing: border-box;
+      background: var(--bg); color: var(--ink); transition: border-color 0.15s ease;
+    }
+    .field textarea { min-height: 64px; resize: vertical; }
+    .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--primary); }
+    .field input::placeholder, .field textarea::placeholder { color: var(--ink-faint); }
+    .btn-add {
+      width: 100%; margin-top: 6px; padding: 14px; border: none; border-radius: 12px;
+      background: var(--primary); color: #fff; font-family: inherit; font-size: 15.5px;
+      font-weight: 700; cursor: pointer; transition: background 0.15s ease;
+    }
+    .btn-add:hover { background: var(--primary-hover); }
+    .btn-add:disabled { opacity: 0.5; cursor: default; }
+
+    /* 수신자 목록 */
+    .recip-section h2 { font-size: 15px; font-weight: 800; margin-bottom: 12px; }
+    .recip-list { display: flex; flex-direction: column; gap: 10px; }
+    .recip-card {
+      background: var(--bg-alt); border: 1px solid var(--line); border-radius: 14px;
+      padding: 16px 18px; display: flex; align-items: flex-start; gap: 12px;
+    }
+    .recip-icon {
+      width: 42px; height: 42px; border-radius: 12px; background: var(--primary-soft);
+      display: flex; align-items: center; justify-content: center; font-size: 19px; flex-shrink: 0;
+    }
+    .recip-body { flex: 1; min-width: 0; }
+    .recip-name { font-size: 15.5px; font-weight: 800; letter-spacing: -0.01em; }
+    .recip-rel { font-size: 12.5px; color: var(--primary); font-weight: 700; margin-top: 1px; }
+    .recip-meta { font-size: 13px; color: var(--ink-muted); line-height: 1.6; margin-top: 6px; word-break: break-word; }
+    .recip-del {
+      flex-shrink: 0; background: none; border: none; color: var(--ink-faint);
+      font-size: 13px; font-weight: 700; cursor: pointer; padding: 4px 6px;
+    }
+    .recip-del:hover { color: var(--warm); }
+    .recip-empty {
+      text-align: center; padding: 30px 16px; color: var(--ink-muted);
+      font-size: 14px; line-height: 1.7;
+    }
+    .recip-empty .em-icon { font-size: 30px; display: block; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+
+<nav class="top-bar">
+  <div class="top-bar-inner">
+    <a href="/" class="logo"><span class="logo-mark">●</span> 잇다</a>
+    <div id="top-bar-links" style="display: flex; gap: 16px; font-size: 14.5px;">
+      <a href="../login.html" style="color: var(--ink-soft); text-decoration: none;">로그인</a>
+    </div>
+  </div>
+</nav>
+
+<main class="shell">
+  <div class="breadcrumb">
+    <a href="../self.html">나의 삶</a> · 가족에게 건네는 봉투
+  </div>
+
+  <div class="header">
+    <span class="kicker">잇다 · 봉투</span>
+    <h1>이 기록을<br>누구에게 건네고 싶으세요?</h1>
+    <p class="lead">
+      적어 둔 것이 의미를 가지려면, 언젠가 받을 사람이 있어야 합니다.<br>
+      배우자·자녀·형제 — 가장 먼저 떠오르는 한 사람부터 적어 보세요.
+    </p>
+  </div>
+
+  <div class="scope-note">
+    <strong>지금은 '받을 사람'을 정해 두는 단계예요.</strong> 적어 두셔도 지금 바로 전달되거나
+    열람 권한이 넘어가지는 않습니다. 정해둔 때에 안전하게 건네는 방법은 차근차근 준비하고 있어요.
+  </div>
+
+  <div class="form-card">
+    <h2>받을 사람 더하기</h2>
+    <div class="field">
+      <label for="r-name">이름</label>
+      <input id="r-name" type="text" placeholder="예: 김민수 (또는 큰아들, 막내딸)" maxlength="40" autocomplete="off">
+    </div>
+    <div class="field">
+      <label for="r-rel">나와의 관계</label>
+      <select id="r-rel">
+        <option value="">선택 안 함</option>
+        <option value="배우자">배우자</option>
+        <option value="자녀">자녀</option>
+        <option value="형제자매">형제자매</option>
+        <option value="부모">부모</option>
+        <option value="그 외 가족">그 외 가족</option>
+        <option value="가까운 사람">가까운 사람</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="r-contact">연락처 <span class="opt">· 선택</span></label>
+      <input id="r-contact" type="text" placeholder="전화번호나 이메일 (지금은 기록만 해 둬요)" maxlength="120" autocomplete="off">
+    </div>
+    <div class="field">
+      <label for="r-note">왜 이 사람인가요 <span class="opt">· 선택</span></label>
+      <textarea id="r-note" placeholder="이 사람에게 건네고 싶은 이유를 한 줄." maxlength="300"></textarea>
+    </div>
+    <button class="btn-add" id="add-btn">받을 사람으로 정해 두기</button>
+  </div>
+
+  <div class="recip-section">
+    <h2>정해 둔 사람</h2>
+    <div class="recip-list" id="recip-list"></div>
+  </div>
+</main>
+
+<footer class="auth-footer">
+  © 2026 라이프헤리티지 · 잇다
+</footer>
+
+<script type="module">
+  import { requireAuth, supabase } from '../auth.js';
+
+  const session = await requireAuth('../login.html');
+  if (!session) { /* redirected */ }
+  const user = session.user;
+
+  const { renderTopBar } = await import('../nav.js');
+  await renderTopBar({ active: 'note' });
+
+  const listEl = document.getElementById('recip-list');
+  const nameEl = document.getElementById('r-name');
+  const relEl = document.getElementById('r-rel');
+  const contactEl = document.getElementById('r-contact');
+  const noteEl = document.getElementById('r-note');
+  const addBtn = document.getElementById('add-btn');
+
+  function escapeHtml(s) {
+    return (s || '').replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+
+  function render(rows) {
+    if (!rows.length) {
+      listEl.innerHTML = `
+        <div class="recip-empty">
+          <span class="em-icon">✉️</span>
+          아직 정해 둔 사람이 없어요.<br>위에서 가장 먼저 떠오르는 한 사람을 적어 보세요.
+        </div>`;
+      return;
+    }
+    listEl.innerHTML = rows.map((r) => {
+      const metaBits = [];
+      if (r.contact) metaBits.push(escapeHtml(r.contact));
+      if (r.note) metaBits.push(escapeHtml(r.note));
+      return `
+        <div class="recip-card">
+          <div class="recip-icon">🤍</div>
+          <div class="recip-body">
+            <div class="recip-name">${escapeHtml(r.name)}</div>
+            ${r.relation ? `<div class="recip-rel">${escapeHtml(r.relation)}</div>` : ''}
+            ${metaBits.length ? `<div class="recip-meta">${metaBits.join(' · ')}</div>` : ''}
+          </div>
+          <button class="recip-del" data-del="${r.id}">삭제</button>
+        </div>`;
+    }).join('');
+  }
+
+  async function load() {
+    const { data, error } = await supabase
+      .from('vault_recipients')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: true });
+    if (error) { render([]); return; }
+    render(data || []);
+  }
+
+  addBtn.addEventListener('click', async () => {
+    const name = nameEl.value.trim();
+    if (!name) { nameEl.focus(); return; }
+    addBtn.disabled = true;
+    addBtn.textContent = '저장 중…';
+    const { error } = await supabase.from('vault_recipients').insert({
+      user_id: user.id,
+      name,
+      relation: relEl.value || null,
+      contact: contactEl.value.trim() || null,
+      note: noteEl.value.trim() || null,
+    });
+    addBtn.disabled = false;
+    addBtn.textContent = '받을 사람으로 정해 두기';
+    if (error) { alert('잠시 후 다시 시도해 주세요.'); return; }
+    nameEl.value = ''; relEl.value = ''; contactEl.value = ''; noteEl.value = '';
+    nameEl.focus();
+    await load();
+  });
+
+  listEl.addEventListener('click', async (e) => {
+    const id = e.target?.dataset?.del;
+    if (!id) return;
+    if (!confirm('이 사람을 목록에서 지울까요?')) return;
+    const { error } = await supabase.from('vault_recipients').delete().eq('id', id).eq('user_id', user.id);
+    if (error) { alert('잠시 후 다시 시도해 주세요.'); return; }
+    await load();
+  });
+
+  await load();
+</script>
+
+<script src="../scroll-top.js" defer></script>
+</body>
+</html>

@@ -254,10 +254,32 @@ E2EE와 "사후 가족이 봐야 함"은 충돌한다(주인만 키를 안다). 
 
 ---
 
-## 8. 결정 로그 (2026-06-08, 메인 세션)
+## 8. 결정 로그 & 구현 현황 (2026-06-08, 메인 세션)
 
 - ✅ **정체성 = "가족에게 건네는 봉투(전달·수신자 지정)" 확정** (창업자).
-- ⏳ 신뢰 모델(위치·힌트 vs 실값 E2EE), MVP 착수 여부 — 논의 중(창업자 dismiss, 결정 보류).
-- 📌 마음 질문 카피 = 추상('어떤 마음') 금지, **구체적 목적**으로(창업자). 최종 마감은 카피라이터.
-- 📌 발견: 에세이의 세 요소가 이미 self.html 허브 카드로 존재 → 새 제품 아님, 척추.
-- 🐞 배포 부채: digital.html·directive-checklist.html main 미배포(404). 별도 처리.
+- ✅ **②(마음 한 줄 MVP) 배포** — `note/digital.html` 은행·보험·부동산에 정보→마음 인라인. localStorage `{info,heart}`.
+- ✅ **①(허브 3단계 동선) 배포** — `self.html` 모은다→얹는다→건넨다.
+- ✅ **(a) 측정 배포** — 첫 입력 시 `app_events`(event_type `vault_fill`, meta `{category,field}`) 1건. 내용 미전송.
+- ✅ **(b) 봉투 = 수신자 지정 배포** — `note/envelope.html` + `vault_recipients` 테이블(RLS own). **사후 자동공개·잠금해제·암호화 escrow는 미구현(법률·보안 감수 영역).**
+- 📌 마음 질문 카피 = 추상 금지, **구체적 목적**(창업자). 라이브에서 유저 관점 검토 후 카피라이터 마감.
+- ⏳ 신뢰 모델(위치·힌트 vs 실값 E2EE) — 보류. 서버 동기화/E2EE는 다음 단계.
+
+### (a) 전환율 측정 쿼리 (운영자 — service_role/SQL Editor)
+```sql
+-- "정보를 적은 사람 중 몇 명이 마음도 적었나" (에세이 트리거 가설 검증)
+with u as (
+  select user_id,
+         bool_or((meta->>'field') = 'info')  as filled_info,
+         bool_or((meta->>'field') = 'heart') as filled_heart
+  from app_events
+  where event_type = 'vault_fill'
+  group by user_id
+)
+select
+  count(*) filter (where filled_info)                  as users_info,
+  count(*) filter (where filled_info and filled_heart) as users_info_and_heart,
+  round(count(*) filter (where filled_info and filled_heart)::numeric
+        / nullif(count(*) filter (where filled_info), 0), 3) as heart_conversion
+from u;
+-- 카테고리별로 보려면 meta->>'category' 로 group by.
+```

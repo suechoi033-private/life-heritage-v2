@@ -35,6 +35,13 @@
 - **머지 충돌 해소:** 그새 다른 세션이 main에 `digital.html` 배포+카피 정리(62c3395, placeholder 단순화·'남기는 한마디' 힌트 제거). rebase로 그 결정 보존(placeholder "떠오르는 한 줄.", message hint '') + 마음 기능 얹음. → 배포 부채(404) 해소됨.
 - `sw.js CACHE_VERSION → itda-v3-2026-06-08-vault-heart-hub-flow-v1`. main 배포(ff). 모듈 JS 문법 검증 통과.
 
+**(a) 측정 + (b) 봉투(수신자 지정) 구현·배포 (창업자 "a,b 모두 해줘" 승인)**
+- **(a) 전환율 측정:** 새 테이블 없이 기존 `app_events` 재사용. `note/digital.html`에서 정보/마음 칸 **첫 입력 시 1건만** `app_events`(event_type `vault_fill`, meta `{category, field}`) 기록. **내용은 미전송**(카테고리·필드만). 중복 방지 localStorage 플래그. 집계 쿼리는 설계서 §8(트리거 전환율 = info_and_heart ÷ info).
+- **(b) 봉투 = 수신자 지정:** `vault_recipients` 테이블 신규(`20260608_vault_recipients.sql`, apply_migration로 원격 반영, RLS own 4정책 확인). `note/envelope.html` 신규 — 이름·관계·연락처(선택)·한마디(선택)로 "받을 사람" 지정/삭제. **사후 자동공개·dead-man switch·암호화 escrow는 미구현**(법률·보안 감수 영역, 과한 약속 방지 위해 범위 고지 배너 명시).
+- **`self.html`:** '가족 잠금 공유' stub → **'가족에게 건네는 봉투'** 실제 페이지 연결. 수신자 수 조회해 카드·3단계 봉투 카드에 "받을 사람 N명" 표시. comingSoon 해제.
+- `sw.js CACHE_VERSION → itda-v3-2026-06-08-vault-envelope-measure-v1`. 모듈 JS 문법 검증 통과(digital·envelope·self).
+- ⚠️ DB 추가는 one-way door지만 **추가 전용(파괴 없음)** 이며 창업자 승인하에 진행.
+
 ---
 
 ## 2026-06-07

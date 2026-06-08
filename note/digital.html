@@ -297,6 +297,26 @@
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(obj)); } catch (_) {}
   }
 
+  // (a) 측정 — 첫 입력 시 app_events에 1건만 기록(중앙 집계용).
+  // 내용은 보내지 않는다. 카테고리·필드(info/heart)만 → "정보 적은 사람이 마음도 적나" 전환율 측정.
+  const LOG_KEY = `itda:digital_logged:${user.id}`;
+  let logged = new Set();
+  try { logged = new Set(JSON.parse(localStorage.getItem(LOG_KEY) || '[]')); } catch (_) {}
+  function logFirstFill(category, field) {
+    const tag = `${category}:${field}`;
+    if (logged.has(tag)) return;
+    logged.add(tag);
+    try { localStorage.setItem(LOG_KEY, JSON.stringify([...logged])); } catch (_) {}
+    try {
+      supabase.from('app_events').insert({
+        user_id: user.id,
+        event_type: 'vault_fill',
+        path: 'note/digital.html',
+        meta: { category, field },
+      }).then(() => {}, () => {});
+    } catch (_) {}
+  }
+
   const note = loadNote();
 
   const listEl = document.getElementById('cat-list');
@@ -372,6 +392,9 @@
       if (infoKey) {
         const state = listEl.querySelector(`[data-state="${key}"]`);
         if (state) state.textContent = (note[key].info || '').trim() ? '✓ 저장됨' : '비어 있음';
+        if ((note[key].info || '').trim()) logFirstFill(key, 'info');
+      } else if (heartKey && (note[key].heart || '').trim()) {
+        logFirstFill(key, 'heart');
       }
       const note2 = document.getElementById('save-note');
       if (note2) note2.textContent = `자동 저장됨 · ${new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}`;

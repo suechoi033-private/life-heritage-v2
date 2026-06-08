@@ -349,12 +349,11 @@ const CARDS = [
   },
   {
     key: 'lock',
-    icon: '👨‍👩‍👧',
-    title: '가족 잠금 공유',
-    href: '#',
-    comingSoon: true,
-    getStatus: (data) => data?.lock_shared ? '공유 중' : '곧 열려요',
-    isDone: (data) => !!data?.lock_shared,
+    icon: '✉️',
+    title: '가족에게 건네는 봉투',
+    href: './note/envelope.html',
+    getStatus: (data) => (data?.lock_count || 0) > 0 ? `받을 사람 ${data.lock_count}명 정해 둠` : '아직 정하지 않았어요',
+    isDone: (data) => (data?.lock_count || 0) > 0,
     progress: null,
     isLock: true,
   },
@@ -379,6 +378,15 @@ try {
     selfData.directive_checklist_done = dc.done;
     selfData.directive_checklist_total = dc.total;
   }
+} catch (_) {}
+
+// 봉투 — 받을 사람(수신자) 수
+try {
+  const { count } = await supabase
+    .from('vault_recipients')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', user.id);
+  selfData.lock_count = count || 0;
 } catch (_) {}
 
 // 3단계 동선 — 흩어진 카드를 "모은다 → 마음을 얹는다 → 건넨다(봉투)" 흐름으로.
@@ -419,19 +427,22 @@ function stageHtml(stage) {
 }
 
 const lockCard = byKey['lock'];
+const lockCnt = selfData.lock_count || 0;
 const envelopeHtml = `
   <div class="stage">
     <div class="stage-head">
       <span class="stage-n">3</span>
       <div>
         <div class="stage-label">가족에게 건넨다</div>
-        <div class="stage-sub">봉투 — 정해둔 때에 열려, 가족이 길을 찾도록</div>
+        <div class="stage-sub">봉투 — 이걸 누구에게 건넬지 정해 둡니다</div>
       </div>
     </div>
-    <a href="${lockCard.href}" class="self-card-envelope" data-coming="1">
-      <div class="env-badge">곧 열려요</div>
-      <div class="env-title"><span class="env-icon">${lockCard.icon}</span> 가족에게 건네는 봉투</div>
-      <div class="env-desc">받을 사람(배우자·자녀·형제)을 정해 두면, 평소엔 잠겨 있다가 정해둔 때에 열려 가족이 길을 찾습니다. 적어 둔 것이 비로소 "건네는 것"이 됩니다.</div>
+    <a href="${lockCard.href}" class="self-card-envelope">
+      <div class="env-badge">${lockCnt > 0 ? `받을 사람 ${lockCnt}명` : '시작하기'}</div>
+      <div class="env-title"><span class="env-icon">✉️</span> 가족에게 건네는 봉투</div>
+      <div class="env-desc">${lockCnt > 0
+        ? '받을 사람을 정해 두셨어요. 적어 둔 것이 건네질 사람이 생겼습니다.'
+        : '이 기록을 누구에게 건네고 싶으세요? 받을 사람을 정해 두는 것부터 시작합니다.'}</div>
     </a>
   </div>`;
 
