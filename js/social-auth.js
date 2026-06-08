@@ -53,7 +53,12 @@ export async function signInWithApple(opts = {}) {
 // ========================================
 // 소셜 로그인 버튼 렌더링 (공용)
 // ========================================
+// 카카오 콘솔 Redirect URI 등록(KOE006)이 마무리되면 true로 바꾸면 카카오 버튼이 다시 노출된다.
+// (그 한 줄 외엔 손댈 것 없음 — 코드/Supabase 설정은 이미 카카오 준비 완료)
+const SOCIAL_LOGIN_ENABLED = false;
+
 export function renderSocialAuthButtons(container, opts = {}) {
+  if (!SOCIAL_LOGIN_ENABLED) { container.innerHTML = ''; return; }
   const {
     redirectAfter = './index.html',
     inviteCode = '',
