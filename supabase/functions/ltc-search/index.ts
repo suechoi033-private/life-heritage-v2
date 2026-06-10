@@ -18,9 +18,9 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Service02 엔드포인트 — 오퍼레이션명은 API 문서 기준
+// Service01 엔드포인트 — API 문서 확인 후 업데이트 필요
 const SEARCH_URL =
-  'https://apis.data.go.kr/B550928/searchLtcInsttService02/getLtcInsttSearchList02';
+  'https://apis.data.go.kr/B550928/searchLtcInsttService01/getLtcInsttSearchList01';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
