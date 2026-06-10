@@ -31,9 +31,12 @@
 - `sw.js CACHE_VERSION → itda-v3-2026-06-10-care-notifications-v1`.
 - ⏳ **창업자 할 일(배포)**: ① `20260610_*` 마이그레이션 apply ② (앱푸시 원할 시) push-notify 재배포 + care_logs INSERT Database Webhook 연결 + VAPID 키 setup. 인앱 알림함은 마이그레이션만 적용되면 즉시 동작.
 
-**대화형 삶 정리 → AI 유언 초안 설계 확정 (과업2, 설계만)**
+**대화형 삶 정리 → AI 유언 초안 (과업2, 설계 + 프로토타입)**
 - `docs/product/conversational-will-builder.md` 작성. 핵심: **AI 텍스트는 그 자체로 유효 유언 아님**(민법 1066조 자필 요건/대법원 전자문서 불인정) → 포지션 = "초안 + 자필 가이드까지, 화상공증은 준비중".
-- 창업자 결정 반영: 가벼운 질문 + **하단 회색글씨로 '채우는 법적 요건' 안내**, 출구는 초안+자필 가이드, 화상공증 "준비중이에요". 질문↔요건 매핑표·요건 충족도 nudge(1차 notifications 재사용) 포함. **구현은 후속.**
+- 창업자 결정 반영: 가벼운 질문 + **하단 회색글씨로 '채우는 법적 요건' 안내**, 출구는 초안+자필 가이드, 화상공증 "준비중이에요". 질문↔요건 매핑표·요건 충족도 nudge(1차 notifications 재사용) 포함.
+- **프로토타입 구현**: `note/will-builder.html` — 5단계 대화형(스킵 가능)·존엄한 진행도·답변 조립 초안·자필 유언 체크리스트·화상공증 "준비중" 박스. 저장은 localStorage(후속: will_answers/will_drafts 테이블 + vault-will Edge Function로 AI 초안). `note/will.html`에 진입 CTA 추가.
+
+**배포** — 마이그레이션 `20260610_care_update_notifications` apply_migration 원격 반영(테이블·트리거·정책3·realtime 검증 OK). 작업 브랜치 → main → gh-pages 순 fast-forward 푸시.
 
 ---
 
