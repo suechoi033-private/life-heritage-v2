@@ -19,6 +19,24 @@
 
 ---
 
+## 2026-06-10
+
+**케어링 업데이트 알림 — 인앱 알림함 1차 구현 (팀 소집, PE 메인)**
+- 과업: "같은 케어링 대상자의 멤버에게 업데이트(새 기록) 알림". 현황 조사 결과 — 케어링엔 별도 '글' 개념 없고 `care_logs`(기록)만 존재, `care_subjects`(대상자 1)↔`care_members`(멤버 N) 구조, Web Push 발송기(`push-notify`)는 있으나 `care_logs` 컬럼을 잘못 읽는 버그 상태.
+- 창업자 결정: ①'업데이트 글'= **기존 care_logs 등록 = 업데이트**(글쓰기 UI 신설 안 함). ②카카오 알림톡은 **건당 과금**이라 1차 제외 → **인앱 알림함 + 앱푸시(Web Push, 무료) 동시**, 카카오는 **"곧 열려요" 옵트인 문구만**.
+- 마이그레이션 `20260610_care_update_notifications.sql`: `notifications` 테이블(+RLS, 본인만 조회/읽음/삭제, INSERT는 트리거 전용) + `care_logs` AFTER INSERT 트리거 `notify_care_members_on_log()`(수신 = 대상자 owner ∪ care_members − 작성자, SOS는 mood='urgent'/[SOS] 감지) + realtime publication 등록. **apply_migration 미적용(창업자 승인 후 반영 필요).**
+- `js/notifications.js` 신규: 데이터 헬퍼(list/unread/markRead/markAllRead/realtime) + **탑바 벨 컴포넌트**(배지·드롭다운·알림함). 푸터에 "📱 앱 알림 받기"(Web Push 구독) + "💬 카카오톡으로도 받기 (곧 열려요)" 옵트인. 설정은 `profiles.notification_pref`.
+- `nav.js`: 로그인 시 전 페이지 탑바에 벨 동적 마운트(`mountNotificationBell`).
+- `push-notify/index.ts` 버그 수정: `body`→`daily_status`/`free_memo`, 수신 대상에 **owner 포함** + `author_id` 기준 작성자 제외, SOS는 `mood`로 판정.
+- `sw.js CACHE_VERSION → itda-v3-2026-06-10-care-notifications-v1`.
+- ⏳ **창업자 할 일(배포)**: ① `20260610_*` 마이그레이션 apply ② (앱푸시 원할 시) push-notify 재배포 + care_logs INSERT Database Webhook 연결 + VAPID 키 setup. 인앱 알림함은 마이그레이션만 적용되면 즉시 동작.
+
+**대화형 삶 정리 → AI 유언 초안 설계 확정 (과업2, 설계만)**
+- `docs/product/conversational-will-builder.md` 작성. 핵심: **AI 텍스트는 그 자체로 유효 유언 아님**(민법 1066조 자필 요건/대법원 전자문서 불인정) → 포지션 = "초안 + 자필 가이드까지, 화상공증은 준비중".
+- 창업자 결정 반영: 가벼운 질문 + **하단 회색글씨로 '채우는 법적 요건' 안내**, 출구는 초안+자필 가이드, 화상공증 "준비중이에요". 질문↔요건 매핑표·요건 충족도 nudge(1차 notifications 재사용) 포함. **구현은 후속.**
+
+---
+
 ## 2026-06-08
 
 **커뮤니티 답변 노출 수정 — 원글(질문)에 종속시키기 (창업자 제보, PE·마케팅 소집)**

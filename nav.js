@@ -83,6 +83,13 @@ function _renderTopBar({ loggedIn, infoIcon, title, quickWrite = true }) {
     });
   }
 
+  // 알림 벨 — 로그인 시 전 페이지 탑바에 표시(인앱 알림함)
+  if (loggedIn) {
+    import(ROOT + 'js/notifications.js')
+      .then((m) => m.mountNotificationBell())
+      .catch((err) => console.warn('[nav] 알림 벨 로드 실패', err));
+  }
+
   if (!document.getElementById('itda-topbar-style')) {
     const st = document.createElement('style');
     st.id = 'itda-topbar-style';

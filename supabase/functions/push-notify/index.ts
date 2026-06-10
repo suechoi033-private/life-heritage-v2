@@ -96,21 +96,29 @@ async function derivePushFromWebhook(wh: any) {
 
   if (wh.table === 'care_logs' && wh.type === 'INSERT') {
     const r = wh.record;
-    const isSOS = (r.body || '').startsWith('[SOS]');
-    // 협력자 ID (작성자 제외)
-    const { data: members } = await admin.from('care_members')
-      .select('user_id').eq('subject_id', r.subject_id).neq('user_id', r.user_id);
-    const user_ids = (members || []).map((m) => m.user_id);
-    if (!user_ids.length) return null;
+    // care_logs 실제 컬럼: author_id(작성자), daily_status, free_memo, mood
+    const author = r.author_id;
+    const text = (r.daily_status || r.free_memo || '새 케어 기록이 올라왔어요').toString();
+    const isSOS = r.mood === 'urgent' || text.startsWith('[SOS]');
 
     const { data: subject } = await admin.from('care_subjects')
-      .select('name').eq('id', r.subject_id).maybeSingle();
+      .select('name, user_id').eq('id', r.subject_id).maybeSingle();
+
+    // 수신 대상 = 대상자 owner ∪ care_members − 작성자
+    const { data: members } = await admin.from('care_members')
+      .select('user_id').eq('subject_id', r.subject_id);
+    const audience = new Set<string>();
+    if (subject?.user_id) audience.add(subject.user_id);
+    (members || []).forEach((m) => m.user_id && audience.add(m.user_id));
+    if (author) audience.delete(author);
+    const user_ids = [...audience];
+    if (!user_ids.length) return null;
 
     return {
       user_ids,
       payload: {
         title: isSOS ? `🚨 ${subject?.name || '케어링'} 응급 상황` : `${subject?.name || '케어링'} 새 기록`,
-        body: (r.body || '').slice(0, 100),
+        body: text.slice(0, 100),
         url: `./care-dashboard.html?subject=${r.subject_id}`,
         tag: `care-${r.subject_id}`,
       },
