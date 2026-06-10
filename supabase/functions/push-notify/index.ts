@@ -7,10 +7,11 @@
 //      - comments INSERT → 게시글 작성자에게
 //   2. 또는 클라이언트에서 직접 호출 (제한적)
 //
-// 배포: supabase functions deploy push-notify
+// 배포: supabase functions deploy push-notify (verify_jwt=false — DB 웹훅 호출)
 // 환경변수:
 //   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (자동)
 //   VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT (수동, mailto:admin@example.com)
+//   PUSH_WEBHOOK_SECRET (선택, 설정 시 x-webhook-secret 헤더 일치 요구 — 권장)
 //
 // 요청: POST { user_ids: string[], payload: { title, body, url?, tag? } }
 // 응답: { sent: number, failed: number }
@@ -21,6 +22,7 @@ import webpush from 'https://esm.sh/web-push@3.6.7';
 const VAPID_PUBLIC  = Deno.env.get('VAPID_PUBLIC_KEY')  || '';
 const VAPID_PRIVATE = Deno.env.get('VAPID_PRIVATE_KEY') || '';
 const VAPID_SUBJECT = Deno.env.get('VAPID_SUBJECT')     || 'mailto:noreply@itda.app';
+const WEBHOOK_SECRET = Deno.env.get('PUSH_WEBHOOK_SECRET') || '';
 
 if (VAPID_PUBLIC && VAPID_PRIVATE) {
   webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE);
@@ -31,6 +33,10 @@ Deno.serve(async (req) => {
   if (req.method !== 'POST')    return json({ error: 'method not allowed' }, 405);
   if (!VAPID_PUBLIC || !VAPID_PRIVATE) {
     return json({ error: 'VAPID keys not configured' }, 500);
+  }
+  // 선택적 공유 비밀 검증 (설정된 경우에만)
+  if (WEBHOOK_SECRET && req.headers.get('x-webhook-secret') !== WEBHOOK_SECRET) {
+    return json({ error: 'unauthorized' }, 401);
   }
 
   try {
@@ -166,7 +172,7 @@ function json(b: unknown, s = 200) {
 function corsHeaders() {
   return {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-webhook-secret',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
   };
 }
