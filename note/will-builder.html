@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>질문으로 쓰는 유언장 · 잇다 노트</title>
+  <link rel="stylesheet" href="../auth-styles.css">
+  <style>
+    .shell { max-width: 640px; margin: 0 auto; padding: 28px 20px 96px; flex: 1; width: 100%; }
+    @media (min-width: 640px) { .shell { padding: 44px 28px 120px; } }
+
+    .breadcrumb { font-size: 13px; color: var(--ink-muted); margin-bottom: 14px; }
+    .breadcrumb a { color: var(--ink-muted); text-decoration: none; }
+    .breadcrumb a:hover { color: var(--primary); }
+
+    /* 진행도 — 존엄하게: 점수·경쟁 없이 '준비가 차오르는' 느낌만 */
+    .prep {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
+      font-size: 13px; color: var(--ink-soft);
+    }
+    .prep-bar { flex: 1; height: 6px; border-radius: 999px; background: var(--bg-alt); overflow: hidden; }
+    .prep-fill { height: 100%; width: 0; background: var(--primary); border-radius: 999px; transition: width 0.4s ease; }
+    .prep-note { font-size: 12.5px; color: var(--ink-muted); margin-bottom: 22px; line-height: 1.6; }
+
+    h1 { font-family: var(--font-serif); font-size: 25px; font-weight: 800; line-height: 1.4; margin-bottom: 10px; letter-spacing: -0.01em; }
+    @media (min-width: 640px) { h1 { font-size: 28px; } }
+    .lead { color: var(--ink-soft); font-size: 15px; line-height: 1.75; }
+
+    /* 카드 */
+    .card { background: var(--bg-alt); border-radius: 18px; padding: 26px 22px; margin-top: 8px; }
+    @media (min-width: 640px) { .card { padding: 30px 28px; } }
+    .q-label { font-size: 19px; font-weight: 800; line-height: 1.45; letter-spacing: -0.01em; margin-bottom: 6px; }
+    /* 회색 작은 글씨: 이 답이 채우는 법적 요건 */
+    .q-legal { font-size: 12.5px; color: var(--ink-muted); line-height: 1.6; margin-bottom: 18px; }
+    .q-legal::before { content: '⚖ '; opacity: 0.7; }
+
+    textarea, input[type=text] {
+      width: 100%; border: 1px solid var(--line); border-radius: 12px; padding: 14px;
+      font-size: 16px; font-family: inherit; color: var(--ink); background: var(--bg); line-height: 1.6;
+      box-sizing: border-box;
+    }
+    textarea { min-height: 130px; resize: vertical; }
+    .field-row { margin-bottom: 14px; }
+    .field-row label { display: block; font-size: 13px; font-weight: 700; color: var(--ink-soft); margin-bottom: 6px; }
+    .hint { font-size: 12.5px; color: var(--ink-muted); margin-top: 8px; line-height: 1.6; }
+
+    .actions { display: flex; gap: 10px; align-items: center; margin-top: 22px; }
+    .btn {
+      border: none; border-radius: 12px; padding: 14px 22px; font-size: 16px; font-weight: 700;
+      cursor: pointer; font-family: inherit;
+    }
+    .btn-primary { background: var(--primary); color: #fff; flex: 1; }
+    .btn-ghost { background: transparent; color: var(--ink-soft); border: 1px solid var(--line); }
+    .btn-text { background: none; border: none; color: var(--ink-muted); font-size: 14px; cursor: pointer; text-decoration: underline; }
+
+    .step-dots { display: flex; gap: 6px; justify-content: center; margin-top: 20px; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--line); }
+    .dot.on { background: var(--primary); }
+    .dot.done { background: var(--primary); opacity: 0.45; }
+
+    /* 결과 화면 */
+    .nudge {
+      background: #FBF3E6; border: 1px solid #EAD9BC; border-radius: 14px;
+      padding: 16px 18px; margin-bottom: 20px; font-size: 14px; line-height: 1.7; color: #6B5836;
+    }
+    .ok-banner {
+      background: #EAF6EC; border: 1px solid #C6E6CC; border-radius: 14px;
+      padding: 16px 18px; margin-bottom: 20px; font-size: 14px; line-height: 1.7; color: #2E6B3A;
+    }
+    .draft {
+      background: var(--bg); border: 1px solid var(--line); border-radius: 14px;
+      padding: 24px 22px; white-space: pre-wrap; font-size: 15.5px; line-height: 1.9;
+      font-family: var(--font-serif); color: var(--ink);
+    }
+    .draft-mark { font-size: 11px; letter-spacing: 0.08em; color: var(--ink-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 12px; font-family: var(--font-sans, inherit); }
+    .section-title { font-size: 16px; font-weight: 800; margin: 28px 0 12px; }
+    .checklist { list-style: none; padding: 0; margin: 0; }
+    .checklist li { padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px; line-height: 1.6; color: var(--ink-soft); }
+    .checklist li:last-child { border-bottom: none; }
+    .checklist li::before { content: '✍️ '; }
+    .soon-box {
+      margin-top: 24px; border: 1px dashed var(--line); border-radius: 14px; padding: 18px 20px;
+      background: var(--bg-alt);
+    }
+    .soon-box .tag { display: inline-block; font-size: 11px; font-weight: 700; color: var(--primary); background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; margin-bottom: 8px; }
+    .soon-box p { font-size: 13.5px; color: var(--ink-soft); line-height: 1.7; margin: 0; }
+    .disclaimer { font-size: 12px; color: var(--ink-muted); line-height: 1.7; margin-top: 22px; }
+  </style>
+</head>
+<body>
+<main class="shell">
+  <div class="breadcrumb"><a href="../self.html">나의 삶 정리</a> › 질문으로 쓰는 유언장</div>
+
+  <div class="prep">
+    <span>마음을 건네는 준비</span>
+    <span class="prep-bar"><span class="prep-fill" id="prep-fill"></span></span>
+  </div>
+  <div class="prep-note" id="prep-note">가벼운 질문 몇 개예요. 답하기 싫은 건 언제든 건너뛰어도 괜찮아요.</div>
+
+  <div id="stage"></div>
+  <div class="step-dots" id="dots"></div>
+</main>
+
+<script type="module">
+  import { requireAuth, supabase } from '../auth.js';
+
+  const session = await requireAuth('../login.html');
+  const user = session.user;
+  const userName = user.user_metadata?.name || user.email?.split('@')[0] || '';
+
+  const { renderTopBar } = await import('../nav.js');
+  await renderTopBar({ active: 'note' });
+
+  // ── 저장 (프로토타입: localStorage. 후속: will_answers/will_drafts 테이블) ──
+  const KEY = `itda:will_builder:${user.id}`;
+  const load = () => { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch { return {}; } };
+  const save = (o) => localStorage.setItem(KEY, JSON.stringify(o));
+  let answers = load();
+  answers.name = answers.name || userName;
+
+  // ── 질문 정의: 가벼운 질문 + 하단 회색 '채우는 법적 요건' ──
+  // required: 자필 유언이 '형태'를 갖추는 데 꼭 필요한 항목
+  const STEPS = [
+    {
+      key: 'distribute', type: 'textarea', required: true,
+      label: '누구에게, 무엇을 남기고 싶으세요?',
+      legal: '상속인과 재산, 나누는 몫을 정하는 부분이에요. 유언의 핵심 내용이 돼요.',
+      placeholder: '예) 살고 있는 집은 아내에게, 예금은 두 아이에게 똑같이 나눠주고 싶어요.',
+    },
+    {
+      key: 'special', type: 'textarea', required: false,
+      label: '꼭 따로 챙기고 싶은 사람이 있나요?',
+      legal: '특정한 분께 특정한 것을 남기는 ‘특정유증’이에요. 없으면 건너뛰어도 돼요.',
+      placeholder: '예) 오래 곁을 지켜준 동생에게 시계를 남기고 싶어요.',
+    },
+    {
+      key: 'executor', type: 'text', required: false,
+      label: '이 정리를 누가 맡아주면 좋겠어요?',
+      legal: '유언을 실제로 실행할 ‘유언집행자’를 정하는 부분이에요. 정해두면 가족이 덜 헤매요.',
+      placeholder: '예) 큰아들 ○○○',
+    },
+    {
+      key: 'message', type: 'textarea', required: false,
+      label: '마지막으로, 마음에 담아둔 말이 있나요?',
+      legal: '마음을 담는 부분이에요 — 법적 요건은 아니지만, 가장 오래 남는 말이 되기도 해요.',
+      placeholder: '예) 고마웠다는 말, 미안했던 일, 바라는 것…',
+    },
+    {
+      key: 'identity', type: 'identity', required: true,
+      label: '유언장에 들어갈 정보를 확인해 주세요',
+      legal: '이름·주소·날짜를 직접 쓰는 건 자필 유언의 필수 형식 요건이에요(빠지면 효력이 없어요).',
+    },
+  ];
+
+  const stage = document.getElementById('stage');
+  const dotsEl = document.getElementById('dots');
+  const fill = document.getElementById('prep-fill');
+  const prepNote = document.getElementById('prep-note');
+  let idx = 0;
+
+  // 요건 충족: 내용(distribute) + 이름 + 주소 (날짜는 작성 시 자동)
+  function requirementMet() {
+    return !!(answers.distribute && answers.distribute.trim())
+        && !!(answers.name && answers.name.trim())
+        && !!(answers.address && answers.address.trim());
+  }
+  function answeredCount() {
+    return STEPS.filter(s => {
+      if (s.type === 'identity') return answers.name && answers.address;
+      return answers[s.key] && String(answers[s.key]).trim();
+    }).length;
+  }
+  function updatePrep() {
+    const pct = Math.round((answeredCount() / STEPS.length) * 100);
+    fill.style.width = pct + '%';
+  }
+
+  function renderDots(activeIdx) {
+    dotsEl.innerHTML = STEPS.map((_, i) =>
+      `<span class="dot ${i === activeIdx ? 'on' : (i < activeIdx ? 'done' : '')}"></span>`).join('')
+      + `<span class="dot ${activeIdx >= STEPS.length ? 'on' : ''}"></span>`;
+  }
+
+  function renderStep() {
+    updatePrep();
+    if (idx >= STEPS.length) { renderResult(); return; }
+    renderDots(idx);
+    const s = STEPS[idx];
+    prepNote.textContent = '가벼운 질문 몇 개예요. 답하기 싫은 건 언제든 건너뛰어도 괜찮아요.';
+
+    let inner = '';
+    if (s.type === 'identity') {
+      inner = `
+        <div class="field-row">
+          <label>이름(성함)</label>
+          <input type="text" id="f-name" value="${escapeAttr(answers.name || '')}" placeholder="홍길동">
+        </div>
+        <div class="field-row">
+          <label>주소</label>
+          <input type="text" id="f-address" value="${escapeAttr(answers.address || '')}" placeholder="시·군·구까지만 적어도 괜찮아요">
+        </div>
+        <div class="hint">작성 날짜는 실제 손으로 옮겨 쓰는 날 적으면 돼요.</div>
+      `;
+    } else if (s.type === 'text') {
+      inner = `<input type="text" id="f-input" value="${escapeAttr(answers[s.key] || '')}" placeholder="${escapeAttr(s.placeholder)}">`;
+    } else {
+      inner = `<textarea id="f-input" placeholder="${escapeAttr(s.placeholder)}">${escapeHtml(answers[s.key] || '')}</textarea>`;
+    }
+
+    stage.innerHTML = `
+      <div class="card">
+        <div class="q-label">${s.label}</div>
+        <div class="q-legal">${s.legal}</div>
+        ${inner}
+        <div class="actions">
+          <button class="btn btn-primary" id="next">${idx === STEPS.length - 1 ? '다 됐어요' : '다음'}</button>
+          ${!s.required ? `<button class="btn btn-ghost" id="skip">건너뛰기</button>` : ''}
+        </div>
+        ${idx > 0 ? `<div style="text-align:center;margin-top:14px;"><button class="btn-text" id="back">이전으로</button></div>` : ''}
+      </div>`;
+
+    document.getElementById('next').addEventListener('click', () => {
+      if (s.type === 'identity') {
+        answers.name = document.getElementById('f-name').value.trim();
+        answers.address = document.getElementById('f-address').value.trim();
+        if (!answers.name) { document.getElementById('f-name').focus(); return; }
+      } else {
+        answers[s.key] = document.getElementById('f-input').value.trim();
+        if (s.required && !answers[s.key]) { document.getElementById('f-input').focus(); return; }
+      }
+      save(answers); idx++; renderStep();
+    });
+    const skipBtn = document.getElementById('skip');
+    if (skipBtn) skipBtn.addEventListener('click', () => { answers[`${s.key}_skipped`] = true; save(answers); idx++; renderStep(); });
+    const backBtn = document.getElementById('back');
+    if (backBtn) backBtn.addEventListener('click', () => { idx--; renderStep(); });
+  }
+
+  function buildDraft() {
+    const lines = [];
+    lines.push('유언장');
+    lines.push('');
+    lines.push(`나 ${answers.name || '___'}은(는) 아래와 같이 유언합니다.`);
+    lines.push('');
+    let n = 1;
+    if (answers.distribute) { lines.push(`${n}. ${answers.distribute}`); n++; }
+    if (answers.special)    { lines.push(`${n}. ${answers.special}`); n++; }
+    if (answers.executor)   { lines.push(`${n}. 이 유언의 집행자로 ${answers.executor}을(를) 지정합니다.`); n++; }
+    lines.push('');
+    if (answers.message) {
+      lines.push('— 남기는 말 —');
+      lines.push(answers.message);
+      lines.push('');
+    }
+    lines.push(`작성일:        년    월    일`);
+    lines.push(`주소: ${answers.address || ''}`);
+    lines.push(`성명: ${answers.name || ''}          (서명 / 날인)`);
+    return lines.join('\n');
+  }
+
+  function renderResult() {
+    renderDots(STEPS.length);
+    fill.style.width = '100%';
+    prepNote.textContent = '여기까지 와주셔서 고마워요. 아래는 답을 모아 만든 초안이에요.';
+    const met = requirementMet();
+
+    const banner = met
+      ? `<div class="ok-banner">✅ 유언장의 <b>형태</b>가 갖춰졌어요. 아래 초안을 그대로 손으로 옮겨 적으면 자필 유언의 형식 요건을 채울 수 있어요.</div>`
+      : `<div class="nudge">조금만 더 하면 돼요. <b>${missingLabel()}</b>만 채우면 유언장 형태가 완성돼요. <button class="btn-text" id="go-fix">채우러 가기</button></div>`;
+
+    stage.innerHTML = `
+      ${banner}
+      <div class="draft-mark">초안 · 아직 법적 효력은 없어요</div>
+      <div class="draft" id="draft">${escapeHtml(buildDraft())}</div>
+      <div class="actions">
+        <button class="btn btn-primary" id="copy">초안 복사하기</button>
+        <button class="btn btn-ghost" id="edit">다시 고치기</button>
+      </div>
+
+      <div class="section-title">손으로 옮겨 쓸 때 (자필 유언 체크리스트)</div>
+      <ul class="checklist">
+        <li>위 내용을 처음부터 끝까지 <b>직접 손으로</b> 옮겨 적어요(인쇄·대필은 효력이 없어요).</li>
+        <li>맨 끝에 <b>작성한 날짜</b>를 연·월·일까지 적어요.</li>
+        <li><b>주소</b>와 <b>이름</b>을 직접 쓰고, <b>도장</b>을 찍거나 <b>손도장(무인)</b>을 눌러요.</li>
+        <li>다 쓴 유언장은 안전한 곳에 두고, 믿을 수 있는 분께 어디 있는지 알려두면 좋아요.</li>
+      </ul>
+
+      <div class="soon-box">
+        <span class="tag">준비중이에요</span>
+        <p><b>화상 공증 연동</b> — 손으로 쓰지 않아도 공증인과 화상으로 만나 ‘공정증서 유언’을 남기는 길을 준비하고 있어요. 곧 이 자리에서 바로 이어드릴게요.</p>
+      </div>
+
+      <div class="disclaimer">잇다는 유언의 <b>내용과 형식</b>을 갖추도록 도와드려요. 법적 효력은 직접 손으로 쓴 자필 유언, 또는 공증을 통해 생겨요. 재산·상속이 복잡하거나 다툼이 걱정되면 변호사·법무사와 상의하시길 권해요.</div>
+    `;
+
+    document.getElementById('copy').addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(buildDraft()); document.getElementById('copy').textContent = '복사됐어요 ✓'; }
+      catch { alert('복사가 안 됐어요. 길게 눌러 직접 복사해 주세요.'); }
+    });
+    document.getElementById('edit').addEventListener('click', () => { idx = 0; renderStep(); });
+    const fixBtn = document.getElementById('go-fix');
+    if (fixBtn) fixBtn.addEventListener('click', () => { idx = firstMissingIdx(); renderStep(); });
+  }
+
+  function missingLabel() {
+    const m = [];
+    if (!(answers.distribute && answers.distribute.trim())) m.push('남기고 싶은 내용');
+    if (!(answers.name && answers.name.trim())) m.push('이름');
+    if (!(answers.address && answers.address.trim())) m.push('주소');
+    return m.join(' · ');
+  }
+  function firstMissingIdx() {
+    if (!(answers.distribute && answers.distribute.trim())) return 0;
+    return STEPS.findIndex(s => s.type === 'identity');
+  }
+
+  function escapeHtml(s){return String(s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+  function escapeAttr(s){return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+  renderStep();
+</script>
+</body>
+</html>
