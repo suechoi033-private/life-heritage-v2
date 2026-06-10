@@ -24,9 +24,13 @@ export function setAppConfig(patch) {
   return next;
 }
 
+// Web Push VAPID 공개키 (공개돼도 안전 — 클라이언트 구독용).
+// 짝이 되는 개인키(VAPID_PRIVATE_KEY)는 Supabase Edge Function 시크릿에만 둔다(커밋 금지).
+const DEFAULT_VAPID_PUBLIC = 'BAH6g2NAIget6DAJnyaETUsqgzyrwRM1Qbt0laUWrJqHnnYNAYTUvLH1u-ks8AGA_4g7RzBymwvHFN1qnYUpiUM';
+
 export function getVapidPublicKey() {
   if (typeof window !== 'undefined' && window.__VAPID_PUBLIC_KEY__) return window.__VAPID_PUBLIC_KEY__;
-  return load().vapidPublicKey || '';
+  return load().vapidPublicKey || DEFAULT_VAPID_PUBLIC;
 }
 
 export function getKakaoJsKey() {
