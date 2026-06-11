@@ -26,8 +26,17 @@
 - 원인: Supabase 내장 테스트용 SMTP의 네이버 배달 신뢰도 불안정(스팸 처리/silent drop) + 시간당 발송 한도(~3~4통). 네이버 가입 9건 중 6건은 정상 수신·인증, 3건(`98cocu`/`neitynamu` 오타/`yellowcamel3`) 미인증.
 - 즉시 조치: `auth.users`에서 `yellowcamel3@naver.com` `email_confirmed_at` 수동 설정 → 메일 없이 로그인 가능하게 함(되돌리려면 null로 복구).
 - 중복가입 UX: `signup.html` 가입 핸들러에 이미 가입된 이메일 감지 추가. Supabase는 열거 방지를 위해 기존 이메일 재가입 시 에러 없이 `data.user.identities=[]`(빈 배열)을 돌려줌 — 이를 잡아 "이미 가입된 계정" 안내 + 로그인(`login.html?email=` prefill)·비밀번호 재설정(`forgot.html`) 링크 노출. 기존엔 "인증 링크 보냈습니다"를 잘못 띄워 혼란.
-- 변경 파일: `signup.html`, `sw.js`(CACHE_VERSION → `itda-v3-2026-06-11-signup-dup-guard-v1`).
+- 변경 파일: `signup.html`, `sw.js`.
 - 후속(대기): 운영용 커스텀 SMTP(**Resend** 공식 통합) 연결 — 발신 도메인/API 키 필요, 사장님 입력 대기. 연결 시 네이버 배달 정상화.
+
+**가입 흐름 전수 QA + 결과 게이트 "오늘 잇고 답하기" 죽은 버튼 인상 P1 수정 (PE)**
+- 트리거: 창업자 시연 — 진단 결과 게이트의 "오늘 잇고 답하기" 버튼이 "안 연결된다"는 보고.
+- 진단(1줄): 비로그인 첫걸음 CTA(`cta-gate`)는 의도된 게이트 스크롤이지만 게이트가 이미 뷰포트 안에 있으면 스크롤 거리 ~0 → 죽은 버튼 인상.
+- 의도(C4 결정: 결과 → CTA → 게이트)는 보존하면서 시각 시그널만 강화: ①첫걸음 카드 CTA 아래 한 줄 추가 — "답을 남기려면 가입이 필요해요. 아래에서 잠깐만요." ②클릭 시 게이트에 1.2s 펄스 애니메이션(토큰 색 `var(--primary)` 알파, 임의 hex 없음) + 게이트 뷰포트 미노출 시 스크롤 + "이메일로 시작하기" 자동 포커스. ③`.onb-gate`에 `border-radius: 16px` + box-shadow transition.
+- 가입 흐름 전수 QA — `docs/strategy/onboarding-flow-qa-2026-06-11.md` 신규: ①path 5종 × 결과 카피(STAGE/Q2_MIRROR/companionFor/firstStepFor/soloFor/Q4_MIRROR) 매트릭스 전수 확인 → **빈자리·undefined 노출 0건**. ②P1 추가 1건(보류) — `auth.js`의 `emailRedirectTo`가 welcome.html 고정이라 이메일 인증 환경에선 signup의 next 무시되고 옛 onboarding으로 떨어져 이중 온보딩. ③P2 5건 — login.html `next` 미보존, 가입 후 localStorage 답 Supabase 미동기화, welcome/onboarding 이원화, 비로그인 일반 페이지 next 미보존, skip 시 답 손실. ④P3 2건 — 새로고침 시 idx 휘발, 진행률 분모 점프.
+- 가입 게이트 경로 설계: 옵션 A(현재 유지) / B(CTA→가입 직행) / C(1회 무가입 + 2번째에 게이트) 비교. **추천: A+B 혼합** — 현재 미러링 클라이맥스 보존하면서 CTA 시그널만 강화(본 라운드 적용). 사장님 결정 필요 5건(G1 게이트 경로 / G2 emailRedirectTo 동봉 / G3 welcome.html 처리 / G4 login next 도입 / G5 답 Supabase 동기화) 정리.
+- 변경 파일: `onboarding.html`, `sw.js`, `docs/strategy/onboarding-flow-qa-2026-06-11.md` 신규.
+- 통합 CACHE_VERSION: `itda-v3-2026-06-11-onboarding-gate-cta-signup-guard-v1` (signup-dup-guard + onboarding-gate-cta 의도 합침).
 
 **가입 진단 퀴즈 — lifecycle 분기 트리(옵션 A) 재구현 (PE)**
 - 단일 원천: `docs/strategy/onboarding-quiz-qa-2026-06-10.md`. 사장님 5결정 컨펌(C1 분기 도입 / C2 Q4·Q5 제거 / C3 결과→CTA→게이트 유지 / C4 게이트 위치 결과 후 유지 / C5 "○○형" 라벨 금지, "자리" 톤 유지).
