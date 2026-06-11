@@ -21,6 +21,14 @@
 
 ## 2026-06-11
 
+**인증메일 미수신 대응 + 중복가입 UX 보완 (PE)**
+- 제보: 신규 가입(`yellowcamel3@naver.com`, 이름 "공산") 인증메일 미수신. Supabase auth 로그 확인 결과 `mail.send`(confirmation, from `noreply@mail.app.supabase.io`)는 정상 발사됨 → 코드 버그 아님, **배달 문제**.
+- 원인: Supabase 내장 테스트용 SMTP의 네이버 배달 신뢰도 불안정(스팸 처리/silent drop) + 시간당 발송 한도(~3~4통). 네이버 가입 9건 중 6건은 정상 수신·인증, 3건(`98cocu`/`neitynamu` 오타/`yellowcamel3`) 미인증.
+- 즉시 조치: `auth.users`에서 `yellowcamel3@naver.com` `email_confirmed_at` 수동 설정 → 메일 없이 로그인 가능하게 함(되돌리려면 null로 복구).
+- 중복가입 UX: `signup.html` 가입 핸들러에 이미 가입된 이메일 감지 추가. Supabase는 열거 방지를 위해 기존 이메일 재가입 시 에러 없이 `data.user.identities=[]`(빈 배열)을 돌려줌 — 이를 잡아 "이미 가입된 계정" 안내 + 로그인(`login.html?email=` prefill)·비밀번호 재설정(`forgot.html`) 링크 노출. 기존엔 "인증 링크 보냈습니다"를 잘못 띄워 혼란.
+- 변경 파일: `signup.html`, `sw.js`(CACHE_VERSION → `itda-v3-2026-06-11-signup-dup-guard-v1`).
+- 후속(대기): 운영용 커스텀 SMTP(**Resend** 공식 통합) 연결 — 발신 도메인/API 키 필요, 사장님 입력 대기. 연결 시 네이버 배달 정상화.
+
 **가입 진단 퀴즈 — lifecycle 분기 트리(옵션 A) 재구현 (PE)**
 - 단일 원천: `docs/strategy/onboarding-quiz-qa-2026-06-10.md`. 사장님 5결정 컨펌(C1 분기 도입 / C2 Q4·Q5 제거 / C3 결과→CTA→게이트 유지 / C4 게이트 위치 결과 후 유지 / C5 "○○형" 라벨 금지, "자리" 톤 유지).
 - 진단 D1~D7 정조준: ①D4 분기 부재 → Q1 답에 따라 path(caregiver/self_prep/reflector/bereaved/explorer)별 STEPS 동적 재구성. ②D1 사별 path 빈자리 → Q2를 "보내드린 지 어느 정도?"(recent/months/long/hard)로 교체, 옵션 어색 0. ③D2 의미 중첩 → Q2를 path별 다른 어휘로 분리(돌봄 상황/시작 계기/돌아봄 결/사별 시간/방문 결). ④D3 의도 덮어쓰기 → `computeStage`를 Q1 단독 결정으로 단순화. ⑤D5 Q4·Q5 dead weight → 제거(현행 Q6 강도만 Q4로 승계, 자유서술 한 문장은 Q5로 유지). ⑥D6 Q3 무게 동일 → bereaved path에서만 카피 변주("지금 곁에 누가 있어요?"). ⑦D7 결과 부재 → `Q2_MIRROR`(path×Q2 한 줄)·`companionFor`(path×Q2 동행 한 줄)·`firstStepFor`(path×Q4 강도별 첫걸음 카드 + bereaved×recent는 도구 강제 X 글 읽기로 약화)·`soloFor`(path별 SOLO 변주)·`Q4_MIRROR`(강도 한 줄)로 답 5개 모두 결과 카피에 반영.

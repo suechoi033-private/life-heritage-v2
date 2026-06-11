@@ -176,6 +176,25 @@
       return;
     }
 
+    // 이미 가입된 이메일 — Supabase는 열거 방지를 위해 에러 대신
+    // identities 가 빈 배열인 user 를 돌려준다. 로그인으로 안내한다.
+    const alreadyRegistered =
+      data?.user && Array.isArray(data.user.identities) && data.user.identities.length === 0;
+    if (alreadyRegistered) {
+      form.classList.add('hidden');
+      showAlert(`이미 ${email} 으로 가입된 계정이 있습니다.`, 'error');
+      alertBox.insertAdjacentHTML(
+        'beforeend',
+        '<div style="margin-top:14px; display:flex; flex-direction:column; gap:8px;">' +
+          `<a href="./login.html?email=${encodeURIComponent(email)}" style="color:var(--primary);font-weight:700;text-decoration:underline;">이 이메일로 로그인하기 →</a>` +
+          '<a href="./forgot.html" style="color:var(--ink-muted);text-decoration:underline;">비밀번호가 기억나지 않으세요?</a>' +
+        '</div>'
+      );
+      submitBtn.disabled = false;
+      submitBtn.textContent = '가입하기';
+      return;
+    }
+
     // 가입 직후 세션이 바로 잡혔는지 (자동 확인 환경) 확인
     const { data: sessData } = await supabase.auth.getSession();
     if (sessData?.session) {
