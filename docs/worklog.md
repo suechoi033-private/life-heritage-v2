@@ -29,6 +29,13 @@
 - 변경 파일: `signup.html`, `sw.js`(CACHE_VERSION → `itda-v3-2026-06-11-signup-dup-guard-v1`).
 - 후속(대기): 운영용 커스텀 SMTP(**Resend** 공식 통합) 연결 — 발신 도메인/API 키 필요, 사장님 입력 대기. 연결 시 네이버 배달 정상화.
 
+**배포본 단일화 — GitHub Pages로 통합 (PE)**
+- 단서: auth 로그상 가입은 `github.io`에서 일어났는데 `/verify`(인증 처리) 요청 referer는 `itda-one.vercel.app`로 찍힘 → 과거 Vercel 배포 잔재가 인증 redirect 혼선·만료링크("One-time token not found")를 유발.
+- 이력: Vercel → (Netlify 시도) → GitHub Pages 순으로 옮김. 코드 전수 점검 결과 vercel/itda-one 하드코딩 0건, 전부 상대경로 + `location.origin` 기반이라 코드 변경 불필요.
+- 정식 URL: `https://suechoi033-private.github.io/life-heritage-v2/` (CHARTER 기준, 커스텀 도메인/CNAME 없음).
+- in-repo 정리: 죽은 배포 설정 `netlify.toml` 삭제(GitHub Pages 단일 배포만 유지).
+- 저장소 밖 후속(사장님 조치 — MCP로 불가): ①Supabase Dashboard → Authentication → URL Configuration의 **Site URL**을 github.io로 고정, **Redirect URLs** 허용목록에서 `itda-one.vercel.app`(및 netlify) 제거 — 이게 vercel referer의 근본 원인. ②Vercel `itda-one` 프로젝트·Netlify 사이트 삭제로 중복 호스팅 종료.
+
 **가입 진단 퀴즈 — lifecycle 분기 트리(옵션 A) 재구현 (PE)**
 - 단일 원천: `docs/strategy/onboarding-quiz-qa-2026-06-10.md`. 사장님 5결정 컨펌(C1 분기 도입 / C2 Q4·Q5 제거 / C3 결과→CTA→게이트 유지 / C4 게이트 위치 결과 후 유지 / C5 "○○형" 라벨 금지, "자리" 톤 유지).
 - 진단 D1~D7 정조준: ①D4 분기 부재 → Q1 답에 따라 path(caregiver/self_prep/reflector/bereaved/explorer)별 STEPS 동적 재구성. ②D1 사별 path 빈자리 → Q2를 "보내드린 지 어느 정도?"(recent/months/long/hard)로 교체, 옵션 어색 0. ③D2 의미 중첩 → Q2를 path별 다른 어휘로 분리(돌봄 상황/시작 계기/돌아봄 결/사별 시간/방문 결). ④D3 의도 덮어쓰기 → `computeStage`를 Q1 단독 결정으로 단순화. ⑤D5 Q4·Q5 dead weight → 제거(현행 Q6 강도만 Q4로 승계, 자유서술 한 문장은 Q5로 유지). ⑥D6 Q3 무게 동일 → bereaved path에서만 카피 변주("지금 곁에 누가 있어요?"). ⑦D7 결과 부재 → `Q2_MIRROR`(path×Q2 한 줄)·`companionFor`(path×Q2 동행 한 줄)·`firstStepFor`(path×Q4 강도별 첫걸음 카드 + bereaved×recent는 도구 강제 X 글 읽기로 약화)·`soloFor`(path별 SOLO 변주)·`Q4_MIRROR`(강도 한 줄)로 답 5개 모두 결과 카피에 반영.
