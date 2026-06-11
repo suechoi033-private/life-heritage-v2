@@ -19,6 +19,18 @@
 
 ---
 
+## 2026-06-11
+
+**가입 진단 퀴즈 — lifecycle 분기 트리(옵션 A) 재구현 (PE)**
+- 단일 원천: `docs/strategy/onboarding-quiz-qa-2026-06-10.md`. 사장님 5결정 컨펌(C1 분기 도입 / C2 Q4·Q5 제거 / C3 결과→CTA→게이트 유지 / C4 게이트 위치 결과 후 유지 / C5 "○○형" 라벨 금지, "자리" 톤 유지).
+- 진단 D1~D7 정조준: ①D4 분기 부재 → Q1 답에 따라 path(caregiver/self_prep/reflector/bereaved/explorer)별 STEPS 동적 재구성. ②D1 사별 path 빈자리 → Q2를 "보내드린 지 어느 정도?"(recent/months/long/hard)로 교체, 옵션 어색 0. ③D2 의미 중첩 → Q2를 path별 다른 어휘로 분리(돌봄 상황/시작 계기/돌아봄 결/사별 시간/방문 결). ④D3 의도 덮어쓰기 → `computeStage`를 Q1 단독 결정으로 단순화. ⑤D5 Q4·Q5 dead weight → 제거(현행 Q6 강도만 Q4로 승계, 자유서술 한 문장은 Q5로 유지). ⑥D6 Q3 무게 동일 → bereaved path에서만 카피 변주("지금 곁에 누가 있어요?"). ⑦D7 결과 부재 → `Q2_MIRROR`(path×Q2 한 줄)·`companionFor`(path×Q2 동행 한 줄)·`firstStepFor`(path×Q4 강도별 첫걸음 카드 + bereaved×recent는 도구 강제 X 글 읽기로 약화)·`soloFor`(path별 SOLO 변주)·`Q4_MIRROR`(강도 한 줄)로 답 5개 모두 결과 카피에 반영.
+- 진행도 바: 분기 결과 path별 총 질문 수가 동일(Q1+Q2+Q3+Q4+Q5=5)이라 N/5로 자연 표시. Q1 답을 바꾸면 path 재구성하면서 q2~q4만 무효화(q5 자유서술은 보존).
+- 결과→CTA→게이트 흐름·이메일/소셜 OAuth·session 모델은 그대로. 로그인 사용자는 결과부터.
+- 변경 파일: `onboarding.html`(전체 재작성), `sw.js`(CACHE_VERSION → `itda-v3-2026-06-11-quiz-branch-tree-v1`).
+- 잠재 리스크: ①localStorage `itda:onboarding`의 기존 답(q2~q7 키·값 체계)이 새 모델과 불일치 → Q1 답 stage가 같아도 새 path의 q2 옵션 값이 달라 결과 미러링이 빈 칸으로 나갈 수 있음(첫 진입 시 답을 다시 받으면 정상). ②기존 q5(multi)·q6(single read/answer/do)·q7(text) 키를 그대로 쓰지 않고 새 Q4(강도=read/answer/do)·Q5(text) 키로 옮겨서, 이전 세션 답 호환은 의도적으로 끊음. ③커밋·푸시는 사장님 검토 대기.
+
+---
+
 ## 2026-06-10
 
 **케어링 업데이트 알림 — 인앱 알림함 1차 구현 (팀 소집, PE 메인)**

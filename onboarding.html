@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>잇다 시작하기</title>
-  <meta name="description" content="일곱 번만 답하면, 지금 맞는 첫걸음을 같이 찾아요. 1분이면 돼요.">
+  <meta name="description" content="네다섯 번만 답하면, 지금 맞는 첫걸음을 같이 찾아요. 1분이면 돼요.">
   <link rel="stylesheet" href="./auth-styles.css">
   <link rel="manifest" href="./manifest.json">
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
@@ -71,6 +71,7 @@
     .onb-quote-q { font-family: var(--font-serif); font-size: 17px; font-weight: 700; color: var(--ink); line-height: 1.6; }
     .onb-quote-sub { font-size: 13px; color: var(--ink-soft); margin-top: 8px; line-height: 1.6; }
     .onb-companion { font-size: 15px; line-height: 1.75; color: var(--ink-soft); margin: 20px 2px; }
+    .onb-context { font-size: 14.5px; line-height: 1.75; color: var(--ink-soft); background: var(--bg-alt); border-radius: 12px; padding: 14px 16px; margin: 16px 0; }
     .onb-solo { font-size: 14px; line-height: 1.7; color: var(--ink-soft); background: var(--warm-soft); border-radius: 12px; padding: 14px 16px; margin: 16px 0; }
 
     .onb-step-card { background: linear-gradient(160deg, #FAFCFB, var(--bg-alt)); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; margin-top: 8px; }
@@ -105,8 +106,8 @@
 
   <section id="intro" class="onb-intro">
     <div class="onb-intro-kicker">잇다 시작하기</div>
-    <h1 class="onb-intro-title" id="intro-title">지금, 어느 단계에<br>와 계세요?</h1>
-    <p class="onb-intro-lead">일곱 번만 답하면, 지금 맞는 첫걸음을 같이 찾아요.<br>1분이면 돼요. 정답은 없어요.</p>
+    <h1 class="onb-intro-title" id="intro-title">지금, 어디에<br>마음이 머무세요?</h1>
+    <p class="onb-intro-lead">네다섯 번만 답하면, 지금 맞는 첫걸음을 같이 찾아요.<br>1분이면 돼요. 정답은 없어요.</p>
     <button class="onb-start-btn" id="start-btn">시작하기</button>
     <div class="onb-intro-note">답은 언제든 바꿀 수 있어요</div>
   </section>
@@ -137,120 +138,342 @@
   const loggedIn = !!session;
   const ANS_KEY = 'itda:onboarding';
 
-  // ───────── 문항 (확정 카피) ─────────
-  const STEPS = [
-    { key: 'q1', type: 'single', eyebrow: '1 / 7',
-      title: '지금 마음이 가장 많이 머무는 곳은 어디인가요?',
-      options: [
-        { v: 'reflect', label: '살아온 시간을 한번 돌아보고 싶어요' },
-        { v: 'pre',     label: '앞일을 미리 챙겨두고 싶어요' },
-        { v: 'care',    label: '곁에서 누군가를 돌보고 있어요' },
-        { v: 'memory',  label: '소중한 분을 떠나보냈어요' },
-        { v: 'explore', label: '아직 잘 모르겠어요' },
-      ] },
-    { key: 'q2', type: 'single', eyebrow: '2 / 7',
-      title: '그 마음이 든 계기가 있다면, 어느 쪽에 가까운가요?',
-      options: [
-        { v: 'care',      label: '부모님이나 가족이 편찮으세요' },
-        { v: 'loss',      label: '가까운 분을 얼마 전에 보내드렸어요' },
-        { v: 'health',    label: '건강검진이나 진단에서 마음에 걸리는 게 있었어요' },
-        { v: 'milestone', label: '은퇴나 환갑, 손주처럼 삶의 매듭을 지났어요' },
-        { v: 'none',      label: '특별한 계기는 없어요. 그냥 한번 챙겨보려고요' },
-      ] },
-    { type: 'interstitial' },
-    { key: 'q3', type: 'single', eyebrow: '3 / 7',
-      title: '이 고민을 누구와 함께하고 계세요?',
-      options: [
-        { v: 'siblings', label: '형제, 자매와 함께요' },
-        { v: 'spouse',   label: '배우자와 함께요' },
-        { v: 'children', label: '자녀와 함께요' },
-        { v: 'alone',    label: '지금은 혼자 하고 있어요' },
-      ] },
-    { key: 'q4', type: 'single', eyebrow: '4 / 7',
-      title: '지금 마음은 어느 쪽에 가까우세요?',
-      options: [
-        { v: 'heavy', label: '머릿속이 복잡하고 막막해요' },
-        { v: 'mid',   label: '잘 모르겠지만, 천천히 해보려 해요' },
-        { v: 'light', label: '가볍게, 한번 살펴보는 정도예요' },
-      ] },
-    { key: 'q5', type: 'multi', eyebrow: '5 / 7',
-      title: '아래 중 요즘 가장 많이 생각하는 것은 무엇인가요?',
-      options: [
-        { v: 'prep',   label: '언젠가 가족이 헤매지 않게 정리해 두는 것' },
-        { v: 'words',  label: '가족에게 못 한 말을 남기는 것' },
-        { v: 'care',   label: '돌봄과 치료, 요양을 어떻게 할지' },
-        { v: 'grief',  label: '떠난 분을 잘 기억하고, 마음을 추스르는 것' },
-        { v: 'record', label: '내가 살아온 시간을 글로 남기는 것' },
-      ] },
-    { key: 'q6', type: 'single', eyebrow: '6 / 7',
-      title: '지금 시작한다면, 어느 정도가 편하시겠어요?',
-      options: [
-        { v: 'read',   label: '짧은 글 하나 읽는 정도' },
-        { v: 'answer', label: '질문 하나에 답해보는 정도' },
-        { v: 'do',     label: '뭔가 하나 직접 정리해 보고 결과물을 보는 정도' },
-      ] },
-    { key: 'q7', type: 'text', eyebrow: '7 / 7',
-      title: '마지막으로, 사랑하는 사람을 떠올리며(본인이어도 괜찮아요) 지금 가장 남기고 싶은 한 문장이 있다면 적어주세요.',
-      placeholder: '예: 고생한 우리 가족, 고맙다고 / 나는 이렇게 살았다고' },
-  ];
-  const QUESTION_KEYS = STEPS.filter(s => s.key).map(s => s.key);
+  // ─────────────────────────────────────────────────────────────
+  // 분기 트리 v2 (2026-06-11, 사장님 5결정 컨펌)
+  // C1 분기 도입 / C2 Q4·Q5 제거 / C3 결과→CTA→게이트 / C4 게이트 위치 / C5 "○○형" 금지
+  // 단일 원천: docs/strategy/onboarding-quiz-qa-2026-06-10.md (옵션 A 트리)
+  // ─────────────────────────────────────────────────────────────
 
-  // ───────── stage 판정 (전략 확정: Q1·Q2 2축, Q2 우선, Q1=memory 예외) ─────────
-  function computeStage(p) {
-    if (p.q1 === 'memory') return 'bereaved';
-    switch (p.q2) {
-      case 'loss': return 'bereaved';
-      case 'care': return 'caregiver';
-      case 'health': return 'self_prep';
-      case 'milestone': return 'reflector';
-      case 'none':
-      default:
-        if (p.q1 === 'care') return 'caregiver';
-        if (p.q1 === 'pre') return 'self_prep';
-        if (p.q1 === 'reflect') return 'reflector';
-        return 'explorer';
+  // Q1 — 공통 진입 (path 확정)
+  const Q1 = {
+    key: 'q1', type: 'single',
+    title: '지금, 어디에 가장 마음이 머무세요?',
+    options: [
+      { v: 'care',    label: '곁에서 누군가를 돌보고 있어요',     stage: 'caregiver' },
+      { v: 'pre',     label: '앞일을 미리 챙겨두고 싶어요',         stage: 'self_prep' },
+      { v: 'reflect', label: '살아온 시간을 한번 돌아보고 싶어요',   stage: 'reflector' },
+      { v: 'memory',  label: '소중한 분을 떠나보냈어요',             stage: 'bereaved' },
+      { v: 'explore', label: '아직 잘 모르겠어요',                   stage: 'explorer' },
+    ],
+  };
+
+  // Q2 — path별 분기 (계기·상황). 사장님 케이스(사별) 빈자리 메움.
+  const Q2_BY_STAGE = {
+    caregiver: {
+      key: 'q2', type: 'single',
+      title: '지금 돌보고 계신 분은 어떤 상황이세요?',
+      options: [
+        { v: 'facility',  label: '입원이나 시설에 계세요' },
+        { v: 'home',      label: '댁에서 함께 돌보고 있어요' },
+        { v: 'distance',  label: '멀리 떨어져 챙기고 있어요' },
+        { v: 'beginning', label: '막 시작한 참이에요' },
+      ],
+    },
+    self_prep: {
+      key: 'q2', type: 'single',
+      title: '미리 챙겨두고 싶다는 마음, 어디서 시작되었어요?',
+      options: [
+        { v: 'health',     label: '건강검진이나 진단에서 마음에 걸리는 게 있었어요' },
+        { v: 'milestone',  label: '은퇴·환갑·손주처럼 삶의 매듭을 지났어요' },
+        { v: 'parent',     label: '부모님을 보내드리며 나도 정리해 둬야겠다 싶었어요' },
+        { v: 'none',       label: '특별한 계기는 없어요. 그냥 한번 챙겨보려고요' },
+      ],
+    },
+    reflector: {
+      key: 'q2', type: 'single',
+      title: '돌아보고 싶다는 마음, 어떤 결로 와 있어요?',
+      options: [
+        { v: 'write',     label: '글로 남겨두고 싶어요' },
+        { v: 'family',    label: '자식·손주에게 들려주고 싶어요' },
+        { v: 'listener',  label: '나만 알던 이야기, 누가 들어줬으면 해요' },
+        { v: 'unsure',    label: '아직 모르겠지만, 일단 적어보고 싶어요' },
+      ],
+    },
+    bereaved: {
+      key: 'q2', type: 'single',
+      title: '보내드린 지, 어느 정도 되셨어요?',
+      options: [
+        { v: 'recent',     label: '얼마 안 됐어요' },
+        { v: 'months',     label: '몇 달, 또는 한 해쯤 됐어요' },
+        { v: 'long',       label: '시간은 꽤 지났는데, 마음은 아직이에요' },
+        { v: 'hard',       label: '말로 표현하기 어려워요' },
+      ],
+    },
+    explorer: {
+      key: 'q2', type: 'single',
+      title: '오늘은 어떤 결로 들르셨어요?',
+      options: [
+        { v: 'family',    label: '가족 일로 생각이 많아져서요' },
+        { v: 'content',   label: '콘텐츠 한 편 보러요' },
+        { v: 'heard',     label: '그냥 이런 곳이 있다고 들어서요' },
+        { v: 'unsure',    label: '잘 모르겠어요' },
+      ],
+    },
+  };
+
+  // Q3 — 공통(누구와). bereaved path만 카피 변주.
+  function Q3_for(stage) {
+    if (stage === 'bereaved') {
+      return {
+        key: 'q3', type: 'single',
+        title: '지금 곁에 누가 있어요?',
+        options: [
+          { v: 'siblings', label: '형제·자매가 곁에 있어요' },
+          { v: 'spouse',   label: '배우자가 곁에 있어요' },
+          { v: 'children', label: '자녀가 곁에 있어요' },
+          { v: 'alone',    label: '지금은 혼자예요' },
+        ],
+      };
     }
+    return {
+      key: 'q3', type: 'single',
+      title: '이 마음, 지금 누구와 나누고 계세요?',
+      options: [
+        { v: 'siblings', label: '형제·자매와요' },
+        { v: 'spouse',   label: '배우자와요' },
+        { v: 'children', label: '자녀와요' },
+        { v: 'alone',    label: '지금은 혼자예요' },
+      ],
+    };
   }
-  const isSolo = (p) => p.q3 === 'alone';
 
+  // Q4 — 강도 (현 Q6 대체)
+  const Q4 = {
+    key: 'q4', type: 'single',
+    title: '지금 시작한다면, 어느 정도가 편하시겠어요?',
+    options: [
+      { v: 'read',   label: '짧은 글 하나 읽는 정도' },
+      { v: 'answer', label: '질문 하나에 답해보는 정도' },
+      { v: 'do',     label: '뭔가 하나 정리해서 결과물을 보고 싶어요' },
+    ],
+  };
+
+  // Q5 — 한 문장 (현 Q7 유지, 선택)
+  const Q5 = {
+    key: 'q5', type: 'text',
+    title: '마지막으로, 사랑하는 사람을 떠올리며(본인이어도 괜찮아요) 지금 가장 남기고 싶은 한 문장이 있다면 적어주세요.',
+    placeholder: '예: 고생한 우리 가족, 고맙다고 / 나는 이렇게 살았다고',
+  };
+
+  // 인터스티셜 카피 (stage 결정 직후 1회)
   const INTERSTITIAL = {
-    reflector: '그러시군요. 살아온 시간을 한번 돌아보고 싶으신 거죠.',
-    self_prep: '그러시군요. 앞일을 미리 챙겨두고 싶으신 마음이군요.',
     caregiver: '그러시군요. 지금 누군가의 곁을 지키고 계시는군요.',
+    self_prep: '그러시군요. 앞일을 미리 챙겨두고 싶으신 마음이군요.',
+    reflector: '그러시군요. 살아온 시간을 한번 돌아보고 싶으신 거죠.',
     bereaved:  '그러시군요. 소중한 분을 떠나보내셨군요.',
     explorer:  '그러시군요. 아직 정하지 않으셔도 괜찮아요.',
   };
 
+  // ─────────────────────────────────────────────────────────────
+  // 동적 시퀀스 빌더 — Q1 답 stage에 따라 STEPS 재구성
+  // 구조: [Q1, interstitial(stage), Q2(path별), Q3(path별 카피), Q4, Q5]
+  // ─────────────────────────────────────────────────────────────
+  function buildSteps(stage) {
+    return [
+      Q1,
+      { type: 'interstitial', stage },
+      Q2_BY_STAGE[stage],
+      Q3_for(stage),
+      Q4,
+      Q5,
+    ];
+  }
+
+  // 답 stage 계산 — 단일화: Q1만으로 결정 (D3 의도 덮어쓰기 해결)
+  function computeStage(p) {
+    const opt = Q1.options.find(o => o.v === p.q1);
+    return opt ? opt.stage : 'explorer';
+  }
+  const isSolo = (p) => p.q3 === 'alone';
+
+  // ─────────────────────────────────────────────────────────────
+  // 결과 카피 — path × Q2 × Q3 × Q4 모두 반영 (D5·D7 해결)
+  // ─────────────────────────────────────────────────────────────
+
+  // stage 기본 (이름/동행 한 줄/SOLO 변주 들어가는 슬롯)
   const STAGE = {
-    caregiver: { name: '당신은 지금, 누군가의 곁을 지키는 자리에 계세요.',
+    caregiver: {
+      name: '당신은 지금, 누군가의 곁을 지키는 자리에 계세요.',
       companion: '곁을 지키는 일은 혼자 짊어지기 버거워요. 나누면 한결 가벼워져요.',
-      step: '오늘 면회 기록 한 줄을 남겨보세요. 형제도 같은 화면에서 함께 봅니다.',
-      cta: '케어 기록 시작하기', href: './care.html' },
-    self_prep: { name: '당신은 지금, 가족이 헤매지 않게 미리 챙겨두려는 자리에 계세요.',
+    },
+    self_prep: {
+      name: '당신은 지금, 가족이 헤매지 않게 미리 챙겨두려는 자리에 계세요.',
       companion: "먼저 정리해 둔 분들은 '내 자식들은 나처럼 막막하지 않았으면' 하는 마음에서 시작했어요.",
-      step: '가장 가벼운 것부터요. 가족에게 남기고 싶은 정보 한 가지를 적어보세요.',
-      cta: '정보 한 가지 남기기', href: './info.html' },
-    reflector: { name: '당신은 지금, 살아온 시간을 돌아보려는 자리에 계세요.',
+    },
+    reflector: {
+      name: '당신은 지금, 살아온 시간을 돌아보려는 자리에 계세요.',
       companion: '거창하게 시작할 필요 없어요. 하루 한 문장이 일 년 뒤엔 한 권이 돼요.',
-      step: '오늘 잇고에 한 줄 남겨보세요. 1분이면 됩니다.',
-      cta: '오늘 잇고 답하기', href: './ask.html' },
-    bereaved: { name: '당신은 지금, 소중한 분을 떠나보낸 자리에 계세요.',
+    },
+    bereaved: {
+      name: '당신은 지금, 소중한 분을 떠나보낸 자리에 계세요.',
       companion: '같은 길을 먼저 지난 분들의 기록이 여기 있어요. 천천히, 마음 가는 만큼만 읽으셔도 돼요.',
-      step: '먼저 겪은 분의 이야기 한 편을 읽어보세요.',
-      cta: '먼저 겪은 분의 글 읽기', href: './forest.html' },
-    explorer: { name: '아직 어디라고 정하지 않아도 괜찮아요. 천천히 둘러보는 것도 한 걸음이에요.',
+    },
+    explorer: {
+      name: '아직 어디라고 정하지 않아도 괜찮아요. 천천히 둘러보는 것도 한 걸음이에요.',
       companion: "많은 분들이 '그냥 한번' 들렀다가, 자기 자리를 찾았어요.",
-      step: '마음 가는 글 한 편부터 읽어보세요.',
-      cta: '글 둘러보기', href: './forest.html' },
-  };
-  const SOLO = {
-    name: '지금은 혼자 챙기고 계시지만, 그래서 더 또렷이 정리해 두는 분들이 있어요.',
-    companion: '혼자라서 더 막막한 게 아니라, 혼자라서 더 내 뜻대로 정리할 수 있어요.',
+    },
   };
 
-  // ───────── 상태 ─────────
+  // Q2 답을 결과의 "지금의 모습" 한 줄로 미러링 (path × Q2 답 → 한 문장)
+  const Q2_MIRROR = {
+    caregiver: {
+      facility:  '입원이나 시설에서 곁을 지키고 계시는군요. 면회 한 번, 통화 한 통이 큰 일이에요.',
+      home:      '댁에서 함께 돌보고 계시는군요. 매일이 길고, 또 빠르게 지나갑니다.',
+      distance:  '멀리서도 챙기고 계시는군요. 거리는 멀어도, 마음은 매일 그곳에 가 있다는 걸 알아요.',
+      beginning: '막 돌봄을 시작한 참이시군요. 처음엔 뭘 모르는 게 당연해요. 천천히 익혀가셔도 돼요.',
+    },
+    self_prep: {
+      health:    '건강검진에서 걸린 무언가가, 미리 챙겨두자는 마음을 끌어올렸군요.',
+      milestone: '삶의 매듭 하나를 지나며, 이제는 정리할 때라는 신호가 왔군요.',
+      parent:    '부모님을 보내드린 경험이, "나는 가족이 헤매지 않게" 하는 다짐이 되었군요.',
+      none:      '특별한 계기 없이도 "한번 챙겨봐야겠다"는 마음이 든 것, 그것 자체가 시작이에요.',
+    },
+    reflector: {
+      write:     '글로 남겨두고 싶다는 마음, 가장 단단한 출발점이에요.',
+      family:    '자식·손주에게 들려주고 싶은 이야기, 그게 가장 오래 남는 유산이에요.',
+      listener:  '나만 알던 이야기를 누가 들어줬으면 하는 마음, 그 마음을 알아주는 곳이에요.',
+      unsure:    '아직 결은 모르셔도, "일단 적어보고 싶다"는 마음 하나면 충분해요.',
+    },
+    bereaved: {
+      recent:    '보내드린 지 얼마 안 되셨군요. 지금은 무엇도 서두르지 마세요. 여기 머무는 것만으로도 괜찮아요.',
+      months:    '몇 달, 한 해 — 가장 길고 또 흐릿한 시간이에요. 같은 시간을 지나는 분들의 기록이 도움이 되기도 해요.',
+      long:      '시간은 지났는데 마음은 아직이라는 말, 이상한 게 아니에요. 그리움엔 끝나는 날짜가 없어요.',
+      hard:      '말로 표현하기 어려운 마음도 여기서는 그대로 두셔도 돼요. 굳이 풀지 않으셔도 괜찮아요.',
+    },
+    explorer: {
+      family:    '가족 일로 마음이 일렁이는 날, 한 편씩 읽다 보면 자기 자리가 보이기도 해요.',
+      content:   '콘텐츠 한 편 보러 오신 거군요. 그 한 편이 오래 남는 경우가 많아요.',
+      heard:     '"이런 곳이 있다"고 들으셨군요. 천천히 둘러보세요. 정답을 찾으러 온 게 아니어도 괜찮아요.',
+      unsure:    '잘 모르겠다는 게 출발선이에요. 아무것도 정하지 않아도 됩니다.',
+    },
+  };
+
+  // 동행 한 줄을 Q2·Q3에 따라 미세 변주 (path 안에서)
+  function companionFor(stage, q2, q3) {
+    const base = STAGE[stage].companion;
+    // path × Q2 결합 변주
+    if (stage === 'caregiver' && q2 === 'distance') {
+      return '멀리서도 같은 화면을 보면, 곁에 있는 것과 다르지 않아요. 형제와도 같은 기록을 나눌 수 있어요.';
+    }
+    if (stage === 'caregiver' && q2 === 'beginning') {
+      return '돌봄은 처음이 가장 어려워요. 먼저 겪은 분들이 어떻게 첫 한 주를 보냈는지, 여기 있어요.';
+    }
+    if (stage === 'self_prep' && q2 === 'parent') {
+      return '부모님을 보내드린 경험은 가장 큰 스승이에요. 그 경험을 내 정리에 그대로 녹여둘 수 있어요.';
+    }
+    if (stage === 'self_prep' && q2 === 'health') {
+      return '몸이 보내는 신호를 무시하지 않은 것, 그 자체가 한 걸음이에요. 서둘러 다 하지 않으셔도 돼요.';
+    }
+    if (stage === 'reflector' && q2 === 'family') {
+      return '자식·손주는 부모의 "삶 이야기"를 가장 듣고 싶어 해요. 한 문장씩이면 충분합니다.';
+    }
+    if (stage === 'reflector' && q2 === 'listener') {
+      return '여기엔 같은 시간을 살아온 분들이 계세요. 한 줄을 남기면, 누군가의 한 줄이 옵니다.';
+    }
+    if (stage === 'bereaved' && q2 === 'recent') {
+      return '같은 길을 먼저 지난 분들의 기록이 여기 있어요. 오늘은 그냥 한 편만 읽고 가셔도 돼요.';
+    }
+    if (stage === 'bereaved' && q2 === 'long') {
+      return '오래된 그리움도 글로 적으면 한결 가벼워지는 때가 있어요. 같은 시간을 지난 분들의 글이 곁에 있어요.';
+    }
+    return base;
+  }
+
+  // 첫걸음 카드 — path × Q2 × Q4(강도) 모두 반영하여 CTA 약화/강화
+  function firstStepFor(stage, q2, q4) {
+    // bereaved × recent — 사장님 케이스 가드: 도구 강제 X
+    if (stage === 'bereaved' && q2 === 'recent') {
+      return { label: '오늘은 여기까지만', text: '오늘은 그냥 글 한 편만 읽고 가셔도 돼요. 아무것도 정리하지 않아도 괜찮아요.',
+        cta: '먼저 겪은 분의 글 한 편 읽기', href: './forest.html' };
+    }
+    // 강도 read — 모든 path에서 "읽기"부터
+    if (q4 === 'read') {
+      const map = {
+        caregiver: { text: '오늘은 먼저 겪은 보호자 한 분의 짧은 기록을 읽어보세요.',
+          cta: '먼저 겪은 분의 기록 읽기', href: './forest.html' },
+        self_prep: { text: '오늘은 "미리 챙겨둔 분들"의 글 한 편부터 읽어보세요.',
+          cta: '미리 챙긴 분의 글 읽기', href: './forest.html' },
+        reflector: { text: '오늘은 같은 자리에서 글을 남기시는 분의 한 편을 읽어보세요.',
+          cta: '같은 자리의 한 편 읽기', href: './forest.html' },
+        bereaved:  { text: '오늘은 같은 길을 먼저 지난 분의 글 한 편만 읽고 가셔도 돼요.',
+          cta: '먼저 겪은 분의 글 읽기', href: './forest.html' },
+        explorer:  { text: '오늘은 마음 가는 글 한 편부터 읽어보세요.',
+          cta: '글 둘러보기', href: './forest.html' },
+      };
+      return { label: '지금, 가장 가벼운 첫걸음', ...map[stage] };
+    }
+    // 강도 answer — 질문 하나에 답하기
+    if (q4 === 'answer') {
+      const map = {
+        caregiver: { text: '오늘 면회·통화 한 줄을 남겨보세요. 질문 한 줄로 시작하면 됩니다.',
+          cta: '오늘의 케어 한 줄', href: './care.html' },
+        self_prep: { text: '오늘 잇고에서 가장 가벼운 질문 하나에 답해보세요.',
+          cta: '오늘 잇고 답하기', href: './ask.html' },
+        reflector: { text: '오늘 잇고에 한 줄 남겨보세요. 1분이면 됩니다.',
+          cta: '오늘 잇고 답하기', href: './ask.html' },
+        bereaved:  { text: '오늘 마음을 들여다보는 질문 하나에만 답해보셔도 돼요.',
+          cta: '오늘의 한 질문', href: './ask.html' },
+        explorer:  { text: '오늘 잇고에서 가장 가벼운 질문 하나에 답해보세요.',
+          cta: '오늘 잇고 답하기', href: './ask.html' },
+      };
+      return { label: '지금, 가장 가벼운 첫걸음', ...map[stage] };
+    }
+    // 강도 do — 정리·결과물
+    const map = {
+      caregiver: { text: '케어 기록을 시작해보세요. 형제도 같은 화면에서 함께 봅니다.',
+        cta: '케어 기록 시작하기', href: './care.html' },
+      self_prep: { text: '가족에게 남기고 싶은 정보 한 가지를 적어보세요. 가장 가벼운 것부터요.',
+        cta: '정보 한 가지 남기기', href: './info.html' },
+      reflector: { text: '내 이야기 한 편을 적어보세요. 하루 한 문장이 일 년 뒤엔 한 권이 됩니다.',
+        cta: '내 이야기 적기', href: './ask.html' },
+      bereaved:  { text: '먼저 떠난 분에게 못 한 말을 한 줄 남겨보세요. 여기 그대로 머물러 있어요.',
+        cta: '못 한 말 한 줄 남기기', href: './ask.html' },
+      explorer:  { text: '가벼운 도구 하나를 직접 만져보세요. 어떤 자리든 시작점이 될 수 있어요.',
+        cta: '도구 둘러보기', href: './seed.html' },
+    };
+    return { label: '지금, 가장 가벼운 첫걸음', ...map[stage] };
+  }
+
+  // SOLO 블록 — path별 변주
+  function soloFor(stage) {
+    const map = {
+      caregiver: {
+        name: '지금은 혼자 챙기고 계시지만, 그 무게를 정확히 아는 분들이 여기 있어요.',
+        companion: '혼자라서 더 막막한 게 아니에요. 같은 자리를 지나는 분들의 글이 곁에 있어요.',
+      },
+      self_prep: {
+        name: '지금은 혼자 정리하고 계시지만, 그래서 더 또렷이 정리해 두는 분들이 있어요.',
+        companion: '혼자라서 더 막막한 게 아니라, 혼자라서 더 내 뜻대로 정리할 수 있어요.',
+      },
+      reflector: {
+        name: '지금은 혼자 돌아보고 계시지만, 그래서 가장 정직하게 쓰실 수 있어요.',
+        companion: '혼자 적은 글은 가장 깊은 글이 돼요. 누군가 읽어줄 곳이 여기 있어요.',
+      },
+      bereaved: {
+        name: '지금은 혼자 그 시간을 견디고 계시는군요.',
+        companion: '같은 시간을 먼저 지난 분들이 곁에 있어요. 말을 걸지 않으셔도, 글로 곁에 있어요.',
+      },
+      explorer: {
+        name: '지금은 혼자 둘러보고 계시는군요. 정답을 찾지 않아도 괜찮아요.',
+        companion: '많은 분들이 "그냥 혼자" 둘러보다, 자기 자리를 찾았어요.',
+      },
+    };
+    return map[stage] || map.explorer;
+  }
+
+  // 강도 한 줄 미러링 (결과 하단 부드러운 톤 조절)
+  const Q4_MIRROR = {
+    read:   '오늘은 짧은 글 한 편이면 충분합니다. 더 하지 않으셔도 돼요.',
+    answer: '질문 하나에 답하는 정도, 딱 그 정도가 오늘의 한 걸음이에요.',
+    do:     '결과물 하나를 손에 쥐고 싶으신 마음, 그 마음 그대로 시작해보세요.',
+  };
+
+  // ─────────────────────────────────────────────────────────────
+  // 상태 / 흐름
+  // ─────────────────────────────────────────────────────────────
   let answers = loadAns() || {};
   let idx = 0;
+  let steps = answers.q1 ? buildSteps(computeStage(answers)) : [Q1]; // 부팅 시 path 있으면 복원
 
   const $ = (id) => document.getElementById(id);
   const introEl = $('intro'), stepEl = $('step'), resultEl = $('result');
@@ -262,11 +485,33 @@
   function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
   function answered(key) { const v = answers[key]; return Array.isArray(v) ? v.length > 0 : (v !== undefined && v !== null && v !== ''); }
 
+  // Q1 답이 바뀌면 steps 재구성 + 이후 답 무효화(다른 path의 잔존 답 제거)
+  function rebuildAfterQ1(prevStage) {
+    const newStage = computeStage(answers);
+    steps = buildSteps(newStage);
+    if (prevStage && prevStage !== newStage) {
+      // path가 바뀌면 q2~q4(객관식)만 비우고, q5(자유서술 문장)는 보존
+      delete answers.q2;
+      delete answers.q3;
+      delete answers.q4;
+      saveAns();
+    }
+  }
+
   $('start-btn').addEventListener('click', () => {
     introEl.classList.add('hidden');
     idx = 0;
+    if (!steps.length) steps = [Q1];
     renderStep();
   });
+
+  function questionTotal() {
+    // 진행률 분모 = 현재 steps 안의 질문(key 있는 것) 수
+    return steps.filter(x => x.key).length;
+  }
+  function questionDoneBefore(currentIdx) {
+    return steps.slice(0, currentIdx).filter(x => x.key).length;
+  }
 
   function renderStep() {
     resultEl.classList.add('hidden');
@@ -274,13 +519,14 @@
     actionbar.classList.remove('hidden');
     progressWrap.classList.remove('hidden');
 
-    const s = STEPS[idx];
-    const qDone = STEPS.slice(0, idx).filter(x => x.key).length;
-    progressFill.style.width = `${(qDone / QUESTION_KEYS.length) * 100}%`;
-    stepCount.textContent = s.key ? `${qDone + 1} / ${QUESTION_KEYS.length}` : '';
+    const s = steps[idx];
+    const total = questionTotal();
+    const done = questionDoneBefore(idx);
+    progressFill.style.width = `${(done / total) * 100}%`;
+    stepCount.textContent = s.key ? `${done + 1} / ${total}` : '';
 
     if (s.type === 'interstitial') {
-      const stage = computeStage(answers);
+      const stage = s.stage || computeStage(answers);
       stepEl.innerHTML = `<div class="onb-mid"><div class="onb-mid-text">${INTERSTITIAL[stage]}<br>몇 가지만 더 여쭤볼게요.</div></div>`;
       backBtn.textContent = '이전';
       nextBtn.textContent = '계속';
@@ -289,7 +535,7 @@
       return;
     }
 
-    let inner = `<div class="onb-q-eyebrow">${s.eyebrow}</div><div class="onb-q-title">${s.title}</div>`;
+    let inner = `<div class="onb-q-eyebrow">${done + 1} / ${total}</div><div class="onb-q-title">${s.title}</div>`;
     if (s.type === 'text') {
       inner += `<textarea class="onb-text-input" id="text-field" placeholder="${s.placeholder}">${answers[s.key] ? escapeHtml(answers[s.key]) : ''}</textarea>
                 <div class="onb-skip-hint">떠오르지 않으면 비워두셔도 돼요.</div>`;
@@ -315,7 +561,14 @@
             const arr = answers[s.key] || [];
             answers[s.key] = arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v];
           } else {
-            answers[s.key] = v;
+            // Q1 답이 바뀌면 분기 재구성
+            if (s.key === 'q1') {
+              const prev = answers.q1 ? computeStage(answers) : null;
+              answers.q1 = v;
+              rebuildAfterQ1(prev);
+            } else {
+              answers[s.key] = v;
+            }
           }
           saveAns();
           renderStep();
@@ -324,7 +577,8 @@
     }
 
     backBtn.textContent = idx === 0 ? '처음으로' : '이전';
-    nextBtn.textContent = idx === STEPS.length - 1 ? '결과 보기' : '다음';
+    nextBtn.textContent = idx === steps.length - 1 ? '결과 보기' : '다음';
+    // text형(Q5)은 비워도 통과
     nextBtn.disabled = s.type !== 'text' && !answered(s.key);
   }
 
@@ -337,7 +591,7 @@
   });
 
   nextBtn.addEventListener('click', () => {
-    if (idx === STEPS.length - 1) { saveAns(); showLoading(); return; }
+    if (idx === steps.length - 1) { saveAns(); showLoading(); return; }
     idx++; renderStep();
   });
 
@@ -347,30 +601,50 @@
     resultEl.innerHTML = `<div class="onb-loading"><div class="onb-loading-text">답해주신 이야기를<br>정리하고 있어요</div>
       <div class="onb-dots"><span></span><span></span><span></span></div></div>`;
     window.scrollTo(0, 0);
-    setTimeout(showResult, 2500);
+    setTimeout(showResult, 2200);
   }
 
   function showResult() {
     const stage = computeStage(answers);
     answers.stage = stage; answers.solo = isSolo(answers); answers.ts = Date.now();
     saveAns();
-    const s = STAGE[stage];
-    const wish = (answers.q7 || '').trim();
 
+    const base = STAGE[stage];
+    const q2 = answers.q2;
+    const q3 = answers.q3;
+    const q4 = answers.q4;
+    const wish = (answers.q5 || '').trim();
+
+    // 미러링 한 줄 (Q2 답 → 결과)
+    const mirror = (Q2_MIRROR[stage] && Q2_MIRROR[stage][q2]) || '';
+    const contextBlock = mirror ? `<div class="onb-context">${mirror}</div>` : '';
+
+    // 동행 한 줄 (path × Q2 × Q3 변주)
+    const companion = companionFor(stage, q2, q3);
+
+    // 자유서술 인용
     const quoteBlock = wish
       ? `<div class="onb-quote"><div class="onb-quote-q">"${escapeHtml(wish)}"</div>
          <div class="onb-quote-sub">이 한 문장이, 지금 여기 와 계신 이유예요.</div></div>`
       : '';
+
+    // SOLO 블록 (path별 변주)
+    const solo = soloFor(stage);
     const soloBlock = answers.solo
-      ? `<div class="onb-solo">${SOLO.name}<br>${SOLO.companion}</div>`
+      ? `<div class="onb-solo">${solo.name}<br>${solo.companion}</div>`
       : '';
 
+    // 첫걸음 카드 (path × Q2 × Q4 강도 반영)
+    const fs = firstStepFor(stage, q2, q4);
+    const intensityMirror = Q4_MIRROR[q4] ? `<div class="onb-skip-hint" style="margin-top:6px;">${Q4_MIRROR[q4]}</div>` : '';
+
     const firstStep = `<div class="onb-step-card">
-        <div class="onb-step-card-label">지금, 가장 가벼운 첫걸음</div>
-        <div class="onb-step-card-text">${s.step}</div>
+        <div class="onb-step-card-label">${fs.label}</div>
+        <div class="onb-step-card-text">${fs.text}</div>
         ${loggedIn
-          ? `<a class="onb-primary" href="${s.href}">${s.cta}</a>`
-          : `<button class="onb-primary" id="cta-gate">${s.cta}</button>`}
+          ? `<a class="onb-primary" href="${fs.href}">${fs.cta}</a>`
+          : `<button class="onb-primary" id="cta-gate">${fs.cta}</button>`}
+        ${intensityMirror}
       </div>`;
 
     const gate = loggedIn ? '' : `
@@ -385,28 +659,32 @@
           </span>
         </label>
         <div class="onb-social" id="social-auth"></div>
-        <a class="onb-primary" href="./signup.html?next=${encodeURIComponent(s.href)}" style="margin-top:10px;">이메일로 시작하기</a>
+        <a class="onb-primary" href="./signup.html?next=${encodeURIComponent(fs.href)}" style="margin-top:10px;">이메일로 시작하기</a>
         <button class="onb-skip" id="skip">지금은 저장 없이 둘러볼게요</button>
       </div>`;
 
     resultEl.innerHTML = `
       <div class="onb-result-head"><div class="onb-result-kicker">당신의 자리가 그려졌어요</div>
-        <div class="onb-name">${s.name}</div></div>
+        <div class="onb-name">${base.name}</div></div>
+      ${contextBlock}
       ${quoteBlock}
       ${soloBlock}
-      <div class="onb-companion">${s.companion}</div>
+      <div class="onb-companion">${companion}</div>
       ${firstStep}
       ${gate}
       <button class="onb-restart" id="restart">처음부터 다시 해보기</button>`;
     window.scrollTo(0, 0);
 
     if (!loggedIn) {
-      renderSocialAuthButtons($('social-auth'), { redirectAfter: s.href });
-      $('cta-gate').addEventListener('click', () => $('gate').scrollIntoView({ behavior: 'smooth' }));
+      renderSocialAuthButtons($('social-auth'), { redirectAfter: fs.href });
+      const ctaGate = $('cta-gate');
+      if (ctaGate) ctaGate.addEventListener('click', () => $('gate').scrollIntoView({ behavior: 'smooth' }));
+      const skip = $('skip');
+      if (skip) skip.addEventListener('click', () => { window.location.href = fs.href; });
     }
     $('restart').addEventListener('click', () => {
       if (!confirm('답한 내용을 지우고 처음부터 다시 할까요?')) return;
-      answers = {}; idx = 0; saveAns();
+      answers = {}; idx = 0; steps = [Q1]; saveAns();
       resultEl.classList.add('hidden'); introEl.classList.remove('hidden'); window.scrollTo(0, 0);
     });
   }
