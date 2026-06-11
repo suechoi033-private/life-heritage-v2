@@ -111,12 +111,38 @@
   const { renderTopBar } = await import('../nav.js');
   await renderTopBar({ active: 'note' });
 
-  // ── 저장 (프로토타입: localStorage. 후속: will_answers/will_drafts 테이블) ──
+  // ── 저장 (localStorage 캐시 + 서버 will_entries 동기화) ──
   const KEY = `itda:will_builder:${user.id}`;
   const load = () => { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch { return {}; } };
-  const save = (o) => localStorage.setItem(KEY, JSON.stringify(o));
+  let saveTimer = null;
+  const save = (o) => {
+    localStorage.setItem(KEY, JSON.stringify(o));
+    // 서버 동기화 (디바운스 — 본인만 RLS)
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      supabase.from('will_entries').upsert({
+        user_id: user.id,
+        answers: o,
+        requirement_met: requirementMet(),
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id' }).then(({ error }) => {
+        if (error) console.warn('[will] 서버 저장 실패', error.message);
+      });
+    }, 600);
+  };
   let answers = load();
   answers.name = answers.name || userName;
+
+  // 서버에 저장된 답변이 있으면 가져와 채운다(다른 기기에서 이어쓰기)
+  try {
+    const { data: row } = await supabase.from('will_entries')
+      .select('answers').eq('user_id', user.id).maybeSingle();
+    if (row?.answers && Object.keys(row.answers).length) {
+      answers = { ...row.answers, name: row.answers.name || userName };
+      localStorage.setItem(KEY, JSON.stringify(answers));
+    }
+  } catch (_) { /* 오프라인 등 — localStorage로 진행 */ }
+
 
   // ── 질문 정의: 가벼운 질문 + 하단 회색 '채우는 법적 요건' ──
   // required: 자필 유언이 '형태'를 갖추는 데 꼭 필요한 항목
@@ -268,12 +294,16 @@
       ? `<div class="ok-banner">✅ 유언장의 <b>형태</b>가 갖춰졌어요. 아래 초안을 그대로 손으로 옮겨 적으면 자필 유언의 형식 요건을 채울 수 있어요.</div>`
       : `<div class="nudge">조금만 더 하면 돼요. <b>${missingLabel()}</b>만 채우면 유언장 형태가 완성돼요. <button class="btn-text" id="go-fix">채우러 가기</button></div>`;
 
+    let aiDraft = null;
+    const activeDraft = () => aiDraft || buildDraft();
+
     stage.innerHTML = `
       ${banner}
-      <div class="draft-mark">초안 · 아직 법적 효력은 없어요</div>
+      <div class="draft-mark" id="draft-mark">초안 · 아직 법적 효력은 없어요</div>
       <div class="draft" id="draft">${escapeHtml(buildDraft())}</div>
       <div class="actions">
-        <button class="btn btn-primary" id="copy">초안 복사하기</button>
+        <button class="btn btn-primary" id="ai">✨ AI로 다듬기</button>
+        <button class="btn btn-ghost" id="copy">복사하기</button>
         <button class="btn btn-ghost" id="edit">다시 고치기</button>
       </div>
 
@@ -294,12 +324,42 @@
     `;
 
     document.getElementById('copy').addEventListener('click', async () => {
-      try { await navigator.clipboard.writeText(buildDraft()); document.getElementById('copy').textContent = '복사됐어요 ✓'; }
+      try { await navigator.clipboard.writeText(activeDraft()); document.getElementById('copy').textContent = '복사됐어요 ✓'; }
       catch { alert('복사가 안 됐어요. 길게 눌러 직접 복사해 주세요.'); }
     });
     document.getElementById('edit').addEventListener('click', () => { idx = 0; renderStep(); });
     const fixBtn = document.getElementById('go-fix');
     if (fixBtn) fixBtn.addEventListener('click', () => { idx = firstMissingIdx(); renderStep(); });
+
+    // ✨ AI로 다듬기 — vault-will Edge Function 호출
+    const aiBtn = document.getElementById('ai');
+    aiBtn.addEventListener('click', async () => {
+      aiBtn.disabled = true;
+      const prev = aiBtn.textContent;
+      aiBtn.textContent = '다듬는 중…';
+      try {
+        const { data, error } = await supabase.functions.invoke('vault-will', { body: { answers } });
+        if (error) throw error;
+        if (data?.draft) {
+          aiDraft = data.draft;
+          document.getElementById('draft').textContent = aiDraft;
+          document.getElementById('draft-mark').textContent = 'AI가 다듬은 초안 · 아직 법적 효력은 없어요';
+          aiBtn.textContent = '✓ 다듬었어요';
+          // 서버에 초안 저장(본인만)
+          supabase.from('will_entries').upsert({
+            user_id: user.id, answers, draft_text: aiDraft,
+            requirement_met: requirementMet(), updated_at: new Date().toISOString(),
+          }, { onConflict: 'user_id' }).then(({ error: e }) => { if (e) console.warn('[will] draft 저장 실패', e.message); });
+        } else {
+          throw new Error(data?.error || '빈 응답');
+        }
+      } catch (e) {
+        console.warn('[will] AI 다듬기 실패', e);
+        aiBtn.disabled = false;
+        aiBtn.textContent = prev;
+        alert('AI 다듬기는 곧 열려요. 지금은 아래 초안을 그대로 쓰셔도 괜찮아요.');
+      }
+    });
   }
 
   function missingLabel() {

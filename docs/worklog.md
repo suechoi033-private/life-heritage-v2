@@ -46,9 +46,10 @@
 **대화형 삶 정리 → AI 유언 초안 (과업2, 설계 + 프로토타입)**
 - `docs/product/conversational-will-builder.md` 작성. 핵심: **AI 텍스트는 그 자체로 유효 유언 아님**(민법 1066조 자필 요건/대법원 전자문서 불인정) → 포지션 = "초안 + 자필 가이드까지, 화상공증은 준비중".
 - 창업자 결정 반영: 가벼운 질문 + **하단 회색글씨로 '채우는 법적 요건' 안내**, 출구는 초안+자필 가이드, 화상공증 "준비중이에요". 질문↔요건 매핑표·요건 충족도 nudge(1차 notifications 재사용) 포함.
-- **프로토타입 구현**: `note/will-builder.html` — 5단계 대화형(스킵 가능)·존엄한 진행도·답변 조립 초안·자필 유언 체크리스트·화상공증 "준비중" 박스. 저장은 localStorage(후속: will_answers/will_drafts 테이블 + vault-will Edge Function로 AI 초안). `note/will.html`에 진입 CTA 추가.
+- **프로토타입 구현**: `note/will-builder.html` — 5단계 대화형(스킵 가능)·존엄한 진행도·답변 조립 초안·자필 유언 체크리스트·화상공증 "준비중" 박스. `note/will.html`에 진입 CTA 추가.
+- **서버 저장 + AI 초안 연동**: `will_entries` 테이블(본인 RLS, 사용자당 1행, answers·draft_text·requirement_met) 신설. will-builder가 답변을 localStorage 캐시 + 서버 upsert(다기기 이어쓰기). **`vault-will` Edge Function 배포**(verify_jwt=true, claude-opus-4-8 + adaptive thinking) → "✨ AI로 다듬기" 버튼이 답변→유언장 초안 생성. AI는 효력 단정 금지·존엄 톤·제공 정보만 사용. ANTHROPIC_API_KEY 시크릿 필요.
 
-**배포** — 마이그레이션 `20260610_care_update_notifications` apply_migration 원격 반영(테이블·트리거·정책3·realtime 검증 OK). 작업 브랜치 → main → gh-pages 순 fast-forward 푸시.
+**배포** — `20260610_care_update_notifications` + `will_entries` 마이그레이션 apply_migration 원격 반영. Edge Function `push-notify`(verify_jwt=false)·`vault-will`(verify_jwt=true) 신규 배포. VAPID 공개키 클라이언트 주입. 작업 브랜치 → main → gh-pages 순 fast-forward 푸시.
 
 ---
 
