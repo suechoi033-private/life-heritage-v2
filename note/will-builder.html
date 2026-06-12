@@ -72,6 +72,7 @@
       padding: 24px 22px; white-space: pre-wrap; font-size: 15.5px; line-height: 1.9;
       font-family: var(--font-serif); color: var(--ink);
     }
+    .draft.loading { color: var(--ink-muted); font-style: italic; }
     .draft-mark { font-size: 11px; letter-spacing: 0.08em; color: var(--ink-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 12px; font-family: var(--font-sans, inherit); }
     .section-title { font-size: 16px; font-weight: 800; margin: 28px 0 12px; }
     .checklist { list-style: none; padding: 0; margin: 0; }
@@ -212,7 +213,9 @@
     if (idx >= STEPS.length) { renderResult(); return; }
     renderDots(idx);
     const s = STEPS[idx];
-    prepNote.textContent = '가벼운 질문 몇 개예요. 답하기 싫은 건 언제든 건너뛰어도 괜찮아요.';
+    prepNote.textContent = idx === 0
+      ? '가벼운 질문 몇 개예요. 다 답하시면 AI가 한 편의 유언장으로 정리해드려요. 답하기 싫은 건 건너뛰어도 괜찮아요.'
+      : '가벼운 질문 몇 개예요. 답하기 싫은 건 언제든 건너뛰어도 괜찮아요.';
 
     let inner = '';
     if (s.type === 'identity') {
@@ -287,7 +290,7 @@
   function renderResult() {
     renderDots(STEPS.length);
     fill.style.width = '100%';
-    prepNote.textContent = '여기까지 와주셔서 고마워요. 아래는 답을 모아 만든 초안이에요.';
+    prepNote.textContent = '여기까지 와주셔서 고마워요. 답을 바탕으로 AI가 한 편의 유언장으로 정리해드려요.';
     const met = requirementMet();
 
     const banner = met
@@ -299,11 +302,11 @@
 
     stage.innerHTML = `
       ${banner}
-      <div class="draft-mark" id="draft-mark">초안 · 아직 법적 효력은 없어요</div>
-      <div class="draft" id="draft">${escapeHtml(buildDraft())}</div>
+      <div class="draft-mark" id="draft-mark">정리하는 중이에요</div>
+      <div class="draft loading" id="draft">답을 모아 한 편의 유언장으로 정리하고 있어요…</div>
       <div class="actions">
-        <button class="btn btn-primary" id="ai">✨ AI로 다듬기</button>
-        <button class="btn btn-ghost" id="copy">복사하기</button>
+        <button class="btn btn-primary" id="copy" disabled>복사하기</button>
+        <button class="btn btn-ghost" id="redo" style="display:none;">✨ 다시 정리</button>
         <button class="btn btn-ghost" id="edit">다시 고치기</button>
       </div>
 
@@ -320,7 +323,7 @@
         <p><b>화상 공증 연동</b> — 손으로 쓰지 않아도 공증인과 화상으로 만나 ‘공정증서 유언’을 남기는 길을 준비하고 있어요. 곧 이 자리에서 바로 이어드릴게요.</p>
       </div>
 
-      <div class="disclaimer">잇다는 유언의 <b>내용과 형식</b>을 갖추도록 도와드려요. 법적 효력은 직접 손으로 쓴 자필 유언, 또는 공증을 통해 생겨요. 재산·상속이 복잡하거나 다툼이 걱정되면 변호사·법무사와 상의하시길 권해요.</div>
+      <div class="disclaimer">잇다는 답하신 내용을 <b>그대로</b> 담아 유언장 형식으로 정리해드려요(없는 내용을 지어내지 않아요). 법적 효력은 직접 손으로 쓴 자필 유언, 또는 공증을 통해 생겨요. 재산·상속이 복잡하거나 다툼이 걱정되면 변호사·법무사와 상의하시길 권해요.</div>
     `;
 
     document.getElementById('copy').addEventListener('click', async () => {
@@ -328,38 +331,51 @@
       catch { alert('복사가 안 됐어요. 길게 눌러 직접 복사해 주세요.'); }
     });
     document.getElementById('edit').addEventListener('click', () => { idx = 0; renderStep(); });
+    document.getElementById('redo').addEventListener('click', () => organizeDraft());
     const fixBtn = document.getElementById('go-fix');
     if (fixBtn) fixBtn.addEventListener('click', () => { idx = firstMissingIdx(); renderStep(); });
 
-    // ✨ AI로 다듬기 — vault-will Edge Function 호출
-    const aiBtn = document.getElementById('ai');
-    aiBtn.addEventListener('click', async () => {
-      aiBtn.disabled = true;
-      const prev = aiBtn.textContent;
-      aiBtn.textContent = '다듬는 중…';
+    // 결과 화면 진입 즉시 AI 정리를 실행한다(버튼 없이도 정돈된 초안이 바로 나오도록).
+    async function organizeDraft() {
+      const draftEl = document.getElementById('draft');
+      const markEl = document.getElementById('draft-mark');
+      const copyBtn = document.getElementById('copy');
+      const redoBtn = document.getElementById('redo');
+      draftEl.classList.add('loading');
+      draftEl.textContent = '답을 모아 한 편의 유언장으로 정리하고 있어요…';
+      markEl.textContent = '정리하는 중이에요';
+      copyBtn.disabled = true;
+      redoBtn.style.display = 'none';
       try {
         const { data, error } = await supabase.functions.invoke('vault-will', { body: { answers } });
         if (error) throw error;
-        if (data?.draft) {
-          aiDraft = data.draft;
-          document.getElementById('draft').textContent = aiDraft;
-          document.getElementById('draft-mark').textContent = 'AI가 다듬은 초안 · 아직 법적 효력은 없어요';
-          aiBtn.textContent = '✓ 다듬었어요';
-          // 서버에 초안 저장(본인만)
-          supabase.from('will_entries').upsert({
-            user_id: user.id, answers, draft_text: aiDraft,
-            requirement_met: requirementMet(), updated_at: new Date().toISOString(),
-          }, { onConflict: 'user_id' }).then(({ error: e }) => { if (e) console.warn('[will] draft 저장 실패', e.message); });
-        } else {
-          throw new Error(data?.error || '빈 응답');
-        }
+        if (!data?.draft) throw new Error(data?.error || '빈 응답');
+        aiDraft = data.draft;
+        draftEl.classList.remove('loading');
+        draftEl.textContent = aiDraft;
+        markEl.textContent = 'AI가 정리한 초안 · 아직 법적 효력은 없어요';
+        copyBtn.disabled = false;
+        redoBtn.textContent = '✨ 다시 정리';
+        redoBtn.style.display = '';
+        // 서버에 초안 저장(본인만)
+        supabase.from('will_entries').upsert({
+          user_id: user.id, answers, draft_text: aiDraft,
+          requirement_met: requirementMet(), updated_at: new Date().toISOString(),
+        }, { onConflict: 'user_id' }).then(({ error: e }) => { if (e) console.warn('[will] draft 저장 실패', e.message); });
       } catch (e) {
-        console.warn('[will] AI 다듬기 실패', e);
-        aiBtn.disabled = false;
-        aiBtn.textContent = prev;
-        alert('AI 다듬기는 곧 열려요. 지금은 아래 초안을 그대로 쓰셔도 괜찮아요.');
+        // 정리 실패 시 — 답을 모은 구조 초안으로 폴백(빈 화면 방지).
+        console.warn('[will] AI 정리 실패, 구조 초안으로 폴백', e);
+        aiDraft = null;
+        draftEl.classList.remove('loading');
+        draftEl.textContent = buildDraft();
+        markEl.textContent = '초안 · 아직 법적 효력은 없어요';
+        copyBtn.disabled = false;
+        redoBtn.textContent = '✨ AI로 정리';
+        redoBtn.style.display = '';
       }
-    });
+    }
+
+    organizeDraft();
   }
 
   function missingLabel() {
