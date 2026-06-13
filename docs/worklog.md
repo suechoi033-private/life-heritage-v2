@@ -21,6 +21,15 @@
 
 ## 2026-06-13
 
+**잇다 의견·요청 폼 진입점 구현 (PE 세션, 사장님 결정 반영)**
+- 단일 원천: 사장님 확정 구글폼 URL(`docs.google.com/forms/d/e/1FAIpQLSfmsc33WCvi-Fwr7at7ci4HSXeNfL8dTN4JuoNCmhRp32kQXg/viewform?usp=pp_url&entry.1462653906=URL_HERE`) + 다수 오류 시 안내용 이메일(`itda.life.heritage@gmail.com`). `URL_HERE` 자리는 클릭 시점에 `encodeURIComponent(location.href)`로 자동 치환.
+- **공통 footer 진입점 (작업 1)**: nav.js를 쓰는 39개 페이지는 `_renderFooter()` 한 곳에 "잇다에 의견 보내기 →" 한 줄 링크를 추가(© 라인 위, 약관/개인정보 링크와 시각 분리). nav.js를 안 쓰는 auth 계열 페이지(signup·login·forgot·reset·welcome·beta)에는 신규 `js/feedback-link.js`가 `footer.auth-footer` 안에 동일 링크를 동적 prepend(중복 방지를 위해 `itda-footer`가 이미 떠 있으면 no-op). 카피 선택: **"잇다에 의견 보내기 →"** — "잇다에"를 살려 발신자(사용자)와 수신자(잇다)의 관계를 분명히 하고, 헌장의 조용·존엄 톤과 일치. 6개 페이지에 `<script src="./js/feedback-link.js"></script>` 한 줄씩 추가.
+- **beta.html 피드백 채널 교체 (작업 2)**: 이전 라운드의 `<textarea>` + localStorage(`itda:beta_feedback`) 저장 흐름 전부 제거, `hello@lifeheritage.kr` 표기도 제거. 교체: (a) `.quiet-card` 톤의 "구글폼 진입 카드" — `의견·요청·오류는 짧은 폼으로 보내주세요.` + 알약 CTA `의견·요청 보내기 →` (b) 이메일 안내(사장님 카피 그대로) `오류가 있는 페이지가 다수인 경우, 캡처하여 이메일로 알려주시면 더 나은 서비스로 보답하겠습니다. (이메일: itda.life.heritage@gmail.com)`. M3 이벤트 이름은 `beta_feedback_submit` → **`beta_click_feedback_form`** 으로 명료화(클릭 ≠ 제출).
+- 변경 파일: `nav.js`(footer 마크업·스타일·이벤트 핸들러), `js/feedback-link.js`(신규, 자립형 IIFE), `signup.html`·`login.html`·`forgot.html`·`reset.html`·`welcome.html`·`beta.html`(`<script src="./js/feedback-link.js"></script>` 한 줄 추가), `beta.html`(피드백 섹션 마크업·CSS·JS 교체), `sw.js`(`CACHE_VERSION` → `itda-v3-2026-06-13-feedback-form-v1`, APP_SHELL에 `./js/feedback-link.js` 추가).
+- 검증: 브라우저 콘솔 한 줄로 동작 확인 가능 — `window.open('https://docs.google.com/forms/d/e/1FAIpQLSfmsc33WCvi-Fwr7at7ci4HSXeNfL8dTN4JuoNCmhRp32kQXg/viewform?usp=pp_url&entry.1462653906=' + encodeURIComponent(location.href), '_blank', 'noopener')`. 폼 열렸을 때 "URL" 항목에 현재 페이지 주소가 자동 채워져 있어야 함.
+- 디자인 토큰만 사용(--ink-soft/--primary/--bg-alt/--line/--radius-sm), 임의 hex 0건. 헌장(조용함·존엄·과시 금지) 일관.
+- 잠재 리스크: ①신규 구글폼 entry ID(`entry.1462653906`)가 사장님 폼에 실재해야 자동 채움이 동작 — 사장님 검토 시 폼을 한 번 열어 "URL" 필드 prefilled 확인 필요. ②`feedback-link.js`는 `type="module"`이 아닌 일반 스크립트 — auth 페이지가 module 로딩 전이라도 footer는 정적이므로 mount 시점에 footer가 이미 DOM에 있어 정상 동작. ③beta.html의 `beta_feedback_submit` 이벤트를 운영자가 수집/분석 중이었다면 새 이름 `beta_click_feedback_form`으로 파이프라인 갱신 필요(현재 수집은 localStorage only → 영향 0). ④사용자가 footer까지 스크롤하지 않으면 진입점 발견율이 낮을 수 있음 — 본 라운드는 "어디서든 접근 가능한 안전망" 목적이고, 강한 진입(예: 우측 하단 floating)은 다음 라운드 결정.
+
 **seed-12 인스타 카드뉴스 1편 (8장) — D3 컨펌·D5 보류 반영** (마케터 세션)
 - 단일 원천: `docs/content/seed-12-live-without-regret.md`(원본 글), `docs/strategy/acquisition-task-oriented-2026-06-13.md` 3장(인스타 channel 설계), `docs/company/CHARTER.md`(조용함·존엄·과시 금지).
 - 결 흐름 8장: Hook(질문) → "잘 죽는 것=잘 사는 것" → 0.5초 만에 떠오른 사람 → 4가지 후회 카테고리 → 미룸의 누적 → 오늘부터 할 수 있는 3가지 → 잇다 소개 → 무약속 CTA.
