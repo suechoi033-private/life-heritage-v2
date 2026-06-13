@@ -66,6 +66,10 @@
 | D3 이웃 글 정의 | (a) 시각·언어 처리만 | `index.html` `feedCard()` 칩 라벨 | `먼저 겪은 이웃` |
 | D4 게이트 경로 | A+B 혼합 추인 | (PR #41 적용 완료) | — (변경 0, 추인만) |
 
+**버그 수정 — 하단 nav가 스크롤 중 화면 중간으로 떠오르는 문제** (PE 세션)
+- 원인: `body { zoom: 1.1 }` 가 iOS Safari에서 `position: fixed` 의 좌표 기준을 zoom된 공간으로 잡아 하단 메뉴바가 viewport 바닥이 아닌 본문 중간에 붙어 보였음(콘텐츠 상세처럼 본문이 긴 페이지에서 두드러짐).
+- 수정: zoom을 body에서 떼고 컨테이너(`.itda-top-bar` · `body > main` · `.itda-bottom-nav`) 각자에 적용 — 110% 가독성 스케일은 유지, 고정 nav는 viewport 기준으로 정확히 바닥에 고정.
+
 ---
 
 ## 2026-06-12

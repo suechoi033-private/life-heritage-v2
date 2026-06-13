@@ -39,13 +39,22 @@ body {
   color: var(--ink);
   line-height: 1.6;
   font-size: 16px;
-  zoom: 1.1;                 /* 전역 110% 스케일 — 가독성 강화 (텍스트·UI 비례 확대) */
   -webkit-font-smoothing: antialiased;
   word-break: keep-all;
   overflow-wrap: break-word;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+/* 전역 110% 스케일 — 가독성 강화.
+   ※ body에 zoom을 걸면 iOS Safari에서 position:fixed 의 좌표 기준이 zoom된 공간으로 잡혀
+     하단 nav가 스크롤 중 viewport 중간에 떠 보이는 문제가 발생.
+   해결: zoom을 body가 아니라 컨테이너(상단 바·본문·하단 nav) 각자에 적용. */
+.itda-top-bar,
+.itda-bottom-nav,
+body > main {
+  zoom: 1.1;
 }
 
 a { color: var(--primary); text-decoration: none; }
