@@ -129,6 +129,7 @@ function _renderBottomTabs({ active, loggedIn }) {
 }
 
 // 콘텐츠 끝 푸터 — 모든 페이지 공통. 회사정보·잇다 이야기·약관/개인정보 링크.
+// 의견·요청·오류 진입점도 여기 한 줄로 노출(전 페이지 동일 마크업).
 function _renderFooter() {
   if (document.getElementById('itda-footer')) return;
 
@@ -136,11 +137,14 @@ function _renderFooter() {
   f.id = 'itda-footer';
   f.className = 'itda-footer';
   f.innerHTML = `
-    <a class="itda-footer-link" href="${ROOT}about.html">잇다 이야기</a>
-    <span class="itda-footer-sep">·</span>
-    <a class="itda-footer-link" href="#" data-itda-terms>이용약관</a>
-    <span class="itda-footer-sep">·</span>
-    <a class="itda-footer-link" href="#" data-itda-privacy>개인정보</a>
+    <a class="itda-footer-feedback" href="#" data-itda-feedback>잇다에 의견 보내기 <span aria-hidden="true">→</span></a>
+    <div class="itda-footer-links">
+      <a class="itda-footer-link" href="${ROOT}about.html">잇다 이야기</a>
+      <span class="itda-footer-sep">·</span>
+      <a class="itda-footer-link" href="#" data-itda-terms>이용약관</a>
+      <span class="itda-footer-sep">·</span>
+      <a class="itda-footer-link" href="#" data-itda-privacy>개인정보</a>
+    </div>
     <div class="itda-footer-copy">© 라이프헤리티지 · ITDA</div>
   `;
 
@@ -150,6 +154,16 @@ function _renderFooter() {
     document.body.insertBefore(f, bottomNav);
   } else {
     document.body.appendChild(f);
+  }
+
+  // 의견 보내기 — 새 탭으로 구글폼 열기 + 현재 페이지 URL 자동 채움(URL 인코딩).
+  const feedbackLink = f.querySelector('[data-itda-feedback]');
+  if (feedbackLink) {
+    feedbackLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      const base = 'https://docs.google.com/forms/d/e/1FAIpQLSfmsc33WCvi-Fwr7at7ci4HSXeNfL8dTN4JuoNCmhRp32kQXg/viewform?usp=pp_url&entry.1462653906=';
+      window.open(base + encodeURIComponent(location.href), '_blank', 'noopener');
+    });
   }
 
   if (!document.getElementById('itda-footer-style')) {
@@ -166,6 +180,18 @@ function _renderFooter() {
         line-height: 1.8;
         border-top: 1px solid var(--line);
       }
+      .itda-footer-feedback {
+        display: inline-block;
+        margin-bottom: 10px;
+        font-size: 12.5px;
+        font-weight: 700;
+        color: var(--ink-soft);
+        text-decoration: none;
+        letter-spacing: -0.005em;
+        transition: color 0.15s;
+      }
+      .itda-footer-feedback:hover { color: var(--primary); }
+      .itda-footer-links { line-height: 1.8; }
       .itda-footer-link {
         color: var(--ink-soft);
         text-decoration: none;
