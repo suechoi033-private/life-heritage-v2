@@ -363,7 +363,7 @@
   <div class="my-menu">
     <a href="./invite.html">
       <span class="menu-icon">💌</span>
-      <span>친구 초대하기</span>
+      <span>가족과 함께 보기</span>
       <span class="menu-arrow">›</span>
     </a>
     <a href="./self.html">
@@ -688,7 +688,7 @@
   }
 
   function renderFriends(items) {
-    if (!items.length) return setEmpty('아직 친구가 없어요', '잇다 친구를 초대해 보세요', './invite.html');
+    if (!items.length) return setEmpty('함께 보는 가족이 없어요', '가족과 같이 보기로 이어가 보세요', './invite.html');
     document.getElementById('activity-body').innerHTML = `
       <div class="friend-grid">
         ${items.map((f) => `

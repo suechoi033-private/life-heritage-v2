@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>친구 초대 · 잇다</title>
-  <meta name="description" content="잇다 친구를 초대하거나 초대를 수락하세요">
+  <title>가족과 함께 보기 · 잇다</title>
+  <meta name="description" content="잇다에서 기록을 가족과 함께 봅니다">
   <link rel="stylesheet" href="./auth-styles.css">
   <link rel="manifest" href="./manifest.json">
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
   <meta name="theme-color" content="#2F6B4F">
-  <meta property="og:title" content="잇다 친구 초대">
-  <meta property="og:description" content="잇다에서 함께 기록하고 성찰해요">
+  <meta property="og:title" content="잇다 · 함께 기록을 봐요">
+  <meta property="og:description" content="그동안 남긴 기록을 같은 곳에서 함께 볼 수 있어요">
   <style>
     .invite-card {
       background: var(--bg-alt);
@@ -31,6 +31,31 @@
       color: var(--ink-soft);
       line-height: 1.65;
       margin-bottom: 14px;
+    }
+    .invite-message {
+      width: 100%;
+      box-sizing: border-box;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: #fff;
+      padding: 11px 13px;
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--ink);
+      line-height: 1.5;
+      resize: none;
+      margin-bottom: 14px;
+    }
+    .invite-message::placeholder { color: var(--ink-faint); }
+    .invite-message:focus { outline: none; border-color: var(--primary); }
+    .invite-status {
+      margin-top: 4px;
+    }
+    .invite-status-line {
+      font-size: 13.5px;
+      color: var(--ink-soft);
+      line-height: 1.6;
+      padding: 2px 2px;
     }
     .invite-share-grid {
       display: grid;
@@ -141,9 +166,9 @@
 <script type="module">
   import { supabase } from './auth.js';
   import { renderNav } from './nav.js';
-  import { createFriendInvite, shareViaKakao, fetchInviteByCode, acceptFriendInvite } from './js/friends.js';
+  import { createFriendInvite, shareViaKakao, fetchInviteByCode, acceptFriendInvite, listFriends, listMyPendingInvites, previewFriendInvite } from './js/friends.js';
 
-  await renderNav({ active: 'root', infoIcon: false, title: '친구 초대' });
+  await renderNav({ active: 'root', infoIcon: false, title: '가족과 함께 보기' });
 
   const params = new URLSearchParams(location.search);
   const code = (params.get('code') || '').toUpperCase();
@@ -162,13 +187,25 @@
 
     if (!session) {
       localStorage.setItem('itda:pending_friend_invite', code);
+      // 보기 먼저(P6): 가입 전에 보낸 사람 이름 + 한마디를 보여준다.
+      // preview_friend_invite RPC가 적용돼 있으면 이름이 뜨고, 미적용이면 일반 화면으로 폴백.
+      let preview = null;
+      try { preview = await previewFriendInvite(code); } catch {}
+      const who = preview?.inviter_name ? escapeHtml(preview.inviter_name) : '';
+      const avatar = who ? who[0] : '♡';
+      const msg = preview?.message ? escapeHtml(preview.message) : '';
       body.innerHTML = `
+        <div class="invite-inviter">
+          <div class="invite-inviter-avatar">${avatar}</div>
+          <div class="invite-inviter-name">${who ? who + '님이 ' : '가족이 '}함께 보자고 해요</div>
+          <div class="invite-inviter-sub">잇다에 들어오면 같은 화면에서 기록을 함께 봐요</div>
+        </div>
+        ${msg ? `<div class="invite-card"><div class="invite-card-desc" style="margin:0;">"${msg}"</div></div>` : ''}
         <div class="invite-card">
-          <div class="invite-card-title">잇다에 초대받으셨어요</div>
-          <div class="invite-card-desc">로그인 또는 가입하시면 자동으로 친구가 됩니다.</div>
+          <div class="invite-card-desc" style="margin:0 0 14px;">잠깐 들어오시면 지금까지 남긴 기록을 함께 보고, 이어 적을 수 있어요.</div>
           <div style="display:flex;gap:10px;">
-            <a href="./login.html?friend=${encodeURIComponent(code)}" style="flex:1;padding:13px;background:var(--primary);color:#fff;text-align:center;border-radius:12px;font-weight:700;text-decoration:none;">로그인</a>
-            <a href="./signup.html?friend=${encodeURIComponent(code)}" style="flex:1;padding:13px;background:#fff;color:var(--primary);text-align:center;border-radius:12px;font-weight:700;border:1.5px solid var(--primary);text-decoration:none;">가입하기</a>
+            <a href="./signup.html?friend=${encodeURIComponent(code)}" style="flex:1;padding:13px;background:var(--primary);color:#fff;text-align:center;border-radius:12px;font-weight:700;text-decoration:none;">들어가기</a>
+            <a href="./login.html?friend=${encodeURIComponent(code)}" style="flex:1;padding:13px;background:#fff;color:var(--primary);text-align:center;border-radius:12px;font-weight:700;border:1.5px solid var(--primary);text-decoration:none;">로그인</a>
           </div>
         </div>`;
       return;
@@ -191,10 +228,10 @@
     if (invite.inviter_id === session.user.id) {
       body.innerHTML = `
         <div class="empty-state">
-          <div class="empty-icon">😊</div>
-          <div class="empty-title">본인이 만든 초대예요</div>
-          <div class="empty-desc">이 링크를 친구에게 공유해 주세요.</div>
-          <div class="cta-block"><a href="./invite.html">초대 링크 다시 보기</a></div>
+          <div class="empty-icon">🙂</div>
+          <div class="empty-title">내가 보낸 링크예요</div>
+          <div class="empty-desc">이 링크를 가족에게 보내주세요.</div>
+          <div class="cta-block"><a href="./invite.html">링크 다시 보기</a></div>
         </div>`;
       return;
     }
@@ -206,12 +243,14 @@
       <div class="invite-inviter">
         <div class="invite-inviter-avatar">${initial}</div>
         <div class="invite-inviter-name">${escapeHtml(inviter.name || '잇다 사용자')}</div>
-        <div class="invite-inviter-sub">님이 친구로 초대했어요</div>
+        <div class="invite-inviter-sub">님이 함께 보자고 해요</div>
       </div>
-      ${invite.message ? `<div class="invite-card"><div class="invite-card-desc" style="margin:0;">"${escapeHtml(invite.message)}"</div></div>` : ''}
+      ${invite.message
+        ? `<div class="invite-card"><div class="invite-card-desc" style="margin:0;">"${escapeHtml(invite.message)}"</div></div>`
+        : `<div class="invite-card"><div class="invite-card-desc" style="margin:0;">그동안 혼자 적어온 기록이에요. 함께 보면 다음 면회 전에 "그때 뭐라고 했더라"를 안 헤매도 돼요.</div></div>`}
       <div class="invite-actions">
-        <button class="btn-reject" id="btn-reject">다음에</button>
-        <button class="btn-accept" id="btn-accept">친구 수락</button>
+        <button class="btn-reject" id="btn-reject">나중에</button>
+        <button class="btn-accept" id="btn-accept">같이 보기</button>
       </div>
     `;
 
@@ -222,9 +261,9 @@
         body.innerHTML = `
           <div class="invite-inviter">
             <div class="invite-inviter-avatar" style="background:var(--success-soft);color:var(--success);">✓</div>
-            <div class="invite-inviter-name">친구가 되었습니다</div>
-            <div class="invite-inviter-sub">이제 함께 잇다에서 기록을 나눠보세요</div>
-            <div class="cta-block"><a href="./index.html">홈으로</a></div>
+            <div class="invite-inviter-name">이제 같이 봐요</div>
+            <div class="invite-inviter-sub">${escapeHtml(inviter.name || '가족')}님의 기록을 함께 볼 수 있어요. 면회 후 한 줄 남기면 서로 바로 알 수 있어요.</div>
+            <div class="cta-block"><a href="./index.html">기록 보러 가기</a></div>
           </div>`;
       } catch (err) {
         alert(err.message || '수락 실패');
@@ -245,8 +284,9 @@
 
     body.innerHTML = `
       <div class="invite-card">
-        <div class="invite-card-title">친구를 잇다로 초대해요</div>
-        <div class="invite-card-desc">초대 링크를 받은 분이 가입·로그인하면 자동으로 친구가 됩니다.</div>
+        <div class="invite-card-title">이 기록, 가족과 같이 봐요</div>
+        <div class="invite-card-desc">링크 하나면 됩니다. 가족이 열어보면, 지금까지 남긴 기록을 같은 화면에서 함께 봐요.</div>
+        <textarea id="invite-message" class="invite-message" rows="2" maxlength="200" placeholder="한마디 적어 보낼 수 있어요 (예: 엄마 일 우리 같이 보자)"></textarea>
         <div class="invite-share-grid">
           ${kakaoConfigured ? `
             <button class="share-btn" id="share-kakao">
@@ -256,7 +296,7 @@
           ` : ''}
           <button class="share-btn" id="share-link">
             <span class="share-btn-icon">🔗</span>
-            <span class="share-btn-label">링크로 초대</span>
+            <span class="share-btn-label">링크로 보내기</span>
           </button>
         </div>
         <div class="invite-link-box" id="link-box" style="display:none;">
@@ -264,13 +304,43 @@
           <button class="invite-link-copy" id="copy-btn">복사</button>
         </div>
       </div>
+      <div class="invite-status" id="invite-status"></div>
     `;
+
+    // 발급 후 데드엔드 방지 + 관계 가시화(P5): 함께하는 가족 / 보낸 링크 대기 상태
+    renderStatus();
+    async function renderStatus(justSent) {
+      const el = document.getElementById('invite-status');
+      if (!el) return;
+      let friends = [], pending = [];
+      try { [friends, pending] = await Promise.all([listFriends(), listMyPendingInvites()]); } catch {}
+      const parts = [];
+      if (justSent) {
+        parts.push(`
+          <div class="invite-card" style="padding:18px 20px;">
+            <div class="invite-card-title" style="font-size:16px;margin-bottom:6px;">보낸 링크, 잘 가 있어요</div>
+            <div class="invite-card-desc" style="margin:0;">가족이 열어보면 여기서 함께 보게 돼요. 그동안은 평소처럼 기록을 이어가면 돼요.</div>
+          </div>`);
+      }
+      if (friends.length) {
+        const names = friends.map((f) => escapeHtml(f.name || '가족')).join(', ');
+        parts.push(`<div class="invite-status-line">함께하는 가족 ${friends.length}명 · ${names}</div>`);
+      }
+      if (pending.length) {
+        parts.push(`<div class="invite-status-line">아직 열어보지 않은 링크 ${pending.length}건 · 천천히 기다려요</div>`);
+      }
+      el.innerHTML = parts.join('');
+    }
 
     let currentInvite = null;
 
+    function readMessage() {
+      return (document.getElementById('invite-message')?.value || '').trim();
+    }
+
     async function ensureInvite(channel) {
       if (currentInvite) return currentInvite;
-      currentInvite = await createFriendInvite({ channel });
+      currentInvite = await createFriendInvite({ channel, message: readMessage() });
       const box = document.getElementById('link-box');
       box.style.display = 'flex';
       document.getElementById('invite-url').textContent = currentInvite.url;
@@ -281,9 +351,10 @@
       try {
         const invite = await ensureInvite('kakao');
         const name = session.user.user_metadata?.name || '';
-        await shareViaKakao({ url: invite.url, inviterName: name });
+        await shareViaKakao({ url: invite.url, inviterName: name, message: readMessage() });
+        renderStatus(true);
       } catch (err) {
-        alert(err.message || '카카오톡 공유에 실패했어요. 링크로 초대를 이용해 주세요.');
+        alert(err.message || '카카오톡 공유에 실패했어요. 링크로 보내기를 이용해 주세요.');
       }
     });
 
@@ -296,6 +367,7 @@
         const orig = labelEl.textContent;
         labelEl.textContent = '✓ 복사됨';
         setTimeout(() => { labelEl.textContent = orig; }, 1500);
+        renderStatus(true);
       } catch {
         // 클립보드 실패 시 링크만 노출 (수동 복사)
         alert('아래 링크를 길게 눌러 복사해 주세요.');
@@ -310,6 +382,7 @@
         const orig = btn.textContent;
         btn.textContent = '복사됨!';
         setTimeout(() => { btn.textContent = orig; }, 1500);
+        renderStatus(true);
       } catch {
         alert('복사 실패');
       }
@@ -317,12 +390,15 @@
   }
 
   function errorCard(msg) {
+    const expired = /만료|유효하지/.test(msg || '');
     return `
       <div class="empty-state">
         <div class="empty-icon">🙏</div>
-        <div class="empty-title">초대를 처리할 수 없어요</div>
-        <div class="empty-desc">${escapeHtml(msg)}</div>
-        <div class="cta-block"><a href="./index.html">홈으로</a></div>
+        <div class="empty-title">${expired ? '링크가 만료됐어요' : '링크를 열 수 없어요'}</div>
+        <div class="empty-desc">${expired
+          ? '시간이 지나 더 이상 열 수 없어요. 보내준 분에게 새 링크를 받아 다시 열어보세요.'
+          : escapeHtml(msg)}</div>
+        <div class="cta-block"><a href="./index.html">잇다 둘러보기</a></div>
       </div>`;
   }
 

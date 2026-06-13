@@ -108,7 +108,7 @@
     const { data } = await supabase.auth.getSession();
     if (data?.session) { window.location.href = redirectAfterSignup; throw new Error('redirecting'); }
     const lead = document.querySelector('.auth-lead');
-    if (lead) lead.innerHTML = `<strong style="color: var(--primary);">친구 초대</strong>를 받으셨네요. 가입 후 자동으로 연결됩니다.`;
+    if (lead) lead.innerHTML = `<strong style="color: var(--primary);">가족이 함께 보자고</strong> 해요. 가입하면 자동으로 연결됩니다.`;
     showInviteLoginBanner(`./login.html?friend=${friendInvite}`);
   } else if (careInvite) {
     localStorage.setItem('itda:pending_invite', careInvite);

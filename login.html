@@ -104,7 +104,7 @@
     redirectAfterLogin = `./invite.html?code=${encodeURIComponent(friendInvite)}`;
     await redirectIfAuthed(redirectAfterLogin);
     const lead = document.querySelector('.auth-lead');
-    if (lead) lead.innerHTML = `<strong style="color: var(--primary);">친구 초대</strong>를 받으셨네요. 로그인 후 자동으로 연결됩니다.`;
+    if (lead) lead.innerHTML = `<strong style="color: var(--primary);">가족이 함께 보자고</strong> 해요. 로그인하면 자동으로 연결됩니다.`;
   } else if (careInvite) {
     localStorage.setItem('itda:pending_invite', careInvite);
     redirectAfterLogin = `./care.html?accept=${encodeURIComponent(careInvite)}`;
