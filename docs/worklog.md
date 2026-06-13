@@ -70,6 +70,10 @@
 - 원인: `body { zoom: 1.1 }` 가 iOS Safari에서 `position: fixed` 의 좌표 기준을 zoom된 공간으로 잡아 하단 메뉴바가 viewport 바닥이 아닌 본문 중간에 붙어 보였음(콘텐츠 상세처럼 본문이 긴 페이지에서 두드러짐).
 - 수정: zoom을 body에서 떼고 컨테이너(`.itda-top-bar` · `body > main` · `.itda-bottom-nav`) 각자에 적용 — 110% 가독성 스케일은 유지, 고정 nav는 viewport 기준으로 정확히 바닥에 고정.
 
+**오늘 잇고 — "← 어제 질문" 링크** (PE 세션, 사장님 요청)
+- 사장님 요청: "어제 올라온 질문이 뭔지 보고 싶다." 현 로직(가입 N일째 = `display_order`)에선 "유저 기준 어제" = `display_order − 1` 로 정의(플랫폼 캘린더 기준 어제는 `published_at` 컬럼 부재로 불가, 두 시간축 통일 결정 필요 — 별도 라운드).
+- 수정(`ask.html`): q-meta 줄에 `← 어제 질문` 링크 추가, 기본 `hidden`. 오늘 질문 로드 후 `display_order > 1` 이면 `display_order − 1` 인 질문 id를 조회해 링크 노출. 클릭 시 기존 `?id=` 분기로 자연스럽게 "지난 질문" 헤더(`지난 질문 · N번째`)로 진입. 가입 1일째 유저엔 숨김.
+
 ---
 
 ## 2026-06-12
