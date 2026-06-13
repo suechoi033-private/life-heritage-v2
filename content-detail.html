@@ -406,7 +406,7 @@
 <div id="modal-root"></div>
 
 <script type="module">
-  import { supabase } from './auth.js';
+  import { supabase, logEvent } from './auth.js';
   import { renderNav } from './nav.js';
   import { getContent, CATEGORIES, isBookmarked, toggleBookmark, getEmpathy, toggleEmpathy, deleteContent } from './js/content.js';
   import { toggleReaction, getReactionState, reportTarget, REPORT_REASONS, createPost } from './js/community.js';
@@ -557,6 +557,7 @@
   setupReadTime(content.body || '');
   setupTOC();
   setupReadingProgress();
+  setupReadTracking(content); // 정독 계측(스크롤 깊이·체류·완독) — 떠날 때 content_read 1건
 
   // 작성자/관리자 전용 우상단 메뉴 (수정·삭제)
   if (canManage) {
@@ -913,6 +914,51 @@
       }, { rootMargin: '-60px 0px -70% 0px', threshold: 0 });
       headings.forEach((h) => io.observe(h));
     }
+  }
+
+  // ── 정독 계측 (content_read) ────────────────────
+  // "열었다"(pageview)와 "읽었다"를 구분한다. 페이지를 떠날 때(첫 hidden) 1건만 기록.
+  // meta: { contentId, category, maxScrollPct, dwellSec, reachedEnd }. 본문은 전송 안 함.
+  function setupReadTracking(content) {
+    const body = document.getElementById('content-body-text');
+    if (!body) return;
+    let maxPct = 0;
+    let shortArticle = false;
+
+    const measure = () => {
+      const rect = body.getBoundingClientRect();
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      const total = rect.height - vh;
+      if (total <= 0) { shortArticle = true; if (maxPct < 100) maxPct = 100; return; }
+      const pct = Math.min(100, Math.max(0, (-rect.top / total) * 100));
+      if (pct > maxPct) maxPct = pct;
+    };
+    window.addEventListener('scroll', measure, { passive: true });
+    window.addEventListener('resize', measure, { passive: true });
+    measure();
+
+    // 체류 시간: 화면이 보이는 동안만 누적(비활성 탭 시간 제외).
+    let dwellMs = 0;
+    let lastTs = (document.visibilityState === 'visible') ? Date.now() : null;
+    let sent = false;
+    const accumulate = () => { if (lastTs != null) { dwellMs += Date.now() - lastTs; lastTs = null; } };
+    const send = () => {
+      if (sent) return; sent = true;
+      accumulate();
+      logEvent('content_read', {
+        contentId: content.id,
+        category: content.category,
+        maxScrollPct: Math.round(maxPct),
+        dwellSec: Math.round(dwellMs / 1000),
+        reachedEnd: shortArticle || maxPct >= 90,
+      });
+    };
+    // 모바일은 pagehide가 항상 발화하지 않으므로 visibilitychange(hidden)를 종료 신호로 함께 본다.
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') send();
+      else if (lastTs == null && !sent) lastTs = Date.now();
+    });
+    window.addEventListener('pagehide', send);
   }
 
   // ── 읽기 진척도 바 ──────────────────────────────

@@ -8,6 +8,21 @@
 - 출처는 git 커밋. 다른 세션 작업이 빠져 있으면 `git log --date=short` 에서 백필한다.
 - 커밋 해시는 추적용 참고. 세부는 커밋 메시지/PR 참조.
 
+## 2026-06-13
+
+**리텐션 리포트: 운영자(단청) 계정 SQL 제외** (창업자 확정, 운영)
+- 단청(`sue.choi033@gmail.com`)을 운영자 본인 계정으로 확정 → `/retention-report` 코호트에서 자동 제외.
+
+**측정 더 자세히 보기 — 콘텐츠 정독 + ceremony 퍼널 + admin 대시보드** (창업자 요청, PE)
+- **측정 플랜 지도** `docs/product/measurement-plan.md` 신설 — 세 문서(interview-guide·ceremony-funnel·ai-vault)에 흩어진 계측을 한 장에 모으고 구현/미구현 현황 표로 정리.
+- **콘텐츠 정독 계측**: `auth.js`에 범용 `logEvent` 추가, `content-detail.html`이 떠날 때 `app_events`
+  `content_read`(maxScrollPct·dwellSec·reachedEnd) 1건 기록. "열었다(pageview)"와 "읽었다"를 구분.
+- **ceremony 퍼널**: `funnel_events` 테이블(anon insert-only RLS) + `ceremony.html` 6개 이벤트
+  (view·start·step·complete·signup_click·reco_click) 계측. `cer_signup_done`은 백로그.
+- **admin 측정 대시보드**: `admin.html`에 "측정" 탭 — 퍼널 단계별 도달 세션·전환율 + 정독 표.
+  RLS 우회는 운영자 이메일 확인 SECURITY DEFINER RPC(`admin_funnel_summary`·`admin_content_read_summary`).
+- 마이그레이션 `20260613_funnel_events.sql`·`20260613_admin_metrics_rpc.sql` 적용. `sw.js` 캐시 갱신.
+
 ## 2026-06-09
 
 **리텐션 리포트 틀 변경 — 롤링(가입 후 N일째) 코호트로 전환** (창업자 요청, 운영)

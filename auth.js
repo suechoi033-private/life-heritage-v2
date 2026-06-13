@@ -124,19 +124,23 @@ export async function redirectIfAuthed(redirectTo = './index.html') {
 // 로그인 사용자가 페이지에 진입할 때마다 app_events에 1건 기록.
 // 측정 실패는 앱 동작을 절대 방해하지 않도록 조용히 무시한다.
 // =========================================================
-export async function logPageView(extra = {}) {
+export async function logEvent(eventType, meta = {}, pathOverride) {
   try {
     const { data } = await supabase.auth.getSession();
     const user = data?.session?.user;
     if (!user) return; // 로그인 사용자만 기록 (익명 방문은 RLS상 기록 안 됨)
-    const path = (window.location.pathname.split('/').pop() || 'index.html');
+    const path = pathOverride || (window.location.pathname.split('/').pop() || 'index.html');
     await supabase.from('app_events').insert({
       user_id: user.id,
-      event_type: 'pageview',
+      event_type: eventType,
       path,
-      meta: { ref: document.referrer || null, ...extra },
+      meta,
     });
   } catch (_) { /* 계측 실패는 무시 */ }
+}
+
+export async function logPageView(extra = {}) {
+  return logEvent('pageview', { ref: document.referrer || null, ...extra });
 }
 
 // 모듈 로드(=페이지 진입) 시 자동 1회 기록.
