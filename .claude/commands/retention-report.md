@@ -23,7 +23,8 @@ with people as (
   select p.id as user_id, p.name, coalesce(p.auth_provider,'email') as provider,
          p.email, p.created_at as signed_up_at
   from public.profiles p
-  where p.email not ilike '%@itda.net'          -- 내부 계정만 제외
+  where p.email not ilike '%@itda.net'                 -- 내부 도메인 제외
+    and p.email <> 'sue.choi033@gmail.com'             -- 운영자(단청) 본인 계정 제외
 ),
 activity as (
   select user_id, created_at from public.app_events
@@ -91,9 +92,10 @@ order by pe.signed_up_at desc;        -- 최근 가입이 맨 위
    - **주의 신호**: 가입했지만 재방문 N이고 활동일수 0~1인 사람(이탈) 이름 나열.
      특히 **Day 2 이상인데 재방문 N** = 사실상 이탈로 본다.
 
-   - **데이터 품질 주의**: 표에 **운영자 본인 계정·Admin·중복 이름**이 섞여 있으면
-     한 줄로 분리해 표시하고(예: "단청은 운영자 계정으로 추정 — 테스터 분모에서 제외 권장"),
-     순수 테스터 수를 따로 적는다. 창업자가 확정해주면 그 다음부터 SQL에서 제외한다.
+   - **데이터 품질 주의**: 운영자(단청, `sue.choi033@gmail.com`)는 위 SQL에서 이미 제외됨.
+     남은 표에 **Admin/테스트 계정·중복 이름**이 보이면 한 줄로 분리해 표시하고
+     순수 테스터 수를 따로 적는다. (참고: 같은 사람이 이메일을 다르게 적어 두 번 가입한
+     경우가 있다 — 이름이 같고 한쪽만 활동하면 한 명으로 본다.)
 
    - 마지막에 전체 표(이름·이메일 포함)를 붙인다.
    - 표본이 작으면(테스터 5명 미만) "표본이 작아 추세 해석은 이르다. 신호만 기록"이라고 명시.
