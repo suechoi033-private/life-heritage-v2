@@ -21,6 +21,24 @@
 
 ## 2026-06-13
 
+**seed-12 인스타 카드뉴스 1편 (8장) — D3 컨펌·D5 보류 반영** (마케터 세션)
+- 단일 원천: `docs/content/seed-12-live-without-regret.md`(원본 글), `docs/strategy/acquisition-task-oriented-2026-06-13.md` 3장(인스타 channel 설계), `docs/company/CHARTER.md`(조용함·존엄·과시 금지).
+- 결 흐름 8장: Hook(질문) → "잘 죽는 것=잘 사는 것" → 0.5초 만에 떠오른 사람 → 4가지 후회 카테고리 → 미룸의 누적 → 오늘부터 할 수 있는 3가지 → 잇다 소개 → 무약속 CTA.
+- Hook 카피: `오늘 밤 잠들고 / 다시 못 깬다면, / 가장 후회할 한 가지는 무엇인가요.` (seed-12 27행 직접 변주, `당신이`만 삭제로 인스타 호흡 살림)
+- **CTA 카피 (D5 보류 반영)**: `잇다 베타 사용자로 / 함께해 주실래요? // 먼저 시작한 분들의 피드백으로 / 잇다는 만들어집니다.` 정체성·관계만 약속. **가격·기간·인원 캡 표현 본문·캡션·해시태그 전체 0건**.
+- 시각 가이드(텍스트): 차분·여백·명조 한 폰트, 흰 배경 + 잇다 에버그린/잉크 토큰만, 임의 hex 금지. 한 카드 한 메시지·좌측/중앙 정렬. 실 이미지 제작은 사장님.
+- 산출: `docs/marketing/insta-seed-12-cardnews-2026-06-13.md` 신규.
+
+**잇다 베타 랜딩 페이지 신설 (`beta.html`)** — PE 세션, 사장님 D4 컨펌·D5 보류 반영
+- 단일 원천: `docs/strategy/acquisition-task-oriented-2026-06-13.md` 3장(인스타 channel 설계) + `docs/business-plan-v3.md` 10장(M3 정의). 4단계 funnel의 2단계: **인스타 → `beta.html` → `signup.html` → onboarding 결과**.
+- **사장님 D5 보류 신호 반영**: "구독료 형태로 못 갈 것 같다" → beta.html에서 **가격·기간·캡 약속 0건**. ("12개월 무료", "캡 50명", "정식 1년 무료" 표현 전부 제외) 정체성·관계 약속만 — "잇다 베타에 자리를 남겨 두었어요", "함께 만들어가는 단계", "피드백 채널은 늘 열어 두었어요".
+- 페이지 구조(섹션 순서): (1) BETA 키커 + 헤드라인 + 리드 → (2) `.quiet-card` "잇다가 뭐 하는 곳인지"(죽음·돌봄·사별·후회 없이 살기) → (3) `.quiet-card` 베타 단계 안내(정직한 톤) → (4) 시작 CTA `같이 시작해볼게요` + 둘러보기 `먼저 잇다를 둘러볼게요 →` → (5) 피드백 채널(이메일 `hello@lifeheritage.kr` + 가벼운 textarea, localStorage 보관).
+- 톤·디자인: `index.html` 비회원 분기 `.card-quiet` 어휘를 그대로 차용(`.quiet-card`/`.quiet-eyebrow`/`.quiet-title`/`.quiet-body`). 디자인 토큰만(--bg/--bg-alt/--ink/--primary/--primary-soft/--line), 임의 hex 0건. nav·footer는 signup.html 구조 차용.
+- **M3 측정용 이벤트 로그(localStorage only — 분석 도구는 다음 라운드)**: 인라인 스크립트가 (i) UTM 캡처 → `itda:utm:first`(first-touch 보존) + `itda:utm:last`(last-touch) (ii) 이벤트 push → `itda:beta_events`(최대 200건, `beta_view`/`beta_click_signup`/`beta_click_browse`/`beta_feedback_submit`) (iii) CTA `href`에 UTM 파라미터·`via=beta` 자동 패스스루 → signup.html attribution 유지 (iv) `itda:beta_signup_pending` 시각 보존(향후 signup.html이 읽어 M3 = signup/beta_view 계산). 위 키들은 익명·로컬·개인식별정보 0건(헌장 일치).
+- index.html에서 beta.html로의 진입점 **미추가**(인스타 외 진입은 다음 라운드 결정). `beta.html`에서 `index.html`·`signup.html`로 나가는 출구만 있음.
+- 변경 파일: `beta.html`(신설, 1파일 in-line CSS+JS), `sw.js`(`CACHE_VERSION` → `itda-v3-2026-06-13-beta-landing-v1`, APP_SHELL에 `./beta.html` 추가), `docs/worklog.md`.
+- 잠재 리스크: ①UTM 미동봉 진입(직접 URL 공유) → attribution 빈 채로 기록되지만 `beta_view`는 잡힘(허용). ②현재 Supabase analytics 테이블 없음 → 데이터는 사용자 디바이스 localStorage에 갇혀 있음(다음 라운드 `analytics_events` 또는 `cta_clicks` 패턴 확장 필요). ③signup 완료 시점 측정은 signup.html이 `itda:beta_signup_pending`을 읽도록 다음 라운드에서 연결 필요 — 현재는 클릭까지만. ④피드백 textarea 내용도 localStorage에만 → 운영자가 사용자 디바이스에 접근 못 함, 메일 채널이 사실상의 1차 수신처(textarea는 비공식 보조).
+
 **task-oriented acquisition 전략 — v3 가설 매핑 + 인스타 organic 채널 설계** (전략 세션, 사장님 통찰 위임)
 - 사장님 통찰(가입 유저 데이터: 케어링 대상 있을 때만 재로그인, 쏘카 비유 — task-oriented 본질)을 v3 가설에 매핑.
 - 매핑 결론: 사장님 데이터 = **활성 가설(20-40대 일상 진입) 약화 신호** + 케어링자 task-oriented 페르소나(가설 a 본질) 부분 확증. 단 콘텐츠 인덱싱·SNS 유통 전이라 측정 조건 미충족 → **W26 게이트에서 판정**(즉시 폐기 X).

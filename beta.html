@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>잇다 베타에 자리를 남겨 두었어요 · 잇다</title>
+  <meta name="description" content="잇다는 죽음·돌봄·사별, 그리고 후회 없이 살기를 함께 짚어보는 자리입니다. 지금은 베타 단계 — 함께 써보시고 같이 다듬어 가요.">
+  <meta property="og:title" content="잇다 베타에 자리를 남겨 두었어요">
+  <meta property="og:description" content="잇다는 죽음·돌봄·사별을 함께 짚어보는 자리입니다. 지금은 베타 단계 — 함께 써보시고 같이 다듬어 가요.">
+  <link rel="stylesheet" href="./auth-styles.css">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png">
+  <meta name="theme-color" content="#2F6B4F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="잇다">
+  <style>
+    /* beta.html — 인스타 organic 진입의 2단계(약속 페이지).
+       톤 원칙: index.html 비회원 분기의 `.card-quiet` 어휘를 그대로 차용한다.
+       헌장: 조용함·존엄, 과시·경쟁 금지. 자극 카피 X. 디자인 토큰만, 임의 hex 0.
+       사장님 D5 결정 보류 — 가격·기간·캡 약속 0. 정체성·관계 약속만. */
+
+    .beta-shell {
+      flex: 1;
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 40px 22px 64px;
+      width: 100%;
+    }
+    @media (min-width: 640px) {
+      .beta-shell { padding: 64px 24px 96px; }
+    }
+
+    .beta-kicker {
+      display: inline-block;
+      padding: 6px 14px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      border-radius: 999px;
+      margin-bottom: 18px;
+    }
+
+    .beta-headline {
+      font-family: var(--font-serif);
+      font-size: 26px;
+      font-weight: 800;
+      line-height: 1.45;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      margin-bottom: 16px;
+    }
+    @media (min-width: 640px) {
+      .beta-headline { font-size: 30px; }
+    }
+
+    .beta-lead {
+      color: var(--ink-soft);
+      font-size: 15.5px;
+      line-height: 1.85;
+      margin-bottom: 28px;
+    }
+
+    /* 잇다 톤의 정체성 카드 — .card-quiet 패밀리 차용 */
+    .quiet-card {
+      background: var(--bg-alt);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 22px 22px;
+      color: var(--ink);
+      margin-bottom: 14px;
+    }
+    .quiet-eyebrow {
+      font-size: 12px; font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--ink-muted);
+      margin-bottom: 8px;
+    }
+    .quiet-title {
+      font-family: var(--font-serif);
+      font-size: 19px; font-weight: 700;
+      line-height: 1.5; letter-spacing: -0.01em;
+      color: var(--ink);
+      margin-bottom: 10px;
+    }
+    .quiet-body {
+      font-size: 14.5px; line-height: 1.8;
+      color: var(--ink-soft);
+    }
+    .quiet-body p + p { margin-top: 10px; }
+
+    /* CTA 블록 */
+    .beta-cta-block {
+      margin-top: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .beta-cta-primary {
+      display: block;
+      width: 100%;
+      padding: 16px 20px;
+      background: var(--primary);
+      color: #FFF;
+      border: 0;
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 15.5px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .beta-cta-primary:hover {
+      background: var(--primary-hover);
+      color: #FFF;
+    }
+
+    .beta-cta-browse {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+      padding: 14px 18px;
+      background: var(--bg);
+      color: var(--ink-soft);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: border-color 0.15s ease, color 0.15s ease;
+    }
+    .beta-cta-browse:hover {
+      border-color: var(--primary-soft);
+      color: var(--primary);
+    }
+
+    /* 피드백 채널 */
+    .feedback-block {
+      margin-top: 26px;
+      padding-top: 22px;
+      border-top: 1px solid var(--line);
+    }
+    .feedback-label {
+      font-size: 12px; font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--ink-muted);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+    .feedback-text {
+      font-size: 14px;
+      color: var(--ink-soft);
+      line-height: 1.75;
+    }
+    .feedback-text a {
+      color: var(--primary);
+      font-weight: 700;
+    }
+    .feedback-form {
+      margin-top: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .feedback-form textarea {
+      width: 100%;
+      min-height: 88px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 14.5px;
+      line-height: 1.6;
+      background: var(--bg);
+      color: var(--ink);
+      resize: vertical;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .feedback-form textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(47,107,79, 0.10);
+    }
+    .feedback-form button {
+      align-self: flex-start;
+      padding: 10px 18px;
+      background: var(--bg-alt);
+      color: var(--ink);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    }
+    .feedback-form button:hover:not([disabled]) {
+      background: var(--primary-soft);
+      color: var(--primary);
+      border-color: var(--primary-soft);
+    }
+    .feedback-form button[disabled] {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+    .feedback-saved {
+      font-size: 13px;
+      color: var(--success);
+      margin-top: 6px;
+    }
+    .feedback-saved.hidden { display: none; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="./index.html" class="logo" id="brand-link"><span class="logo-mark">●</span> 잇다</a>
+  </div>
+</nav>
+
+<main class="beta-shell" id="main-content">
+  <span class="beta-kicker">BETA</span>
+  <h1 class="beta-headline">잇다 베타에 자리를<br>남겨 두었어요</h1>
+  <p class="beta-lead">
+    잇다를 찾아주셔서 고맙습니다.<br>
+    지금은 함께 만들어가는 단계라, 잠시 머무르며 천천히 둘러봐 주세요.
+  </p>
+
+  <!-- (a) 잇다가 뭐 하는 곳인지 — .card-quiet 어휘 차용 -->
+  <section class="quiet-card" aria-labelledby="about-title">
+    <div class="quiet-eyebrow">잇다 · 같이 짚어보는 자리</div>
+    <h2 class="quiet-title" id="about-title">죽음을 생각하는 건, 잘 살기 위해서예요</h2>
+    <div class="quiet-body">
+      <p>
+        잇다는 부모를 돌보고, 누군가를 떠나보내고,
+        그리고 언젠가의 내 차례를 마주하는 자리예요.
+      </p>
+      <p>
+        후회 없이 살기 위해 인생의 끝을 한 번씩 짚어보는 분들,
+        먼저 겪은 이웃의 이야기에서 한 줄을 얻고 싶은 분들과
+        조용히 같이 있는 공간입니다.
+      </p>
+    </div>
+  </section>
+
+  <!-- (b) 베타 단계 안내 — 정직하게. 가격·기간·캡 약속 0건. -->
+  <section class="quiet-card" aria-labelledby="beta-title">
+    <div class="quiet-eyebrow">지금은 베타 단계</div>
+    <h2 class="quiet-title" id="beta-title">함께 써보시고, 같이 다듬어가요</h2>
+    <div class="quiet-body">
+      <p>
+        잇다는 아직 베타예요. 완성된 모습이 아니라,
+        먼저 들어와 주신 분들과 함께 다듬어가는 중입니다.
+      </p>
+      <p>
+        쓰시다 어색한 자리, 불편한 표현, 더 있었으면 하는 한 가지 —
+        들려주시면 다음 모습에 반영해 가겠습니다.
+        피드백 채널은 늘 열어 두었어요.
+      </p>
+    </div>
+  </section>
+
+  <!-- (d) 시작하기 CTA + (e) 둘러보기 옵션 -->
+  <div class="beta-cta-block">
+    <a id="cta-signup" href="./signup.html" class="beta-cta-primary">
+      같이 시작해볼게요
+    </a>
+    <a id="cta-browse" href="./index.html" class="beta-cta-browse">
+      먼저 잇다를 둘러볼게요 <span aria-hidden="true">→</span>
+    </a>
+  </div>
+
+  <!-- (c) 피드백 채널 — 가벼운 textarea + 이메일 안내 -->
+  <section class="feedback-block" aria-labelledby="feedback-title">
+    <div class="feedback-label" id="feedback-title">피드백 채널</div>
+    <p class="feedback-text">
+      한 줄 메모도 좋고, 긴 이야기도 좋아요.
+      바로 보내고 싶으시면 <a href="mailto:hello@lifeheritage.kr">hello@lifeheritage.kr</a> 로 적어 주세요.
+    </p>
+    <form class="feedback-form" id="feedback-form" novalidate>
+      <label for="feedback-text" class="visually-hidden" style="position:absolute;left:-9999px;">피드백</label>
+      <textarea id="feedback-text" placeholder="잇다에 바라는 한 가지, 어색했던 한 자리…" maxlength="2000"></textarea>
+      <button type="submit" id="feedback-submit">조용히 남겨두기</button>
+      <div class="feedback-saved hidden" id="feedback-saved" role="status">
+        고맙습니다. 메모를 잘 받아 두었어요.
+      </div>
+    </form>
+  </section>
+</main>
+
+<footer class="auth-footer">
+  © 2026 라이프헤리티지 · 잇다
+</footer>
+
+<script>
+  // ─────────────────────────────────────────────────────────────
+  // beta.html — M3 측정용 클라이언트 이벤트 로그
+  // ─────────────────────────────────────────────────────────────
+  // 목적: (i) 인스타 UTM 파라미터 보존 (ii) view/click 시점 기록
+  // 정책: 분석 도구는 다음 라운드. 이번엔 데이터 수집 가능하게만(localStorage only).
+  // 헌장: 개인 식별 정보 수집 X. UTM·이벤트 timestamp만. 익명·로컬.
+  // 향후: analytics_events 테이블 또는 cta_clicks 패턴 확장 시 readers는 동일 키를 읽으면 됨.
+  (function () {
+    var STORE_UTM_FIRST = 'itda:utm:first';   // 최초 접점(first-touch) 보존
+    var STORE_UTM_LAST  = 'itda:utm:last';    // 마지막 접점(last-touch)
+    var STORE_EVENTS    = 'itda:beta_events'; // 이벤트 배열 (cap 200)
+    var STORE_SIG_PEND  = 'itda:beta_signup_pending'; // beta→signup 클릭 시각
+    var UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'];
+
+    function nowIso() { return new Date().toISOString(); }
+
+    function safeGet(key) {
+      try { return localStorage.getItem(key); } catch (_) { return null; }
+    }
+    function safeSet(key, val) {
+      try { localStorage.setItem(key, val); } catch (_) { /* private mode */ }
+    }
+
+    // 1) UTM 캡처 — 진입한 URL의 utm_*을 읽어 localStorage에 보존
+    var params = new URLSearchParams(location.search);
+    var utmIn = {};
+    UTM_KEYS.forEach(function (k) {
+      var v = params.get(k);
+      if (v) utmIn[k] = v.slice(0, 120);
+    });
+    if (document.referrer) utmIn._ref = String(document.referrer).slice(0, 200);
+    utmIn._captured_at = nowIso();
+    utmIn._page = 'beta';
+
+    if (Object.keys(utmIn).length) {
+      var serialized = JSON.stringify(utmIn);
+      if (!safeGet(STORE_UTM_FIRST)) safeSet(STORE_UTM_FIRST, serialized);
+      safeSet(STORE_UTM_LAST, serialized);
+    }
+
+    // 2) 이벤트 push 헬퍼 — localStorage 배열에 append (최대 200건)
+    function pushEvent(name, extra) {
+      var raw = safeGet(STORE_EVENTS);
+      var arr = [];
+      if (raw) { try { arr = JSON.parse(raw) || []; } catch (_) { arr = []; } }
+      var evt = { name: name, at: nowIso(), page: 'beta' };
+      if (extra) Object.keys(extra).forEach(function (k) { evt[k] = extra[k]; });
+      // UTM도 동봉 — 추후 분석 시 같은 이벤트 안에 맥락이 있다
+      var lastUtm = safeGet(STORE_UTM_LAST);
+      if (lastUtm) { try { evt.utm = JSON.parse(lastUtm); } catch (_) {} }
+      arr.push(evt);
+      if (arr.length > 200) arr = arr.slice(-200);
+      safeSet(STORE_EVENTS, JSON.stringify(arr));
+    }
+
+    // 3) view 이벤트 — 페이지 진입
+    pushEvent('beta_view');
+
+    // 4) signup·browse 출구에 UTM 패스스루 (signup.html 측 attribution 보존)
+    function appendUtmToHref(anchorId) {
+      var a = document.getElementById(anchorId);
+      if (!a) return;
+      var url = new URL(a.getAttribute('href'), location.href);
+      UTM_KEYS.forEach(function (k) {
+        var v = params.get(k);
+        if (v && !url.searchParams.get(k)) url.searchParams.set(k, v);
+      });
+      // beta 페이지를 거쳐 들어왔다는 자체 표식 — 분석 시 funnel 단계 구분용
+      if (!url.searchParams.get('via')) url.searchParams.set('via', 'beta');
+      a.setAttribute('href', url.pathname + (url.search || ''));
+    }
+    appendUtmToHref('cta-signup');
+    appendUtmToHref('cta-browse');
+
+    // 5) click 이벤트 기록 — 비차단(이동 막지 않음)
+    var ctaSignup = document.getElementById('cta-signup');
+    if (ctaSignup) {
+      ctaSignup.addEventListener('click', function () {
+        pushEvent('beta_click_signup', { href: ctaSignup.getAttribute('href') });
+        // signup 완료 시점 측정을 위해 beta→signup 시각 보존 (다음 라운드에서 signup.html 측이 읽음)
+        safeSet(STORE_SIG_PEND, nowIso());
+      });
+    }
+    var ctaBrowse = document.getElementById('cta-browse');
+    if (ctaBrowse) {
+      ctaBrowse.addEventListener('click', function () {
+        pushEvent('beta_click_browse', { href: ctaBrowse.getAttribute('href') });
+      });
+    }
+
+    // 6) 피드백 폼 — localStorage 보관(다음 라운드 운영자가 수거 또는 메일 전환)
+    var form = document.getElementById('feedback-form');
+    var saved = document.getElementById('feedback-saved');
+    var ta = document.getElementById('feedback-text');
+    var btn = document.getElementById('feedback-submit');
+    if (form) {
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var text = (ta && ta.value || '').trim();
+        if (!text) return;
+        var raw = safeGet('itda:beta_feedback');
+        var arr = [];
+        if (raw) { try { arr = JSON.parse(raw) || []; } catch (_) { arr = []; } }
+        arr.push({ at: nowIso(), text: text.slice(0, 2000) });
+        if (arr.length > 50) arr = arr.slice(-50);
+        safeSet('itda:beta_feedback', JSON.stringify(arr));
+        pushEvent('beta_feedback_submit', { length: text.length });
+        if (ta) ta.value = '';
+        if (saved) saved.classList.remove('hidden');
+        if (btn) { btn.disabled = true; setTimeout(function () { btn.disabled = false; }, 1200); }
+      });
+    }
+  })();
+</script>
+
+</body>
+</html>
