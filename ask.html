@@ -395,6 +395,7 @@
     <p class="q-meta">
       <span id="q-category">—</span> ·
       <span id="q-count">0명이 답을 남겼어요</span>
+      <a id="prev-q-link" href="#" hidden style="margin-left: 10px; color: var(--primary); text-decoration: none; font-weight: 700;">← 어제 질문</a>
       <a href="./questions.html" style="margin-left: 10px; color: var(--primary); text-decoration: none; font-weight: 700;">지난 질문 보기 →</a>
     </p>
 
@@ -539,6 +540,20 @@
   document.getElementById('q-title').textContent = todaysQ.question_text;
   document.getElementById('q-category').textContent = CATEGORY_LABEL[todaysQ.category] || todaysQ.category;
   document.getElementById('modal-question-text').textContent = todaysQ.question_text;
+
+  // ── 어제 질문 링크 (이전 display_order — 1일째 유저엔 숨김) ─────
+  if (todaysQ.display_order > 1) {
+    const { data: prevQ } = await supabase
+      .from('daily_questions')
+      .select('id')
+      .eq('display_order', todaysQ.display_order - 1)
+      .maybeSingle();
+    if (prevQ) {
+      const prevLink = document.getElementById('prev-q-link');
+      prevLink.href = `./ask.html?id=${prevQ.id}`;
+      prevLink.hidden = false;
+    }
+  }
 
   // ── 답변 종류가 'song'이면 my-song.html로 안내 (텍스트 답변 X) ──────
   if (todaysQ.answer_kind === 'song') {
