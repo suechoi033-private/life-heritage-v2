@@ -121,6 +121,59 @@
       padding: 24px 22px;
       border: 1px solid var(--line);
     }
+
+    /* D2 — 비회원 진단 입구 카드 (잔잔한 솔리드 톤, 그라데이션 X)
+       회원의 .card-seed 그라데이션과 의도적으로 구분: 두 카드의 정체가 다르다(엔게이지 vs 진단 입구)는
+       시각 차이로 즉시 전달한다. 디자인 토큰만 사용. */
+    .card-quiet {
+      background: var(--bg-alt);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 22px 22px;
+      color: var(--ink);
+      cursor: pointer; text-decoration: none; display: block;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .card-quiet:hover {
+      border-color: var(--primary-soft);
+      box-shadow: 0 4px 16px rgba(47,107,79,0.06);
+      color: var(--ink);
+    }
+    .card-quiet-eyebrow {
+      font-size: 12px; font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--ink-muted);
+      margin-bottom: 8px;
+    }
+    .card-quiet-title {
+      font-family: var(--font-serif);
+      font-size: 19px; font-weight: 700;
+      line-height: 1.5; letter-spacing: -0.01em;
+      color: var(--ink);
+      margin-bottom: 6px;
+    }
+    .card-quiet-desc {
+      font-size: 13.5px; line-height: 1.65;
+      color: var(--ink-soft);
+      margin-bottom: 14px;
+    }
+    .card-quiet-cta {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 13.5px; font-weight: 800;
+      color: var(--primary);
+      background: var(--primary-soft);
+      border-radius: 999px; padding: 8px 14px;
+    }
+
+    /* D1 — 비회원 below-fold "둘러보기" 작은 링크 */
+    .browse-link {
+      display: inline-flex; align-items: center; gap: 4px;
+      margin-top: 14px;
+      font-size: 12.5px; font-weight: 700;
+      color: var(--ink-muted);
+      text-decoration: none;
+    }
+    .browse-link:hover { color: var(--primary); }
     .card-onboard-title {
       font-family: var(--font-serif);
       font-size: 19px; font-weight: 800;
@@ -323,6 +376,11 @@
       <div class="skeleton" style="height:96px;margin-top:12px;"></div>
     </div>
   </section>
+
+  <!-- D1 — 비회원 below-fold 둘러보기 (작게). 회원에겐 노출 안 함. -->
+  <div id="guest-browse-row" hidden style="text-align:center; margin: 20px 0 8px;">
+    <a href="./forest.html" class="browse-link">가입 없이 둘러보기 <span>›</span></a>
+  </div>
 </main>
 
 <script type="module">
@@ -385,25 +443,24 @@ if (user) {
     </a>
   `;
 } else {
-  // 비로그인 온보딩
+  // 비로그인 — D1·D2 (2026-06-13)
+  //  · first-fold = (1) 인사 (greeting-block, 위에서 이미 렌더) → (2) 톤 다운 진단 입구 카드(잔잔한 솔리드) → (3) "요즘, 잇다에선" 피드
+  //  · "둘러보기" 링크는 작게 below the fold
+  //  · "정답은 없어요" 표현 비회원 화면에서 완전 제거 (헌장 톤 점검 결과)
+  //  · 회원의 card-seed 그라데이션과 시각 분리 → 같은 자리에 다른 정체의 카드가 살고 있다는 신호
   cardsEl.innerHTML = `
-    <a href="./onboarding.html" class="card-seed">
-      <div class="card-eyebrow">🌿 1분 · 정답은 없어요</div>
-      <div class="card-seed-title">지금, 어느 단계에 와 계세요? 일곱 번만 답하면, 지금 맞는 첫걸음을 같이 찾아드려요.</div>
-      <div class="card-cta">시작하기 <span>→</span></div>
+    <a href="./onboarding.html" class="card-quiet">
+      <div class="card-quiet-eyebrow">잇다 · 같이 짚어보기</div>
+      <div class="card-quiet-title">오늘은 어디쯤 와 계세요?</div>
+      <div class="card-quiet-desc">일곱 번만 답하면, 지금 결에 맞는 다음 한 걸음을 같이 찾아볼게요.</div>
+      <span class="card-quiet-cta">같이 짚어볼게요 <span>→</span></span>
     </a>
 
     <div class="onboard-note" style="margin-top:14px;text-align:center;">이미 계정이 있으시면 <a href="./login.html" style="color:var(--primary);font-weight:700;">로그인</a></div>
-
-    <a href="./forest.html" class="card-forest" style="margin-top:14px;">
-      <div class="card-forest-icon">🌳</div>
-      <div class="card-forest-body">
-        <div class="card-forest-title">커뮤니티 둘러보기</div>
-        <div class="card-forest-desc">가입 없이 콘텐츠와 대화 탐색</div>
-      </div>
-      <span class="card-arrow">›</span>
-    </a>
   `;
+  // 비회원 한정: 피드 below에 작은 "둘러보기" 링크 노출
+  const browseRow = document.getElementById('guest-browse-row');
+  if (browseRow) browseRow.hidden = false;
 }
 
 // ── 콘텐츠 피드 (잇다에디터 + 유저, '추모' 제외) ──
@@ -501,7 +558,10 @@ function feedCard(c, e) {
       </div>
       <div class="hcard-body">
         <div class="hcard-cat">
-          <span class="hcard-src ${isEditor ? 'src-editor' : 'src-user'}">${isEditor ? '✓ 잇다 에디터' : '이웃의 이야기'}</span>
+          <!-- D3 (2026-06-13) — 작성자 칩 "이웃 톤"으로 시각 조정.
+               필터(listHomeFeed: author_type='official')는 v3 검증 전 유지.
+               본문/제목 비건드림. 카드가 "먼저 겪은 사람의 이야기"로 읽히도록 라벨만 손봄. -->
+          <span class="hcard-src ${isEditor ? 'src-editor' : 'src-user'}">${isEditor ? '먼저 겪은 이웃' : '이웃의 이야기'}</span>
           ${CATEGORY_LABELS[c.category] ? `<span class="hcard-catname">${CATEGORY_LABELS[c.category]}</span>` : ''}
         </div>
         <div class="hcard-title">${escapeHtml(c.title || '제목 없음')}</div>
