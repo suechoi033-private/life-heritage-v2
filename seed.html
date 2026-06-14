@@ -552,8 +552,8 @@
 
 <main class="page-shell" id="main-content">
   <div class="tab-segment" role="tablist">
-    <button type="button" id="tab-diary" class="active" role="tab" aria-selected="true">일기</button>
-    <button type="button" id="tab-goal" role="tab" aria-selected="false">버킷리스트</button>
+    <button type="button" id="tab-goal" class="active" role="tab" aria-selected="true">버킷리스트</button>
+    <button type="button" id="tab-diary" role="tab" aria-selected="false">일기</button>
   </div>
 
   <div id="seed-hero" class="seed-hero">
@@ -657,8 +657,10 @@
   if (params.get('action') === 'new') {
     window.location.href = './diary-write.html';
   }
-  const initialTab = params.get('tab') === 'goal' ? 'goal' : 'diary';
-  let currentTab = 'diary';
+  // 라이프 첫 진입 = 버킷리스트(사장님 직관 "버킷리스트가 일기에 묻혀 있다" 해소).
+  // ?tab=diary 파라미터로 들어오면 일기 우선.
+  const initialTab = params.get('tab') === 'diary' ? 'diary' : 'goal';
+  let currentTab = 'goal';
   setActiveTab(initialTab);
 
   document.getElementById('tab-diary').addEventListener('click', () => setActiveTab('diary'));
