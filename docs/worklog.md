@@ -51,7 +51,14 @@
 
 ## 2026-06-14
 
-**답변→공유→초대 유입 루프 종합 설계 (사업전략 세션, 분석·설계만 — 코드 0)**
+**형제(가족) 초대 플로우 — 프로덕션 배포 + "보기 먼저" RPC 적용 + 케어 트리거 + UT 키트** (오케스트레이터, 사장님 "배포해/M2/2,3번 go")
+- **"보기 먼저" RPC 적용 완료(라이브):** `preview_friend_invite`(anon, SECURITY DEFINER, 읽기전용) Supabase 적용·검증(잘못된 코드→0행). 케어링 `preview_care_invite` 동일 패턴. 보안 어드바이저 신규 경고 0. 비로그인 가족이 가입 전 초대자 이름+한마디 확인(P6). 프런트는 RPC 실패시 폴백 전향설계라 적용 즉시 작동.
+- **케어 트리거 배치(발송률 출처):** care.html — ①일지 탭 상시 진입점 1줄(가족 0명→"가족과 함께 보기", N명→"함께하는 가족 N명") ②첫 일지 저장 직후 권유 모달 1회(사용자당 localStorage 가드, 이미 가족 있으면 미노출, 닫기 가능). 기존 modal 패턴·토큰 재사용, DB 무변경. (PE 세션)
+- **퀵 UT 키트(M2):** `docs/research/invite-flow-ut-kit.md` — 전략 핵심리스크(UI vs 관계 마찰)를 결정 분기로. 미발송/미클릭을 A(방법 모름)/B(보내기 부담)로 가르는 질문 + 판정·다음액션 분기표. (ops 세션)
+- **배포:** 작업브랜치 → main fast-forward(main이 다른 세션 PR #43~53로 크게 앞서 있어 rebase로 합침; sw.js 캐시버전 충돌 통합 해소 → `2026-06-14-invite-care-share-v1`). gh-pages 없음(main 직접 서빙).
+- **⚠️ 수렴 알림(사장님 확인 필요):** 다른 06-14 세션의 "답변→공유→초대 유입 루프"(아래)가 같은 `invite.html`·`friends.js`·`friend_invites`를 공유 인프라로 씀. 내 리프레임은 **케어 맥락**("이 기록, 가족과 같이 봐요"), 그쪽은 **성찰 맥락**(질문 공유). 두 트랙이 한 초대 화면에 모이므로, invite.html 카피를 channel(care vs reflection_q1)에 따라 분기시키는 정리가 차주 필요. 내 `preview_friend_invite` RPC는 그쪽 "직접 보내기"에도 유용(시너지).
+
+
 - 사장님 통찰: "잇다 성찰과 매일 노출되는 질문에 답변하고 지인을 초대할 수 있는 유인경로를 설계해줘." 산출: `docs/strategy/answer-invite-loop-2026-06-14.md`.
 - 단일 원천 종합 검토: 어제 `decisions-2026-06-14.md`(자기성찰 시리즈 5단계·사별 분기) + `acquisition-task-oriented-2026-06-13.md`(M1·M2·M3·organic 우선) + `business-plan-v3.md`(양면 시장·D5 신호) + 헌장 5장(좋아요 경쟁 의도적 제거) + 코드(`reflection.html`·`js/share-card.js`·`js/share-sheet.js`·`js/friends.js`·`invite.html`·`friend_invites`/`friendships`/`accept_friend_invite` RPC).
 - 가치 진단: 답 텍스트는 사적 결이라 공유 약함, **본진은 (b) 질문 공유 + 같이 답하기 + (d) 그 사람에게 직접 보내기**. 답 카드 공유 (a)는 보조·M6 데이터 후 결정(C7). 비교 회고 (c)·잇다 친구 양방향 (e)·미래 봉투 (f)는 본 라운드 보류.
