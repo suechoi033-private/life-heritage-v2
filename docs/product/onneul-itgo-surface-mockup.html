@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<style>
+  :root{
+    --bg:#FFFFFF; --bg-alt:#F4F6F4; --ink:#21261E; --ink-soft:#3E4A43;
+    --ink-muted:#6B756E; --ink-faint:#AFB8B2; --primary:#2F6B4F;
+    --primary-soft:#E7F1EC; --warm:#BE6440; --warm-soft:#F6EEE7;
+    --line:#E5EAE6; --radius:16px;
+    --font-serif:'Nanum Myeongjo', serif;
+    --font-sans:'Nanum Gothic', sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased;}
+  body{background:#E5E9E6;font-family:var(--font-sans);display:flex;justify-content:center;padding:34px;}
+  .device{width:390px;background:var(--bg);border-radius:40px;overflow:hidden;
+    box-shadow:0 24px 60px rgba(0,0,0,.16);border:1px solid #d7ddd9;}
+
+  /* status bar */
+  .statusbar{display:flex;justify-content:space-between;align-items:center;
+    padding:12px 26px 6px;font-size:13px;font-weight:700;color:var(--ink);}
+  .statusbar .right{display:flex;gap:6px;align-items:center;font-size:12px;}
+
+  /* app bar */
+  .appbar{display:flex;align-items:center;padding:6px 18px 12px;border-bottom:1px solid var(--line);}
+  .appbar .back{font-size:24px;color:var(--ink-soft);width:30px;}
+  .appbar .title{flex:1;text-align:center;font-family:var(--font-serif);font-size:18px;color:var(--ink);font-weight:700;}
+  .appbar .spacer{width:30px;}
+
+  .scroll{padding:0 18px 18px;}
+
+  /* manifesto */
+  .mani{padding:22px 4px 14px;}
+  .mani .eyebrow{font-size:11px;letter-spacing:.12em;color:var(--ink-muted);font-weight:700;margin-bottom:9px;}
+  .mani .line{font-family:var(--font-serif);font-size:23px;line-height:1.45;color:var(--ink);}
+  .mani .date{font-size:12px;color:var(--ink-muted);margin-top:8px;}
+
+  /* hero card */
+  .hero{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
+    box-shadow:0 4px 18px rgba(0,0,0,.05);background:var(--bg);}
+  .hero .cover{position:relative;width:100%;aspect-ratio:16/9;}
+  .hero .cover svg{position:absolute;inset:0;width:100%;height:100%;display:block;}
+  .badge{position:absolute;top:12px;left:12px;background:var(--primary-soft);color:var(--primary);
+    font-size:11px;font-weight:800;padding:4px 10px;border-radius:999px;}
+  .hero .body{padding:15px 16px 17px;}
+  .hero .kick{font-size:11.5px;font-weight:700;color:var(--ink-muted);margin-bottom:7px;}
+  .hero .ttl{font-family:var(--font-serif);font-size:21px;font-weight:700;color:var(--ink);margin-bottom:9px;}
+  .hero .exc{font-size:13.5px;line-height:1.65;color:var(--ink-soft);}
+  .hero .src{font-size:11px;color:var(--ink-muted);margin-top:11px;}
+
+  /* question record card */
+  .qcard{margin-top:16px;border-left:3px solid var(--primary);background:var(--bg-alt);
+    border-radius:12px;padding:15px 16px 16px;}
+  .qcard .qk{font-size:11.5px;font-weight:800;color:var(--primary);margin-bottom:8px;}
+  .qcard .qt{font-family:var(--font-serif);font-size:16.5px;line-height:1.5;color:var(--ink);margin-bottom:13px;}
+  .qcard .input{display:flex;align-items:center;justify-content:space-between;background:var(--bg);
+    border:1px solid var(--line);border-radius:999px;padding:11px 16px;}
+  .qcard .input span{font-size:13.5px;color:var(--ink-faint);}
+  .qcard .input .arrow{color:var(--primary);font-weight:800;font-size:15px;}
+  .qcard .note{font-size:12px;color:var(--ink-muted);margin-top:11px;}
+
+  /* list section */
+  .sec{display:flex;align-items:baseline;justify-content:space-between;margin:26px 4px 12px;}
+  .sec .h{font-size:14px;font-weight:800;color:var(--ink-soft);}
+  .sec .more{font-size:12px;color:var(--ink-muted);}
+
+  .row{display:flex;gap:13px;align-items:center;padding:11px 0;border-top:1px solid var(--line);}
+  .row .thumb{width:62px;height:62px;border-radius:12px;overflow:hidden;flex:none;}
+  .row .thumb svg{width:100%;height:100%;display:block;}
+  .row .rk{font-size:11px;color:var(--ink-muted);margin-bottom:3px;}
+  .row .rt{font-family:var(--font-serif);font-size:15.5px;color:var(--ink);line-height:1.4;}
+
+  /* bottom nav */
+  .nav{display:flex;border-top:1px solid var(--line);background:var(--bg);padding:8px 0 14px;}
+  .nav a{flex:1;text-align:center;text-decoration:none;color:var(--ink-faint);}
+  .nav a .ic{font-size:20px;display:block;filter:grayscale(1);opacity:.55;}
+  .nav a .lb{font-size:10.5px;font-weight:700;margin-top:3px;display:block;}
+  .nav a.active{color:var(--primary);}
+  .nav a.active .ic{filter:none;opacity:1;}
+  .nav a.active .lb{color:var(--primary);}
+</style>
+</head>
+<body>
+<div class="device">
+  <div class="statusbar"><span>9:41</span><span class="right">●●●● &nbsp;5G&nbsp; <b>100</b></span></div>
+
+  <div class="appbar">
+    <div class="back">‹</div>
+    <div class="title">오늘 잇고</div>
+    <div class="spacer"></div>
+  </div>
+
+  <div class="scroll">
+    <div class="mani">
+      <div class="eyebrow">DAILY · INTELLECTUAL WELLNESS</div>
+      <div class="line">오늘, 나에게 닿는<br>질문 하나.</div>
+      <div class="date">6월 14일 토요일</div>
+    </div>
+
+    <!-- 오늘의 큐레이션 (hero) -->
+    <div class="hero">
+      <div class="cover">
+        <svg viewBox="0 0 160 90" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+          <defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FBF3E2"/><stop offset="1" stop-color="#F3E4C6"/></linearGradient></defs>
+          <rect width="160" height="90" fill="url(#sky)"/>
+          <circle cx="119" cy="30" r="22" fill="#E9C987" opacity="0.26"/>
+          <circle cx="119" cy="30" r="12.5" fill="#E9C987"/>
+          <path d="M0 58 Q40 45 80 53 T160 50 L160 90 L0 90 Z" fill="#E5D6AE"/>
+          <path d="M0 74 Q48 63 100 71 T160 69 L160 90 L0 90 Z" fill="#D2BC86"/>
+          <rect x="75" y="55" width="9" height="19" rx="2.5" fill="#F6EFE2"/>
+          <path d="M79.5 47 q4.5 5 0 9.5 q-4.5 -4.5 0 -9.5z" fill="#E79A39"/>
+        </svg>
+        <div class="badge">✓ 잇다 에디터</div>
+      </div>
+      <div class="body">
+        <div class="kick">오늘의 잇고 · 자기성찰</div>
+        <div class="ttl">살아 있을 확률</div>
+        <div class="exc">한 과학자는 한 인간이 살아 있을 확률을 10⁻²·⁶⁸⁵·⁰⁰⁰이라 했다. 1조 면짜리 주사위 200만 개를 동시에 던져 모두 같은 숫자가 나올 확률…</div>
+        <div class="src">출처 · 「편안함의 습격」, 마이클 이스터</div>
+      </div>
+    </div>
+
+    <!-- 나에게 닿는 질문 (기록) -->
+    <div class="qcard">
+      <div class="qk">나에게 닿는 질문</div>
+      <div class="qt">살아 있다는 사실 하나면 충분하다고 생각한 일이, 당신에게도 있었나요.</div>
+      <div class="input"><span>한 줄 적어보기…</span><span class="arrow">→</span></div>
+      <div class="note">💬 이미 14명이 한 줄을 남겼어요</div>
+    </div>
+
+    <!-- 지난 잇고 -->
+    <div class="sec"><span class="h">지난 잇고</span><span class="more">전체 보기 ›</span></div>
+
+    <div class="row">
+      <div class="thumb"><svg viewBox="0 0 90 90" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="s1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FBF6E6"/><stop offset="1" stop-color="#F2E6C5"/></linearGradient></defs><rect width="90" height="90" fill="url(#s1)"/><circle cx="64" cy="30" r="11" fill="#EBCF88"/><path d="M0 60 Q30 50 55 56 T90 53 L90 90 L0 90Z" fill="#D0E1BA"/><path d="M0 74 Q30 66 60 71 T90 70 L90 90 L0 90Z" fill="#A9CD8E"/></svg></div>
+      <div><div class="rk">자기성찰 · 3분</div><div class="rt">오늘의 한 줄을 위해 산 하루</div></div>
+    </div>
+    <div class="row">
+      <div class="thumb"><svg viewBox="0 0 90 90" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="s2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#EAF4ED"/><stop offset="1" stop-color="#D5EADD"/></linearGradient></defs><rect width="90" height="90" fill="url(#s2)"/><circle cx="62" cy="28" r="11" fill="#BFE1C8"/><path d="M0 60 Q30 50 55 56 T90 53 L90 90 L0 90Z" fill="#ABD4B8"/><path d="M0 75 Q30 67 60 72 T90 71 L90 90 L0 90Z" fill="#86BF98"/></svg></div>
+      <div><div class="rk">자기성찰 · 2분</div><div class="rt">어제의 나는 오늘의 내가 아니다</div></div>
+    </div>
+    <div class="row">
+      <div class="thumb"><svg viewBox="0 0 90 90" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="s3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F1EEF9"/><stop offset="1" stop-color="#E1DAEF"/></linearGradient></defs><rect width="90" height="90" fill="url(#s3)"/><circle cx="63" cy="29" r="11" fill="#CCC1EA"/><path d="M0 60 Q30 50 55 56 T90 53 L90 90 L0 90Z" fill="#D1CBE7"/><path d="M0 75 Q30 67 60 72 T90 71 L90 90 L0 90Z" fill="#B5ABDF"/></svg></div>
+      <div><div class="rk">자기성찰 · 4분</div><div class="rt">사라진 것의 모양</div></div>
+    </div>
+    <div class="row">
+      <div class="thumb"><svg viewBox="0 0 90 90" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="s4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FBF3E2"/><stop offset="1" stop-color="#F3E4C6"/></linearGradient></defs><rect width="90" height="90" fill="url(#s4)"/><circle cx="62" cy="29" r="11" fill="#E9C987"/><path d="M0 60 Q30 50 55 56 T90 53 L90 90 L0 90Z" fill="#E5D6AE"/><path d="M0 75 Q30 67 60 72 T90 71 L90 90 L0 90Z" fill="#D2BC86"/></svg></div>
+      <div><div class="rk">자기성찰 · 3분</div><div class="rt">내 장례식에 틀고 싶은 음악</div></div>
+    </div>
+  </div>
+
+  <div class="nav">
+    <a><span class="ic">🏠</span><span class="lb">홈</span></a>
+    <a><span class="ic">🌱</span><span class="lb">라이프</span></a>
+    <a><span class="ic">🪺</span><span class="lb">케어링</span></a>
+    <a class="active"><span class="ic">🌳</span><span class="lb">콘텐츠</span></a>
+    <a><span class="ic">🌿</span><span class="lb">마이</span></a>
+  </div>
+</div>
+</body>
+</html>
