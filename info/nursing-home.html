@@ -680,6 +680,15 @@
       return;
     }
 
+    // DEBUG: 필드명 확인용 임시 출력
+    if (result.debug_first_item) {
+      listEl.innerHTML = `<div class="empty-state" style="text-align:left;padding:16px;">
+        <strong style="font-size:12px;color:var(--primary);">DEBUG — 실제 필드명 목록:</strong>
+        <pre style="font-size:11px;white-space:pre-wrap;word-break:break-all;margin-top:8px;">${JSON.stringify(result.debug_first_item, null, 2)}</pre>
+      </div>`;
+      return;
+    }
+
     if (!result.ok || !result.items) {
       const detail = result.status ? ` [HTTP ${result.status}]` : '';
       const rawStr = result.raw ? `<br><small style="color:var(--ink-muted);word-break:break-all;">${JSON.stringify(result.raw).slice(0, 300)}</small>` : '';
