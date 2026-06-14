@@ -51,6 +51,19 @@
 
 ## 2026-06-14
 
+**답변→공유→초대 유입 루프 PE 구현 (사장님 컨펌 후 1차 배포 준비)**
+- 단일 원천: `docs/strategy/answer-invite-loop-2026-06-14.md`(467줄, C1~C7 결정 카드). 사장님 컨펌: C1 (b)질문 공유 + (d)그 사람에게 직접 보내기 조합 · C2 옵션 C(질문 노출 + 비로그인 답 1줄 → 가입 게이트) · C3 기존 friend_invites 활용 · C4 이름 default + 익명 토글 · C5 보류 · C6 M6·M7·M8 등재 · C7 카드 공유 보류 · 만료 30일 기본.
+- **신규 모듈** `js/reflection-invite.js`: `createReflectionInvite`(친구 초대 토큰 발급, channel='reflection_invite', metadata jsonb에 question_id·anonymous 저장), `shareReflectionInvite`(카카오 SDK 우선 → Web Share → 클립보드 fallback), `renderInviteNudge`(잔잔한 권유 카드 + 익명 토글 + 두 버튼), `logReflectionInviteEvent`(localStorage 폴백 측정). 헌장 일관 — 권유 1회 게이트 (`itda:reflection_invite_nudge_shown` 질문별 마킹).
+- **nudge 노출 위치**: `reflection.html` `renderDone()` 직후 — 사별 페르소나(`state.bereaved=true`)는 노출 X (안전장치). `ask.html` 자동저장 직후 — 첫 저장 시 자동저장 status 위에 카드. 질문 텍스트만 공유(답 본문 노출 X).
+- **신규 페이지** `invite-answer.html`: URL 파라미터(`?token=&q=`)로 friend_invites 검증 → 만료/사용여부 체크 → metadata 또는 message JSON에서 익명 여부 추출 → 익명이면 "잇다 친구 한 분", 아니면 inviter profile.name 노출. 질문 텍스트 노출 + 비로그인 textarea 1줄 → "답을 저장하고 이어서 잇다 만나기" 버튼. 이미 로그인된 사용자는 즉시 `daily_answers` 정식 저장 + `mark_reflection_invite_consumed` RPC 호출. 비로그인은 localStorage `itda:invite_pending_answer` 임시 저장 후 `signup.html?next=./invite-answer.html?...&invite_answer=1`로 이동.
+- **가입 직후 임시 답 정착 안전망** (`index.html` 회원 분기 진입 시): `itda:invite_pending_answer` 발견되면 `daily_answers`에 정식 저장(upsert) + `reflection_invite_signed_up` 이벤트 로깅 + localStorage 정리. signup.html은 `invite_answer=1` 파라미터로 lead 카피만 부드럽게 갈음.
+- **마이그레이션** `supabase/migrations/20260614_friend_invites_reflection.sql` (idempotent): (a) `friend_invites.channel` CHECK 제약을 동적 drop → reflection_invite 값 허용으로 재생성. (b) `metadata jsonb default '{}'` 컬럼 추가 + `(metadata->>'kind')` 인덱스. (c) `mark_reflection_invite_consumed(uuid)` RPC 신설(security definer) — accept_friend_invite와 별개. friendships 생성 X. 마이그레이션 미적용 환경에서도 동작하도록 `createReflectionInvite`는 metadata 컬럼 누락/CHECK 위반 시 message에 JSON fallback.
+- **M6·M7·M8 정식 등재** (`docs/strategy/decisions-2026-06-14.md` 부록 추가): M6 답변 후 공유율 ≥ 15%, M7 초대 링크 → 가입 전환율 ≥ 5%, M8 초대받아 가입한 D30 retention ≥ 30%. 측정 이벤트 정의 + W26 액션 기준 + 사장님 결정 카드 C1~C7 컨펌 표 + 격리 안전 가드 명시.
+- **격리·안전 확인**: 케어링·일기·버킷리스트·기존 share-card·invite.html(친구수락)·기존 share-sheet 사용처(content-detail·diary-detail) 영향 0. 답 본문 공유 X, 친구 답 노출 X, 사별 페르소나 nudge 노출 X. 추모 페이지 복원 0. 임의 hex 0(디자인 토큰만). streak·랭킹·"5명 모으면" 0건.
+- **sw.js**: `CACHE_VERSION` → `itda-v3-2026-06-14-reflection-invite-measurement-v1`(다른 세션의 measurement-deploy 작업과 통합 머지). `APP_SHELL`에 `./invite-answer.html`, `./js/reflection-invite.js` 추가.
+- **변경 파일**: `js/reflection-invite.js`(신규), `invite-answer.html`(신규), `supabase/migrations/20260614_friend_invites_reflection.sql`(신규), `reflection.html`(renderDone에 nudge slot + import), `ask.html`(자동저장 직후 nudge 동적 import), `index.html`(가입 후 pending answer 정착 안전망), `signup.html`(invite_answer=1 lead 카피), `sw.js`(캐시 버전·APP_SHELL), `docs/strategy/decisions-2026-06-14.md`(M6·M7·M8 등재 + 결정 카드 컨펌 표).
+- **사장님 액션**: Supabase SQL Editor에서 `20260614_friend_invites_reflection.sql` 1회 실행 — (a) friend_invites.channel CHECK 제약 reflection_invite 허용, (b) metadata jsonb 컬럼 추가, (c) mark_reflection_invite_consumed RPC. 멱등(재실행 안전). 미실행 시에도 코드는 message JSON 폴백으로 동작하나 익명·질문 ID 추적이 message 파싱에 의존 — 가능한 빨리 실행 권장.
+- 잠재 리스크: (a) 토큰 도용 — 30일 만료 + status='pending' 1회성. 도용 시 도용자 본인 답으로 저장되는 정도이며 inviter 답·정보 노출 0. (b) 만료 후 진입 — invite-answer.html이 만료 메시지로 안내 (가입 게이트 없음). (c) 익명 토글이 자랑 동기 더 약화 가능 — M6 측정 후 카피라이터 라운드에서 익명 default 검토. (d) 비로그인 답 1줄 임시저장 후 가입 이탈 시 localStorage에 답 보존됨 — 다음 진입 시 자동 정착(폴백 안전망). (e) 마이그레이션 미적용 환경에서 message에 JSON 직렬화로 fallback 작동하나 invitee 마킹은 RPC 의존 — 마이그레이션 실행 필수.
 
 **측정 더 자세히 보기 — 콘텐츠 정독 + ceremony 퍼널 + admin 대시보드, 배포** (창업자 요청, PE/운영)
 - **측정 플랜 지도** `docs/product/measurement-plan.md` 신설 — 세 문서(interview-guide·ceremony-funnel·ai-vault)에 흩어진 계측을 한 장에 모으고 구현/미구현 현황 표로 정리.
