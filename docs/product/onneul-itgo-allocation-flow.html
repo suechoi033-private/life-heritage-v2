@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<style>
+  :root{
+    --bg:#FFFFFF; --bg-alt:#F4F6F4; --ink:#21261E; --ink-soft:#3E4A43;
+    --ink-muted:#6B756E; --ink-faint:#AFB8B2; --primary:#2F6B4F;
+    --primary-soft:#E7F1EC; --warm:#BE6440; --line:#E5EAE6; --radius:14px;
+    --font-serif:'Nanum Myeongjo', serif; --font-sans:'Nanum Gothic', sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased;}
+  body{background:#EEF1EF;font-family:var(--font-sans);padding:40px 36px 46px;}
+  .hd{text-align:center;margin-bottom:8px;}
+  .hd h1{font-family:var(--font-serif);font-size:30px;color:var(--ink);}
+  .hd p{font-size:15px;color:var(--ink-muted);margin-top:8px;}
+  .stage{display:flex;align-items:flex-start;justify-content:center;gap:0;margin-top:30px;}
+  .col{width:330px;}
+  .arrow{align-self:center;font-size:34px;color:var(--primary);padding:0 14px;flex:none;margin-top:-40px;}
+  .cap{margin-top:14px;}
+  .cap .step{display:inline-block;background:var(--primary);color:#fff;font-size:12px;font-weight:800;
+    border-radius:999px;padding:3px 11px;margin-bottom:8px;}
+  .cap .t{font-size:15px;font-weight:800;color:var(--ink);margin-bottom:5px;}
+  .cap .d{font-size:12.5px;line-height:1.6;color:var(--ink-soft);}
+  .cap .d b{color:var(--primary);}
+
+  /* phone */
+  .phone{width:330px;background:var(--bg);border-radius:30px;overflow:hidden;
+    box-shadow:0 16px 40px rgba(0,0,0,.13);border:1px solid #dde2df;}
+  .sb{display:flex;justify-content:space-between;padding:9px 20px 4px;font-size:11px;font-weight:700;color:var(--ink);}
+  .bar{display:flex;align-items:center;padding:4px 14px 9px;border-bottom:1px solid var(--line);}
+  .bar .b{font-size:20px;color:var(--ink-soft);width:24px;}
+  .bar .ti{flex:1;text-align:center;font-family:var(--font-serif);font-size:15px;font-weight:700;color:var(--ink);}
+  .bar .s{width:24px;}
+  .body{padding:14px 14px 8px;min-height:560px;}
+
+  /* generic cards */
+  .quiet{border:1px solid var(--line);border-radius:var(--radius);padding:13px 14px;margin-bottom:11px;}
+  .quiet .e{font-size:10.5px;font-weight:700;color:var(--ink-muted);margin-bottom:5px;}
+  .quiet .ti{font-family:var(--font-serif);font-size:15px;line-height:1.45;color:var(--ink);margin-bottom:6px;}
+  .quiet .c{font-size:11.5px;color:var(--primary);font-weight:700;}
+
+  .seed{border-radius:var(--radius);padding:14px;margin-bottom:11px;color:#fff;
+    background:linear-gradient(135deg,var(--primary),#3E9C72);position:relative;}
+  .seed .e{font-size:11px;font-weight:800;margin-bottom:6px;opacity:.95;}
+  .seed .ti{font-family:var(--font-serif);font-size:15.5px;line-height:1.4;margin-bottom:8px;}
+  .seed .c{font-size:11.5px;font-weight:700;opacity:.95;}
+  /* entry highlight */
+  .entry{outline:3px solid #E0A33E;outline-offset:3px;border-radius:var(--radius);}
+  .pin{position:absolute;top:-12px;right:10px;background:#E0A33E;color:#fff;font-size:10.5px;
+    font-weight:800;padding:3px 9px;border-radius:999px;box-shadow:0 3px 8px rgba(0,0,0,.18);}
+
+  .forest{display:flex;align-items:center;gap:11px;border:1px solid var(--line);border-radius:var(--radius);padding:12px 13px;margin-bottom:11px;}
+  .forest .ic{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#E7F1EC,#D2E8DC);
+    display:flex;align-items:center;justify-content:center;font-size:19px;flex:none;}
+  .forest .ti{font-family:var(--font-serif);font-size:14.5px;color:var(--ink);}
+  .forest .ds{font-size:11px;color:var(--ink-muted);margin-top:2px;}
+
+  .greet{padding:10px 4px 14px;}
+  .greet .lb{font-size:11px;color:var(--ink-muted);font-weight:700;margin-bottom:6px;}
+  .greet .tx{font-family:var(--font-serif);font-size:21px;line-height:1.4;color:var(--ink);}
+
+  .feedh{font-size:12.5px;font-weight:800;color:var(--ink-soft);margin:16px 4px 9px;}
+  .fcard{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;}
+  .fcard .cov{height:74px;}
+  .fcard .cov svg{width:100%;height:100%;display:block;}
+  .fcard .bd{padding:9px 12px 11px;}
+  .fcard .ti{font-family:var(--font-serif);font-size:13.5px;color:var(--ink);}
+
+  /* mani + hero (screen 2) */
+  .mani{padding:8px 4px 12px;}
+  .mani .e{font-size:10px;letter-spacing:.1em;color:var(--ink-muted);font-weight:700;margin-bottom:7px;}
+  .mani .l{font-family:var(--font-serif);font-size:19px;line-height:1.4;color:var(--ink);}
+  .hero{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:0 3px 14px rgba(0,0,0,.05);}
+  .hero .cov{position:relative;height:108px;}
+  .hero .cov svg{width:100%;height:100%;display:block;}
+  .hero .bdg{position:absolute;top:10px;left:10px;background:var(--primary-soft);color:var(--primary);font-size:10px;font-weight:800;padding:3px 8px;border-radius:999px;}
+  .hero .bd{padding:12px 13px 14px;}
+  .hero .k{font-size:10.5px;font-weight:700;color:var(--ink-muted);margin-bottom:5px;}
+  .hero .ti{font-family:var(--font-serif);font-size:18px;font-weight:700;color:var(--ink);margin-bottom:7px;}
+  .hero .ex{font-size:12px;line-height:1.6;color:var(--ink-soft);}
+  .hero .sr{font-size:10px;color:var(--ink-muted);margin-top:9px;}
+  .qc{margin-top:13px;border-left:3px solid var(--primary);background:var(--bg-alt);border-radius:11px;padding:12px 13px;}
+  .qc .k{font-size:10.5px;font-weight:800;color:var(--primary);margin-bottom:6px;}
+  .qc .t{font-family:var(--font-serif);font-size:14px;line-height:1.5;color:var(--ink);margin-bottom:10px;}
+  .qc .in{display:flex;justify-content:space-between;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:9px 13px;}
+  .qc .in span{font-size:12px;color:var(--ink-faint);}
+  .qc .in .a{color:var(--primary);font-weight:800;}
+  .seclist{font-size:12px;font-weight:800;color:var(--ink-soft);margin:18px 4px 9px;}
+  .row{display:flex;gap:11px;align-items:center;padding:9px 0;border-top:1px solid var(--line);}
+  .row .th{width:48px;height:48px;border-radius:10px;overflow:hidden;flex:none;}
+  .row .th svg{width:100%;height:100%;display:block;}
+  .row .rk{font-size:10px;color:var(--ink-muted);margin-bottom:2px;}
+  .row .rt{font-family:var(--font-serif);font-size:13.5px;color:var(--ink);}
+
+  /* detail (screen 3) */
+  .dcov{height:150px;position:relative;}
+  .dcov svg{width:100%;height:100%;display:block;}
+  .dwrap{padding:16px 16px 8px;}
+  .dk{font-size:11px;font-weight:700;color:var(--ink-muted);margin-bottom:8px;}
+  .dt{font-family:var(--font-serif);font-size:23px;line-height:1.35;color:var(--ink);margin-bottom:14px;}
+  .dp{font-family:var(--font-serif);font-size:14.5px;line-height:1.85;color:var(--ink-soft);margin-bottom:14px;}
+  .demph{font-family:var(--font-serif);font-size:14.5px;line-height:1.8;color:var(--ink);font-weight:700;
+    border-left:3px solid var(--primary);padding-left:13px;margin:16px 0;}
+  .dsrc{font-size:11px;color:var(--ink-muted);border-top:1px solid var(--line);padding-top:12px;margin-top:6px;}
+  .dcta{margin-top:16px;background:var(--bg-alt);border-radius:12px;padding:14px;text-align:center;}
+  .dcta .t{font-family:var(--font-serif);font-size:14px;color:var(--ink);margin-bottom:10px;}
+  .dcta .btn{background:var(--primary);color:#fff;font-size:13px;font-weight:800;border-radius:999px;padding:10px 0;}
+
+  /* nav */
+  .nav{display:flex;border-top:1px solid var(--line);padding:7px 0 11px;}
+  .nav a{flex:1;text-align:center;color:var(--ink-faint);text-decoration:none;}
+  .nav a .ic{font-size:17px;display:block;filter:grayscale(1);opacity:.5;}
+  .nav a .lb{font-size:9.5px;font-weight:700;margin-top:2px;display:block;}
+  .nav a.active{color:var(--primary);}
+  .nav a.active .ic{filter:none;opacity:1;}
+  .nav a.active .lb{color:var(--primary);}
+
+  /* allocation legend */
+  .legend{max-width:1180px;margin:34px auto 0;background:#fff;border:1px solid var(--line);
+    border-radius:18px;padding:22px 26px;}
+  .legend h2{font-family:var(--font-serif);font-size:18px;color:var(--ink);margin-bottom:14px;}
+  .legend .g{display:flex;gap:22px;}
+  .legend .item{flex:1;}
+  .legend .item .hh{font-size:13px;font-weight:800;color:var(--primary);margin-bottom:6px;}
+  .legend .item p{font-size:12.5px;line-height:1.65;color:var(--ink-soft);}
+  .legend .item p b{color:var(--ink);}
+</style>
+</head>
+<body>
+  <div class="hd">
+    <h1>"오늘 잇고" — 라이브 지면 할당</h1>
+    <p>진입점은 기존 화면 그대로, 전용 지면 하나만 신설 · 상세는 기존 페이지 재사용</p>
+  </div>
+
+  <div class="stage">
+    <!-- ① 홈 진입 -->
+    <div class="col">
+      <div class="phone">
+        <div class="sb"><span>9:41</span><span>●●●● 5G 100</span></div>
+        <div class="bar"><div class="b"></div><div class="ti">잇다</div><div class="s"></div></div>
+        <div class="body">
+          <div class="greet"><div class="lb">안녕하세요, 수님</div><div class="tx">라이프 · 케어링 · 커뮤니티,<br>한 곳에서.</div></div>
+          <div class="quiet"><div class="e">자기성찰 · 5분</div><div class="ti">내일 다시 못 깨어난다면,<br>가장 후회할 일은?</div><div class="c">시작하기 →</div></div>
+          <div class="seed entry">
+            <div class="pin">📌 진입점</div>
+            <div class="e">🕯 오늘 잇고</div>
+            <div class="ti">오늘, 나에게 닿는 질문 하나.<br>— 살아 있을 확률</div>
+            <div class="c">오늘의 잇고 열기 →</div>
+          </div>
+          <div class="forest"><div class="ic">🌿</div><div><div class="ti">장례희망</div><div class="ds">살아서 하는 장례식을 미리 그려보기</div></div></div>
+          <div class="feedh">요즘, 잇다에선</div>
+          <div class="fcard"><div class="cov"><svg viewBox="0 0 160 60" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="f1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#EAF2FA"/><stop offset="1" stop-color="#D8E8F5"/></linearGradient></defs><rect width="160" height="60" fill="url(#f1)"/><circle cx="120" cy="22" r="10" fill="#F3D9A6"/><path d="M0 42 Q40 33 80 38 T160 36 L160 60 L0 60Z" fill="#C2DACB"/></svg></div><div class="bd"><div class="ti">부모님을 갑자기 잃은 40대가…</div></div></div>
+        </div>
+        <div class="nav">
+          <a class="active"><span class="ic">🏠</span><span class="lb">홈</span></a>
+          <a><span class="ic">🌱</span><span class="lb">라이프</span></a>
+          <a><span class="ic">🪺</span><span class="lb">케어링</span></a>
+          <a><span class="ic">🌳</span><span class="lb">콘텐츠</span></a>
+          <a><span class="ic">🌿</span><span class="lb">마이</span></a>
+        </div>
+      </div>
+      <div class="cap"><span class="step">① 진입</span><div class="t">홈 · 콘텐츠 탭에서 진입</div>
+        <div class="d">홈의 기존 <b>🕯 오늘 잇고</b> 카드 한 개가 전용 지면으로 연결됩니다. <b>새 자리 추가 0</b> — 지금 ask.html(질문)로 가던 링크의 목적지만 바뀜. 콘텐츠 탭 상단에도 같은 입구.</div>
+      </div>
+    </div>
+
+    <div class="arrow">→</div>
+
+    <!-- ② 전용 지면 -->
+    <div class="col">
+      <div class="phone">
+        <div class="sb"><span>9:41</span><span>●●●● 5G 100</span></div>
+        <div class="bar"><div class="b">‹</div><div class="ti">오늘 잇고</div><div class="s"></div></div>
+        <div class="body">
+          <div class="mani"><div class="e">DAILY · INTELLECTUAL WELLNESS</div><div class="l">오늘, 나에게 닿는<br>질문 하나.</div></div>
+          <div class="hero">
+            <div class="cov">
+              <svg viewBox="0 0 160 90" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FBF3E2"/><stop offset="1" stop-color="#F3E4C6"/></linearGradient></defs><rect width="160" height="90" fill="url(#sky)"/><circle cx="119" cy="30" r="22" fill="#E9C987" opacity="0.26"/><circle cx="119" cy="30" r="12.5" fill="#E9C987"/><path d="M0 58 Q40 45 80 53 T160 50 L160 90 L0 90Z" fill="#E5D6AE"/><path d="M0 74 Q48 63 100 71 T160 69 L160 90 L0 90Z" fill="#D2BC86"/><rect x="75" y="55" width="9" height="19" rx="2.5" fill="#F6EFE2"/><path d="M79.5 47 q4.5 5 0 9.5 q-4.5 -4.5 0 -9.5z" fill="#E79A39"/></svg>
+              <div class="bdg">✓ 잇다 에디터</div>
+            </div>
+            <div class="bd"><div class="k">오늘의 잇고 · 자기성찰</div><div class="ti">살아 있을 확률</div><div class="ex">한 과학자는 한 인간이 살아 있을 확률을 10⁻²·⁶⁸⁵·⁰⁰⁰이라 했다. 1조 면짜리 주사위 200만 개를 동시에…</div><div class="sr">출처 · 「편안함의 습격」, 마이클 이스터</div></div>
+          </div>
+          <div class="qc"><div class="k">나에게 닿는 질문</div><div class="t">살아 있다는 사실 하나면 충분하다고 생각한 일이, 있었나요.</div><div class="in"><span>한 줄 적어보기…</span><span class="a">→</span></div></div>
+          <div class="seclist">지난 잇고</div>
+          <div class="row"><div class="th"><svg viewBox="0 0 90 90" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="r1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FBF6E6"/><stop offset="1" stop-color="#F2E6C5"/></linearGradient></defs><rect width="90" height="90" fill="url(#r1)"/><circle cx="64" cy="30" r="11" fill="#EBCF88"/><path d="M0 62 Q30 52 55 57 T90 55 L90 90 L0 90Z" fill="#A9CD8E"/></svg></div><div><div class="rk">자기성찰 · 3분</div><div class="rt">오늘의 한 줄을 위해 산 하루</div></div></div>
+          <div class="row"><div class="th"><svg viewBox="0 0 90 90" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="r2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F1EEF9"/><stop offset="1" stop-color="#E1DAEF"/></linearGradient></defs><rect width="90" height="90" fill="url(#r2)"/><circle cx="63" cy="29" r="11" fill="#CCC1EA"/><path d="M0 62 Q30 52 55 57 T90 55 L90 90 L0 90Z" fill="#B5ABDF"/></svg></div><div><div class="rk">자기성찰 · 2분</div><div class="rt">어제의 나는 오늘의 내가 아니다</div></div></div>
+        </div>
+        <div class="nav">
+          <a><span class="ic">🏠</span><span class="lb">홈</span></a>
+          <a><span class="ic">🌱</span><span class="lb">라이프</span></a>
+          <a><span class="ic">🪺</span><span class="lb">케어링</span></a>
+          <a class="active"><span class="ic">🌳</span><span class="lb">콘텐츠</span></a>
+          <a><span class="ic">🌿</span><span class="lb">마이</span></a>
+        </div>
+      </div>
+      <div class="cap"><span class="step">② 전용 지면 (신설)</span><div class="t">오늘 잇고 큐레이션 지면</div>
+        <div class="d"><b>유일하게 새로 만드는 화면.</b> 오늘의 큐레이션(히어로) + 나에게 닿는 질문(읽기→기록) + 지난 잇고(고아였던 6편). 콘텐츠 탭에 소속.</div>
+      </div>
+    </div>
+
+    <div class="arrow">→</div>
+
+    <!-- ③ 상세 -->
+    <div class="col">
+      <div class="phone">
+        <div class="sb"><span>9:41</span><span>●●●● 5G 100</span></div>
+        <div class="bar"><div class="b">‹</div><div class="ti">콘텐츠</div><div class="s">⋯</div></div>
+        <div class="dcov"><svg viewBox="0 0 160 70" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="dsky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FBF3E2"/><stop offset="1" stop-color="#F3E4C6"/></linearGradient></defs><rect width="160" height="70" fill="url(#dsky)"/><circle cx="120" cy="26" r="17" fill="#E9C987" opacity=".28"/><circle cx="120" cy="26" r="10" fill="#E9C987"/><path d="M0 48 Q40 38 80 43 T160 41 L160 70 L0 70Z" fill="#E5D6AE"/><path d="M0 60 Q48 52 100 57 T160 56 L160 70 L0 70Z" fill="#D2BC86"/><rect x="75" y="44" width="8" height="15" rx="2" fill="#F6EFE2"/><path d="M79 38 q4 4 0 8 q-4 -4 0 -8z" fill="#E79A39"/></svg></div>
+        <div class="dwrap">
+          <div class="dk">자기성찰 · ✓ 잇다 에디터</div>
+          <div class="dt">살아 있을 확률</div>
+          <div class="dp">한 과학자는 한 인간이 살아 있을 확률을 10⁻²·⁶⁸⁵·⁰⁰⁰이라 했다. 1조 면짜리 주사위 200만 개를 동시에 던져 모두 같은 숫자가 나올 확률.</div>
+          <div class="dp">하루의 대부분 우리는 이 사실을 놓친다. 못 한 것을 자책하고, 더 가지지 못한 것을 헤아리며.</div>
+          <div class="demph">살아 있다는 것 자체가 기적이라는 말은 위로가 아니다. 통계다.</div>
+          <div class="dsrc">출처 · 「편안함의 습격」, 마이클 이스터</div>
+          <div class="dcta"><div class="t">살아 있다는 사실 하나면 충분했던 일이, 있었나요.</div><div class="btn">한 줄 남기기</div></div>
+        </div>
+        <div class="nav">
+          <a><span class="ic">🏠</span><span class="lb">홈</span></a>
+          <a><span class="ic">🌱</span><span class="lb">라이프</span></a>
+          <a><span class="ic">🪺</span><span class="lb">케어링</span></a>
+          <a class="active"><span class="ic">🌳</span><span class="lb">콘텐츠</span></a>
+          <a><span class="ic">🌿</span><span class="lb">마이</span></a>
+        </div>
+      </div>
+      <div class="cap"><span class="step">③ 상세 (기존 재사용)</span><div class="t">에세이 상세 페이지</div>
+        <div class="d"><b>새로 만들 것 없음.</b> 기존 content-detail 페이지 그대로. 7편이 각자 상세를 갖고, 글 끝 "한 줄 남기기"로 기록 도구 연결.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <h2>지면 할당 요약 — 무엇이 어디에 들어가나</h2>
+    <div class="g">
+      <div class="item"><div class="hh">홈 (index.html)</div><p>기존 <b>🕯 오늘 잇고 카드 1개</b>의 목적지만 전용 지면으로 변경. 새 카드·새 자리 추가 없음 → 홈 복잡도 그대로.</p></div>
+      <div class="item"><div class="hh">콘텐츠 탭 (info.html)</div><p>라이프사이클 브라우저 상단에 <b>"오늘 잇고" 입구 1줄</b> 추가. 기존 주제 카테고리 구조와 충돌 없음.</p></div>
+      <div class="item"><div class="hh">전용 지면 (신설 1개)</div><p>오늘의 큐레이션 + 질문 + 지난 잇고 리스트. <b>고아였던 7편이 여기에 집을 가짐.</b> 홈 피드의 reflection 제외 필터는 그대로 둠.</p></div>
+      <div class="item"><div class="hh">상세 (content-detail)</div><p>기존 페이지 재사용. DB·콘텐츠 그대로, 추가 작업 거의 0. 글 끝 CTA로 기록 도구 연결.</p></div>
+    </div>
+  </div>
+</body>
+</html>
