@@ -79,6 +79,15 @@
     .checklist li { padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px; line-height: 1.6; color: var(--ink-soft); }
     .checklist li:last-child { border-bottom: none; }
     .checklist li::before { content: '✍️ '; }
+    /* 연명의료 — 유언장과 분리된 '나의 뜻' 카드 */
+    .will-aside {
+      margin-top: 22px; border: 1px solid var(--line); border-left: 3px solid var(--primary);
+      border-radius: 12px; padding: 18px 20px; background: var(--bg-alt);
+    }
+    .will-aside-title { font-size: 14.5px; font-weight: 800; margin-bottom: 8px; }
+    .will-aside-body { font-size: 15px; line-height: 1.8; color: var(--ink); white-space: pre-wrap; font-family: var(--font-serif); }
+    .will-aside-note { font-size: 12.5px; color: var(--ink-muted); line-height: 1.7; margin-top: 12px; }
+    .will-aside-note a { color: var(--primary); text-decoration: underline; font-weight: 700; }
     .soon-box {
       margin-top: 24px; border: 1px dashed var(--line); border-radius: 14px; padding: 18px 20px;
       background: var(--bg-alt);
@@ -165,6 +174,12 @@
       label: '이 정리를 누가 맡아주면 좋겠어요?',
       legal: '유언을 실제로 실행할 ‘유언집행자’를 정하는 부분이에요. 정해두면 가족이 덜 헤매요.',
       placeholder: '예) 큰아들 ○○○',
+    },
+    {
+      key: 'life_sustaining', type: 'textarea', required: false,
+      label: '연명의료에 대해 생각해 두신 게 있나요?',
+      legal: '회복 가능성이 없는 임종기에 인공호흡기·심폐소생술 같은 연명의료를 받을지에 대한 뜻이에요. ⚠️ 이건 마음을 적어두는 것으로, 실제 효력은 유언장이 아니라 ‘사전연명의료의향서’를 공식 기관에 등록해야 생겨요(아래 결과 화면에서 안내해 드려요). 없으면 건너뛰어도 돼요.',
+      placeholder: '예) 회복 가능성이 없다면 연명의료는 원하지 않아요. 편안하게 보내주세요.',
     },
     {
       key: 'message', type: 'textarea', required: false,
@@ -310,6 +325,13 @@
         <button class="btn btn-ghost" id="edit">다시 고치기</button>
       </div>
 
+      ${answers.life_sustaining ? `
+      <div class="will-aside">
+        <div class="will-aside-title">🕊️ 연명의료에 대한 나의 뜻</div>
+        <div class="will-aside-body">${escapeHtml(answers.life_sustaining)}</div>
+        <div class="will-aside-note">이 글은 마음을 적어둔 것으로, <b>유언장과는 별개</b>예요. 실제로 연명의료를 받지 않으시려면 <b>사전연명의료의향서</b>를 보건소·등록기관에서 직접 작성·등록하셔야 효력이 생겨요. <a href="https://www.lst.go.kr" target="_blank" rel="noopener">국립연명의료관리기관에서 등록처 찾기 ›</a></div>
+      </div>` : ''}
+
       <div class="section-title">손으로 옮겨 쓸 때 (자필 유언 체크리스트)</div>
       <ul class="checklist">
         <li>위 내용을 처음부터 끝까지 <b>직접 손으로</b> 옮겨 적어요(인쇄·대필은 효력이 없어요).</li>
@@ -319,8 +341,8 @@
       </ul>
 
       <div class="soon-box">
-        <span class="tag">준비중이에요</span>
-        <p><b>화상 공증 연동</b> — 손으로 쓰지 않아도 공증인과 화상으로 만나 ‘공정증서 유언’을 남기는 길을 준비하고 있어요. 곧 이 자리에서 바로 이어드릴게요.</p>
+        <span class="tag">함께 준비할게요</span>
+        <p><b>공증사무소 연결 (대면 공정증서)</b> — 손글씨가 어렵거나 더 확실히 남기고 싶다면, 공증인과 증인 앞에서 작성하는 ‘공정증서 유언’이 안전해요. 가까운 공증사무소로 잇는 길을 준비하고 있어요.<br><span style="color:var(--ink-muted);">※ 사진으로 찍어 올리는 건 분실 대비 <b>보관용</b>이에요 — 법적 효력은 손으로 직접 쓴 원본(또는 공정증서)에 있어요.</span></p>
       </div>
 
       <div class="disclaimer">잇다는 답하신 내용을 <b>그대로</b> 담아 유언장 형식으로 정리해드려요(없는 내용을 지어내지 않아요). 법적 효력은 직접 손으로 쓴 자필 유언, 또는 공증을 통해 생겨요. 재산·상속이 복잡하거나 다툼이 걱정되면 변호사·법무사와 상의하시길 권해요.</div>
