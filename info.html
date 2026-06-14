@@ -261,6 +261,26 @@
     <button type="button" onclick="window.location.href='./forest.html?seg=community'">커뮤니티</button>
   </div>
 
+  <style>
+    .itgo-hero{display:block;background:linear-gradient(135deg,#FAF6EE,#F2EBDD);border:1px solid var(--warm-soft);border-radius:18px;padding:18px 18px 16px;margin:0 0 10px;text-decoration:none;color:inherit;transition:border-color .15s,transform .1s;}
+    .itgo-hero:hover{border-color:var(--warm);}
+    .itgo-hero:active{transform:scale(0.995);}
+    .itgo-hero-eyebrow{display:block;font-size:11px;font-weight:800;letter-spacing:0.08em;color:var(--warm);margin-bottom:8px;}
+    .itgo-hero-title{display:block;font-family:var(--font-serif);font-size:19px;font-weight:800;line-height:1.45;color:var(--ink);margin-bottom:8px;}
+    .itgo-hero-snippet{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font-size:13px;line-height:1.7;color:var(--ink-soft);margin-bottom:10px;}
+    .itgo-hero-cta{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:var(--warm);}
+    .itgo-more{display:block;text-align:center;font-size:13px;font-weight:800;color:var(--primary);text-decoration:none;margin:0 0 22px;}
+  </style>
+
+  <!-- 오늘 잇다가 고른 글 (큐레이션 — 7일 회전, forest.html과 동일 로직) -->
+  <a id="itgo-hero" class="itgo-hero" href="#" hidden>
+    <span class="itgo-hero-eyebrow">🌿 오늘 잇다가 고른 글</span>
+    <span class="itgo-hero-title" id="itgo-hero-title"></span>
+    <span class="itgo-hero-snippet" id="itgo-hero-snippet"></span>
+    <span class="itgo-hero-cta">읽어보기 ›</span>
+  </a>
+  <a id="itgo-more" class="itgo-more" href="./forest.html" hidden>오늘 잇고 콘텐츠 전체 보기 →</a>
+
   <div class="tab-segment" style="margin-bottom:20px;" role="tablist">
     <button type="button" class="stage-tab active" data-stage="pre">미리</button>
     <button type="button" class="stage-tab" data-stage="in">곁에</button>
@@ -298,6 +318,36 @@
 
   const { renderTopBar } = await import('./nav.js');
   await renderTopBar({ active: 'info' });
+
+  // 오늘 잇다가 고른 글 — 7일 회전. forest.html과 동일 로직(베타 시작 2026-06-03 기준).
+  // 콘텐츠 탭(=info.html 정보 랜딩)에서 오늘의 큐레이션 글을 바로 노출. 실패 시 조용히 숨김.
+  (async () => {
+    const hero = document.getElementById('itgo-hero');
+    const more = document.getElementById('itgo-more');
+    if (!hero) return;
+    try {
+      const HERO_LAUNCH_MS = Date.UTC(2026, 5, 3, -9, 0, 0); // KST 6/3 00:00
+      const dayDiff = Math.floor((Date.now() - HERO_LAUNCH_MS) / 86400000);
+      const heroDay = (((dayDiff % 7) + 7) % 7) + 1; // 1..7
+      const { data, error } = await supabase
+        .from('contents')
+        .select('id, title, body')
+        .eq('hero_day', heroDay)
+        .eq('is_published', true)
+        .eq('author_type', 'official')
+        .maybeSingle();
+      if (error || !data) return;
+      const snippet = (data.body || '')
+        .replace(/[#*>_`\[\]]/g, '').replace(/\s+/g, ' ').trim().slice(0, 140);
+      document.getElementById('itgo-hero-title').textContent = data.title || '';
+      document.getElementById('itgo-hero-snippet').textContent = snippet + '…';
+      hero.href = `./content-detail.html?id=${data.id}`;
+      hero.hidden = false;
+      if (more) more.hidden = false;
+    } catch (e) {
+      console.warn('[info] 오늘 잇고 hero 로드 실패, 숨김 유지', e);
+    }
+  })();
 
   // ── 카테고리 정의 (시점별) ────────────────────
   const STAGES = {

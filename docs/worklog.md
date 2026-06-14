@@ -51,6 +51,19 @@
 
 ## 2026-06-14
 
+**콘텐츠 노출 진단 → "오늘 잇고" 큐레이션 콘텐츠 탭 노출 (PE 배포)** (사장님 세션: 릴스→콘텐츠 노출)
+- 사장님 제보: "잇다 콘텐츠가 노출 안 됨, 지면 바뀐 탓?" 원격 DB 직접 확인 + 코드 추적으로 진단.
+- **근본 원인**: `forest.html`이 이미 "오늘 잇다가 고른 글" 큐레이션 히어로(hero_day 7일 회전) + reflection 에세이 목록을 갖춘 완성된 콘텐츠 지면인데, 하단 **콘텐츠 탭이 info.html(정보 기본 랜딩, 6/8 결정 #2173c8f)** 을 가리켜 에세이가 2탭 깊이에 묻혀 있었음. "살아 있을 확률" 외 6편(hero_day 1~7)은 is_published=true이나 홈 피드는 `category='reflection'` 의도적 제외(`js/content.js`).
+- **수정(배포)**: 6/8 정보-기본-랜딩 결정은 유지하고, **info.html(콘텐츠 탭 랜딩) 최상단에 "🌿 오늘 잇다가 고른 글" 큐레이션 히어로 추가** — forest.html과 동일 로직(hero_day 회전) 재사용, 오늘의 에세이 제목·발췌를 바로 노출 + content-detail 링크 + "오늘 잇고 전체 보기 →" forest.html 링크. 콘텐츠 탭 진입 즉시 오늘의 글이 보임. 추가만(기존 카테고리 브라우저·세그먼트 영향 0).
+- 파일: `info.html`(히어로 마크업+스타일+로더 IIFE), `sw.js` CACHE_VERSION → `itda-v3-2026-06-14-itgo-curation-on-content-tab-v1`.
+- **검증 한계**: 샌드박스 네트워크 정책이 jsdelivr CDN(supabase-js)·Supabase를 403 차단 → 데이터 호출 로컬 검증 불가. 정적 렌더 정상 + 히어로 로직은 프로덕션 동작 중인 forest.html과 동일(ID만 상이). 배포 후 라이브 확인 필요.
+- 후속(미착수): info.html 히어로를 승인 목업(`docs/product/onneul-itgo-surface-mockup.html`)처럼 커버 이미지·"나에게 닿는 질문" 입력까지 폴리시 / 홈 진입점 추가 여부.
+
+**릴스용 AI 디지털 트윈(창업자 페르소나) + "살아 있을 확률" 카드뉴스** (마케팅 세션, 사장님 대화)
+- 디지털 트윈 제작 가이드 + 캘리브레이션 대본 v3(끝을 생각해 잘 살기+함께) + 표정·제스처 디렉션(상담사의 평온·안전감) + 릴스 제작 프롬프트: `docs/content/reels-ai-persona-digital-twin.md`.
+- 인스타 카드뉴스 "살아 있을 확률" 8장(seed-12 포맷 계승): `docs/marketing/insta-alive-probability-cardnews-2026-06-14.md`.
+- "오늘 잇고" 전용 지면 목업·지면 할당 흐름도(Playwright 렌더): `docs/product/onneul-itgo-surface-mockup.html`, `docs/product/onneul-itgo-allocation-flow.html`.
+
 **답변→공유→초대 유입 루프 PE 구현 (사장님 컨펌 후 1차 배포 준비)**
 - 단일 원천: `docs/strategy/answer-invite-loop-2026-06-14.md`(467줄, C1~C7 결정 카드). 사장님 컨펌: C1 (b)질문 공유 + (d)그 사람에게 직접 보내기 조합 · C2 옵션 C(질문 노출 + 비로그인 답 1줄 → 가입 게이트) · C3 기존 friend_invites 활용 · C4 이름 default + 익명 토글 · C5 보류 · C6 M6·M7·M8 등재 · C7 카드 공유 보류 · 만료 30일 기본.
 - **신규 모듈** `js/reflection-invite.js`: `createReflectionInvite`(친구 초대 토큰 발급, channel='reflection_invite', metadata jsonb에 question_id·anonymous 저장), `shareReflectionInvite`(카카오 SDK 우선 → Web Share → 클립보드 fallback), `renderInviteNudge`(잔잔한 권유 카드 + 익명 토글 + 두 버튼), `logReflectionInviteEvent`(localStorage 폴백 측정). 헌장 일관 — 권유 1회 게이트 (`itda:reflection_invite_nudge_shown` 질문별 마킹).
