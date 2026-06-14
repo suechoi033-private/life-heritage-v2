@@ -21,6 +21,18 @@
 
 ## 2026-06-14
 
+**답변→공유→초대 유입 루프 종합 설계 (사업전략 세션, 분석·설계만 — 코드 0)**
+- 사장님 통찰: "잇다 성찰과 매일 노출되는 질문에 답변하고 지인을 초대할 수 있는 유인경로를 설계해줘." 산출: `docs/strategy/answer-invite-loop-2026-06-14.md`.
+- 단일 원천 종합 검토: 어제 `decisions-2026-06-14.md`(자기성찰 시리즈 5단계·사별 분기) + `acquisition-task-oriented-2026-06-13.md`(M1·M2·M3·organic 우선) + `business-plan-v3.md`(양면 시장·D5 신호) + 헌장 5장(좋아요 경쟁 의도적 제거) + 코드(`reflection.html`·`js/share-card.js`·`js/share-sheet.js`·`js/friends.js`·`invite.html`·`friend_invites`/`friendships`/`accept_friend_invite` RPC).
+- 가치 진단: 답 텍스트는 사적 결이라 공유 약함, **본진은 (b) 질문 공유 + 같이 답하기 + (d) 그 사람에게 직접 보내기**. 답 카드 공유 (a)는 보조·M6 데이터 후 결정(C7). 비교 회고 (c)·잇다 친구 양방향 (e)·미래 봉투 (f)는 본 라운드 보류.
+- 헌장 일관 초대 메커니즘: "친구 N명 보상" 금지·"지금만" 금지·랭킹·뱃지·점수 0. 권유는 시리즈 완주(Q5) 직후 1회만. 강요·죄책감 0.
+- 초대 인프라: **신규 테이블 0**. 기존 `friend_invites.channel`에 `reflection_q1` 값 추가만(스키마 변경 0), 기존 `accept_friend_invite` RPC 그대로. one-way door 0건.
+- 초대받은 친구 첫 화면 추천 = **옵션 C** (질문 노출 + 비로그인 답 1줄 임시 작성(localStorage) → 가입 게이트). 친구 답은 노출 X (privacy + 사별 안전).
+- W26 게이트 metric 보강 — **M6·M7·M8 등재 권고**: M6 답변 후 공유율 ≥ 15%, M7 초대 링크 → 가입 전환율 ≥ 5%, M8 초대받아 가입한 D30 retention ≥ 30%. M4·M5(어제 D8)와 같은 라인업.
+- 사장님 결정 카드 7개(C1~C7, 모두 two-way door): C1 본진 시나리오 / C2 초대받은 친구 첫 화면 / C3 초대 인프라(기존 활용) / C4 초대자 이름 노출 + 익명 토글 / C5 가입 후 초대자 알림(보류) / C6 M6~M8 등재 / C7 (a) 카드 공유 보류.
+- 정직성 라벨: 답변→공유 동력 가설·M7 5% 추정·초대 acquisition이 인스타보다 강한 retention 가설 모두 **미검증**. 가장 큰 약점 — 잇다 톤이 자랑 동기를 의도적으로 걷어내서 공유 동기 자체가 약할 risk. M6 5% 미만이면 "헌장은 지켰는데 acquisition은 안 일어남" 함정.
+- 다음 단계: 사장님 결정 후 PE(C1·C2·C3·C6 1차 측정 인프라 = localStorage), 카피라이터(7.1·7.2·7.3 후보 확정), 마케터(D3 인스타와 연결 시나리오), 운영(M6~M8 W26 등재 + 지인 인터뷰 가이드 보강).
+
 **자기성찰 시리즈 + Axis A·B 홈 카드 구현 (PE 세션, 사장님 결정 8개 일괄)**
 - 단일 원천: `docs/strategy/decisions-2026-06-14.md`(사장님 결정 8개), `docs/strategy/product-axis-not-waking-tomorrow-2026-06-14.md`. **D1 보류**(important_people 신설 X) → 기존 daily_questions + daily_answers + profiles.notification_pref 활용으로 우회. **D4 라이프 탭 IA 손대지 않음**.
 - **자기성찰 시리즈 마이그레이션** (`supabase/migrations/20260614_reflection_series.sql`): `daily_questions`에 `series_key`·`series_step`·`series_branch` 컬럼 추가(전부 NULL 허용, 기존 행 영향 0). `not_waking_tomorrow` 시리즈 8문항 멱등 INSERT — Q1(사장님 확정 카피 그대로) + Q2 분기 + 사람 Q3a·4a·5a + 일 Q3b·4b·5b. `display_order=NULL`로 두어 `get_todays_question` RPC와 충돌 0.
