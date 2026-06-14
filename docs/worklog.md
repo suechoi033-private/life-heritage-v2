@@ -51,6 +51,17 @@
 
 ## 2026-06-14
 
+**측정 더 자세히 보기 — 콘텐츠 정독 + ceremony 퍼널 + admin 대시보드, 배포** (창업자 요청, PE/운영)
+- **측정 플랜 지도** `docs/product/measurement-plan.md` 신설 — 세 문서(interview-guide·ceremony-funnel·ai-vault)에 흩어진 계측을 한 장에 모으고 구현/미구현 현황 표로 정리.
+- **콘텐츠 정독 계측(`content_read`):** `auth.js`에 범용 `logEvent` 추가, `content-detail.html`이 떠날 때 `app_events`에 maxScrollPct·dwellSec·reachedEnd 1건 기록. "열람(pageview)"과 "정독" 구분.
+- **ceremony 퍼널(`funnel_events`):** 테이블(anon insert-only RLS) + 위저드 6개 이벤트(view·start·step·complete·signup_click·reco_click) 계측. `cer_signup_done`은 백로그(가입 `next`에 session_id 전달 필요).
+- **admin 측정 대시보드:** `admin.html` "측정" 탭 — 퍼널 단계별 도달 세션·전환율(직전 대비) + 정독 표. RLS 우회는 운영자 이메일 확인 SECURITY DEFINER RPC(`admin_funnel_summary`·`admin_content_read_summary`).
+- 마이그레이션 `20260613_funnel_events.sql`·`20260613_admin_metrics_rpc.sql` 적용. `sw.js` → `2026-06-14-measurement-deploy-v1`. 작업브랜치 → main merge 배포.
+
+**리텐션 리포트 틀 — 롤링(가입 후 N일째) 코호트 + 운영자 제외** (창업자 요청, 운영)
+- 한 명씩 알음알음 초대하는 방식에 맞춰 고정 `test_start` 코호트 폐기. `/retention-report`를 "가입 실사용자 전원(=초대한 사람) 누적, 사람마다 가입 후 N일째·재방문(D1+)·2회차·초대" 틀로 재작성.
+- 운영자 본인(단청, `sue.choi033@gmail.com`) 계정 SQL 자동 제외.
+
 **형제(가족) 초대 플로우 — 프로덕션 배포 + "보기 먼저" RPC 적용 + 케어 트리거 + UT 키트** (오케스트레이터, 사장님 "배포해/M2/2,3번 go")
 - **"보기 먼저" RPC 적용 완료(라이브):** `preview_friend_invite`(anon, SECURITY DEFINER, 읽기전용) Supabase 적용·검증(잘못된 코드→0행). 케어링 `preview_care_invite` 동일 패턴. 보안 어드바이저 신규 경고 0. 비로그인 가족이 가입 전 초대자 이름+한마디 확인(P6). 프런트는 RPC 실패시 폴백 전향설계라 적용 즉시 작동.
 - **케어 트리거 배치(발송률 출처):** care.html — ①일지 탭 상시 진입점 1줄(가족 0명→"가족과 함께 보기", N명→"함께하는 가족 N명") ②첫 일지 저장 직후 권유 모달 1회(사용자당 localStorage 가드, 이미 가족 있으면 미노출, 닫기 가능). 기존 modal 패턴·토큰 재사용, DB 무변경. (PE 세션)

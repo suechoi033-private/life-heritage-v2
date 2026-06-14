@@ -301,6 +301,27 @@
       color: var(--primary);
     }
 
+    /* ── Metrics (퍼널·정독) ───────────── */
+    .metrics-block {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px 16px 18px;
+      margin-bottom: 16px;
+    }
+    .metrics-head {
+      font-size: 14.5px;
+      font-weight: 800;
+      color: var(--ink);
+      margin-bottom: 14px;
+    }
+    .metrics-head .metrics-sub {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--ink-muted);
+      margin-left: 6px;
+    }
+
     /* ── Users table ───────────────────── */
     .users-search {
       display: flex;
@@ -679,6 +700,7 @@
       <button type="button" class="section-tab" data-section="promote">콘텐츠 승급 <span class="count-badge" id="tab-count-promote">—</span></button>
       <button type="button" class="section-tab" data-section="reports">신고함 <span class="count-badge" id="tab-count-reports">—</span></button>
       <button type="button" class="section-tab" data-section="users">가입자 <span class="count-badge" id="tab-count-users">—</span></button>
+      <button type="button" class="section-tab" data-section="metrics">측정 <span class="count-badge" id="tab-count-metrics">—</span></button>
     </div>
 
     <!-- Section: stories -->
@@ -778,6 +800,25 @@
         </div>
       </div>
     </div>
+
+    <!-- Section: metrics (리텐션 테스트 — 퍼널·정독 계측) -->
+    <div class="admin-section hidden" data-section-content="metrics">
+      <p class="page-sub">
+        리텐션 테스트 계측입니다. <strong>ceremony 퍼널</strong>(단계별 진행·이탈)과
+        <strong>콘텐츠 정독</strong>(얼마나 읽었나)을 봅니다. 최근 30일 기준.
+        사람 식별 정보는 담지 않아요(session_id·집계값만).
+      </p>
+
+      <div class="metrics-block">
+        <div class="metrics-head">🪻 ceremony 퍼널 <span class="metrics-sub">단계별 도달 세션 수 · 전환율</span></div>
+        <div id="funnel-area"><div class="empty"><div class="empty-icon">🪻</div><p>불러오는 중…</p></div></div>
+      </div>
+
+      <div class="metrics-block">
+        <div class="metrics-head">📖 콘텐츠 정독 <span class="metrics-sub">열람 · 완독 · 평균 스크롤/체류</span></div>
+        <div id="content-read-area"><div class="empty"><div class="empty-icon">📖</div><p>불러오는 중…</p></div></div>
+      </div>
+    </div>
   </div>
 
 </main>
@@ -853,8 +894,102 @@
       if (section === 'users'   && !state.usersLoaded)   loadUsers();
       if (section === 'promote' && !state.promoteLoaded) loadPromote();
       if (section === 'reports' && !state.reportsLoaded) loadReports();
+      if (section === 'metrics' && !state.metricsLoaded) loadMetrics();
     });
   });
+
+  // ── 측정 (퍼널·정독) ──────────────────
+  const FUNNEL_ORDER = [
+    { ev: 'cer_view',         label: '진입',        ic: '🚪' },
+    { ev: 'cer_start',        label: '시작',        ic: '▶' },
+    { ev: 'cer_step',         label: '문항 응답',   ic: '✍' },
+    { ev: 'cer_complete',     label: '결과 도달',   ic: '🎉' },
+    { ev: 'cer_signup_click', label: '가입 클릭',   ic: '🌿' },
+    { ev: 'cer_reco_click',   label: '연결 요청',   ic: '🤝' },
+  ];
+
+  async function loadMetrics() {
+    state.metricsLoaded = true;
+    const funnelArea = document.getElementById('funnel-area');
+    const readArea = document.getElementById('content-read-area');
+
+    // ── 퍼널 ──
+    try {
+      const { data, error } = await supabase.rpc('admin_funnel_summary', { days: 30 });
+      if (error) throw error;
+      const byEv = {};
+      (data || []).forEach(r => { byEv[r.event] = r; });
+      const base = byEv['cer_view']?.sessions || 0;
+      document.getElementById('tab-count-metrics').textContent = base;
+      if (!base) {
+        funnelArea.innerHTML = `<div class="empty"><div class="empty-icon">🪻</div><p>아직 퍼널 데이터가 없어요.<br>ceremony 위저드 방문이 쌓이면 표시됩니다.</p></div>`;
+      } else {
+        funnelArea.innerHTML = FUNNEL_ORDER.map((f, i) => {
+          const sessions = byEv[f.ev]?.sessions || 0;
+          const pct = base ? Math.round((sessions / base) * 100) : 0;
+          // 직전 단계 대비 전환율(첫 행 제외)
+          const prev = i > 0 ? (byEv[FUNNEL_ORDER[i - 1].ev]?.sessions || 0) : 0;
+          const step = (i > 0 && prev) ? Math.round((sessions / prev) * 100) : null;
+          return `
+            <div style="margin-bottom:10px;">
+              <div style="display:flex;align-items:baseline;justify-content:space-between;font-size:13px;margin-bottom:4px;">
+                <span style="font-weight:700;color:var(--ink);">${f.ic} ${f.label}</span>
+                <span style="color:var(--ink-muted);font-size:12px;">
+                  <strong style="color:var(--ink);font-size:14px;">${sessions}</strong> 세션 · ${pct}%${step !== null ? ` <span style="color:var(--ink-soft);">(직전 대비 ${step}%)</span>` : ''}
+                </span>
+              </div>
+              <div style="height:9px;background:var(--bg-alt);border-radius:99px;overflow:hidden;">
+                <div style="height:100%;width:${pct}%;background:var(--primary);border-radius:99px;"></div>
+              </div>
+            </div>`;
+        }).join('');
+      }
+    } catch (e) {
+      funnelArea.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><p>퍼널 집계 실패: ${escapeHtml(e.message || String(e))}</p></div>`;
+    }
+
+    // ── 콘텐츠 정독 ──
+    try {
+      const { data, error } = await supabase.rpc('admin_content_read_summary', { days: 30 });
+      if (error) throw error;
+      const rows = data || [];
+      if (!rows.length) {
+        readArea.innerHTML = `<div class="empty"><div class="empty-icon">📖</div><p>아직 정독 데이터가 없어요.<br>콘텐츠를 읽고 떠나면 기록됩니다.</p></div>`;
+      } else {
+        readArea.innerHTML = `
+          <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:12.5px;">
+            <thead><tr style="text-align:left;color:var(--ink-muted);border-bottom:1px solid var(--line);">
+              <th style="padding:7px 8px;">콘텐츠</th>
+              <th style="padding:7px 8px;text-align:right;">열람</th>
+              <th style="padding:7px 8px;text-align:right;">완독</th>
+              <th style="padding:7px 8px;text-align:right;">완독률</th>
+              <th style="padding:7px 8px;text-align:right;">평균스크롤</th>
+              <th style="padding:7px 8px;text-align:right;">평균체류</th>
+            </tr></thead>
+            <tbody>
+            ${rows.map(r => {
+              const reads = Number(r.reads) || 0;
+              const completes = Number(r.completes) || 0;
+              const rate = reads ? Math.round((completes / reads) * 100) : 0;
+              const cat = r.category ? `<span style="color:var(--ink-muted);">[${escapeHtml(r.category)}]</span> ` : '';
+              return `
+                <tr style="border-bottom:1px solid var(--line);">
+                  <td style="padding:7px 8px;color:var(--ink);">${cat}${escapeHtml((r.content_id || '').slice(0, 8))}</td>
+                  <td style="padding:7px 8px;text-align:right;font-weight:700;">${reads}</td>
+                  <td style="padding:7px 8px;text-align:right;">${completes}</td>
+                  <td style="padding:7px 8px;text-align:right;color:${rate >= 50 ? 'var(--primary)' : 'var(--ink-soft)'};font-weight:700;">${rate}%</td>
+                  <td style="padding:7px 8px;text-align:right;">${r.avg_scroll ?? '—'}%</td>
+                  <td style="padding:7px 8px;text-align:right;">${r.avg_dwell ?? '—'}초</td>
+                </tr>`;
+            }).join('')}
+            </tbody>
+          </table></div>`;
+      }
+    } catch (e) {
+      readArea.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><p>정독 집계 실패: ${escapeHtml(e.message || String(e))}</p></div>`;
+    }
+  }
 
   // ── Load ──────────────────────────────
   await loadStories();

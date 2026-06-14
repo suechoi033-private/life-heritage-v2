@@ -171,6 +171,24 @@
   const PLAN_KEY = 'itda:ceremony_plan';
   const LEADS_KEY = 'itda:ceremony_leads';
 
+  // ───────────────────────── 퍼널 계측 (funnel_events) ─────────────────────────
+  // 위저드 단계별 진행·이탈을 본다. 익명 가능(로그인 전 진입) — session_id로 묶는다.
+  // 측정 실패는 앱 동작을 절대 방해하지 않는다. props엔 PII 금지.
+  const FUNNEL_SID_KEY = 'itda:funnel_sid';
+  function funnelSid() {
+    try {
+      let sid = sessionStorage.getItem(FUNNEL_SID_KEY);
+      if (!sid) { sid = (crypto?.randomUUID?.() || (Date.now() + '-' + Math.random().toString(16).slice(2))); sessionStorage.setItem(FUNNEL_SID_KEY, sid); }
+      return sid;
+    } catch (_) { return 'anon'; }
+  }
+  async function logFunnel(event, props = {}) {
+    try { await supabase.from('funnel_events').insert({ session_id: funnelSid(), event, props: { loggedIn, ...props } }); } catch (_) {}
+  }
+  const _funnelStepsLogged = new Set();
+  let _funnelCompleteLogged = false;
+  logFunnel('cer_view');
+
   // ───────────────────────── 질문 정의 ─────────────────────────
   const STEPS = [
     {
@@ -324,6 +342,7 @@
   // ───────────────────────── 인트로 → 시작 ─────────────────────────
   $('start-btn').addEventListener('click', () => {
     introEl.classList.add('hidden');
+    logFunnel('cer_start');
     // 첫 미응답 단계로 점프 (이어보기 지원)
     idx = STEPS.findIndex(s => !isAnswered(s.key));
     if (idx < 0) idx = 0;
@@ -346,6 +365,7 @@
     progressWrap.classList.remove('hidden');
 
     const s = STEPS[idx];
+    if (!_funnelStepsLogged.has(idx)) { _funnelStepsLogged.add(idx); logFunnel('cer_step', { step: idx + 1, key: s.key }); }
     progressFill.style.width = `${((idx) / STEPS.length) * 100}%`;
     stepCount.textContent = `${idx + 1} / ${STEPS.length}`;
 
@@ -558,6 +578,7 @@
 
   // ───────────────────────── 결과 ─────────────────────────
   async function showResult() {
+    if (!_funnelCompleteLogged) { _funnelCompleteLogged = true; logFunnel('cer_complete'); }
     introEl.classList.add('hidden');
     stepEl.classList.add('hidden');
     actionbar.classList.add('hidden');
@@ -637,6 +658,7 @@
 
     if (!loggedIn) {
       $('gate-signup').addEventListener('click', () => {
+        logFunnel('cer_signup_click');
         savePlan();
         window.location.href = './signup.html?mode=ceremony';
       });
@@ -672,6 +694,7 @@
 
   function submitLead(btn) {
     if (btn.classList.contains('done')) return;
+    logFunnel('cer_reco_click', { kind: btn.dataset.kind });
     const lead = {
       kind: btn.dataset.kind,
       partner: btn.dataset.name,
