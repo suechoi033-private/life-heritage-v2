@@ -56,6 +56,7 @@
 - **근본 원인**: `forest.html`이 이미 "오늘 잇다가 고른 글" 큐레이션 히어로(hero_day 7일 회전) + reflection 에세이 목록을 갖춘 완성된 콘텐츠 지면인데, 하단 **콘텐츠 탭이 info.html(정보 기본 랜딩, 6/8 결정 #2173c8f)** 을 가리켜 에세이가 2탭 깊이에 묻혀 있었음. "살아 있을 확률" 외 6편(hero_day 1~7)은 is_published=true이나 홈 피드는 `category='reflection'` 의도적 제외(`js/content.js`).
 - **수정(배포)**: 6/8 정보-기본-랜딩 결정은 유지하고, **info.html(콘텐츠 탭 랜딩) 최상단에 "🌿 오늘 잇다가 고른 글" 큐레이션 히어로 추가** — forest.html과 동일 로직(hero_day 회전) 재사용, 오늘의 에세이 제목·발췌를 바로 노출 + content-detail 링크 + "오늘 잇고 전체 보기 →" forest.html 링크. 콘텐츠 탭 진입 즉시 오늘의 글이 보임. 추가만(기존 카테고리 브라우저·세그먼트 영향 0).
 - 파일: `info.html`(히어로 마크업+스타일+로더 IIFE), `sw.js` CACHE_VERSION → `itda-v3-2026-06-14-itgo-curation-on-content-tab-v1`.
+- **보완(v2, 사장님 피드백 "목록까지 안 보임")**: 히어로 아래에 **나머지 오늘잇고 글 목록을 인라인으로 펼침**(`#itgo-list`, category='reflection' 전체를 한 쿼리로 받아 오늘 글=hero·나머지=목록, 각 행 → content-detail). 작은 "전체 보기" 링크에만 의존하지 않도록. `sw.js` → `itda-v3-2026-06-14-itgo-curation-list-v2`.
 - **검증 한계**: 샌드박스 네트워크 정책이 jsdelivr CDN(supabase-js)·Supabase를 403 차단 → 데이터 호출 로컬 검증 불가. 정적 렌더 정상 + 히어로 로직은 프로덕션 동작 중인 forest.html과 동일(ID만 상이). 배포 후 라이브 확인 필요.
 - 후속(미착수): info.html 히어로를 승인 목업(`docs/product/onneul-itgo-surface-mockup.html`)처럼 커버 이미지·"나에게 닿는 질문" 입력까지 폴리시 / 홈 진입점 추가 여부.
 
