@@ -259,6 +259,7 @@
 <script type="module">
 import { supabase } from './auth.js';
 import { renderTopBar } from './nav.js';
+import { renderInviteNudge } from './js/reflection-invite.js';
 
 await renderTopBar({ active: 'ask' });
 
@@ -734,8 +735,32 @@ const contentEl = document.getElementById('content');
         <div style="font-size:36px;">🌿</div>
         <div class="rf-done-mark">잘 적어두셨어요.<br>${line}</div>
         <a href="./index.html" class="rf-done-cta">홈으로</a>
+        <div id="rf-invite-slot" style="max-width:560px;margin:0 auto;"></div>
       </div>
     `;
+
+    // 답변→공유→초대 nudge — Q5 옵트인 직후 1회
+    // 사별 페르소나엔 노출 X (헌장 안전장치) / Q1 질문 = 시리즈 시작 질문 자체를 공유
+    if (!state.bereaved) {
+      const q1 = qByStep.common[1];
+      if (q1?.id && q1?.question_text) {
+        const slot = document.getElementById('rf-invite-slot');
+        const inviterName = (user?.user_metadata?.name || '').trim();
+        const copy = branch === 'person'
+          ? '이 질문을 같이 답해보고 싶은 분이 있으신가요?'
+          : '이 질문을 같이 답해보고 싶은 분이 있으신가요?';
+        renderInviteNudge(slot, {
+          questionId: q1.id,
+          questionText: q1.question_text,
+          inviterName,
+          copy,
+          hint: '잇다에서 같은 질문을 답해보실 수 있게 보내드릴게요. 답은 보내지 않아요.',
+          primaryLabel: '이 질문 함께 답해보기',
+          secondaryLabel: '다음에',
+          source: 'reflection_done',
+        });
+      }
+    }
   }
 })().catch(err => {
   console.error('[reflection] fatal', err);

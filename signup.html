@@ -131,6 +131,12 @@
     showInviteLoginBanner(`./login.html?invite=${careInvite}`);
   } else if (safeNext) {
     redirectAfterSignup = safeNext;
+    // 답변→공유→초대 루프: invite-answer에서 온 가입은 안내 lead 부드럽게 갈음
+    const fromInviteAnswer = params.get('invite_answer') === '1' || /invite-answer\.html/.test(safeNext);
+    if (fromInviteAnswer) {
+      const lead = document.querySelector('.auth-lead');
+      if (lead) lead.innerHTML = `<strong style="color: var(--primary);">잇다 친구가 보낸 질문</strong>에 답을 적어두셨네요. 가입하시면 그 답이 그대로 저장돼요.`;
+    }
     await redirectIfAuthed(safeNext);
   } else {
     await redirectIfAuthed('./index.html');

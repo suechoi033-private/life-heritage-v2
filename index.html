@@ -397,6 +397,47 @@ const { data: { session } } = await supabase.auth.getSession();
 const user = session?.user ?? null;
 const currentUserId = user?.id || null;
 
+// 답변→공유→초대 루프: 비로그인 임시 답 정식 저장 안전망
+// (가입/로그인 후 invite-answer.html로 못 돌아온 경우의 폴백)
+if (user) {
+  try {
+    const pendingRaw = localStorage.getItem('itda:invite_pending_answer');
+    if (pendingRaw) {
+      const pending = JSON.parse(pendingRaw);
+      if (pending?.question_id && pending?.content) {
+        const { data: existing } = await supabase
+          .from('daily_answers')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('question_id', pending.question_id)
+          .maybeSingle();
+        if (existing) {
+          await supabase.from('daily_answers')
+            .update({ content: pending.content, visibility: 'private', updated_at: new Date().toISOString() })
+            .eq('id', existing.id);
+        } else {
+          await supabase.from('daily_answers').insert({
+            user_id: user.id, question_id: pending.question_id,
+            content: pending.content, visibility: 'private',
+          });
+        }
+        // 측정 이벤트 — 가입 후 정식 저장
+        try {
+          const log = JSON.parse(localStorage.getItem('itda:reflection_invite_events') || '[]');
+          log.push({
+            type: 'reflection_invite_signed_up',
+            payload: { invite_code: pending.invite_code, question_id: pending.question_id },
+            at: new Date().toISOString(),
+          });
+          while (log.length > 100) log.shift();
+          localStorage.setItem('itda:reflection_invite_events', JSON.stringify(log));
+        } catch (_) {}
+        localStorage.removeItem('itda:invite_pending_answer');
+      }
+    }
+  } catch (e) { console.warn('[home] pending answer settle failed', e); }
+}
+
 // ── 인사말 ──
 const greetingLabel = document.getElementById('greeting-label');
 const greetingText  = document.getElementById('greeting-text');
