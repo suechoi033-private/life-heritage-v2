@@ -59,6 +59,7 @@
 - **보완(v2, 사장님 피드백 "목록까지 안 보임")**: 히어로 아래에 **나머지 오늘잇고 글 목록을 인라인으로 펼침**(`#itgo-list`, category='reflection' 전체를 한 쿼리로 받아 오늘 글=hero·나머지=목록, 각 행 → content-detail). 작은 "전체 보기" 링크에만 의존하지 않도록. `sw.js` → `itda-v3-2026-06-14-itgo-curation-list-v2`.
 - **검증 한계**: 샌드박스 네트워크 정책이 jsdelivr CDN(supabase-js)·Supabase를 403 차단 → 데이터 호출 로컬 검증 불가. 정적 렌더 정상 + 히어로 로직은 프로덕션 동작 중인 forest.html과 동일(ID만 상이). 배포 후 라이브 확인 필요.
 - 후속(미착수): info.html 히어로를 승인 목업(`docs/product/onneul-itgo-surface-mockup.html`)처럼 커버 이미지·"나에게 닿는 질문" 입력까지 폴리시 / 홈 진입점 추가 여부.
+- **최종(v3, 사장님 "콘텐츠 탭 UX 별로" → 팀 추천안 채택)**: info.html에 큐레이션 욱여넣은 게 '정보 브라우저 + 오늘잇고 피드' 한 화면 혼재 → UX 망침. **info.html 완전 원복(f73b073, itgo 0)** + **nav.js 콘텐츠 탭 href `info.html` → `forest.html`** 변경. 이유: forest.html("콘텐츠" 세그먼트)이 이미 오늘잇고 글을 단일 목적으로 잘 모은 페이지 — 라벨('콘텐츠')과 목적지 일치 + 콘텐츠 1탭 노출. 정보(미리/곁에/떠난뒤)는 forest.html 세그먼트 '정보'로 1탭 유지. **6/8 '정보 기본 랜딩'(#2173c8f) 의도적 뒤집음**(콘텐츠 노출 우선, 되돌리기 1줄). `sw.js` → `itda-v3-2026-06-14-content-tab-to-forest-v3`.
 
 **릴스용 AI 디지털 트윈(창업자 페르소나) + "살아 있을 확률" 카드뉴스** (마케팅 세션, 사장님 대화)
 - 디지털 트윈 제작 가이드 + 캘리브레이션 대본 v3(끝을 생각해 잘 살기+함께) + 표정·제스처 디렉션(상담사의 평온·안전감) + 릴스 제작 프롬프트: `docs/content/reels-ai-persona-digital-twin.md`.
