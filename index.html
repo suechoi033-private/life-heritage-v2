@@ -423,11 +423,144 @@ try {
   if (data && data.length > 0) todayQ = data[0];
 } catch (_) {}
 
+// ── 자기성찰 시리즈 상태 (회원만) — 사장님 결정 2026-06-14 ──
+//   미답: Axis A·B 진입 카드 (사장님 확정 카피)
+//   답함: 약속 진행 한 줄 (사람 path → 이름 / 일 path → 한 가지)
+//   사별: 알람 노출 X (slience by design)
+async function loadReflectionSeriesState() {
+  if (!user) return null;
+  try {
+    // 시리즈 질문들의 id 가져오기
+    const { data: qs } = await supabase
+      .from('daily_questions')
+      .select('id, series_step, series_branch')
+      .eq('series_key', 'not_waking_tomorrow');
+    if (!qs || qs.length === 0) return null; // 마이그레이션 미적용 시 안전하게 null
+    const qIds = qs.map(q => q.id);
+    const { data: answers } = await supabase
+      .from('daily_answers')
+      .select('question_id, content')
+      .eq('user_id', user.id)
+      .in('question_id', qIds);
+    if (!answers || answers.length === 0) return { started: false };
+    const byQid = {};
+    answers.forEach(a => { byQid[a.question_id] = a.content; });
+    let branch = null, personName = null, pick = null, freq = null, optin = null, bereaved = false;
+    qs.forEach(q => {
+      const c = byQid[q.id];
+      if (!c) return;
+      if (q.series_step === 2 && (c === 'person' || c === 'work')) branch = c;
+      if (q.series_branch === 'person' && q.series_step === 3) {
+        bereaved = c.includes('[사별]');
+        personName = c.replace('[사별]', '').trim();
+      }
+      if (q.series_branch === 'person' && q.series_step === 4) freq = c;
+      if (q.series_branch === 'work' && q.series_step === 4) pick = c;
+      if (q.series_step === 5) optin = c;
+    });
+    const q5Answered = !!optin;
+    return {
+      started: true,
+      completed: q5Answered || (bereaved && !!personName), // 사별이면 Q4·Q5 스킵 = 완료로 봄
+      branch, personName, pick, freq, optin, bereaved,
+    };
+  } catch (e) {
+    console.warn('[home] reflection series state load failed', e);
+    return null;
+  }
+}
+
+// in-app 알람 노출 룰 — 옵트인 사용자, 사별 제외, 사용자 정한 빈도
+//   주 1·2·3회 → 각각 일 / 월·목 / 월·수·금 노출일에만 카드 표시
+function shouldShowReminderToday(rs) {
+  if (!rs || !rs.completed) return false;
+  if (rs.bereaved) return false;
+  if (rs.optin !== '예') return false;
+  if (!rs.freq) return false;
+  const day = new Date().getDay(); // 0=일, 1=월, ...
+  if (rs.freq === '주 1회') return day === 0;
+  if (rs.freq === '주 2회') return day === 1 || day === 4;
+  if (rs.freq === '주 3회') return day === 1 || day === 3 || day === 5;
+  return false;
+}
+
 // ── 카드 렌더 ──
 const cardsEl = document.getElementById('home-cards');
 
 if (user) {
+  const rs = await loadReflectionSeriesState();
+  let reflectionCardHtml = '';
+
+  if (!rs || !rs.started) {
+    // 미답 — Axis A·B 진입 카드 (사장님 확정 카피, card-quiet 차용)
+    reflectionCardHtml = `
+      <a href="./reflection.html" class="card-quiet" style="margin-bottom:12px;">
+        <div class="card-quiet-eyebrow">자기성찰 · 5분</div>
+        <div class="card-quiet-title">내일 다시 못 깨어난다면,<br>가장 후회할 일은?</div>
+        <div class="card-quiet-desc">짧게 한 줄이라도 적어보세요. 떠오르는 그대로요.</div>
+        <span class="card-quiet-cta">시작하기 <span>→</span></span>
+      </a>
+    `;
+  } else if (!rs.completed) {
+    // 시작했지만 미완료 — 이어가기
+    reflectionCardHtml = `
+      <a href="./reflection.html" class="card-quiet" style="margin-bottom:12px;">
+        <div class="card-quiet-eyebrow">자기성찰 · 이어가기</div>
+        <div class="card-quiet-title">잠시 멈춰두셨네요.<br>이어서 적어볼까요?</div>
+        <div class="card-quiet-desc">남겨두신 자리에서 다시 시작할 수 있어요.</div>
+        <span class="card-quiet-cta">이어서 적기 <span>→</span></span>
+      </a>
+    `;
+  } else if (rs.bereaved) {
+    // 사별 페르소나 — 알람 없이 일기 진입만 (자극·죄책감 0)
+    const name = rs.personName || '그분';
+    reflectionCardHtml = `
+      <a href="./diary-write.html" class="card-quiet" style="margin-bottom:12px;">
+        <div class="card-quiet-eyebrow">마음의 자리</div>
+        <div class="card-quiet-title">${escapeHtml(name)}께,<br>오늘은 어떤 말을 남겨두실까요</div>
+        <div class="card-quiet-desc">닿지 않아도 남겨둘 수 있어요. 천천히, 마음만큼만.</div>
+        <span class="card-quiet-cta">일기에 남기기 <span>→</span></span>
+      </a>
+    `;
+  } else if (rs.branch === 'person' && shouldShowReminderToday(rs)) {
+    // 사람 path · 알람 노출일
+    const name = rs.personName || '그분';
+    reflectionCardHtml = `
+      <a href="./reflection.html" class="card-quiet" style="margin-bottom:12px;">
+        <div class="card-quiet-eyebrow">이번 주 약속</div>
+        <div class="card-quiet-title">이번 주, ${escapeHtml(name)} 한 번 어떠세요</div>
+        <div class="card-quiet-desc">짧은 안부 한 줄, 마음이 갈 때요.</div>
+        <span class="card-quiet-cta">자기성찰 다시 보기 <span>→</span></span>
+      </a>
+    `;
+  } else if (rs.branch === 'work' && shouldShowReminderToday(rs)) {
+    // 일 path · 알람 노출일
+    reflectionCardHtml = `
+      <a href="./reflection.html" class="card-quiet" style="margin-bottom:12px;">
+        <div class="card-quiet-eyebrow">이번 주 약속</div>
+        <div class="card-quiet-title">이번 주 골라두신 한 가지, 어때요</div>
+        <div class="card-quiet-desc">작은 한 걸음이면 충분해요.</div>
+        <span class="card-quiet-cta">자기성찰 다시 보기 <span>→</span></span>
+      </a>
+    `;
+  } else if (rs.completed) {
+    // 완료 + 알람 노출일 아님 — 잔잔한 한 줄 (강요 X)
+    const name = rs.branch === 'person' ? (rs.personName || '그분') : '한 가지';
+    const line = rs.branch === 'person'
+      ? `${escapeHtml(name)}을(를) 마음에 두셨어요`
+      : `이번 주 골라두신 한 가지, 마음에 두셨어요`;
+    reflectionCardHtml = `
+      <a href="./reflection.html" class="card-quiet" style="margin-bottom:12px;">
+        <div class="card-quiet-eyebrow">자기성찰</div>
+        <div class="card-quiet-title">${line}</div>
+        <div class="card-quiet-desc">다시 보고 싶을 때 들러주세요.</div>
+        <span class="card-quiet-cta">다시 보기 <span>→</span></span>
+      </a>
+    `;
+  }
+
   cardsEl.innerHTML = `
+    ${reflectionCardHtml}
     <a href="./ask.html" class="card-seed">
       <div class="card-eyebrow">🕯 오늘 잇고</div>
       <div class="card-seed-title">${todayQ?.question_text || '오늘 하루, 어떻게 보내셨나요?'}</div>

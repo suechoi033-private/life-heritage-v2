@@ -21,6 +21,19 @@
 
 ## 2026-06-14
 
+**자기성찰 시리즈 + Axis A·B 홈 카드 구현 (PE 세션, 사장님 결정 8개 일괄)**
+- 단일 원천: `docs/strategy/decisions-2026-06-14.md`(사장님 결정 8개), `docs/strategy/product-axis-not-waking-tomorrow-2026-06-14.md`. **D1 보류**(important_people 신설 X) → 기존 daily_questions + daily_answers + profiles.notification_pref 활용으로 우회. **D4 라이프 탭 IA 손대지 않음**.
+- **자기성찰 시리즈 마이그레이션** (`supabase/migrations/20260614_reflection_series.sql`): `daily_questions`에 `series_key`·`series_step`·`series_branch` 컬럼 추가(전부 NULL 허용, 기존 행 영향 0). `not_waking_tomorrow` 시리즈 8문항 멱등 INSERT — Q1(사장님 확정 카피 그대로) + Q2 분기 + 사람 Q3a·4a·5a + 일 Q3b·4b·5b. `display_order=NULL`로 두어 `get_todays_question` RPC와 충돌 0.
+- **goals.area joy 추가 마이그레이션** (`supabase/migrations/20260614_goals_area_joy.sql`): pg_constraint 동적 조회 → 기존 CHECK 제약 drop → `goals_area_check`로 재생성(`finance`·`health`·`family`·`growth`·`joy`). 기존 데이터 영향 0, reversible.
+- **신규 페이지** `reflection.html`: 5단계 시리즈 UI(Q1·Q2·Q3·Q4·Q5). 분기 처리(사람·일), 사별 체크박스 → Q4·Q5 스킵 + 일기 편지 분기, 진행률 dot, 이어쓰기(기존 답 자동 로드), 옵트인 결과는 `profiles.notification_pref.reflection_series` JSON에 저장(컬럼 신규 0).
+- **홈 카드 (`index.html` 회원 분기)**: 자기성찰 시리즈 상태 조회(`loadReflectionSeriesState`) → 미답=진입 카드(사장님 확정 카피), 미완료=이어가기, 사별=일기 편지 카드(알람 0건), 사람/일 path + 옵트인 + 알람 노출일=잔잔한 한 줄 약속 카드, 그 외 완료=다시 보기. `.card-quiet` 차용, 임의 hex 0건. 알람 노출일 룰: 주1=일, 주2=월·목, 주3=월·수·금(`shouldShowReminderToday`).
+- **사별 안전장치**: Q3a(사람 이름)에 "이미 떠나신 분이에요" 체크박스 → 답에 `[사별]` 접두사 마킹 → reflection.html이 Q4·Q5 스킵, 일기 편지 분기. 홈에서도 알람 카드 대신 일기 진입 카드. profile에 `bereaved: true` 보존.
+- **M4·M5 metric 등재**: `docs/strategy/decisions-2026-06-14.md` 부록에 M4(시리즈 완주율 ≥30%) / M5(약속 이행률 ≥40%) 잠정 합격선 + 계산 SQL 초안 + W26 액션. M5의 "오늘 했어요" 이벤트는 다음 라운드 PE.
+- 변경 파일: `supabase/migrations/20260614_reflection_series.sql`(신규), `supabase/migrations/20260614_goals_area_joy.sql`(신규), `reflection.html`(신규), `index.html`(회원 카드 분기), `sw.js`(CACHE_VERSION → `itda-v3-2026-06-14-reflection-series-v1`, APP_SHELL에 `./reflection.html` 추가), `docs/strategy/decisions-2026-06-14.md`(부록 M4·M5).
+- **사장님 액션**: Supabase SQL Editor에서 두 마이그레이션 1회 실행 — (1) `20260614_reflection_series.sql` → daily_questions 컬럼 추가 + 시리즈 8문항 INSERT, (2) `20260614_goals_area_joy.sql` → goals.area CHECK 갱신. 순서 무관, 둘 다 멱등(재실행 안전).
+- 격리 확인: 케어링·일기·버킷리스트·자기준비 허브·라이프 탭 IA 비변경. 비회원 홈 비변경. 추모 페이지 복원 0건. 임의 hex 0건(디자인 토큰만).
+- 잠재 리스크: (a) 사별 페르소나 오분류 — 체크박스 단일 시그널만 사용. 답에 "엄마(돌아가심)" 같이 자유서술하면 잡지 못함. 다음 라운드에서 키워드 보강 검토. (b) Q5 옵트인 흐름이 5단계 끝에 와서 사용자가 도달 전 이탈할 수 있음 — M4 < 30%면 흐름 재검토. (c) 알람 노출일 룰(요일 고정)은 in-app only, 사용자 가입 요일·타임존 무시 — 푸시 라운드에서 정교화.
+
 **프로덕트 축 재설계 종합 설계 (사업전략 세션, 분석·제안만 — 코드 0)**
 - 사장님 통찰(seed-12 카드뉴스 제작 중) → 카드뉴스의 결을 프로덕트 축으로 옮기는 종합 설계 라운드. 산출: `docs/strategy/product-axis-not-waking-tomorrow-2026-06-14.md`.
 - 코드 사실관계 확인(seed.html·plan-write.html·js/goals.js·index.html·nav.js·migrations): (a) 버킷리스트는 `goals` 테이블로 모델 완비 — 사장님 표현 "일기에 묻혀 있다"는 테이블 통합이 아니라 **진입 동선(seed.html 탭2)·영역 분류(재정·건강·가족·성장 4개, "사소한 기쁨" 없음)·홈 노출 0 합성어**. (b) "내 삶에서 중요한 사람" 객체가 잇다 코드 어디에도 없음 — Axis A는 새 1급 객체 추가.

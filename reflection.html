@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>자기성찰 · 잇다</title>
+  <meta name="description" content="내일 다시 못 깨어난다면, 가장 후회할 일은? — 잇다의 자기성찰 시리즈.">
+  <link rel="stylesheet" href="./auth-styles.css">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png">
+  <meta name="theme-color" content="#2F6B4F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="잇다">
+  <style>
+    .rf-shell {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 32px 20px 80px;
+      flex: 1;
+      width: 100%;
+    }
+    @media (min-width: 640px) {
+      .rf-shell { padding: 56px 32px 120px; }
+    }
+
+    .rf-eyebrow {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--ink-muted);
+      margin-bottom: 10px;
+    }
+
+    .rf-progress {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 20px;
+    }
+    .rf-progress span {
+      flex: 1;
+      height: 3px;
+      border-radius: 999px;
+      background: var(--line);
+    }
+    .rf-progress span.done { background: var(--primary); }
+    .rf-progress span.current { background: var(--primary-soft); }
+
+    .rf-question {
+      font-family: var(--font-serif);
+      font-size: 22px;
+      font-weight: 800;
+      line-height: 1.55;
+      letter-spacing: -0.01em;
+      color: var(--ink);
+      margin-bottom: 6px;
+    }
+    @media (min-width: 640px) {
+      .rf-question { font-size: 26px; }
+    }
+    .rf-hint {
+      font-size: 13.5px;
+      color: var(--ink-muted);
+      line-height: 1.65;
+      margin-bottom: 22px;
+    }
+
+    .rf-textarea {
+      width: 100%;
+      min-height: 160px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--ink);
+      background: var(--bg);
+      resize: vertical;
+      box-sizing: border-box;
+    }
+    .rf-textarea:focus { outline: none; border-color: var(--primary); }
+
+    .rf-input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 15px;
+      color: var(--ink);
+      background: var(--bg);
+      box-sizing: border-box;
+    }
+    .rf-input:focus { outline: none; border-color: var(--primary); }
+
+    .rf-choices {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .rf-choice {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      background: var(--bg);
+      border: 1.5px solid var(--line);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--ink);
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .rf-choice:hover { border-color: var(--primary); background: var(--primary-soft); }
+    .rf-choice.selected { border-color: var(--primary); background: var(--primary-soft); }
+    .rf-choice-sub {
+      display: block;
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--ink-muted);
+      margin-top: 3px;
+    }
+
+    .rf-check-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px;
+      background: var(--bg-alt);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      margin-top: 14px;
+      font-size: 13.5px;
+      color: var(--ink-soft);
+      line-height: 1.6;
+    }
+    .rf-check-row label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      flex: 1;
+    }
+
+    .rf-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 24px;
+    }
+    .rf-back {
+      padding: 10px 16px;
+      background: transparent;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-family: inherit;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--ink-muted);
+      cursor: pointer;
+    }
+    .rf-back:hover { color: var(--primary); border-color: var(--primary-soft); }
+    .rf-back:disabled { opacity: 0.4; cursor: not-allowed; }
+    .rf-next {
+      flex: 1;
+      padding: 14px 22px;
+      background: var(--ink);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .rf-next:hover { background: var(--primary); }
+    .rf-next:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .rf-skip {
+      display: inline-block;
+      margin-top: 10px;
+      font-size: 12.5px;
+      color: var(--ink-muted);
+      background: none;
+      border: none;
+      font-family: inherit;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    .rf-skip:hover { color: var(--primary); }
+
+    .rf-done {
+      text-align: center;
+      padding: 32px 20px;
+    }
+    .rf-done-mark {
+      font-family: var(--font-serif);
+      font-size: 19px;
+      font-weight: 700;
+      line-height: 1.6;
+      color: var(--ink);
+      margin: 14px 0 22px;
+    }
+    .rf-done-cta {
+      display: inline-block;
+      padding: 13px 24px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+    .rf-done-cta:hover { background: var(--primary-hover); color: #fff; }
+
+    .rf-bereaved-note {
+      margin-top: 16px;
+      padding: 14px 16px;
+      background: var(--warm-soft);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      font-size: 13.5px;
+      line-height: 1.65;
+      color: var(--ink-soft);
+    }
+
+    .rf-error {
+      padding: 24px 20px;
+      text-align: center;
+      color: var(--ink-muted);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .rf-login-cta {
+      background: var(--bg-alt);
+      border-radius: var(--radius);
+      padding: 28px 20px;
+      text-align: center;
+    }
+    .rf-login-cta a { color: var(--primary); font-weight: 700; }
+  </style>
+</head>
+<body>
+
+<main class="rf-shell" id="main-content">
+  <div id="loading" class="rf-error">잠시만요…</div>
+  <div id="content" hidden></div>
+</main>
+
+<footer class="auth-footer">
+  © 2026 라이프헤리티지 · 잇다
+</footer>
+
+<script type="module">
+import { supabase } from './auth.js';
+import { renderTopBar } from './nav.js';
+
+await renderTopBar({ active: 'ask' });
+
+const SERIES_KEY = 'not_waking_tomorrow';
+const SERIES_TOTAL_STEPS = 5; // 사용자 시점: 5단계 (Q1·Q2·Q3·Q4·Q5)
+
+const loadingEl = document.getElementById('loading');
+const contentEl = document.getElementById('content');
+
+(async function main() {
+  const { data: { session } } = await supabase.auth.getSession();
+  const user = session?.user || null;
+
+  if (!user) {
+    loadingEl.hidden = true;
+    contentEl.hidden = false;
+    contentEl.innerHTML = `
+      <div class="rf-login-cta">
+        <div style="font-family:var(--font-serif);font-size:18px;font-weight:700;margin-bottom:10px;">
+          자기성찰은 회원 전용이에요
+        </div>
+        <div style="font-size:13.5px;color:var(--ink-soft);line-height:1.7;margin-bottom:18px;">
+          잠시 자신과 마주 앉는 시간을 위해, 먼저 로그인해 주세요.
+        </div>
+        <a href="./login.html" style="display:inline-block;padding:12px 22px;background:var(--primary);color:#fff;border-radius:999px;font-weight:700;text-decoration:none;">로그인</a>
+      </div>
+    `;
+    return;
+  }
+
+  // 시리즈 질문 8개 로드 (Q1·Q2 공통 + Q3a/4a/5a + Q3b/4b/5b)
+  const { data: qs, error: qErr } = await supabase
+    .from('daily_questions')
+    .select('id, question_text, series_key, series_step, series_branch')
+    .eq('series_key', SERIES_KEY)
+    .order('series_step', { ascending: true });
+
+  if (qErr || !qs || qs.length === 0) {
+    loadingEl.innerHTML = `
+      <p>자기성찰 시리즈를 불러오지 못했어요.<br>${escapeHtml(qErr?.message || '잠시 후 다시 시도해 주세요.')}</p>
+      <p style="margin-top:14px;"><a href="./index.html" style="color:var(--primary);font-weight:700;">홈으로</a></p>
+    `;
+    return;
+  }
+
+  // 기존 답변 로드 (이어쓰기 지원)
+  const { data: existingAnswers } = await supabase
+    .from('daily_answers')
+    .select('id, question_id, content')
+    .eq('user_id', user.id)
+    .in('question_id', qs.map(q => q.id));
+  const answerByQid = {};
+  (existingAnswers || []).forEach(a => { answerByQid[a.question_id] = a; });
+
+  // 질문 인덱싱
+  const qByStep = { common: {}, person: {}, work: {} };
+  qs.forEach(q => {
+    const bucket = q.series_branch ? qByStep[q.series_branch] : qByStep.common;
+    bucket[q.series_step] = q;
+  });
+
+  // 상태
+  let state = {
+    step: 1,                  // 사용자 시점 1..5
+    branch: null,             // 'person'|'work'|null — Q2 답 후 결정
+    bereaved: false,          // Q3a 사별 체크
+    answers: {},              // step → { qid, content }
+  };
+
+  // 기존 답에서 branch 복원 (Q2 답이 있으면)
+  const q2 = qByStep.common[2];
+  if (q2 && answerByQid[q2.id]) {
+    const v = answerByQid[q2.id].content || '';
+    if (v.startsWith('person')) state.branch = 'person';
+    else if (v.startsWith('work')) state.branch = 'work';
+  }
+
+  // Q1·Q2 기존 답 채우기
+  [1, 2].forEach(s => {
+    const q = qByStep.common[s];
+    if (q && answerByQid[q.id]) {
+      state.answers[s] = { qid: q.id, content: answerByQid[q.id].content };
+    }
+  });
+  // 분기 답 복원
+  if (state.branch) {
+    [3, 4, 5].forEach(s => {
+      const q = qByStep[state.branch][s];
+      if (q && answerByQid[q.id]) {
+        state.answers[s] = { qid: q.id, content: answerByQid[q.id].content };
+        // Q3a 사별 표식
+        if (state.branch === 'person' && s === 3 && (answerByQid[q.id].content || '').includes('[사별]')) {
+          state.bereaved = true;
+        }
+      }
+    });
+  }
+
+  // 시작 step — 미완료 첫 step
+  for (let s = 1; s <= SERIES_TOTAL_STEPS; s++) {
+    if (!state.answers[s]) { state.step = s; break; }
+    if (s === SERIES_TOTAL_STEPS) state.step = SERIES_TOTAL_STEPS; // 다 완료된 경우 마지막 자리
+  }
+
+  loadingEl.hidden = true;
+  contentEl.hidden = false;
+  render();
+
+  // ───────────────────────────────────────────────
+  function render() {
+    if (state.step > SERIES_TOTAL_STEPS) { renderDone(); return; }
+    const q = currentQuestion();
+    if (!q) {
+      contentEl.innerHTML = `<div class="rf-error">질문을 찾지 못했어요. <a href="./index.html" style="color:var(--primary);">홈으로</a></div>`;
+      return;
+    }
+
+    // 사별 페르소나 + 사람 path Q4·Q5 → 스킵 처리
+    if (state.bereaved && state.branch === 'person' && (state.step === 4 || state.step === 5)) {
+      renderBereavedAlt();
+      return;
+    }
+
+    const progressDots = Array.from({ length: SERIES_TOTAL_STEPS }, (_, i) => {
+      const n = i + 1;
+      if (n < state.step) return '<span class="done"></span>';
+      if (n === state.step) return '<span class="current"></span>';
+      return '<span></span>';
+    }).join('');
+
+    let bodyHtml = '';
+    if (state.step === 2) {
+      bodyHtml = renderBranchChoice(q);
+    } else if (state.branch === 'person' && state.step === 3) {
+      bodyHtml = renderPersonNameInput(q);
+    } else if (state.branch === 'person' && state.step === 4) {
+      bodyHtml = renderFreqChoice(q);
+    } else if (state.step === 5) {
+      bodyHtml = renderOptInChoice(q);
+    } else if (state.branch === 'work' && state.step === 4) {
+      bodyHtml = renderWorkPick(q);
+    } else {
+      // 자유 서술 (Q1, Q3b)
+      bodyHtml = renderFreeText(q);
+    }
+
+    contentEl.innerHTML = `
+      <div class="rf-eyebrow">자기성찰 · ${state.step} / ${SERIES_TOTAL_STEPS}</div>
+      <div class="rf-progress">${progressDots}</div>
+      <div class="rf-question">${escapeHtml(q.question_text)}</div>
+      ${stepHint()}
+      ${bodyHtml}
+      <div class="rf-foot">
+        <button type="button" class="rf-back" id="rf-back" ${state.step === 1 ? 'disabled' : ''}>이전</button>
+        <button type="button" class="rf-next" id="rf-next">${state.step === SERIES_TOTAL_STEPS ? '마무리' : '다음'}</button>
+      </div>
+      <div style="text-align:center;margin-top:8px;">
+        <button type="button" class="rf-skip" id="rf-skip">잠시 미루기</button>
+      </div>
+    `;
+
+    document.getElementById('rf-back')?.addEventListener('click', () => {
+      if (state.step > 1) { state.step--; render(); }
+    });
+    document.getElementById('rf-next')?.addEventListener('click', onNext);
+    document.getElementById('rf-skip')?.addEventListener('click', () => {
+      window.location.href = './index.html';
+    });
+
+    bindStepEvents();
+  }
+
+  function stepHint() {
+    if (state.step === 1) {
+      return `<div class="rf-hint">조용히, 떠오르는 그대로 한 줄이라도 적어보세요.</div>`;
+    }
+    if (state.branch === 'person' && state.step === 3) {
+      return `<div class="rf-hint">"엄마", "그 친구", 이름 — 적고 싶은 그대로요.</div>`;
+    }
+    if (state.branch === 'work' && state.step === 3) {
+      return `<div class="rf-hint">크지 않아도 괜찮아요. 떠오르는 모습 그대로.</div>`;
+    }
+    if (state.step === 5) {
+      return `<div class="rf-hint">강요하지 않아요. 마음이 갈 때 잔잔히 한 줄 보내드릴게요.</div>`;
+    }
+    return '';
+  }
+
+  function currentQuestion() {
+    if (state.step <= 2) return qByStep.common[state.step];
+    if (!state.branch) return null;
+    return qByStep[state.branch][state.step];
+  }
+
+  function renderFreeText(q) {
+    const existing = state.answers[state.step]?.content || '';
+    return `
+      <textarea class="rf-textarea" id="rf-text" placeholder="짧게 한 줄이라도 괜찮아요." maxlength="2000">${escapeHtml(existing)}</textarea>
+    `;
+  }
+
+  function renderBranchChoice(q) {
+    const sel = state.branch;
+    return `
+      <div class="rf-choices" id="rf-branch">
+        <div class="rf-choice ${sel === 'person' ? 'selected' : ''}" data-branch="person">
+          사람
+          <span class="rf-choice-sub" style="margin-left:auto;text-align:right;">떠오른 건 한 사람</span>
+        </div>
+        <div class="rf-choice ${sel === 'work' ? 'selected' : ''}" data-branch="work">
+          하고 싶은 일
+          <span class="rf-choice-sub" style="margin-left:auto;text-align:right;">풍요로운 삶의 모습</span>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderPersonNameInput(q) {
+    const existing = state.answers[3]?.content || '';
+    // [사별] 접두사 분리
+    const isBereaved = existing.includes('[사별]');
+    const cleanText = existing.replace('[사별]', '').trim();
+    return `
+      <input type="text" class="rf-input" id="rf-text" placeholder="예: 엄마, 그 친구, 김지원" maxlength="200" value="${escapeHtml(cleanText)}">
+      <div class="rf-check-row">
+        <label>
+          <input type="checkbox" id="rf-bereaved" ${isBereaved ? 'checked' : ''}>
+          <span>이미 떠나신 분이에요</span>
+        </label>
+      </div>
+    `;
+  }
+
+  function renderFreqChoice(q) {
+    const existing = state.answers[4]?.content || '';
+    const opts = [
+      { v: '주 1회', label: '주 1회' },
+      { v: '주 2회', label: '주 2회' },
+      { v: '주 3회', label: '주 3회' },
+    ];
+    return `
+      <div class="rf-choices" id="rf-freq">
+        ${opts.map(o => `
+          <div class="rf-choice ${existing === o.v ? 'selected' : ''}" data-freq="${o.v}">${o.label}</div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  function renderOptInChoice(q) {
+    const existing = state.answers[5]?.content || '';
+    return `
+      <div class="rf-choices" id="rf-optin">
+        <div class="rf-choice ${existing === '예' ? 'selected' : ''}" data-optin="예">
+          예, 동의합니다
+          <span class="rf-choice-sub" style="margin-left:auto;text-align:right;">정한 빈도에 한 줄</span>
+        </div>
+        <div class="rf-choice ${existing === '아니오' ? 'selected' : ''}" data-optin="아니오">
+          아니오, 지금은 괜찮아요
+        </div>
+      </div>
+    `;
+  }
+
+  function renderWorkPick(q) {
+    // 사용자가 Q3b에 적은 내용을 보여주고, 거기서 고르거나 추가 입력
+    const q3 = state.answers[3]?.content || '';
+    const existing = state.answers[4]?.content || '';
+    return `
+      ${q3 ? `<div class="rf-hint" style="margin-bottom:14px;padding:12px 14px;background:var(--bg-alt);border-radius:var(--radius-sm);color:var(--ink-soft);">조금 전 적어두신 것:<br><span style="color:var(--ink);font-weight:700;white-space:pre-wrap;">${escapeHtml(q3)}</span></div>` : ''}
+      <textarea class="rf-textarea" id="rf-text" placeholder="그 중에서 이번 주 하나만 고르거나, 새로 적어주세요." maxlength="2000">${escapeHtml(existing)}</textarea>
+    `;
+  }
+
+  function renderBereavedAlt() {
+    // 사별 페르소나 → Q4·Q5(연락 빈도·알람) 스킵, 대신 편지/일기 분기
+    contentEl.innerHTML = `
+      <div class="rf-eyebrow">자기성찰 · 마무리</div>
+      <div class="rf-question">그분께 편지를 남겨두시겠어요?</div>
+      <div class="rf-hint">연락은 닿지 않아도, 마음은 남겨둘 수 있어요. 일기에 적어두시면 언제든 다시 꺼내 보실 수 있어요.</div>
+      <div class="rf-bereaved-note">
+        그리움과 자책의 결은 다릅니다. 잇다는 사별의 시간에는 알람을 보내지 않아요.
+      </div>
+      <div class="rf-foot" style="margin-top:24px;">
+        <button type="button" class="rf-back" id="rf-back">이전</button>
+        <a href="./diary-write.html" class="rf-next" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none;">일기에 편지 남기기 →</a>
+      </div>
+      <div style="text-align:center;margin-top:8px;">
+        <a href="./index.html" class="rf-skip" style="display:inline-block;text-decoration:underline;">홈으로 돌아가기</a>
+      </div>
+    `;
+    document.getElementById('rf-back')?.addEventListener('click', () => {
+      // 사별 체크 해제하고 Q3로 돌아가기
+      state.step = 3;
+      render();
+    });
+    // 사별 상태 저장 (Q3 답에 [사별] 표시 유지) + 프로필 알람 옵트인 OFF 보장
+    persistBereavedOptOut().catch(() => {});
+  }
+
+  function bindStepEvents() {
+    // 분기 선택 (Q2)
+    document.querySelectorAll('[data-branch]').forEach(el => {
+      el.addEventListener('click', () => {
+        document.querySelectorAll('[data-branch]').forEach(e => e.classList.remove('selected'));
+        el.classList.add('selected');
+        state._pendingBranch = el.dataset.branch;
+      });
+    });
+    // 빈도 선택 (Q4a)
+    document.querySelectorAll('[data-freq]').forEach(el => {
+      el.addEventListener('click', () => {
+        document.querySelectorAll('[data-freq]').forEach(e => e.classList.remove('selected'));
+        el.classList.add('selected');
+        state._pendingFreq = el.dataset.freq;
+      });
+    });
+    // 옵트인 선택 (Q5)
+    document.querySelectorAll('[data-optin]').forEach(el => {
+      el.addEventListener('click', () => {
+        document.querySelectorAll('[data-optin]').forEach(e => e.classList.remove('selected'));
+        el.classList.add('selected');
+        state._pendingOptin = el.dataset.optin;
+      });
+    });
+  }
+
+  async function onNext() {
+    const q = currentQuestion();
+    if (!q) return;
+    let content = '';
+
+    if (state.step === 2) {
+      const branch = state._pendingBranch || state.branch;
+      if (!branch) { alert('하나 골라주세요.'); return; }
+      state.branch = branch;
+      content = branch;
+    } else if (state.branch === 'person' && state.step === 3) {
+      const name = document.getElementById('rf-text')?.value.trim() || '';
+      if (!name) { alert('이름이나 관계를 적어주세요.'); return; }
+      const bereaved = document.getElementById('rf-bereaved')?.checked;
+      state.bereaved = !!bereaved;
+      content = bereaved ? `[사별] ${name}` : name;
+    } else if (state.branch === 'person' && state.step === 4) {
+      const freq = state._pendingFreq || state.answers[4]?.content;
+      if (!freq) { alert('빈도를 골라주세요.'); return; }
+      content = freq;
+    } else if (state.step === 5) {
+      const optin = state._pendingOptin || state.answers[5]?.content;
+      if (!optin) { alert('예/아니오 중 골라주세요.'); return; }
+      content = optin;
+    } else if (state.branch === 'work' && state.step === 4) {
+      const t = document.getElementById('rf-text')?.value.trim() || '';
+      if (!t) { alert('이번 주 하나만 적어주세요.'); return; }
+      content = t;
+    } else {
+      // 자유 서술
+      content = document.getElementById('rf-text')?.value.trim() || '';
+      if (!content) { alert('한 줄이라도 적어주세요.'); return; }
+    }
+
+    // 저장
+    const saved = await saveAnswer(q.id, content);
+    if (!saved) { alert('저장에 실패했어요. 잠시 후 다시 시도해 주세요.'); return; }
+    state.answers[state.step] = { qid: q.id, content };
+
+    // 사별이면 Q4·Q5 스킵 (사람 path)
+    if (state.bereaved && state.branch === 'person' && state.step === 3) {
+      state.step = 4;
+      render();
+      return;
+    }
+
+    // 옵트인 결과 → 프로필 저장 (Q5에서)
+    if (state.step === 5) {
+      await persistOptInToProfile().catch(err => console.warn('[reflection] optin save failed', err));
+    }
+
+    if (state.step === SERIES_TOTAL_STEPS) {
+      state.step = SERIES_TOTAL_STEPS + 1;
+      renderDone();
+      return;
+    }
+    state.step++;
+    render();
+  }
+
+  async function saveAnswer(qid, content) {
+    const existing = answerByQid[qid];
+    if (existing) {
+      const { error } = await supabase
+        .from('daily_answers')
+        .update({ content, visibility: 'private', updated_at: new Date().toISOString() })
+        .eq('id', existing.id);
+      if (error) return false;
+      existing.content = content;
+      return true;
+    }
+    const { data, error } = await supabase
+      .from('daily_answers')
+      .insert({ user_id: user.id, question_id: qid, content, visibility: 'private' })
+      .select()
+      .single();
+    if (error) return false;
+    answerByQid[qid] = data;
+    return true;
+  }
+
+  async function persistOptInToProfile() {
+    const optin = state.answers[5]?.content === '예';
+    const name = (state.answers[3]?.content || '').replace('[사별]', '').trim();
+    const freq = state.branch === 'person' ? (state.answers[4]?.content || null) : (state.answers[4]?.content || null);
+    // profiles.notification_pref jsonb 안에 reflection_series 키로 저장 — 컬럼 추가 0
+    const { data: prof } = await supabase
+      .from('profiles')
+      .select('notification_pref')
+      .eq('id', user.id)
+      .single();
+    const pref = prof?.notification_pref || {};
+    pref.reflection_series = {
+      opt_in: optin,
+      branch: state.branch,
+      person_name: state.branch === 'person' ? name : null,
+      frequency: freq,
+      bereaved: state.bereaved,
+      updated_at: new Date().toISOString(),
+    };
+    await supabase
+      .from('profiles')
+      .update({ notification_pref: pref })
+      .eq('id', user.id);
+  }
+
+  async function persistBereavedOptOut() {
+    const { data: prof } = await supabase
+      .from('profiles')
+      .select('notification_pref')
+      .eq('id', user.id)
+      .single();
+    const pref = prof?.notification_pref || {};
+    pref.reflection_series = {
+      ...(pref.reflection_series || {}),
+      opt_in: false,
+      bereaved: true,
+      branch: 'person',
+      person_name: (state.answers[3]?.content || '').replace('[사별]', '').trim(),
+      updated_at: new Date().toISOString(),
+    };
+    await supabase
+      .from('profiles')
+      .update({ notification_pref: pref })
+      .eq('id', user.id);
+  }
+
+  function renderDone() {
+    const branch = state.branch;
+    const name = (state.answers[3]?.content || '').replace('[사별]', '').trim();
+    let line = '';
+    if (branch === 'person' && !state.bereaved) {
+      const freq = state.answers[4]?.content || '';
+      const optin = state.answers[5]?.content || '';
+      line = `${escapeHtml(name)} · ${escapeHtml(freq)}${optin === '예' ? ' · 잔잔한 알람을 켜둘게요' : ''}`;
+    } else if (branch === 'work') {
+      const pick = state.answers[4]?.content || '';
+      const optin = state.answers[5]?.content || '';
+      line = `이번 주 한 가지${optin === '예' ? ' · 잔잔한 알람을 켜둘게요' : ''}`;
+      if (pick) line += `<br><span style="color:var(--ink-muted);font-size:13.5px;white-space:pre-wrap;">"${escapeHtml(pick)}"</span>`;
+    } else if (state.bereaved) {
+      line = `${escapeHtml(name)} — 마음에 남겨두셨어요`;
+    }
+    contentEl.innerHTML = `
+      <div class="rf-done">
+        <div style="font-size:36px;">🌿</div>
+        <div class="rf-done-mark">잘 적어두셨어요.<br>${line}</div>
+        <a href="./index.html" class="rf-done-cta">홈으로</a>
+      </div>
+    `;
+  }
+})().catch(err => {
+  console.error('[reflection] fatal', err);
+  loadingEl.innerHTML = `<p>화면을 띄우지 못했어요.<br>${escapeHtml(err?.message || '')}</p>`;
+});
+
+function escapeHtml(s) {
+  if (s == null) return '';
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+</script>
+
+</body>
+</html>
