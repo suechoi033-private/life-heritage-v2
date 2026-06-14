@@ -1086,6 +1086,13 @@
         <h3 id="logs-count">오늘의 기록</h3>
         <button type="button" class="primary-cta" id="write-log-btn">✍️ 오늘 기록 쓰기</button>
       </div>
+      <!-- 가족과 함께 보기 — 조용한 상시 진입점(P5/P1). JS가 friends 상태에 따라 채운다. -->
+      <a id="family-share-entry" href="./invite.html"
+         style="display:none;align-items:center;gap:10px;padding:11px 14px;background:var(--bg-alt);border:1px solid var(--line);border-radius:var(--radius-sm);text-decoration:none;color:var(--ink-soft);margin-bottom:14px;">
+        <span style="font-size:17px;flex-shrink:0;line-height:1;">🌿</span>
+        <span id="family-share-entry-text" style="flex:1;min-width:0;font-size:14px;font-weight:600;">가족과 함께 보기</span>
+        <span style="color:var(--ink-muted);font-size:16px;">›</span>
+      </a>
       <div id="logs-container"></div>
     </section>
 
@@ -1406,6 +1413,28 @@
   </div>
 </div>
 
+<!-- 첫 일지 직후 가족 공유 권유 — 1회·조용함·닫을 수 있음(P1/P4). 기존 modal 패턴 재사용(M7) -->
+<div class="modal-backdrop hidden" id="share-nudge-modal">
+  <div class="modal">
+    <div class="modal-header" style="padding: 20px 22px 0;">
+      <div class="modal-title">이 기록, 가족과 같이 볼까요?</div>
+      <button type="button" class="modal-close" data-close-modal="share-nudge-modal">×</button>
+    </div>
+    <div class="modal-body">
+      <p class="modal-sub" style="margin-top: 12px;">
+        지금 남긴 기록을 형제·가족과 같은 곳에서 함께 볼 수 있어요. 지금 안 하셔도 돼요 — 나중에 ‘가족과 함께 보기’에서 언제든 할 수 있습니다.
+      </p>
+      <div style="padding-top: 18px;">
+        <a href="./invite.html" class="primary-cta" style="display:block;width:100%;text-align:center;box-sizing:border-box;text-decoration:none;">가족과 함께 보기</a>
+      </div>
+      <div style="padding-top: 10px;">
+        <button type="button" class="subject-btn" id="share-nudge-later" style="width: 100%;">나중에</button>
+      </div>
+      <div style="padding-bottom: 24px;"></div>
+    </div>
+  </div>
+</div>
+
 <!-- Code entry modal (받는 쪽) -->
 <div class="modal-backdrop hidden" id="code-entry-modal">
   <div class="modal">
@@ -1565,7 +1594,18 @@ document.addEventListener('DOMContentLoaded', () => {
     listActiveConditions, addCondition, endCondition, periodToEndDate, isChronicCategory,
   } from './js/prescription.js';
   import { ocrMemo } from './js/memo-ocr.js';
+  import { listFriends } from './js/friends.js';
   await renderNav({ active: 'care', infoIcon: true, title: '케어링' });
+
+  // 가족 초대 진입점 게이트 — 이미 함께하는 가족(friendships)이 있으면 권유하지 않는다(P5/P1).
+  // friends 결과를 한 번만 캐싱(같은 세션 내 중복 호출 방지).
+  let _friendsCache = null;
+  async function getFriendsOnce() {
+    if (_friendsCache !== null) return _friendsCache;
+    try { _friendsCache = await listFriends(); }
+    catch { _friendsCache = []; }
+    return _friendsCache;
+  }
 
   // "더 적기" 토글
   document.getElementById('more-fields-btn')?.addEventListener('click', function() {
@@ -1869,6 +1909,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     renderLogs();
+    updateFamilyShareEntry();
+  }
+
+  // care-dashboard(=일지 탭) 상시 진입점 — 조용한 줄 1개(P1/P5).
+  // 가족이 없으면 "가족과 함께 보기", 있으면 "함께하는 가족 N명".
+  async function updateFamilyShareEntry() {
+    const el = $('family-share-entry');
+    if (!el) return;
+    const txt = $('family-share-entry-text');
+    const friends = await getFriendsOnce();
+    if (friends.length > 0) {
+      if (txt) txt.textContent = `함께하는 가족 ${friends.length}명`;
+    } else {
+      if (txt) txt.textContent = '가족과 함께 보기';
+    }
+    el.style.display = 'flex';
   }
 
   function renderLogs() {
@@ -2692,6 +2748,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // ── 첫 일지 직후 가족 공유 권유 ───────────────────────────
+  // 전략 진입점: 첫 케어 일지 저장 직후 조용한 제안 1회(P4/M5 다리, P1 조용함).
+  // 강요 금지: 닫을 수 있고, 사용자당 1회만(localStorage 가드). 이미 함께하는 가족이
+  // 있으면(listFriends 결과 있으면) 노출하지 않는다(P5).
+  const _shareNudgeKey = `itda:care_share_nudge_shown_${user.id}`;
+  $('share-nudge-later')?.addEventListener('click', () => closeModal('share-nudge-modal'));
+  async function maybeShowShareNudge() {
+    if (localStorage.getItem(_shareNudgeKey)) return;        // 이미 한 번 봤으면 끝
+    const friends = await getFriendsOnce();
+    if (friends.length > 0) return;                          // 이미 가족과 함께면 권유 안 함
+    localStorage.setItem(_shareNudgeKey, '1');               // 노출 = 1회 소진
+    $('share-nudge-modal')?.classList.remove('hidden');
+  }
+
   $('first-subject-btn').addEventListener('click', () => openSubjectModal());
   $('edit-subject-btn').addEventListener('click', () => openSubjectModal(state.currentSubjectId));
 
@@ -2970,8 +3040,10 @@ document.addEventListener('DOMContentLoaded', () => {
           .insert(payload);
         if (error) throw error;
       }
+      const _wasNewLog = !state.editingLogId;
       closeModal('log-modal');
       await loadSubjects();   // refreshes cards + counts + logs
+      if (_wasNewLog) maybeShowShareNudge();
     } catch (e) {
       console.error(e);
       showAlert('저장 실패: ' + (e.message || e));
