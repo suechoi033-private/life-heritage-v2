@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>같이 답해보기 · 잇다</title>
+  <meta name="description" content="잇다 친구가 같이 답해보자고 보낸 질문입니다.">
+  <link rel="stylesheet" href="./auth-styles.css">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png">
+  <meta name="theme-color" content="#2F6B4F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="잇다">
+  <meta property="og:title" content="잇다 · 같이 답해보기">
+  <meta property="og:description" content="잇다에서 같은 질문을 답해보실 수 있어요.">
+  <style>
+    .ia-shell {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 32px 20px 80px;
+      flex: 1;
+      width: 100%;
+    }
+    @media (min-width: 640px) {
+      .ia-shell { padding: 56px 32px 120px; }
+    }
+
+    .ia-eyebrow {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--ink-muted);
+      margin-bottom: 10px;
+    }
+
+    .ia-inviter {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 22px;
+      padding: 14px 16px;
+      background: var(--bg-alt);
+      border-radius: var(--radius-sm);
+    }
+    .ia-inviter-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--primary-soft);
+      color: var(--primary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 15px;
+    }
+    .ia-inviter-text {
+      font-size: 13.5px;
+      color: var(--ink-soft);
+      line-height: 1.5;
+    }
+    .ia-inviter-text strong { color: var(--ink); font-weight: 800; }
+
+    .ia-question {
+      font-family: var(--font-serif);
+      font-size: 22px;
+      font-weight: 800;
+      line-height: 1.55;
+      letter-spacing: -0.01em;
+      color: var(--ink);
+      margin-bottom: 8px;
+    }
+    @media (min-width: 640px) {
+      .ia-question { font-size: 26px; }
+    }
+    .ia-hint {
+      font-size: 13.5px;
+      color: var(--ink-muted);
+      line-height: 1.65;
+      margin-bottom: 22px;
+    }
+
+    .ia-textarea {
+      width: 100%;
+      min-height: 140px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--ink);
+      background: var(--bg);
+      resize: vertical;
+      box-sizing: border-box;
+    }
+    .ia-textarea:focus { outline: none; border-color: var(--primary); }
+
+    .ia-foot {
+      margin-top: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .ia-submit {
+      padding: 14px 22px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .ia-submit:hover { background: var(--primary-hover); }
+    .ia-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+    .ia-skip {
+      padding: 11px 16px;
+      background: transparent;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink-muted);
+      cursor: pointer;
+      align-self: center;
+      text-decoration: none;
+    }
+    .ia-skip:hover { color: var(--primary); border-color: var(--primary-soft); }
+
+    .ia-note {
+      margin-top: 18px;
+      padding: 12px 14px;
+      background: var(--bg-alt);
+      border-radius: var(--radius-sm);
+      font-size: 12.5px;
+      color: var(--ink-soft);
+      line-height: 1.6;
+    }
+
+    .ia-error {
+      padding: 24px 20px;
+      text-align: center;
+      color: var(--ink-muted);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+    .ia-error a { color: var(--primary); font-weight: 700; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="./index.html" class="logo"><span class="logo-mark">●</span> 잇다</a>
+  </div>
+</nav>
+
+<main class="ia-shell" id="main-content">
+  <div id="loading" class="ia-error">잠시만요…</div>
+  <div id="content" hidden></div>
+</main>
+
+<footer class="auth-footer">
+  © 2026 라이프헤리티지 · 잇다
+</footer>
+
+<script type="module">
+  import { supabase } from './auth.js';
+  import { logReflectionInviteEvent } from './js/reflection-invite.js';
+
+  const LS_PENDING = 'itda:invite_pending_answer';
+
+  const loadingEl = document.getElementById('loading');
+  const contentEl = document.getElementById('content');
+
+  function escapeHtml(s) {
+    if (s == null) return '';
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  function showError(msg, opts = {}) {
+    loadingEl.hidden = false;
+    contentEl.hidden = true;
+    const homeLink = opts.skipHome ? '' : '<p style="margin-top:14px;"><a href="./index.html">홈으로</a></p>';
+    loadingEl.innerHTML = `<p>${escapeHtml(msg)}</p>${homeLink}`;
+  }
+
+  (async function main() {
+    const params = new URLSearchParams(location.search);
+    const token = (params.get('token') || '').toUpperCase().trim();
+    const qid   = (params.get('q') || '').trim();
+
+    if (!token || !qid) {
+      showError('초대 링크가 올바르지 않아요. 다시 확인해 주세요.');
+      return;
+    }
+
+    // 1) 초대 토큰 검증 — RLS 정책 friend_invites_code_lookup (status=pending, expires_at>now())
+    const { data: invite, error: invErr } = await supabase
+      .from('friend_invites')
+      .select('id, inviter_id, invite_code, channel, message, metadata, status, expires_at')
+      .eq('invite_code', token)
+      .maybeSingle();
+
+    if (invErr) {
+      console.warn('[invite-answer] invite lookup error', invErr);
+      showError('초대를 불러올 수 없어요. 잠시 후 다시 시도해 주세요.');
+      return;
+    }
+    if (!invite) {
+      showError('유효하지 않거나 만료된 초대예요. 초대해 주신 분께 다시 보내달라 요청해 보세요.');
+      return;
+    }
+    if (invite.expires_at && new Date(invite.expires_at) <= new Date()) {
+      showError('초대 링크가 만료됐어요. 초대해 주신 분께 다시 보내달라 요청해 보세요.');
+      return;
+    }
+    if (invite.status !== 'pending') {
+      showError('이미 사용된 초대 링크예요.');
+      return;
+    }
+
+    // 2) 익명 여부 — metadata 우선, 없으면 message JSON 백폴백
+    let anonymous = false;
+    let inviteQuestionId = qid; // URL의 q와 metadata 둘 다 확인
+    if (invite.metadata && typeof invite.metadata === 'object') {
+      anonymous = !!invite.metadata.anonymous;
+      if (invite.metadata.question_id) inviteQuestionId = invite.metadata.question_id;
+    } else if (invite.message && typeof invite.message === 'string') {
+      try {
+        const meta = JSON.parse(invite.message);
+        if (meta && typeof meta === 'object') {
+          anonymous = !!meta.anonymous;
+          if (meta.question_id) inviteQuestionId = meta.question_id;
+        }
+      } catch (_) { /* message가 JSON 아니어도 진행 */ }
+    }
+
+    // 3) 질문 로드
+    const { data: q, error: qErr } = await supabase
+      .from('daily_questions')
+      .select('id, question_text')
+      .eq('id', inviteQuestionId)
+      .maybeSingle();
+    if (qErr || !q) {
+      showError('질문을 찾지 못했어요. 초대해 주신 분께 다시 보내달라 요청해 보세요.');
+      return;
+    }
+
+    // 4) 초대자 이름 — 익명이면 노출 X
+    let inviterDisplay = '잇다 친구 한 분';
+    if (!anonymous) {
+      const { data: inviter } = await supabase
+        .from('profiles')
+        .select('id, name')
+        .eq('id', invite.inviter_id)
+        .maybeSingle();
+      if (inviter?.name) inviterDisplay = inviter.name;
+    }
+
+    // 5) 이미 로그인된 사용자라면? — 그대로 답하면 daily_answers에 정식 저장
+    const { data: { session } } = await supabase.auth.getSession();
+    const currentUser = session?.user || null;
+    const alreadyOwner = currentUser?.id === invite.inviter_id;
+
+    logReflectionInviteEvent('reflection_invite_opened', {
+      invite_code: token,
+      question_id: q.id,
+      anonymous,
+      logged_in: !!currentUser,
+      self: alreadyOwner,
+    });
+
+    // 6) 본인이 본인 링크를 연 경우
+    if (alreadyOwner) {
+      loadingEl.hidden = true;
+      contentEl.hidden = false;
+      contentEl.innerHTML = `
+        <div class="ia-eyebrow">잇다 · 초대 미리보기</div>
+        <div class="ia-question">${escapeHtml(q.question_text)}</div>
+        <div class="ia-hint">이 링크는 본인이 만든 초대예요. 친구에게 공유해 주세요.</div>
+        <div class="ia-foot">
+          <a href="./index.html" class="ia-skip" style="display:inline-flex;align-items:center;justify-content:center;">홈으로</a>
+        </div>
+      `;
+      return;
+    }
+
+    // 7) 일반 동선 — 옵션 C: 질문 노출 + 비로그인 답 1줄 → 가입 게이트
+    const initialEl = (() => {
+      const firstChar = inviterDisplay.trim()[0] || '·';
+      return firstChar.toUpperCase();
+    })();
+
+    loadingEl.hidden = true;
+    contentEl.hidden = false;
+    contentEl.innerHTML = `
+      <div class="ia-eyebrow">잇다 · 같이 답해보기</div>
+      <div class="ia-inviter">
+        <span class="ia-inviter-avatar">${escapeHtml(initialEl)}</span>
+        <span class="ia-inviter-text">
+          <strong>${escapeHtml(inviterDisplay)}</strong>${anonymous ? '' : '님'}이 이 질문을 같이 답해보자고 보내셨어요.
+        </span>
+      </div>
+      <div class="ia-question">${escapeHtml(q.question_text)}</div>
+      <div class="ia-hint">한 줄이라도 괜찮아요. 떠오르는 그대로 적어보세요.</div>
+      <textarea class="ia-textarea" id="ia-answer" placeholder="짧게 한 줄이라도 괜찮아요." maxlength="2000"></textarea>
+      <div class="ia-foot">
+        <button type="button" class="ia-submit" id="ia-submit">${currentUser ? '답 저장하기' : '답을 저장하고 이어서 잇다 만나기'}</button>
+        <a href="./index.html" class="ia-skip">잠시 둘러보기만</a>
+      </div>
+      <div class="ia-note">
+        ${currentUser
+          ? '저장하시면 잇다 내 오늘 답에 들어갑니다.'
+          : '답은 본인 계정에 안전하게 저장돼요. 가입 후 같은 답으로 이어서 보실 수 있어요.'}
+      </div>
+    `;
+
+    // 기존 임시 답 복원
+    const pending = readPending();
+    if (pending && pending.question_id === q.id) {
+      document.getElementById('ia-answer').value = pending.content || '';
+    }
+
+    document.getElementById('ia-submit').addEventListener('click', async () => {
+      const text = (document.getElementById('ia-answer').value || '').trim();
+      if (!text) { alert('한 줄이라도 적어주세요.'); return; }
+
+      if (currentUser) {
+        // 즉시 정식 저장 — 이미 로그인된 친구
+        const ok = await saveDailyAnswerForUser(currentUser.id, q.id, text);
+        if (!ok) { alert('저장에 실패했어요. 잠시 후 다시 시도해 주세요.'); return; }
+        await markInviteConsumed(invite.id).catch(() => {});
+        logReflectionInviteEvent('reflection_invite_answer_saved', {
+          invite_code: token, question_id: q.id, anonymous, immediate: true,
+        });
+        contentEl.innerHTML = `
+          <div class="ia-eyebrow">잇다</div>
+          <div class="ia-question">잘 적어두셨어요.</div>
+          <div class="ia-hint">답이 오늘 잇고에 저장됐어요.</div>
+          <div class="ia-foot">
+            <a href="./ask.html?id=${encodeURIComponent(q.id)}" class="ia-submit" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none;">오늘 잇고로 이동</a>
+            <a href="./index.html" class="ia-skip">홈으로</a>
+          </div>
+        `;
+        return;
+      }
+
+      // 비로그인: localStorage 임시 저장 → signup으로
+      writePending({
+        question_id: q.id,
+        content: text,
+        invite_code: token,
+        inviter_id: invite.inviter_id,
+        saved_at: new Date().toISOString(),
+      });
+      logReflectionInviteEvent('reflection_invite_pending_saved', {
+        invite_code: token, question_id: q.id, anonymous,
+      });
+      // signup으로 — next 파라미터로 다시 invite-answer로 돌아오게(가입 후 자동 정식 저장)
+      const back = `./invite-answer.html?token=${encodeURIComponent(token)}&q=${encodeURIComponent(q.id)}`;
+      const signupUrl = `./signup.html?next=${encodeURIComponent(back)}&invite_answer=1`;
+      window.location.href = signupUrl;
+    });
+  })().catch(err => {
+    console.error('[invite-answer] fatal', err);
+    showError(err?.message || '화면을 띄우지 못했어요.');
+  });
+
+  function readPending() {
+    try { return JSON.parse(localStorage.getItem(LS_PENDING) || 'null'); }
+    catch (_) { return null; }
+  }
+  function writePending(obj) {
+    try { localStorage.setItem(LS_PENDING, JSON.stringify(obj)); } catch (_) {}
+  }
+
+  async function saveDailyAnswerForUser(userId, questionId, content) {
+    // 기존 답 있으면 update, 없으면 insert
+    const { data: existing } = await supabase
+      .from('daily_answers')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('question_id', questionId)
+      .maybeSingle();
+    if (existing) {
+      const { error } = await supabase
+        .from('daily_answers')
+        .update({ content, visibility: 'private', updated_at: new Date().toISOString() })
+        .eq('id', existing.id);
+      return !error;
+    }
+    const { error } = await supabase
+      .from('daily_answers')
+      .insert({ user_id: userId, question_id: questionId, content, visibility: 'private' });
+    return !error;
+  }
+
+  async function markInviteConsumed(inviteId) {
+    // accepted_at, invitee_user_id, status='accepted' — RLS상 본인(invitee)만 update 가능하진 않음.
+    // friend_invites 정책: inviter_id만 update 가능. 따라서 status는 그대로 두고 metadata에 표식만 시도(베스트 에포트).
+    // accept_friend_invite RPC와 구조 다름 — 본 라운드는 metric만 잡고, 만료(30일)로 자연 정리.
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return;
+    try {
+      await supabase.rpc('mark_reflection_invite_consumed', { p_invite_id: inviteId });
+    } catch (_) { /* RPC 없으면 no-op — 마이그레이션 후 정식 작동 */ }
+  }
+</script>
+
+</body>
+</html>

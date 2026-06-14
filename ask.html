@@ -813,6 +813,29 @@
     setStatus('저장됨 ✓', 'var(--primary)');
     await loadAnswers();
 
+    // 답변→공유→초대 nudge — 첫 저장 직후 모달 안에 잔잔히 1회 노출 (헌장: 권유 1회)
+    // 답 본문이 아니라 "오늘의 질문 텍스트"만 공유 — privacy 보호
+    try {
+      const { renderInviteNudge } = await import('./js/reflection-invite.js');
+      const slotId = `ask-invite-slot-${todaysQ.id}`;
+      const status = document.getElementById('autosave-status');
+      if (status && !document.getElementById(slotId)) {
+        const slot = document.createElement('div');
+        slot.id = slotId;
+        status.parentNode.insertBefore(slot, status);
+        renderInviteNudge(slot, {
+          questionId: todaysQ.id,
+          questionText: todaysQ.question_text,
+          inviterName: currentUserName || '',
+          copy: '이 질문을 같이 답해보고 싶은 분이 있으신가요?',
+          hint: '잇다에서 같은 질문을 답해보실 수 있게 보내드릴게요. 답은 보내지 않아요.',
+          primaryLabel: '이 질문 함께 답해보기',
+          secondaryLabel: '다음에',
+          source: 'ask_saved',
+        });
+      }
+    } catch (e) { console.warn('[ask] invite nudge failed', e); }
+
     // 일기로도 저장 옵션 (체크되어 있고 아직 일기 미생성 시 한 번만)
     const saveAsDiary = document.getElementById('save-as-diary');
     if (saveAsDiary?.checked && !state.diarySaved) {

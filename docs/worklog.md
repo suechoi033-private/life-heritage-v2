@@ -51,6 +51,7 @@
 
 ## 2026-06-14
 
+
 **측정 더 자세히 보기 — 콘텐츠 정독 + ceremony 퍼널 + admin 대시보드, 배포** (창업자 요청, PE/운영)
 - **측정 플랜 지도** `docs/product/measurement-plan.md` 신설 — 세 문서(interview-guide·ceremony-funnel·ai-vault)에 흩어진 계측을 한 장에 모으고 구현/미구현 현황 표로 정리.
 - **콘텐츠 정독 계측(`content_read`):** `auth.js`에 범용 `logEvent` 추가, `content-detail.html`이 떠날 때 `app_events`에 maxScrollPct·dwellSec·reachedEnd 1건 기록. "열람(pageview)"과 "정독" 구분.
@@ -69,6 +70,19 @@
 - **배포:** 작업브랜치 → main fast-forward(main이 다른 세션 PR #43~53로 크게 앞서 있어 rebase로 합침; sw.js 캐시버전 충돌 통합 해소 → `2026-06-14-invite-care-share-v1`). gh-pages 없음(main 직접 서빙).
 - **⚠️ 수렴 알림(사장님 확인 필요):** 다른 06-14 세션의 "답변→공유→초대 유입 루프"(아래)가 같은 `invite.html`·`friends.js`·`friend_invites`를 공유 인프라로 씀. 내 리프레임은 **케어 맥락**("이 기록, 가족과 같이 봐요"), 그쪽은 **성찰 맥락**(질문 공유). 두 트랙이 한 초대 화면에 모이므로, invite.html 카피를 channel(care vs reflection_q1)에 따라 분기시키는 정리가 차주 필요. 내 `preview_friend_invite` RPC는 그쪽 "직접 보내기"에도 유용(시너지).
 
+
+
+**W26 게이트 측정 대시보드 — M1~M8 통합 (사업전략 세션, 분석·통합만 — 코드 0)**
+- 사장님 트리거: "W26 게이트의 M1~M8을 한 곳에서 일목요연하게 + 베타테스트(retention-report skill) 데이터와 합쳐 한 화면에서 합격 여부 판단할 수 있게." 산출: `docs/strategy/measurement-dashboard-w26-2026-06-14.md`.
+- 단일 원천 통합: `acquisition-task-oriented-2026-06-13.md`(M1·M2·M3) + `decisions-2026-06-14.md` 부록(M4·M5) + `answer-invite-loop-2026-06-14.md`(M6·M7·M8) + `business-plan-v3.md` 10·11장(QAU 북극성, 가설 a~e, 분기 게이트) + `.claude/commands/retention-report.md`(베타테스트 일일 SQL).
+- 한 화면 요약: 즉시 측정 가능 = **M4·M7 (2개)**, 부분 측정 = **M1·M3·M8 (3개)**, 인프라 갭 = **M2·M5·M6 (3개)**. 우선순위 metric 3개 = **M1·M7·M8** (활성 가설 + 관계 리텐션 직접 시험).
+- retention-report와의 매핑: M7·M8은 사실상 retention-report가 자동 측정 중(`초대수락`·`페이지뷰누적`·`마지막방문` 컬럼). 단일 원천 결정 = **M7·M8은 retention-report 우선**, 본 대시보드는 W26 시점 정형 판정 라인만. M1·M4는 둘 다 사용, M2·M3·M5·M6은 본 대시보드 책임.
+- 통합 단일 SQL 초안: M4·M7·M8 3개는 한 번에 실측 가능, M2·M5·M6은 "미구현" 라벨 + null 반환. M1·M3는 referrer/UTM 메타가 부분이라 분모 과소. 즉 한 번에 8개 다 측정 **불가**.
+- W26 판정 매트릭스 6개 시나리오(A 완전합격 / B 관계 강세 / C 활성 강세 / D 시리즈만 / E 우선순위 3개 모두 미달 / F 인프라 갭으로 보류). paid 검토는 **시나리오 C에서만** 발화(D7 조건).
+- 인프라 갭 + 다음 PE 위임 한 줄: **referrer/UTM 정형화 + content_scroll·reflection_promise_kept·share_card_click 3개 이벤트 등재 + reflection.html invited_by 모드 — 총 PE 라운드 1회 (약 5~7일).**
+- 정직성 라벨: 모든 합격선 [추정], W13 기준선 데이터로 재보정 1회 필수. 가장 큰 약점 — M2·M5·M6 미구현이라 W26이 시나리오 F(보류)로 빠질 risk. PE 우선순위 1·2(referrer + reflection 초대 모드)만이라도 W20 전에 끝내야 한다.
+
+**답변→공유→초대 유입 루프 종합 설계 (사업전략 세션, 분석·설계만 — 코드 0)**
 
 - 사장님 통찰: "잇다 성찰과 매일 노출되는 질문에 답변하고 지인을 초대할 수 있는 유인경로를 설계해줘." 산출: `docs/strategy/answer-invite-loop-2026-06-14.md`.
 - 단일 원천 종합 검토: 어제 `decisions-2026-06-14.md`(자기성찰 시리즈 5단계·사별 분기) + `acquisition-task-oriented-2026-06-13.md`(M1·M2·M3·organic 우선) + `business-plan-v3.md`(양면 시장·D5 신호) + 헌장 5장(좋아요 경쟁 의도적 제거) + 코드(`reflection.html`·`js/share-card.js`·`js/share-sheet.js`·`js/friends.js`·`invite.html`·`friend_invites`/`friendships`/`accept_friend_invite` RPC).
