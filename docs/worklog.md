@@ -51,7 +51,14 @@
 
 ## 2026-06-14
 
-**유언 빌더 — 연명의료 질문 추가 + 공증 안내 정확화 (사장님 질문 → 법령 확인 후 반영)**
+**🐞 유언 빌더 "AI 정리" 무반응 근본 원인 = vault-will CORS preflight 차단 (사장님 제보 → 로그로 확정)**
+- 증상: 결과 화면이 항상 `buildDraft()` 폴백("1. 1.", "을(를) 지정합니다", "— 남기는 말 —")으로 떴고 "다시 정리"를 눌러도 동일. 사장님 "AI로 정리 눌러도 차이가 없다".
+- 진단(Supabase edge-function 로그): 오늘 vault-will에 `OPTIONS 200` 프리플라이트만 3건, 뒤따르는 `POST`가 **0건**. 브라우저가 프리플라이트 응답이 실제 요청 헤더를 허용하지 않아 POST 자체를 **차단** → `supabase.functions.invoke`가 네트워크 에러 → 클라이언트가 매번 폴백.
+- 원인: `vault-will`의 `Access-Control-Allow-Headers`가 `Content-Type, Authorization`만 허용. supabase-js `functions.invoke`는 `apikey`·`x-client-info` 헤더를 항상 붙이는데 이게 미허용 → 프리플라이트 실패.
+- 수정: `Access-Control-Allow-Headers: 'authorization, x-client-info, apikey, content-type'`로 교체. **MCP로 vault-will v2 배포 완료**(ACTIVE). 참고로 `thinking: {type:'adaptive'}`는 Opus 4.8에서 유효해 문제 아님이었음.
+- 후속: 라이브에서 유언 빌더 끝까지 → 결과가 AI 정리본으로 뜨는지 확인 필요. (다른 vault-* 엣지함수도 같은 CORS 패턴이면 동일 증상 가능 — 추후 점검.)
+
+
 - ⚖️ 법령 확인(YMYL): ① 유언장에 '연명치료 거부'를 적어도 **그 자체로는 효력 없음** — 연명의료 중단은 「연명의료결정법」상 **사전연명의료의향서(공식 등록)/연명의료계획서 + 의료진 임종과정 판단**으로만 효력. 유언은 사후·재산 중심이라 시점·대상 불일치. ② **자필유언 사진 업로드→디지털/화상공증으로 효력 부여 불가** — 자필증서는 직접 손으로 쓴 **원본 종이**라야 효력(민법 §1066, 대법원: 전자문서 서면요건 불충족). **화상공증은 '사서증서 인증'만 대상이고 공정증서(유언) 작성은 제외.**
 - 반영(`note/will-builder.html`): '연명의료에 대한 생각' 질문 추가(required=false) — **유언장 본문(번호 항목)에는 넣지 않고**(효력 오해 방지, vault-will이 이 필드 미사용) 결과 화면에 **'🕊️ 연명의료에 대한 나의 뜻' 별도 카드**로 분리 + "효력은 사전연명의료의향서 등록으로" 안내 + lst.go.kr 연결. '화상 공증 연동 준비중' 부정확 박스 → **'공증사무소 연결(대면 공정증서)'**로 교체, 사진=보관용·효력=원본/공정증서 명시.
 - `sw.js → itda-v3-2026-06-14-content-tab-to-forest-v3-will-life-sustaining-v1`(다른 세션 콘텐츠탭 변경과 통합 머지). 모듈 문법 통과.
