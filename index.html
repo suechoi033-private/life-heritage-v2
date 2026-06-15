@@ -568,8 +568,8 @@ if (user) {
     const name = rs.personName || '그분';
     reflectionCardHtml = `
       <a href="./reflection.html" class="card-quiet" style="margin-bottom:12px;">
-        <div class="card-quiet-eyebrow">이번 주 약속</div>
-        <div class="card-quiet-title">이번 주, ${escapeHtml(name)} 한 번 어떠세요</div>
+        <div class="card-quiet-eyebrow">약속</div>
+        <div class="card-quiet-title">오늘, ${escapeHtml(name)}에게<br>안부 한 줄 어떠세요</div>
         <div class="card-quiet-desc">짧은 안부 한 줄, 마음이 갈 때요.</div>
         <span class="card-quiet-cta">자기성찰 다시 보기 <span>→</span></span>
       </a>
@@ -578,8 +578,8 @@ if (user) {
     // 일 path · 알람 노출일
     reflectionCardHtml = `
       <a href="./reflection.html" class="card-quiet" style="margin-bottom:12px;">
-        <div class="card-quiet-eyebrow">이번 주 약속</div>
-        <div class="card-quiet-title">이번 주 골라두신 한 가지, 어때요</div>
+        <div class="card-quiet-eyebrow">약속</div>
+        <div class="card-quiet-title">오늘, 골라두신 한 가지<br>어떠세요</div>
         <div class="card-quiet-desc">작은 한 걸음이면 충분해요.</div>
         <span class="card-quiet-cta">자기성찰 다시 보기 <span>→</span></span>
       </a>
@@ -589,7 +589,7 @@ if (user) {
     const name = rs.branch === 'person' ? (rs.personName || '그분') : '한 가지';
     const line = rs.branch === 'person'
       ? `${escapeHtml(name)}을(를) 마음에 두셨어요`
-      : `이번 주 골라두신 한 가지, 마음에 두셨어요`;
+      : `골라두신 한 가지, 마음에 두셨어요`;
     reflectionCardHtml = `
       <a href="./reflection.html" class="card-quiet" style="margin-bottom:12px;">
         <div class="card-quiet-eyebrow">자기성찰</div>
