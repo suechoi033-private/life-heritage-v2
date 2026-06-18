@@ -10,6 +10,26 @@
 
 ---
 
+## 2026-06-18
+
+**"지난 질문들"에 자기성찰 시리즈가 노출되는 문제 (사장님 제보)** (PE)
+- 🐞 증상: `questions.html` 의 "지난 질문들" 목록 최상단에 `-101 ~ -108` 번호로 자기성찰 시리즈 8문항(`내일 다시 못 깨어난다면…` 외 7개)이 노출. 사장님이 "이거 무슨 일?" 보고. 총 질문 수도 139개로 부풀림.
+- 원인: `20260614_reflection_series.sql` 가 `daily_questions` 에 시리즈 8문항(`series_key='not_waking_tomorrow'`)을 추가했으나, `questions.html:324` 의 조회 쿼리에 시리즈 필터가 없었음. 시리즈 질문은 `reflection.html` 의 가이드 흐름 안에서만 답하도록 설계되어 공개 목록엔 노출되면 안 됨.
+- 수정: `questions.html:324` 쿼리에 `.is('series_key', null)` 추가 → 시리즈 질문 자동 제외. 100 + 박스 시드만 노출. 다른 단건 조회(`ask.html?id=`·`invite-answer.html`·`content-detail.html`)는 id 기반이라 영향 0. `forest.html` 의 unlock 윈도우는 `display_order` 기준이라 NULL인 시리즈 질문은 자연스럽게 제외됨.
+- `sw.js → itda-v3-2026-06-18-questions-filter-series`.
+
+---
+
+## 2026-06-14
+
+**알림 패널이 화면 왼쪽으로 잘려나가는 문제 (사장님 제보)** (PE)
+- 🐞 증상: 상단 🔔 클릭 → 알림 드롭다운이 좌측으로 흘러나가 본문이 잘림("아직 알림이 없어요" 등).
+- 원인: `js/notifications.js` 에서 `.itda-notif`(벨 자체)에 `position: relative` 가 걸려 패널의 containing block이 **벨 박스**로 좁혀짐. 패널 `right: 0` 은 벨 우측에 맞춰 정렬되고, width 320px(또는 86vw)가 벨 좌측으로 흘러나감. 벨이 액션 아이콘 군에서 좌측(✏️📚보다 앞)에 있어 좌측 여유가 부족함.
+- 수정: `.itda-notif` 의 `position: relative` 제거 → 패널의 containing block이 위로 올라가 `.itda-top-bar`(`position: sticky` 라 positioned ancestor 자격) 로 잡힘. `right: 12px` 로 viewport 우측에서 살짝 들어간 위치에 정렬, `top: 56px` 로 탑바(52px·zoom 1.1) 바로 아래. `max-width: calc((100vw - 24px) / 1.1)` 로 작은 화면(iPhone SE 등)에서도 zoom 1.1 적용 후 viewport 밖으로 흘러나가지 않도록 보정.
+- `sw.js → itda-v3-2026-06-14-notif-panel-anchor-fix`.
+
+---
+
 ## 2026-06-13
 
 **프로덕트 디자인 원칙 문서 신설 — `docs/company/product-design-principles.md`** (오케스트레이터 세션, 사장님 의제)

@@ -204,7 +204,10 @@ function injectStyle() {
   const st = document.createElement('style');
   st.id = 'itda-notif-style';
   st.textContent = `
-    .itda-notif { position: relative; display: inline-flex; }
+    /* 벨 자체는 position:static — 패널의 containing block을 .itda-top-bar(sticky)로
+       올려 두 가지를 동시에 얻는다: (1) right:0 이 탑바 우측에 붙어 화면 밖 왼쪽으로 흘러
+       나가지 않음, (2) 어떤 액션 아이콘 옆에 와도 안정적. */
+    .itda-notif { display: inline-flex; }
     .itda-notif-bell {
       position: relative; background: transparent; border: none; cursor: pointer;
       font-size: 20px; line-height: 1; padding: 4px; border-radius: 8px;
@@ -216,7 +219,10 @@ function injectStyle() {
       font-size: 10px; font-weight: 800; line-height: 16px; text-align: center;
     }
     .itda-notif-panel {
-      position: absolute; top: 38px; right: 0; width: 320px; max-width: 86vw;
+      position: absolute; top: 56px; right: 12px; width: 320px;
+      /* 줌(1.1)이 컨테이너에 걸린 환경에서도 작은 폰(iPhone SE)에서 가로로 흘러나가지 않도록
+         실제 화면 폭 기준으로 안전 여백. calc() 안에 zoom 보정을 포함. */
+      max-width: calc((100vw - 24px) / 1.1);
       background: #fff; border: 1px solid var(--line, #e8e4dd); border-radius: 14px;
       box-shadow: 0 12px 32px rgba(0,0,0,0.14); z-index: 1200; overflow: hidden;
     }
