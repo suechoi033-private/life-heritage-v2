@@ -91,6 +91,22 @@
 
 ---
 
+**F1 PE 정리 라운드 — orphan 삭제 + 진입 카드 두 얼굴** (PE 세션, 사장님 결정 컨펌 후)
+- 사장님 컨펌 받음: ① §6.3 4번 케어→유언 자연 전환 = (a) 자연 ② 벤치마킹 Top 2 (Cake·Empathy) 베끼기 받아들임 ③ 다음 트랙 F1→F2 순.
+- **F1a 무손실 정리**: orphan 4개 파일 삭제(`stories.html` · `prototype-forest.html` · `footprint-preview.html` · `my.html`(13줄 redirect shim)). admin.html `./my.html` → `./root.html` 참조 갱신. welcome.html 코멘트 정합성 정리.
+- **진단 수정 (이전 §6.1 오류 정정)**: `story.html` (admin.html 2건 참조) · `note.html` (note/will, info/* 등 3건 참조)는 살아있는 페이지 — **삭제 X**. `care.html` (참조 15건)은 통합 비용 커서 보류. `questions.html` (438줄)은 "지난 질문들" 별도 페이지 — 유지. 검색 패턴 보강(`[^/a-z-]${f}|/${f}`)으로 재검증.
+- **F1b 진입 카드 두 얼굴 적용** (L3 (b) / two-faces-one-code-2026-06-15.md §3·§6):
+  - index.html 비회원 진입 카드를 1개 → 2개로 분리: ① "내일 다시 못 깨어난다면, 가장 후회할 일은?" → `onboarding.html?path=will` ② "부모님께 오늘, 안부 한 줄" → `onboarding.html?path=care`. 카드 클릭 시 `localStorage.setItem('itda:entry_path', ...)` 저장.
+  - welcome.html: 가입 직후 localStorage 또는 URL `?path` 파라미터에서 entry_path 읽어 `profiles.entry_path`에 1회 정착(`is('entry_path', null)` 가드).
+- **마이그레이션 신규**: `supabase/migrations/20260621_profiles_entry_path.sql` — `entry_path text check (in 'will','care')` 컬럼 추가. 사장님 1회 SQL Editor 실행 필요.
+- **sw.js**: `CACHE_VERSION` → `itda-v3-2026-06-21-pe-cleanup-two-faces-v2`. APP_SHELL은 orphan들 이미 빠져 있어 변경 없음.
+- **변경 파일**: `index.html` · `welcome.html` · `admin.html` · `sw.js` · `supabase/migrations/20260621_profiles_entry_path.sql`(신규) · 삭제 4개(`stories/prototype-forest/footprint-preview/my.html`).
+- **이번 라운드 미진행**: Cake yes/no step 0 (B1) · Empathy care 4 카드 (B2) · invite 5인 슬롯 (B3) · forest↔info 통합 (B4) — 다음 라운드(F1c·F2).
+- **단발 브랜치 예외**: strategy 브랜치(`claude/benchmark-research-2026-06-15`) main fast-forward 머지 후 main 위에 직접 F1 commit(작업 브랜치 `claude/pe-cleanup-2026-06-21` 따왔으나 working tree 그대로 main 머지에 흡수). 다음 작업부터 다시 작업 브랜치 → main 워크플로.
+- 후속(다음 세션): F1c(Cake/Empathy 세부 패턴 적용) · F2(콘텐츠 허브 forest 재설계 — 마케팅+카피라이터) · 사장님 마이그레이션 실행 확인 · note/* 위계 단순화 · `care.html` 15건 참조 통합 결정.
+
+---
+
 ## 2026-06-14
 
 **🐞 유언 빌더 "AI 정리" 무반응 근본 원인 = vault-will CORS preflight 차단 (사장님 제보 → 로그로 확정)**
