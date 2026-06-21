@@ -49,7 +49,9 @@
 
 ---
 
-## 2026-06-15
+## 2026-06-21
+
+> 06-15 결정 트리거의 후속 작업 일괄(전략·구체화·프레임워크·해외 벤치마킹). 결정 카드 문서명은 트리거 날짜 06-15 유지(컨벤션), 실제 작업·커밋 날짜는 06-21.
 
 **잇다 분리·acquisition 전략 결정 — 레몬테라스 신호** (전략 세션, 사장님 발의)
 - 사장님이 직접 본 네이버 카페 **레몬테라스** "유언/유서" 검색 결과 캡쳐 2건이 단일 원천. 카페 회원 3,016,256명(여성, 1966~2006년생), 22년 된 메가카페. "유언" 검색 시 4가지 결: A.실무질문(답 없음) · B.부모 케어+유언 교집합 · C.본인 유언 의향 · D.뉴스/가십. → 한 카페에 두 페르소나 공존 = 잇다 케어링·유언 path 둘 다 정확 명중.
@@ -72,6 +74,20 @@
 - **PE 위임**: 즉시(orphan/중복 삭제 + sw.js APP_SHELL + legacy active map 7개 정리) · 후속(진입 카드 + `20260615_profiles_entry_path` 마이그레이션 + note/* 단순화) · 결정 후(푸시 채널 1차=이메일 추천).
 - 단일 원천: `docs/strategy/service-framework-2026-06-15.md` (신규).
 - 트랙 평행: 대시보드(B) 브랜치는 보류 상태 — 프레임워크 정리가 대시보드 metric 설계 input으로 활용 가능.
+
+---
+
+**해외 죽음·웰다잉·사별 서비스 UX 벤치마크 (L8 후속)** (전략 에이전트 백그라운드 위임)
+- 사장님 발의: *"죽음관련 서비스 살펴보고 베끼기 가장 적절한 서비스 추천해줘."* → life-heritage-strategy 에이전트 백그라운드 위임.
+- **조사 7개 + 종료 1개**: Cake · Empathy · Everplans · Trust & Will · HereAfter AI · Modern Loss · Help Texts (+ Lantern 2024 종료).
+- **베끼기 추천 Top 2**:
+  - **1순위 Cake (joincake.com)** → 유언/웰니스 path 진입: yes/no 첫 질문 3개로 마찰 ↓ · 콘텐츠 허브 = acquisition 엔진 위계 · freemium "무료로 시작" 정서.
+  - **2순위 Empathy (empathy.com)** → 케어링 path 동선: "오늘 무엇부터" 상황 분기 4 카드 · "다음 한 가지" 단일 액션 카드 · 5인 가족 협업 슬롯 명시.
+- **베끼지 말 것**: HereAfter AI/Empathy AI 부고문 (추모 보류 헌장 위배) · Trust & Will 법률 자동화 무게 (잇다 차별점 "관계 자동화" 충돌, 망고하다와 분리 핵심) · B2B2C BM 즉시 도입 (06-15 L2 네이버 카페 1순위 충돌, Q4 분기 게이트 이후).
+- **핵심 발견 3가지**: ① 유언 단독 BM 위험 — Lantern 종료(2018~2024) = `docs/benchmark/shukatsu-net.md` 終活ねっと와 같은 결, L6 BM 보류 잘함, 콘텐츠+도구+매칭 3축 가설 보강 · ② 승자는 다 콘텐츠 허브 — Cake/Modern Loss/Empathy 공통, forest.html 정비 + 시드 30+ 다음 라운드 최우선 · ③ "다음 한 가지" 패턴은 케어링 universal — Empathy/Help Texts/Cake 공통, 헌장 "시스템이 권하지 않음"과 충돌 X (path 선택 후엔 가이드 허용).
+- **사장님 컨펌 필요 카피 결정 5개 (B1~B5)**: 문서 §6.
+- 단일 원천: `docs/strategy/ux-benchmark-foreign-2026-06-15.md` (신규, ~11페이지 표 기반).
+- 후속(다음 세션): B1~B5 컨펌 후 PE 위임 (index.html 진입 카드 통합 카피 · care-dashboard 4 카드 · reflection step 0 yes/no · invite 5인 카피) · 콘텐츠 허브 재설계는 마케팅+카피라이터 위임.
 
 ---
 
