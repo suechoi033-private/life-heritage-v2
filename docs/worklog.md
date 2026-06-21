@@ -71,6 +71,17 @@
 
 ---
 
+**자동화 — `/show-flow` 슬래시 커맨드 + Playwright 캡쳐 스크립트** (PE 세션, 사장님 발의)
+- 사장님 발의: "5분만 더 들이면 slash command로 저장해둬서 매번 자동 호출 가능 — 만들어둬." 매번 시크릿 창·임시 이메일·DB 확인 부담을 자동 캡쳐로 대체.
+- **신규 스크립트**: `scripts/capture-flow.mjs` (~200줄). Playwright + Supabase 클라이언트 stub(비회원·회원 두 종류) + route mock(CDN·Supabase 차단 환경 대응). 12장 화면(01 비회원 홈 → 02-03 두 카드 → 04·07 가입 게이트 → 05·08~11 welcome 5-step → 06 답 입력 → 12 reflection step 2)을 한 번에 캡쳐. iPhone 12 Pro 뷰포트(390×844). 환경변수로 ITDA_BASE_URL·ITDA_SCREENSHOT_DIR 조정 가능.
+- **신규 커맨드**: `.claude/commands/show-flow.md`. 절차: 로컬 HTTP 서버 띄움 → Playwright symlink → 스크립트 실행 → SendUserFile 12장. 사용자가 페이지 추가하려면 PAGES 배열에 한 줄.
+- **사장님 라이브 검증 흐름 보강 발견**: 08(welcome step 1) → 09(reflection) 직접 연결 아님. welcome 5-step 위저드(step 1 이름 → step 2 자리 선택 → step 3 첫걸음 추천 → step 4 가족 초대 → step 5 "잇다 시작하기 →") 거친 후 reflection. 스크립트가 자동 클릭으로 step 2~5도 캡쳐.
+- **welcome step 5 카피 발견 (정정 후보)**: "이따가 하지 말고 지금." — "잇다" 발음 유희 의도일 수 있으나 "이따가"로 띄어쓰기 시 다르게 읽힘. 카피라이터 검토 필요.
+- **변경 파일**: `scripts/capture-flow.mjs`(신규) · `.claude/commands/show-flow.md`(신규).
+- 후속(다음 라운드): step 5 카피 검토 · F1d 가입 path별 분기 카피 · F1c Cake/Empathy 패턴 · F2 콘텐츠 허브 재설계 · 회원 entry_path 기반 분기.
+
+---
+
 **잇다 분리·acquisition 전략 결정 — 레몬테라스 신호** (전략 세션, 사장님 발의)
 - 사장님이 직접 본 네이버 카페 **레몬테라스** "유언/유서" 검색 결과 캡쳐 2건이 단일 원천. 카페 회원 3,016,256명(여성, 1966~2006년생), 22년 된 메가카페. "유언" 검색 시 4가지 결: A.실무질문(답 없음) · B.부모 케어+유언 교집합 · C.본인 유언 의향 · D.뉴스/가십. → 한 카페에 두 페르소나 공존 = 잇다 케어링·유언 path 둘 다 정확 명중.
 - **결정 (L1~L8)**: L1 망고하다=카테고리 검증자(경쟁자 X) · L2 acquisition 1순위=네이버 카페 · **L3 분리방식=(b) 한 코드 두 얼굴 (사장님 컨펌: "팀의 의견대로 유입경로만 바꾸고 하나의 앱 내에서 운영")** · L4 케어링·유언 동시 진행("순서대로 해서는 늦어") · L5 acquisition 3개월 가설 M1(답글)→M2(SEO글)→M3(사례) · L6 BM 보류(D5 유지) · **L7 데이터 대시보드 전면 재설계** · **L8 UX 벤치마킹 적극 활용**.
