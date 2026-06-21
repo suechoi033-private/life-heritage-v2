@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>오늘 안부 한 줄 · 잇다</title>
+  <meta name="description" content="잇다 — 부모님께 오늘, 안부 한 줄.">
+  <link rel="stylesheet" href="./auth-styles.css">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png">
+  <meta name="theme-color" content="#2F6B4F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="잇다">
+  <meta property="og:title" content="잇다 · 가족과 함께">
+  <meta property="og:description" content="부모님께 오늘, 안부 한 줄.">
+  <style>
+    .cs-shell {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 32px 20px 80px;
+      flex: 1;
+      width: 100%;
+    }
+    @media (min-width: 640px) {
+      .cs-shell { padding: 56px 32px 120px; }
+    }
+    .cs-eyebrow {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--ink-muted);
+      margin-bottom: 10px;
+    }
+    .cs-question {
+      font-family: var(--font-serif);
+      font-size: 24px;
+      font-weight: 800;
+      line-height: 1.5;
+      letter-spacing: -0.01em;
+      color: var(--ink);
+      margin-bottom: 10px;
+    }
+    @media (min-width: 640px) {
+      .cs-question { font-size: 28px; }
+    }
+    .cs-hint {
+      font-size: 13.5px;
+      color: var(--ink-muted);
+      line-height: 1.65;
+      margin-bottom: 22px;
+    }
+    .cs-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink-soft);
+      margin-bottom: 6px;
+      margin-top: 14px;
+    }
+    .cs-input {
+      width: 100%;
+      padding: 13px 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 15px;
+      color: var(--ink);
+      background: var(--bg);
+      box-sizing: border-box;
+    }
+    .cs-input:focus { outline: none; border-color: var(--primary); }
+    .cs-textarea {
+      width: 100%;
+      min-height: 120px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--ink);
+      background: var(--bg);
+      resize: vertical;
+      box-sizing: border-box;
+    }
+    .cs-textarea:focus { outline: none; border-color: var(--primary); }
+    .cs-foot {
+      margin-top: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .cs-submit {
+      padding: 14px 22px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .cs-submit:hover { background: var(--primary-hover); }
+    .cs-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+    .cs-skip {
+      padding: 11px 16px;
+      background: transparent;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink-muted);
+      cursor: pointer;
+      align-self: center;
+      text-decoration: none;
+    }
+    .cs-skip:hover { color: var(--primary); border-color: var(--primary-soft); }
+    .cs-note {
+      margin-top: 18px;
+      padding: 12px 14px;
+      background: var(--bg-alt);
+      border-radius: var(--radius-sm);
+      font-size: 12.5px;
+      color: var(--ink-soft);
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="./index.html" class="logo"><span class="logo-mark">●</span> 잇다</a>
+  </div>
+</nav>
+
+<main class="cs-shell" id="main-content">
+  <div class="cs-eyebrow">잇다 · 가족과 함께</div>
+  <div class="cs-question">부모님께 오늘,<br>안부 한 줄</div>
+  <div class="cs-hint">짧게 한 줄이라도 괜찮아요. 돌봄을 가족이 같이 보는 잇다, 여기에서 시작해요.</div>
+
+  <label class="cs-label" for="cs-target">부모님을 어떻게 부르세요?</label>
+  <input class="cs-input" id="cs-target" type="text" placeholder="예: 아버지 / 엄마 / 어머님" maxlength="40">
+
+  <label class="cs-label" for="cs-message">오늘의 안부</label>
+  <textarea class="cs-textarea" id="cs-message" placeholder="한 줄로 시작해요. 예: 오늘 점심 잘 챙기셨어요?" maxlength="2000"></textarea>
+
+  <div class="cs-foot">
+    <button type="button" class="cs-submit" id="cs-submit">안부 저장하고 이어서 잇다 만나기</button>
+    <a href="./index.html" class="cs-skip">잠시 둘러보기만</a>
+  </div>
+  <div class="cs-note" id="cs-note">
+    안부는 본인 계정에 안전하게 저장돼요. 가입 후 케어링 대시보드에서 가족과 같이 볼 수 있어요.
+  </div>
+</main>
+
+<footer class="auth-footer">
+  © 2026 라이프헤리티지 · 잇다
+</footer>
+
+<script type="module">
+  import { supabase } from './auth.js';
+
+  const LS_KEY = 'itda:care_pending_answer';
+  const ENTRY_PATH_KEY = 'itda:entry_path';
+
+  // 진입 즉시 entry_path 기록 (직접 진입 안전망)
+  try { localStorage.setItem(ENTRY_PATH_KEY, 'care'); } catch (_) {}
+
+  const targetEl = document.getElementById('cs-target');
+  const messageEl = document.getElementById('cs-message');
+  const submitBtn = document.getElementById('cs-submit');
+  const noteEl = document.getElementById('cs-note');
+
+  // 기존 임시 답 복원
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) {
+      const pending = JSON.parse(raw);
+      if (pending?.target) targetEl.value = pending.target;
+      if (pending?.message) messageEl.value = pending.message;
+    }
+  } catch (_) {}
+
+  // 이미 로그인된 사용자 진입 — 케어 대시보드로 안내
+  const { data: { session } } = await supabase.auth.getSession();
+  const currentUser = session?.user ?? null;
+  if (currentUser) {
+    submitBtn.textContent = '안부 저장하고 케어링 대시보드로';
+    noteEl.textContent = '이미 로그인되어 있어요. 케어링 대시보드에서 가족과 같이 보실 수 있어요.';
+  }
+
+  submitBtn.addEventListener('click', async () => {
+    const target = (targetEl.value || '').trim();
+    const message = (messageEl.value || '').trim();
+    if (!message) { alert('안부 한 줄을 적어주세요.'); return; }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = '잠시만요…';
+
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify({
+        target,
+        message,
+        saved_at: new Date().toISOString(),
+      }));
+      localStorage.setItem(ENTRY_PATH_KEY, 'care');
+    } catch (_) {}
+
+    if (currentUser) {
+      // 로그인 상태: 케어 대시보드로 바로 이동.
+      // 정식 저장(care_log 등)은 다음 라운드 PE — 이번 라운드는 안부 보존만.
+      window.location.href = './care-dashboard.html';
+      return;
+    }
+
+    const back = './care-start.html';
+    const signupUrl = `./signup.html?next=${encodeURIComponent(back)}&path=care`;
+    window.location.href = signupUrl;
+  });
+</script>
+
+</body>
+</html>

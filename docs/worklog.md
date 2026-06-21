@@ -53,6 +53,24 @@
 
 > 06-15 결정 트리거의 후속 작업 일괄(전략·구체화·프레임워크·해외 벤치마킹). 결정 카드 문서명은 트리거 날짜 06-15 유지(컨벤션), 실제 작업·커밋 날짜는 06-21.
 
+**🐞 F1 후속 — 사장님 라이브 검증 발견: 두 카드 약속 깨짐 → 비회원 답 화면 신규 (F1 v2)** (PE 세션)
+- 사장님 라이브 검증 직후 발견: 카드 1 "한 줄 적어볼게요" 클릭 → onboarding.html `?path` 파라미터 무시 → 일반 카피 "지금, 어디에 마음이 머무세요?" 노출. 카드 2 "오늘 안부 시작"도 같은 결로 약속 깨짐. 사장님 한 줄: *"엉망이야"*.
+- 진단: 06-21 F1에서 카드 카피만 정하고 다음 흐름은 onboarding.html이 받게 둠 → onboarding.html line 118의 일반 카피 노출. path 분기 미구현.
+- **백그라운드 전수검사**: Explore 에이전트가 잇다 전체 검사 → `docs/strategy/full-audit-2026-06-21.md` (신규, 12 섹션, ~400행). 🔥 즉시 3건(path 무시·"정답은 없어요" 톤 위반·entry_path 분기 미구현) + ⚠️ 다음 라운드 4건. 사장님 발견과 동일.
+- **신규 화면 2개** (invite-answer.html 패턴 차용 → 비회원 답 1줄 → localStorage → signup 게이트 → 가입 후 정착):
+  - `will-start.html` — 사장님 확정 카피 "내일 다시 못 깨어난다면, 가장 후회할 일은?" + textarea. localStorage `itda:will_pending_answer` 저장. 가입 후 welcome.html에서 `daily_answers` (series_key='not_waking_tomorrow' step 1) 정착 → reflection.html 진입.
+  - `care-start.html` — 사장님 확정 카피 "부모님께 오늘, 안부 한 줄" + 부모 이름 + 안부 입력. localStorage `itda:care_pending_answer` 저장. 가입 후 welcome.html → care-dashboard.html 진입. 정식 저장은 다음 라운드(care_log 통합).
+- **index.html 카드 링크 변경**: `./onboarding.html?path=will|care` → `./will-start.html` · `./care-start.html`. onboarding.html은 그대로(다른 진입에서 여전히 사용).
+- **welcome.html 정착 코드 보강**:
+  - 기존 entry_path 정착 옆에 will pending answer → daily_answers 정착 추가.
+  - 최종 진입(`enter-itda`·`skip-onboarding` 버튼) → `resolvedEntryPath` 기준 분기. will=reflection.html · care=care-dashboard.html · null=index.html.
+- **sw.js**: `CACHE_VERSION` → `itda-v3-2026-06-21-two-faces-flow-fix-v3`. APP_SHELL에 `./will-start.html` · `./care-start.html` 추가.
+- **변경 파일**: `will-start.html`(신규) · `care-start.html`(신규) · `index.html` · `welcome.html` · `sw.js` · `docs/strategy/full-audit-2026-06-21.md`(신규).
+- **이번 라운드 미진행 (다음)**: care 답을 care_log/care_target에 정식 정착 · onboarding.html "정답은 없어요" 톤 위반 정리 · index.html 회원 화면에서 entry_path 기반 path별 카드 우선 노출(전수검사 🔥 #3) · note/* 위계 단순화.
+- 작업 브랜치: `claude/two-faces-flow-fix-2026-06-21`. main 머지 후 gh-pages 배포 예정.
+
+---
+
 **잇다 분리·acquisition 전략 결정 — 레몬테라스 신호** (전략 세션, 사장님 발의)
 - 사장님이 직접 본 네이버 카페 **레몬테라스** "유언/유서" 검색 결과 캡쳐 2건이 단일 원천. 카페 회원 3,016,256명(여성, 1966~2006년생), 22년 된 메가카페. "유언" 검색 시 4가지 결: A.실무질문(답 없음) · B.부모 케어+유언 교집합 · C.본인 유언 의향 · D.뉴스/가십. → 한 카페에 두 페르소나 공존 = 잇다 케어링·유언 path 둘 다 정확 명중.
 - **결정 (L1~L8)**: L1 망고하다=카테고리 검증자(경쟁자 X) · L2 acquisition 1순위=네이버 카페 · **L3 분리방식=(b) 한 코드 두 얼굴 (사장님 컨펌: "팀의 의견대로 유입경로만 바꾸고 하나의 앱 내에서 운영")** · L4 케어링·유언 동시 진행("순서대로 해서는 늦어") · L5 acquisition 3개월 가설 M1(답글)→M2(SEO글)→M3(사례) · L6 BM 보류(D5 유지) · **L7 데이터 대시보드 전면 재설계** · **L8 UX 벤치마킹 적극 활용**.

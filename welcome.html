@@ -406,8 +406,10 @@
   const { data: { session } } = await supabase.auth.getSession();
   const currentUser = session?.user || null;
 
-  // (b) 한 코드 두 얼굴 — index.html 비회원 진입 카드에서 저장한 entry_path를 profiles에 정착.
+  // (b) 한 코드 두 얼굴 — index.html 비회원 진입 카드 / will-start / care-start 에서 저장한
+  // entry_path 와 pending answer 를 profiles · daily_answers 에 정착.
   // 06-15 L3 / two-faces-one-code-2026-06-15.md §6. URL 파라미터(?path=)도 폴백으로 수용.
+  let resolvedEntryPath = null;
   if (currentUser) {
     try {
       const urlPath = new URLSearchParams(location.search).get('path');
@@ -416,6 +418,7 @@
                       : (urlPath === 'will' || urlPath === 'care') ? urlPath
                       : null;
       if (entryPath) {
+        resolvedEntryPath = entryPath;
         await supabase.from('profiles')
           .update({ entry_path: entryPath })
           .eq('id', currentUser.id)
@@ -423,6 +426,34 @@
         localStorage.removeItem('itda:entry_path');
       }
     } catch (_) {}
+
+    // will-start.html 에서 비회원이 적은 한 줄을 daily_answers 정착 (not_waking_tomorrow step 1)
+    try {
+      const raw = localStorage.getItem('itda:will_pending_answer');
+      if (raw) {
+        const pending = JSON.parse(raw);
+        const text = (pending?.content || '').trim();
+        if (text) {
+          const { data: q } = await supabase
+            .from('daily_questions')
+            .select('id')
+            .eq('series_key', 'not_waking_tomorrow')
+            .eq('series_step', 1)
+            .maybeSingle();
+          if (q?.id) {
+            await supabase.from('daily_answers').upsert({
+              user_id: currentUser.id,
+              question_id: q.id,
+              content: text,
+              visibility: 'private',
+            }, { onConflict: 'user_id,question_id' });
+          }
+        }
+        localStorage.removeItem('itda:will_pending_answer');
+      }
+    } catch (e) { console.warn('[welcome] will pending answer 정착 실패', e); }
+    // care-start.html pending 안부는 다음 라운드 PE 에서 care 도메인 정착.
+    // (이번 라운드는 localStorage 보존만 — 사용자가 care-dashboard 진입 시 활용)
   }
 
   const RECOMMEND = {
@@ -505,11 +536,21 @@
   document.getElementById('step3-next').addEventListener('click', () => showStep(4));
 
   // ── Step 4: 마무리 → root.html ──
+  // entry_path 별 진입 화면
+  //  · will → reflection.html (step 1 답 정착됨 → 자연스럽게 step 2부터)
+  //  · care → care-dashboard.html (가족 협업 시작)
+  //  · null → index.html (기본)
+  const PATH_HOME = {
+    will: './reflection.html',
+    care: './care-dashboard.html',
+  };
+  const homeHref = PATH_HOME[resolvedEntryPath] || './index.html';
+
   document.getElementById('finish-onboarding').addEventListener('click', () => showStep(5));
-  document.getElementById('enter-itda').addEventListener('click', () => persistAndGo('./index.html'));
+  document.getElementById('enter-itda').addEventListener('click', () => persistAndGo(homeHref));
 
   // ── 건너뛰기 ──
-  document.getElementById('skip-onboarding').addEventListener('click', () => persistAndGo('./index.html'));
+  document.getElementById('skip-onboarding').addEventListener('click', () => persistAndGo(homeHref));
 
   // ── 이전 버튼 (모든 pane) ──
   document.querySelectorAll('[data-back]').forEach(btn => {

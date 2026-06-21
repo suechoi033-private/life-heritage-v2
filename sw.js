@@ -1,13 +1,15 @@
 // 잇다 PWA Service Worker
 // 전략: 앱 셸 캐시 (네트워크 우선 + 캐시 폴백), 푸시 알림 수신
 
-const CACHE_VERSION = 'itda-v3-2026-06-21-pe-cleanup-two-faces-v2';
+const CACHE_VERSION = 'itda-v3-2026-06-21-two-faces-flow-fix-v3';
 const APP_SHELL = [
   './',
   './index.html',
   './beta.html',
   './onboarding.html',
   './ceremony.html',
+  './will-start.html',
+  './care-start.html',
   './seed.html',
   './nest.html',
   './forest.html',
