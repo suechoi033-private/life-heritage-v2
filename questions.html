@@ -321,7 +321,7 @@
 
   // 모든 질문 + 답변 + 공감 + 오늘의 질문
   const [{ data: questions }, { data: answers }, { data: likes }, { data: todayData }] = await Promise.all([
-    supabase.from('daily_questions').select('id, display_order, category, question_text').order('display_order', { ascending: true }),
+    supabase.from('daily_questions').select('id, display_order, category, question_text').is('series_key', null).order('display_order', { ascending: true }),
     supabase.from('daily_answers').select('id, question_id, visibility').eq('visibility', 'public'),
     supabase.from('answer_likes').select('answer_id'),
     supabase.rpc('get_todays_question'),

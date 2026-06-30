@@ -93,6 +93,17 @@
 
 ---
 
+**🐞 questions.html에 reflection 시리즈가 `-108`·`-107`·… 마이너스 번호로 노출** (사장님 라이브 발견 → 즉시 수정)
+- 사장님 라이브 발견(캡쳐): "지난 질문 보기" 클릭 시 reflection 시리즈 8개 질문이 상단에 `-108`, `-107`, `-106`… 음수 번호로 표시됨.
+- **근본 원인**: 06-14 reflection 시리즈 마이그레이션에서 `display_order`를 NULL로 두려 했으나 NOT NULL constraint로 실패 → 음수 (-101 ~ -108)로 우회 저장. `questions.html` line 324는 `daily_questions` 전체를 `display_order` ascending 정렬해 표시하므로 음수가 가장 앞에 노출됨.
+- **수정**: `questions.html` 쿼리에 `.is('series_key', null)` 추가 — 일반 "오늘의 질문"만 표시, reflection 시리즈는 reflection.html에서만 진입.
+- **다른 daily_questions 쿼리 4건 검토** (안전 확인): `ask.html`(id eq · display_order=days(양수만) · prev display_order-1) · `index.html`(series_key='not_waking_tomorrow' 명시) · `admin.html`(어드민 전체 노출 OK) · `welcome.html`(시리즈 정착, series_key 명시) · `reflection.html` · `will-start.html` 동일.
+- **sw.js**: `CACHE_VERSION` → `itda-v3-2026-06-21-questions-exclude-series-v4`.
+- **변경 파일**: `questions.html` · `sw.js`.
+- 작업 브랜치: `claude/questions-exclude-series-2026-06-21`. main 머지 + gh-pages 배포 예정.
+
+---
+
 **잇다 분리·acquisition 전략 결정 — 레몬테라스 신호** (전략 세션, 사장님 발의)
 - 사장님이 직접 본 네이버 카페 **레몬테라스** "유언/유서" 검색 결과 캡쳐 2건이 단일 원천. 카페 회원 3,016,256명(여성, 1966~2006년생), 22년 된 메가카페. "유언" 검색 시 4가지 결: A.실무질문(답 없음) · B.부모 케어+유언 교집합 · C.본인 유언 의향 · D.뉴스/가십. → 한 카페에 두 페르소나 공존 = 잇다 케어링·유언 path 둘 다 정확 명중.
 - **결정 (L1~L8)**: L1 망고하다=카테고리 검증자(경쟁자 X) · L2 acquisition 1순위=네이버 카페 · **L3 분리방식=(b) 한 코드 두 얼굴 (사장님 컨펌: "팀의 의견대로 유입경로만 바꾸고 하나의 앱 내에서 운영")** · L4 케어링·유언 동시 진행("순서대로 해서는 늦어") · L5 acquisition 3개월 가설 M1(답글)→M2(SEO글)→M3(사례) · L6 BM 보류(D5 유지) · **L7 데이터 대시보드 전면 재설계** · **L8 UX 벤치마킹 적극 활용**.
