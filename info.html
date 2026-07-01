@@ -305,6 +305,7 @@
       label: '미리',
       categories: [
         { key: 'well-dying', name: '웰다잉 — 좋은 죽음 준비', summary: '죽음을 미리 생각하면 지금이 더 잘 보입니다' },
+        { key: 'home-death-korea', name: '자택 임종·사망 절차 (한국)', summary: '경찰 검안·사망진단서·주치의 시범까지, 지금 한국의 실제' },
         { key: 'charnel-house', name: '납골당(봉안당) 고르는 법', summary: '선택 기준, 비용, 준비 시점까지' },
         { key: 'silver-town', name: '실버타운 가이드', summary: '유형별 차이, 입주 조건, 비용까지' },
         { key: 'advance-directive', name: '사전연명의료의향서', summary: '국립연명의료관리기관 등록 안내' },
@@ -341,7 +342,7 @@
   let state = { stage: 'pre', category: null };
 
   // 콘텐츠가 준비된 카테고리 (확장 시 추가)
-  const ENABLED_KEYS = new Set(['advance-directive', 'funeral-prepay', 'long-term-care', 'nursing-home', 'well-dying', 'charnel-house', 'silver-town']);
+  const ENABLED_KEYS = new Set(['advance-directive', 'funeral-prepay', 'long-term-care', 'nursing-home', 'well-dying', 'charnel-house', 'silver-town', 'home-death-korea']);
 
   function render() {
     // 카테고리 사이드바
@@ -381,6 +382,7 @@
       'well-dying':        './info/well-dying-guide.html',
       'charnel-house':     './info/choosing-charnel-house.html',
       'silver-town':       './info/silver-town-guide.html',
+      'home-death-korea':  './info/home-death-korea.html',
     };
     if (ENABLED[cat.key]) {
       window.location.href = ENABLED[cat.key];
