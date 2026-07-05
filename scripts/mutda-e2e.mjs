@@ -139,6 +139,24 @@ try {
   if (!paper.includes('유 언 장') || !paper.includes('김하나')) throw new Error('유언장 초안 내용 이상: ' + paper.slice(0, 80));
   if (!paper.includes('나머지 재산은 모두 남편 이몽룡에게')) throw new Error('잔여 조항 누락: ' + paper);
   if (!paper.includes('어머니께') || !paper.includes('사랑하는 가족에게')) throw new Error('받는 사람별 남기는 말 누락: ' + paper);
+  // 최종본 표시 + 수정 기록
+  const meta = await page.locator('#will-meta').innerText();
+  if (!meta.includes('최종본 v1')) throw new Error('최종본 표시 이상: ' + meta);
+  await page.waitForSelector('#revision-list .item-row', { timeout: 15000 });
+  // '남기는 말 고치기' 바로가기 → 7단계로 직행, 기존 블록 유지 확인
+  await page.click('#msg-btn');
+  await page.waitForSelector('.msg-block', { timeout: 15000 });
+  const blocks = await page.locator('.msg-block').count();
+  if (blocks < 2) throw new Error('남기는 말 블록 유실: ' + blocks);
+  // 아빠에게 한 통 추가 → 초안 다시 생성 → v2 확인
+  await page.click('button[data-msg-chip="father"]');
+  await page.fill(`.msg-block:nth-of-type(${blocks + 1}) textarea[data-name="body"]`, '아버지, 감사했습니다.');
+  await page.click('#next');
+  await page.waitForSelector('.will-paper', { timeout: 15000 });
+  const meta2 = await page.locator('#will-meta').innerText();
+  if (!meta2.includes('최종본 v2')) throw new Error('수정 후 판 갱신 이상: ' + meta2);
+  const paper2 = await page.locator('.will-paper').innerText();
+  if (!paper2.includes('아버지께')) throw new Error('추가한 남기는 말 누락');
   console.log('  → 초안 생성 확인 (', paper.split('\n')[0], ')');
   await shot('04-will-draft');
   await page.click('#handwritten-btn');

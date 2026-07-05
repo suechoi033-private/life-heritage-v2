@@ -1,5 +1,5 @@
 // 묻다 서비스워커 — 웹푸시 수신 + 알림 클릭 (안부확인 알림용)
-const CACHE_VERSION = 'mutda-v6-2026-07-05-message-recipient-chips';
+const CACHE_VERSION = 'mutda-v7-2026-07-06-will-revisions-step-jump';
 
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (e) => {

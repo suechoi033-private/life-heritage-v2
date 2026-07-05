@@ -27,11 +27,20 @@
       자필증서 유언이 됩니다.
     </div>
 
+    <p class="small center" id="will-meta" style="margin-bottom:8px;"></p>
     <div class="will-paper" id="will-body"></div>
-    <div style="display:flex; gap:10px; margin-top:14px;">
-      <button class="btn ghost sm" id="copy-btn" style="flex:1;">📋 초안 복사</button>
-      <button class="btn ghost sm" id="print-btn" style="flex:1;">🖨️ 인쇄(참고용)</button>
-      <button class="btn quiet sm" id="redo-btn" style="flex:1;">✏️ 다시 답하기</button>
+    <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;">
+      <button class="btn ghost sm" id="copy-btn" style="flex:1; min-width:100px;">📋 복사</button>
+      <button class="btn ghost sm" id="print-btn" style="flex:1; min-width:100px;">🖨️ 인쇄</button>
+      <button class="btn quiet sm" id="redo-btn" style="flex:1; min-width:100px;">✏️ 수정하기</button>
+      <button class="btn quiet sm" id="msg-btn" style="flex:1; min-width:100px;">💌 남기는 말 고치기</button>
+    </div>
+
+    <div id="revisions-box" style="display:none;">
+      <h2 class="section-title">수정 기록</h2>
+      <p class="small muted" style="margin-bottom:10px;">
+        수정할 때마다 한 판씩 남습니다. 맨 위가 최종본이에요.</p>
+      <div class="card" style="padding:6px 20px;" id="revision-list"></div>
     </div>
 
     <h2 class="section-title">이제, 손으로 옮겨 쓰세요</h2>
@@ -66,26 +75,26 @@
     <div class="card soft">
       <p class="sub" style="line-height:1.8;">
         재산 관계가 복잡하거나 상속인 간 다툼이 걱정된다면, 초안을 들고
-        변호사와 상의하세요. 묻다의 유언장 기능은
-        <b>법무법인 율사서재 김한나 변호사</b>가 법률 감수를 맡고 있습니다.
+        변호사와 상의하세요.
+        <b>법무법인 율사서재 김한나 대표변호사님</b>이 법률 감수를 맡고 있습니다.
       </p>
       <div style="display:flex; gap:8px; margin-top:12px;">
         <a class="btn ghost sm" href="tel:02-523-1579" style="flex:1;">📞 02-523-1579</a>
         <a class="btn ghost sm" href="mailto:hss1@yulsasj.com" style="flex:1;">✉️ 이메일 문의</a>
       </div>
-      <p class="small muted" style="margin-top:8px;">상담은 별도 비용이 발생할 수 있어요.</p>
+      <p class="small muted" style="margin-top:8px;">(소정의 상담비가 발생할 수 있습니다)</p>
     </div>
 
     <p class="legal-note">
       이 초안과 안내는 참고용 정보이며 법률 자문이 아닙니다. 재산 관계가 복잡하거나
       상속인 간 다툼이 예상되면 변호사·공증인과 상담하세요.
-      법률 감수: 법무법인 율사서재 김한나 변호사 (진행 중)
+      법률 감수: 법무법인 율사서재 김한나 대표변호사 (진행 중)
     </p>
   </section>
 </main>
 
 <script type="module">
-  import { supabase, initAppPage, toast, esc, logEvent } from './js/app.js';
+  import { supabase, initAppPage, toast, esc, fmtDate, logEvent } from './js/app.js';
   import { WILL_QUESTIONS, generateWill, formatAddress, HANDWRITE_CHECKLIST,
            ASSET_CATEGORIES, inheritanceGuide, heirSuggest, HEIR_NAME_FIELDS,
            MESSAGE_RECIPIENTS } from './js/will-wizard.js';
@@ -138,11 +147,71 @@
     renderStep();
   }
 
+  // 단계 이름 — 점프 바에 쓴다
+  const STEP_NAMES = ['이름', '생년월일', '주소', '재산', '집행자', '장례', '남기는 말'];
+
+  // 현재 화면의 답을 모은다. validate=false면 검증 없이 (단계 점프용)
+  function collectValue(q, box, validate = true) {
+    if (q.type === 'assets') {
+      const value = [...box.querySelectorAll('.asset-row')].map(row => ({
+        category: row.dataset.category || '',
+        what: row.querySelector('[data-name="what"]').value.trim(),
+        who: row.querySelector('[data-name="who"]').value.trim(),
+      })).filter(o => o.what || o.who);
+      if (validate) {
+        if (q.required && !value.length)
+          return { error: '위의 종류 버튼을 눌러, 한 가지만이라도 담아보세요.' };
+        const incomplete = value.find(o => o.what && !o.who);
+        if (incomplete)
+          return { error: `'${incomplete.what}'을(를) 누구에게 남길지 적어주세요. 막막하면 상속 순위 마법사를 눌러보세요.` };
+      }
+      return { value };
+    }
+    if (q.type === 'address') {
+      const value = {
+        base: box.querySelector('#addr-base').value.trim(),
+        detail: box.querySelector('#addr-detail').value.trim(),
+      };
+      if (validate && q.required && !value.base)
+        return { error: '우편번호 검색으로 주소를 넣어주세요.' };
+      return { value };
+    }
+    if (q.type === 'messages') {
+      const value = [...box.querySelectorAll('.msg-block')].map(bl => ({
+        to: bl.querySelector('[data-name="to"]').value.trim(),
+        body: bl.querySelector('[data-name="body"]').value.trim(),
+      })).filter(m => m.body);
+      return { value };
+    }
+    const value = box.querySelector('#in').value.trim();
+    if (validate && q.required && !value) return { error: '이 항목은 유언장에 꼭 필요해요.' };
+    return { value };
+  }
+
+  // 단계 점프 — 지금 화면의 답을 조용히 저장하고 이동 (답은 문항별로 저장되므로 안전)
+  async function jumpTo(target) {
+    const q = WILL_QUESTIONS[idx];
+    const box = document.getElementById('box');
+    if (box) {
+      const { value, error } = collectValue(q, box, false);
+      if (!error && value !== undefined) await saveAnswer(q.key, value);
+    }
+    idx = target;
+    renderStep();
+  }
+
   function renderStep() {
     const q = WILL_QUESTIONS[idx];
     document.getElementById('bar').style.width =
       `${Math.round((idx / WILL_QUESTIONS.length) * 100)}%`;
-    document.getElementById('step-label').textContent = `${idx + 1} / ${WILL_QUESTIONS.length}`;
+    document.getElementById('step-label').innerHTML =
+      `<span style="display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;">
+        ${WILL_QUESTIONS.map((_, i) => `
+          <button type="button" data-jump="${i}" class="chip ${i === idx ? 'green' : ''}"
+                  style="border:none; cursor:pointer;">${i + 1} ${STEP_NAMES[i]}</button>`).join('')}
+      </span>`;
+    document.getElementById('step-label').querySelectorAll('[data-jump]')
+      .forEach(b => b.onclick = () => jumpTo(Number(b.dataset.jump)));
 
     const stage = document.getElementById('stage');
     stage.innerHTML = `
@@ -208,36 +277,10 @@
       box.innerHTML = `<div class="field"><input id="in" value="${esc(saved || '')}" placeholder="${q.placeholder || ''}" /></div>`;
     }
 
-    stage.querySelector('#prev')?.addEventListener('click', () => { idx--; renderStep(); });
+    stage.querySelector('#prev')?.addEventListener('click', () => jumpTo(idx - 1));
     stage.querySelector('#next').addEventListener('click', async () => {
-      let value;
-      if (q.type === 'assets') {
-        value = [...box.querySelectorAll('.asset-row')].map(row => ({
-          category: row.dataset.category || '',
-          what: row.querySelector('[data-name="what"]').value.trim(),
-          who: row.querySelector('[data-name="who"]').value.trim(),
-        })).filter(o => o.what || o.who);
-        if (q.required && !value.length)
-          return alert('위의 종류 버튼을 눌러, 한 가지만이라도 담아보세요.');
-        const incomplete = value.find(o => o.what && !o.who);
-        if (incomplete)
-          return alert(`'${incomplete.what}'을(를) 누구에게 남길지 적어주세요. 막막하면 상속 순위 마법사를 눌러보세요.`);
-      } else if (q.type === 'address') {
-        value = {
-          base: box.querySelector('#addr-base').value.trim(),
-          detail: box.querySelector('#addr-detail').value.trim(),
-        };
-        if (q.required && !value.base)
-          return alert('우편번호 검색으로 주소를 넣어주세요.');
-      } else if (q.type === 'messages') {
-        value = [...box.querySelectorAll('.msg-block')].map(bl => ({
-          to: bl.querySelector('[data-name="to"]').value.trim(),
-          body: bl.querySelector('[data-name="body"]').value.trim(),
-        })).filter(m => m.body);
-      } else {
-        value = box.querySelector('#in').value.trim();
-        if (q.required && !value) return alert('이 항목은 유언장에 꼭 필요해요.');
-      }
+      const { value, error } = collectValue(q, box, true);
+      if (error) return alert(error);
       await saveAnswer(q.key, value);
       if (idx === WILL_QUESTIONS.length - 1) await buildWill();
       else { idx++; renderStep(); }
@@ -435,12 +478,21 @@
 
   // 남기는 말 단계 — 받는 사람 칩을 누르면 그 사람 몫의 칸이 생긴다
   function renderMessages(box, saved) {
-    box.innerHTML = `
-      <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;">
+    const chipBar = `
+      <div style="display:flex; flex-wrap:wrap; gap:8px;">
         ${MESSAGE_RECIPIENTS.map(r => `
           <button type="button" class="btn quiet sm" data-msg-chip="${r.key}">${r.ico} ${r.label}</button>`).join('')}
-      </div>
-      <div id="msg-blocks"></div>`;
+      </div>`;
+    // 칩을 위·아래 두 곳에 — 한 명 쓰고 나서도 "다른 사람에게 또" 가 바로 보이게
+    box.innerHTML = `
+      ${chipBar}
+      <div id="msg-blocks" style="margin-top:14px;"></div>
+      <div class="card soft" style="padding:14px;">
+        <p class="small" style="color:var(--ink-soft); margin-bottom:8px;">
+          다른 사람에게도 남기고 싶다면 눌러주세요. 지금 다 쓰지 않아도,
+          언제든 돌아와 추가할 수 있어요.</p>
+        ${chipBar}
+      </div>`;
 
     const blocksEl = box.querySelector('#msg-blocks');
 
@@ -478,8 +530,12 @@
     });
   }
 
+  // 남기는 말 단계의 인덱스 (초안 화면 바로가기용)
+  const MESSAGE_STEP = WILL_QUESTIONS.findIndex(q => q.key === 'message');
+
   async function buildWill() {
     const body = generateWill(answers);
+    const prevStatus = will?.status;
     if (will) {
       const { data } = await supabase.from('mutda_wills')
         .update({ body, version: (will.version || 1) + 1, status: 'draft', updated_at: new Date().toISOString() })
@@ -490,8 +546,16 @@
         .insert({ user_id: user.id, body }).select().single();
       will = data;
     }
+    // 판 스냅샷 — 수정 기록으로 남긴다
+    await supabase.from('mutda_will_revisions').insert({
+      will_id: will.id, user_id: user.id, version: will.version || 1, body,
+    });
     logEvent('will_draft_created');
-    toast('유언장 초안이 저장됐어요');
+    if (prevStatus && prevStatus !== 'draft') {
+      toast('내용이 바뀌어 초안 상태로 돌아갔어요. 자필본도 새로 옮겨 써주세요.');
+    } else {
+      toast('유언장 초안이 저장됐어요');
+    }
     showResult();
   }
 
@@ -499,10 +563,20 @@
     wizardEl.style.display = 'none'; resultEl.style.display = '';
     document.getElementById('will-body').textContent = will.body;
 
+    const STATUS_LABEL = { draft: '초안', handwritten: '자필 완료', notarized: '공증 완료' };
+    document.getElementById('will-meta').innerHTML =
+      `<span class="chip green">최종본 v${will.version || 1}</span>
+       <span class="muted"> ${fmtDate(will.updated_at || will.created_at)} 수정 · ${STATUS_LABEL[will.status] || '초안'}</span>`;
+
     if (will.status === 'handwritten')
       document.getElementById('result-notice').innerHTML = '✅ 자필 작성을 마친 유언장입니다. 안전한 곳에 보관하고, 보관 장소를 믿을 만한 한 사람에게 알려두세요.';
-    if (will.status === 'notarized')
+    else if (will.status === 'notarized')
       document.getElementById('result-notice').innerHTML = '✅ 공증까지 마친 유언장입니다. 가장 단단한 준비를 하셨어요.';
+    else
+      document.getElementById('result-notice').innerHTML =
+        '초안이 완성됐습니다. 아래 내용을 <b>처음부터 끝까지 직접 손으로</b> 옮겨 쓰면 자필증서 유언이 됩니다.';
+
+    loadRevisions();
 
     const KEY = 'mutda:will_check';
     const checked = new Set(JSON.parse(localStorage.getItem(KEY) || '[]'));
@@ -520,12 +594,42 @@
     });
   }
 
+  // 수정 기록 — 판별 스냅샷 목록. 지난 판을 눌러 내용을 볼 수 있다.
+  async function loadRevisions() {
+    const { data: revs } = await supabase.from('mutda_will_revisions')
+      .select('version, body, created_at').eq('will_id', will.id)
+      .order('version', { ascending: false }).limit(20);
+    const box = document.getElementById('revisions-box');
+    const list = document.getElementById('revision-list');
+    if (!revs?.length) { box.style.display = 'none'; return; }
+    box.style.display = '';
+    list.innerHTML = revs.map((r, i) => `
+      <div class="item-row">
+        <span class="grow">
+          <span class="title">v${r.version} ${i === 0 ? '<span class="chip green">최종본</span>' : ''}</span><br/>
+          <span class="meta">${new Date(r.created_at).toLocaleString('ko-KR')}</span>
+        </span>
+        ${i === 0 ? '' : `<button class="btn quiet sm" data-rev="${r.version}">보기</button>`}
+      </div>`).join('');
+    list.querySelectorAll('[data-rev]').forEach(b => b.onclick = () => {
+      const r = revs.find(x => String(x.version) === b.dataset.rev);
+      document.getElementById('will-body').textContent = r.body;
+      document.getElementById('will-meta').innerHTML =
+        `<span class="chip warm">지난 판 v${r.version}</span>
+         <span class="muted"> ${new Date(r.created_at).toLocaleString('ko-KR')} 작성 — 참고용이에요</span>
+         <button class="btn quiet sm" id="back-latest" style="margin-left:8px;">최종본 보기</button>`;
+      document.getElementById('back-latest').onclick = showResult;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
+
   document.getElementById('copy-btn').onclick = async () => {
     await navigator.clipboard.writeText(will.body);
     toast('초안을 복사했어요');
   };
   document.getElementById('print-btn').onclick = () => window.print();
   document.getElementById('redo-btn').onclick = () => { idx = 0; showWizard(); };
+  document.getElementById('msg-btn').onclick = () => { idx = MESSAGE_STEP; showWizard(); };
 
   document.getElementById('handwritten-btn').onclick = async () => {
     await supabase.from('mutda_wills')

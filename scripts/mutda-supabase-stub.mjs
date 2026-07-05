@@ -18,6 +18,7 @@ const SCHEMA = {
   mutda_posts: ["id","user_id","author_name","title","body","topic","is_seed","created_at"],
   mutda_profiles: ["user_id","name","birth_year","onboarding","journey_focus","has_pet","checkin_enabled","checkin_threshold_hours","share_location","last_active_at","last_lat","last_lng","last_location_at","streak_days","last_visit_date","created_at","updated_at"],
   mutda_will_answers: ["user_id","question_key","answer","updated_at"],
+  mutda_will_revisions: ["id","will_id","user_id","version","body","created_at"],
   mutda_wills: ["id","user_id","body","version","status","handwritten_at","notarized_at","created_at","updated_at"],
 };
 
