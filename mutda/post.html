@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>이야기 — 묻다.</title>
+  <link rel="stylesheet" href="./css/mutda.css" />
+</head>
+<body>
+<main>
+  <a href="./community.html" class="small">‹ 함께로 돌아가기</a>
+  <article id="post" style="margin-top:14px;"><p class="muted small">불러오는 중…</p></article>
+
+  <section>
+    <h2 class="section-title">따뜻한 말 남기기</h2>
+    <div class="card" style="padding:6px 20px;" id="comments"></div>
+    <div class="card soft">
+      <div class="field">
+        <textarea id="c-body" style="min-height:80px;" placeholder="평가나 조언보다, 곁에 앉는 한마디가 좋아요."></textarea>
+      </div>
+      <button class="btn sm" id="c-submit">남기기</button>
+    </div>
+  </section>
+</main>
+
+<script type="module">
+  import { supabase, initAppPage, toast, esc, fmtDate, logEvent } from './js/app.js';
+  import { renderNav } from './js/nav.js';
+
+  renderNav({ active: 'community', title: '이야기' });
+  const { user, profile } = await initAppPage();
+
+  const id = new URLSearchParams(location.search).get('id');
+  if (!id) location.replace('./community.html');
+  logEvent('post_view', { post: id });
+
+  const TOPIC = { life: '삶과 준비', will: '유언장', letter: '감사·작별의 말', belongings: '물건 정리', pet: '반려동물' };
+
+  const { data: post } = await supabase.from('mutda_posts')
+    .select('*').eq('id', id).maybeSingle();
+
+  const box = document.getElementById('post');
+  if (!post) {
+    box.innerHTML = '<p class="muted">이야기를 찾을 수 없어요.</p>';
+  } else {
+    box.innerHTML = `
+      <span class="chip">${TOPIC[post.topic] || '이야기'}</span>
+      <h1 class="serif" style="font-size:24px; line-height:1.5; margin:10px 0 4px;">${esc(post.title || '')}</h1>
+      <p class="post-meta" style="margin-bottom:18px;">${esc(post.author_name)} · ${fmtDate(post.created_at)}</p>
+      <div style="white-space:pre-wrap; color:var(--ink-soft); font-size:16.5px; line-height:1.85;">${esc(post.body)}</div>
+      ${post.user_id === user.id ? '<button class="btn quiet sm" id="del-post" style="margin-top:16px;">이 글 삭제</button>' : ''}`;
+    document.getElementById('del-post')?.addEventListener('click', async () => {
+      if (!confirm('이 이야기를 삭제할까요?')) return;
+      await supabase.from('mutda_posts').delete().eq('id', id);
+      location.href = './community.html';
+    });
+  }
+
+  document.getElementById('c-submit').onclick = async () => {
+    const body = document.getElementById('c-body').value.trim();
+    if (!body) return;
+    await supabase.from('mutda_post_comments').insert({
+      post_id: id, user_id: user.id, author_name: profile.name || '익명', body,
+    });
+    document.getElementById('c-body').value = '';
+    toast('마음을 남겼어요');
+    loadComments();
+  };
+
+  async function loadComments() {
+    const { data } = await supabase.from('mutda_post_comments')
+      .select('*').eq('post_id', id).order('created_at');
+    const c = document.getElementById('comments');
+    c.innerHTML = data?.length ? data.map(x => `
+      <div class="item-row">
+        <span class="grow">
+          <span class="title">${esc(x.author_name)}</span>
+          <span class="meta" style="margin-left:6px;">${fmtDate(x.created_at)}</span><br/>
+          <span style="font-size:14.5px; color:var(--ink-soft);">${esc(x.body)}</span>
+        </span>
+        ${x.user_id === user.id ? `<button class="btn quiet sm" data-del="${x.id}">삭제</button>` : ''}
+      </div>`).join('')
+      : '<p class="muted small" style="padding:12px 0;">아직 남겨진 말이 없어요.</p>';
+    c.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
+      await supabase.from('mutda_post_comments').delete().eq('id', b.dataset.del);
+      loadComments();
+    });
+  }
+
+  loadComments();
+</script>
+</body>
+</html>

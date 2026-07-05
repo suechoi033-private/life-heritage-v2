@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>반려동물 돌봄 플랜 — 묻다.</title>
+  <link rel="stylesheet" href="./css/mutda.css" />
+</head>
+<body>
+<main>
+  <div style="padding-top:8px;">
+    <h2 class="serif" style="font-size:22px;">반려동물 돌봄 플랜</h2>
+    <p class="muted small">내게 비상상황이 생겨도 이 아이의 하루는 계속되도록, 미리 적어두는 인계서입니다.</p>
+  </div>
+
+  <div class="notice warn" style="margin-top:14px;">
+    가장 중요한 것은 <b>돌봄인의 사전 동의</b>입니다. 플랜을 다 적으면
+    돌봐줄 사람에게 직접 보여주고 "부탁해요"라고 말해두세요.
+  </div>
+
+  <section class="card" id="form">
+    <div class="field"><label>이름</label><input id="pet_name" placeholder="예) 콩이" /></div>
+    <div class="field"><label>종류</label><input id="species" placeholder="예) 강아지(말티즈) / 고양이 / 앵무새" /></div>
+    <div class="field"><label>나이·특징</label><input id="age_note" placeholder="예) 12살, 왼쪽 귀가 약함" /></div>
+    <div class="field"><label>식사</label><textarea id="feeding" style="min-height:80px;" placeholder="사료 종류, 하루 횟수와 양, 간식, 절대 주면 안 되는 것"></textarea></div>
+    <div class="field"><label>건강·약</label><textarea id="medical" style="min-height:80px;" placeholder="지병, 복용 중인 약과 시간, 알레르기"></textarea></div>
+    <div class="field"><label>다니는 동물병원</label><input id="vet" placeholder="예) ○○동물병원 02-000-0000 (진료기록 있음)" /></div>
+
+    <h3 class="section-title" style="margin-top:20px;">비상시 돌봄인</h3>
+    <div class="field"><label>이름 (관계)</label><input id="caretaker_name" placeholder="예) 동생 김두리" /></div>
+    <div class="field"><label>연락처</label><input id="caretaker_contact" placeholder="예) 010-0000-0000" /></div>
+    <label class="item-row" style="cursor:pointer; border:none;">
+      <input type="checkbox" id="caretaker_agreed" style="width:20px;height:20px;accent-color:var(--primary);" />
+      <span class="grow"><span class="title">돌봄인에게 미리 부탁했고, 동의를 받았어요</span></span>
+    </label>
+
+    <div class="field" style="margin-top:12px;">
+      <label>인계 메모</label>
+      <textarea id="handover_note" style="min-height:100px;" placeholder="좋아하는 것, 무서워하는 것, 산책 습관, 잠자리, 부르는 별명…"></textarea>
+      <p class="hint">이 아이를 처음 만나는 사람도 당황하지 않도록, 아이의 하루를 그려주세요.</p>
+    </div>
+
+    <button class="btn" id="save-btn">플랜 저장하기</button>
+  </section>
+
+  <section id="saved-note" style="display:none;">
+    <div class="notice info">
+      ✅ 돌봄 플랜이 저장돼 있어요. 내용이 바뀌면 언제든 고쳐주세요.
+      <b>인쇄해서 사료통 근처에 붙여두면</b> 비상시 누구든 바로 볼 수 있습니다.
+    </div>
+    <button class="btn ghost" onclick="window.print()">🖨️ 인계서 인쇄하기</button>
+  </section>
+</main>
+
+<script type="module">
+  import { supabase, initAppPage, toast, logEvent } from './js/app.js';
+  import { renderNav } from './js/nav.js';
+
+  renderNav({ active: 'home', title: '반려동물' });
+  const { user } = await initAppPage();
+  logEvent('pet_view');
+
+  const FIELDS = ['pet_name','species','age_note','feeding','medical','vet',
+                  'caretaker_name','caretaker_contact','handover_note'];
+  let plan = null;
+
+  const { data } = await supabase.from('mutda_pet_plans')
+    .select('*').eq('user_id', user.id).order('created_at').limit(1);
+  if (data?.length) {
+    plan = data[0];
+    FIELDS.forEach(f => { document.getElementById(f).value = plan[f] || ''; });
+    document.getElementById('caretaker_agreed').checked = !!plan.caretaker_agreed;
+    document.getElementById('saved-note').style.display = '';
+  }
+
+  document.getElementById('save-btn').onclick = async () => {
+    const row = { updated_at: new Date().toISOString() };
+    FIELDS.forEach(f => { row[f] = document.getElementById(f).value.trim() || null; });
+    row.caretaker_agreed = document.getElementById('caretaker_agreed').checked;
+    if (!row.pet_name) return alert('아이의 이름을 알려주세요.');
+
+    if (plan) {
+      await supabase.from('mutda_pet_plans').update(row).eq('id', plan.id);
+    } else {
+      const { data: inserted } = await supabase.from('mutda_pet_plans')
+        .insert({ ...row, user_id: user.id }).select().single();
+      plan = inserted;
+    }
+    logEvent('pet_plan_saved');
+    toast(`${row.pet_name}의 내일을 준비해 두셨어요`);
+    document.getElementById('saved-note').style.display = '';
+  };
+</script>
+</body>
+</html>

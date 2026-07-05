@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>홈 — 묻다.</title>
+  <link rel="stylesheet" href="./css/mutda.css" />
+</head>
+<body>
+<main>
+  <section id="greet" style="padding-top:8px;">
+    <h2 class="serif" id="greet-title" style="font-size:23px; line-height:1.5;">안녕하세요</h2>
+    <div style="margin-top:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+      <span class="streak-chip" id="streak">🌱 이어온 지 1일째</span>
+      <span class="chip green" id="checkin-chip" style="display:none;">🔔 안부확인 켜짐</span>
+    </div>
+  </section>
+
+  <section class="card tint" id="today-card" style="margin-top:20px;">
+    <h3 class="serif" id="today-title">오늘의 한 걸음</h3>
+    <p class="sub" id="today-desc"></p>
+    <a class="btn" id="today-btn" style="margin-top:14px;">시작하기</a>
+  </section>
+
+  <section>
+    <h2 class="section-title">나의 준비 여정</h2>
+    <div class="card" style="padding:8px 20px;">
+      <div id="journey"></div>
+    </div>
+    <p class="small muted center" id="journey-progress"></p>
+  </section>
+
+  <section>
+    <h2 class="section-title">함께 읽어보세요</h2>
+    <div id="reco"></div>
+  </section>
+</main>
+
+<script type="module">
+  import { initAppPage, logEvent } from './js/app.js';
+  import { getJourneyState } from './js/journey.js';
+  import { renderNav } from './js/nav.js';
+
+  renderNav({ active: 'home' });
+  const { user, profile } = await initAppPage();
+  logEvent('home_view');
+
+  // 인사
+  const hour = new Date().getHours();
+  const timeGreet = hour < 6 ? '고요한 새벽이에요' : hour < 12 ? '좋은 아침이에요'
+    : hour < 18 ? '평안한 오후예요' : '편안한 저녁이에요';
+  document.getElementById('greet-title').textContent =
+    `${profile.name}님, ${timeGreet}.`;
+
+  document.getElementById('streak').textContent =
+    `🌱 이어온 지 ${profile.streak_days || 1}일째`;
+  if (profile.checkin_enabled)
+    document.getElementById('checkin-chip').style.display = '';
+
+  // 여정
+  const { steps, doneCount, total, next } = await getJourneyState(user, profile);
+  document.getElementById('journey').innerHTML = steps.map(s => `
+    <a class="journey-step ${s.done ? 'done' : (s === next ? 'now' : '')}" href="./${s.href}"
+       style="color:inherit;">
+      <span class="knot">${s.done ? '✓' : s.ico}</span>
+      <span class="body"><h4>${s.title}</h4><p>${s.desc}</p></span>
+      <span class="go">›</span>
+    </a>`).join('');
+  document.getElementById('journey-progress').textContent =
+    `${total}개의 매듭 중 ${doneCount}개를 지었습니다`;
+
+  // 오늘의 한 걸음 = 여정의 다음 매듭
+  const first = new URLSearchParams(location.search).get('first');
+  if (next) {
+    document.getElementById('today-title').textContent =
+      first ? `${profile.name}님의 여정이 준비됐어요` : '오늘의 한 걸음';
+    document.getElementById('today-desc').textContent =
+      `${next.title} — ${next.desc}`;
+    const btn = document.getElementById('today-btn');
+    btn.href = `./${next.href}`;
+    btn.textContent = next.title;
+  } else {
+    document.getElementById('today-title').textContent = '모든 매듭을 지으셨어요';
+    document.getElementById('today-desc').textContent =
+      '기록은 살아있는 문서입니다. 계절이 바뀔 때마다 한 번씩 들여다보세요.';
+    document.getElementById('today-btn').style.display = 'none';
+  }
+
+  // 추천 콘텐츠 (서재)
+  document.getElementById('reco').innerHTML = `
+    <a class="card soft" href="./article-will-legal.html" style="display:block; color:inherit;">
+      <h3 class="serif">자필 유언장, 법적으로 유효하려면</h3>
+      <p class="sub">다섯 가지 요건을 놓치면 무효가 됩니다. 5분 읽기.</p>
+    </a>
+    <a class="card soft" href="./article-belongings.html" style="display:block; color:inherit;">
+      <h3 class="serif">물건을 정리한다는 것</h3>
+      <p class="sub">유품정리사가 전하는, 살아서 하는 정리의 의미.</p>
+    </a>`;
+</script>
+</body>
+</html>

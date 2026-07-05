@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>환영합니다 — 묻다.</title>
+  <link rel="stylesheet" href="./css/mutda.css" />
+</head>
+<body>
+<main>
+  <div class="auth-wrap center">
+    <div class="brand">묻다<span style="color:var(--primary)">.</span></div>
+    <div class="card soft" style="margin-top:24px;" id="msg-card">
+      <h3 class="serif" id="msg-title">확인 중…</h3>
+      <p class="sub" id="msg-body"></p>
+    </div>
+    <a class="btn" href="./onboarding.html" id="go-btn" style="display:none;">첫 질문 만나러 가기</a>
+  </div>
+</main>
+
+<script type="module">
+  import { getUser } from './js/app.js';
+
+  const sent = new URLSearchParams(location.search).get('sent');
+  const title = document.getElementById('msg-title');
+  const body = document.getElementById('msg-body');
+  const go = document.getElementById('go-btn');
+
+  const user = await getUser();
+  if (user) {
+    title.textContent = '이메일 확인 완료!';
+    body.textContent = '이제 묻다가 몇 가지를 여쭤볼게요. 3분이면 당신만의 준비 여정이 만들어집니다.';
+    go.style.display = '';
+  } else if (sent) {
+    title.textContent = '메일함을 확인해 주세요';
+    body.textContent = '가입하신 이메일로 확인 링크를 보냈어요. 링크를 누르면 바로 시작됩니다.';
+  } else {
+    title.textContent = '환영합니다';
+    body.innerHTML = '<a href="./login.html">로그인</a>하고 계속해 주세요.';
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>가입하기 — 묻다.</title>
+  <link rel="stylesheet" href="./css/mutda.css" />
+</head>
+<body>
+<main>
+  <div class="auth-wrap">
+    <div class="brand">묻다<span style="color:var(--primary)">.</span></div>
+    <p class="brand-sub">삶에게 묻고, 마음을 남기다</p>
+
+    <form id="signup-form" novalidate>
+      <div class="field">
+        <label for="name">이름</label>
+        <input id="name" type="text" autocomplete="name" placeholder="어떻게 불러드릴까요?" required />
+      </div>
+      <div class="field">
+        <label for="email">이메일</label>
+        <input id="email" type="email" autocomplete="email" placeholder="you@example.com" required />
+      </div>
+      <div class="field">
+        <label for="password">비밀번호</label>
+        <input id="password" type="password" autocomplete="new-password" placeholder="6자 이상" minlength="6" required />
+      </div>
+      <p class="form-error" id="err"></p>
+      <button class="btn" type="submit" id="submit-btn">가입하고 시작하기</button>
+    </form>
+
+    <p class="center small muted" style="margin-top:18px;">
+      이미 계정이 있나요? <a href="./login.html"><b>로그인</b></a>
+    </p>
+  </div>
+</main>
+
+<script type="module">
+  import { signUp, redirectIfAuthed, friendlyError, logEvent } from './js/app.js';
+
+  redirectIfAuthed('home.html');
+  logEvent('signup_view');
+
+  const form = document.getElementById('signup-form');
+  const err = document.getElementById('err');
+  const btn = document.getElementById('submit-btn');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    err.textContent = '';
+    btn.disabled = true; btn.textContent = '가입 중…';
+
+    const name = document.getElementById('name').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    const { data, error } = await signUp(email, password, name);
+    if (error) {
+      err.textContent = friendlyError(error);
+      btn.disabled = false; btn.textContent = '가입하고 시작하기';
+      return;
+    }
+    logEvent('signup_done');
+    sessionStorage.setItem('mutda:signup_name', name);
+    // 이메일 확인이 꺼져 있으면 세션이 바로 생긴다 → 온보딩으로.
+    if (data?.session) location.href = './onboarding.html';
+    else location.href = './welcome.html?sent=1';
+  });
+</script>
+</body>
+</html>

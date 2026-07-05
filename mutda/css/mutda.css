@@ -1,0 +1,357 @@
+/* 묻다 — 공유 스타일
+   잇다 디자인 토큰 v3 그대로 사용 (docs/company/design-system.md).
+   토큰만 사용, 임의 hex 금지. 시니어 가독성 우선. */
+
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css');
+@import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap');
+
+:root {
+  --bg: #FFFFFF;
+  --bg-alt: #F4F6F4;
+  --bg-dark: #16201A;
+  --ink: #21261E;
+  --ink-soft: #3E4A43;
+  --ink-muted: #6B756E;
+  --ink-faint: #AFB8B2;
+  --primary: #2F6B4F;
+  --primary-hover: #25563F;
+  --primary-soft: #E7F1EC;
+  --warm: #BE6440;
+  --warm-hover: #9E5234;
+  --warm-soft: #F6EEE7;
+  --line: #E5EAE6;
+  --danger: #C94F4F;
+  --danger-soft: #F5E4E4;
+  --success: #2E8A5E;
+  --success-soft: #E4F2EA;
+  --font-sans: 'Pretendard Variable', 'Noto Sans KR', 'Apple SD Gothic Neo', '맑은 고딕', 'Malgun Gothic', sans-serif;
+  --font-serif: 'Nanum Myeongjo', 'Noto Serif KR', 'Apple SD Gothic Neo', serif;
+  --radius: 16px;
+  --radius-sm: 12px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.65;
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 잇다와 동일한 110% 스케일 규칙 (iOS fixed 버그 회피를 위해 컨테이너별 적용) */
+.mutda-top-bar, .mutda-bottom-nav, body > main { zoom: 1.1; }
+
+a { color: var(--primary); text-decoration: none; }
+button { font-family: inherit; cursor: pointer; }
+input, textarea, select { font-family: inherit; font-size: 16px; }
+
+main {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 20px 20px 96px;
+  flex: 1;
+}
+
+/* ---------- 상단 바 ---------- */
+.mutda-top-bar {
+  position: sticky; top: 0; z-index: 40;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+}
+.mutda-top-bar .inner {
+  max-width: 640px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px;
+}
+.mutda-logo {
+  font-family: var(--font-serif);
+  font-weight: 800; font-size: 22px; color: var(--ink);
+}
+.mutda-logo .dot { color: var(--primary); }
+
+/* ---------- 하단 내비게이션 ---------- */
+.mutda-bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 40;
+  background: var(--bg);
+  border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.mutda-bottom-nav .inner {
+  max-width: 640px; margin: 0 auto;
+  display: flex;
+}
+.mutda-bottom-nav a {
+  flex: 1; text-align: center; padding: 10px 4px 12px;
+  color: var(--ink-muted); font-size: 12px; line-height: 1.3;
+}
+.mutda-bottom-nav a .ico { display: block; font-size: 22px; margin-bottom: 2px; }
+.mutda-bottom-nav a.active { color: var(--primary); font-weight: 700; }
+
+/* ---------- 카드/섹션 ---------- */
+.card {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 14px;
+}
+.card.soft { background: var(--bg-alt); border-color: transparent; }
+.card.tint { background: var(--primary-soft); border-color: transparent; }
+.card h3 { font-size: 17px; margin-bottom: 6px; }
+.card .sub { color: var(--ink-muted); font-size: 14px; }
+
+.section-title {
+  font-family: var(--font-serif);
+  font-size: 19px; font-weight: 700;
+  margin: 26px 0 12px;
+}
+
+.serif { font-family: var(--font-serif); }
+.muted { color: var(--ink-muted); }
+.small { font-size: 13px; }
+.center { text-align: center; }
+
+/* ---------- 버튼 ---------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%;
+  padding: 15px 20px;
+  border-radius: var(--radius-sm);
+  border: none;
+  font-size: 17px; font-weight: 700;
+  background: var(--primary); color: #fff;
+  transition: background .15s;
+}
+.btn:hover { background: var(--primary-hover); }
+.btn:disabled { background: var(--ink-faint); cursor: not-allowed; }
+.btn.ghost {
+  background: var(--bg); color: var(--primary);
+  border: 1.5px solid var(--primary);
+}
+.btn.ghost:hover { background: var(--primary-soft); }
+.btn.quiet {
+  background: var(--bg-alt); color: var(--ink-soft); font-weight: 600;
+}
+.btn.quiet:hover { background: var(--line); }
+.btn.sm { width: auto; padding: 9px 16px; font-size: 14px; }
+.btn.danger { background: var(--danger); }
+
+/* ---------- 폼 ---------- */
+.field { margin-bottom: 16px; }
+.field label {
+  display: block; font-size: 14px; font-weight: 700;
+  color: var(--ink-soft); margin-bottom: 6px;
+}
+.field input, .field textarea, .field select {
+  width: 100%;
+  padding: 13px 14px;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--ink);
+}
+.field input:focus, .field textarea:focus, .field select:focus {
+  outline: none; border-color: var(--primary);
+}
+.field textarea { min-height: 120px; resize: vertical; line-height: 1.7; }
+.field .hint { font-size: 13px; color: var(--ink-muted); margin-top: 5px; }
+
+/* ---------- 선택 카드 (온보딩/위저드 객관식) ---------- */
+.choice-list { display: flex; flex-direction: column; gap: 10px; }
+.choice {
+  display: block; width: 100%; text-align: left;
+  padding: 16px 18px;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  font-size: 16px; color: var(--ink);
+  transition: border-color .15s, background .15s;
+}
+.choice:hover { border-color: var(--primary); }
+.choice.selected {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  font-weight: 700;
+}
+.choice .desc { display: block; font-size: 13px; color: var(--ink-muted); font-weight: 400; margin-top: 3px; }
+
+/* ---------- 진행 표시 ---------- */
+.progress-track {
+  height: 8px; border-radius: 99px; background: var(--bg-alt);
+  overflow: hidden; margin: 10px 0 4px;
+}
+.progress-fill {
+  height: 100%; border-radius: 99px;
+  background: var(--primary);
+  transition: width .3s ease;
+}
+
+/* 조용한 스트릭 — 이어온 날들 */
+.streak-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--primary-soft); color: var(--primary);
+  border-radius: 99px; padding: 5px 14px;
+  font-size: 14px; font-weight: 700;
+}
+
+/* 여정 단계 (매듭) */
+.journey-step {
+  display: flex; gap: 14px; align-items: flex-start;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+.journey-step:last-child { border-bottom: none; }
+.journey-step .knot {
+  flex: 0 0 40px; height: 40px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 19px;
+  background: var(--bg-alt); color: var(--ink-faint);
+}
+.journey-step.done .knot { background: var(--primary); color: #fff; }
+.journey-step.now .knot { background: var(--primary-soft); color: var(--primary); }
+.journey-step .body { flex: 1; }
+.journey-step .body h4 { font-size: 16px; }
+.journey-step .body p { font-size: 13.5px; color: var(--ink-muted); }
+.journey-step .go { align-self: center; color: var(--ink-faint); font-size: 18px; }
+
+/* ---------- 배지/상태 칩 ---------- */
+.chip {
+  display: inline-block;
+  border-radius: 99px; padding: 3px 12px;
+  font-size: 12.5px; font-weight: 700;
+  background: var(--bg-alt); color: var(--ink-soft);
+}
+.chip.green { background: var(--success-soft); color: var(--success); }
+.chip.warm { background: var(--warm-soft); color: var(--warm); }
+.chip.red { background: var(--danger-soft); color: var(--danger); }
+
+/* ---------- 위저드 ---------- */
+.wizard-q {
+  font-family: var(--font-serif);
+  font-size: 21px; font-weight: 700; line-height: 1.5;
+  margin: 18px 0 6px;
+}
+.wizard-help { color: var(--ink-muted); font-size: 14px; margin-bottom: 18px; }
+.wizard-nav { display: flex; gap: 10px; margin-top: 22px; }
+.wizard-nav .btn { flex: 1; }
+
+/* 생성된 문서 미리보기 */
+.will-paper {
+  background: var(--bg);
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius);
+  padding: 28px 24px;
+  font-family: var(--font-serif);
+  font-size: 16.5px; line-height: 2.05;
+  white-space: pre-wrap;
+}
+
+/* ---------- 알림 배너 ---------- */
+.notice {
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  font-size: 14px; line-height: 1.6;
+  margin-bottom: 16px;
+}
+.notice.info { background: var(--primary-soft); color: var(--primary-hover); }
+.notice.warn { background: var(--warm-soft); color: var(--warm-hover); }
+.notice.danger { background: var(--danger-soft); color: var(--danger); }
+
+/* YMYL 고지 */
+.legal-note {
+  font-size: 12.5px; color: var(--ink-muted);
+  background: var(--bg-alt);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  margin-top: 18px;
+}
+
+/* ---------- 리스트 아이템 (유품/편지 등) ---------- */
+.item-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+.item-row:last-child { border-bottom: none; }
+.item-row .grow { flex: 1; min-width: 0; }
+.item-row .title { font-weight: 700; font-size: 15.5px; }
+.item-row .meta { font-size: 13px; color: var(--ink-muted); }
+
+/* ---------- 커뮤니티 ---------- */
+.post-card { cursor: pointer; }
+.post-card .body-preview {
+  color: var(--ink-soft); font-size: 14.5px;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+  overflow: hidden; margin-top: 8px;
+}
+.post-meta { font-size: 12.5px; color: var(--ink-faint); margin-top: 10px; }
+
+/* ---------- 토스트 ---------- */
+#mutda-toast {
+  position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%);
+  background: var(--bg-dark); color: #fff;
+  border-radius: 99px; padding: 11px 22px;
+  font-size: 14.5px; z-index: 90;
+  opacity: 0; pointer-events: none;
+  transition: opacity .25s;
+  max-width: 88vw; text-align: center;
+}
+#mutda-toast.show { opacity: 1; }
+
+/* ---------- 랜딩 ---------- */
+.hero {
+  text-align: center;
+  padding: 46px 0 30px;
+}
+.hero h1 {
+  font-family: var(--font-serif);
+  font-size: 34px; font-weight: 800; line-height: 1.4;
+}
+.hero p.lead {
+  color: var(--ink-soft); font-size: 17px;
+  margin: 14px 0 26px;
+}
+.feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.feature-grid .card { margin-bottom: 0; }
+.feature-grid .ico { font-size: 26px; margin-bottom: 8px; display: block; }
+@media (max-width: 420px) { .feature-grid { grid-template-columns: 1fr; } }
+
+/* 인증 페이지 */
+.auth-wrap { max-width: 420px; margin: 0 auto; padding-top: 30px; }
+.auth-wrap .brand {
+  font-family: var(--font-serif); font-weight: 800;
+  font-size: 30px; text-align: center; margin-bottom: 6px;
+}
+.auth-wrap .brand-sub { text-align: center; color: var(--ink-muted); margin-bottom: 28px; }
+.form-error { color: var(--danger); font-size: 14px; margin: 8px 0; min-height: 20px; }
+
+/* 아티클 */
+.article h1 {
+  font-family: var(--font-serif);
+  font-size: 26px; line-height: 1.45; margin: 10px 0 6px;
+}
+.article .article-meta { color: var(--ink-faint); font-size: 13px; margin-bottom: 22px; }
+.article h2 {
+  font-family: var(--font-serif);
+  font-size: 20px; margin: 30px 0 10px;
+}
+.article p { margin-bottom: 14px; font-size: 16.5px; color: var(--ink-soft); }
+.article ul, .article ol { padding-left: 22px; margin-bottom: 14px; color: var(--ink-soft); }
+.article li { margin-bottom: 6px; }
+
+/* 푸터 */
+.mutda-footer {
+  text-align: center; color: var(--ink-faint); font-size: 12.5px;
+  padding: 20px 0 8px;
+}

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>감사의 말 · 작별인사 — 묻다.</title>
+  <link rel="stylesheet" href="./css/mutda.css" />
+</head>
+<body>
+<main>
+  <div style="padding-top:8px;">
+    <h2 class="serif" style="font-size:22px;">마음을 남기는 편지</h2>
+    <p class="muted small">보내지 않아도 됩니다. 쓰는 것만으로 시작입니다.</p>
+  </div>
+
+  <div style="display:flex; gap:8px; margin:16px 0;">
+    <button class="btn quiet sm" id="tab-gratitude" style="flex:1;">💐 감사의 말</button>
+    <button class="btn quiet sm" id="tab-farewell" style="flex:1;">🕊️ 작별인사</button>
+  </div>
+
+  <div class="notice info" id="kind-guide"></div>
+
+  <section id="editor" class="card">
+    <div class="field">
+      <label>받는 사람</label>
+      <input id="in-recipient" placeholder="예) 딸 하나에게" />
+    </div>
+    <div class="field">
+      <label>편지</label>
+      <textarea id="in-body" style="min-height:180px;"></textarea>
+      <p class="hint" id="starter-hint"></p>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button class="btn quiet sm" id="starter-btn" style="flex:1;">✨ 첫 문장 받기</button>
+      <button class="btn sm" id="save-btn" style="flex:2;">저장하기</button>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="section-title">내가 남긴 편지</h2>
+    <div id="letter-list" class="card" style="padding:6px 20px;"><p class="muted small" style="padding:12px 0;">아직 없어요.</p></div>
+  </section>
+</main>
+
+<script type="module">
+  import { supabase, initAppPage, toast, esc, fmtDate, logEvent } from './js/app.js';
+  import { renderNav } from './js/nav.js';
+
+  renderNav({ active: 'home', title: '편지' });
+  const { user } = await initAppPage();
+  logEvent('letters_view');
+
+  const GUIDE = {
+    gratitude: '살아 있을 때 전하는 감사가 가장 힘이 셉니다. 다 쓰고 나면, 용기가 나는 날 직접 읽어주세요.',
+    farewell: '작별인사는 남는 사람에게 주는 마지막 선물입니다. 서두르지 말고, 여러 번 고쳐 써도 됩니다.',
+  };
+  // 빈 화면 공포를 없애는 시작 문장들 — 이어서 쓰기만 하면 된다
+  const STARTERS = {
+    gratitude: [
+      '돌아보니, 너에게 가장 많이 빚진 것은 ',
+      '한 번도 제대로 말한 적 없지만, ',
+      '네가 있어서 견딜 수 있었던 날이 있다. 그날은 ',
+    ],
+    farewell: [
+      '이 편지를 읽고 있다면, 부디 슬픔보다 먼저 ',
+      '내 인생에서 가장 잘한 일은 ',
+      '너에게 마지막으로 부탁하고 싶은 것은 딱 하나, ',
+    ],
+  };
+
+  let kind = new URLSearchParams(location.search).get('kind') === 'farewell' ? 'farewell' : 'gratitude';
+  let editing = null; // 수정 중인 편지 id
+  let starterIdx = 0;
+
+  const tabs = {
+    gratitude: document.getElementById('tab-gratitude'),
+    farewell: document.getElementById('tab-farewell'),
+  };
+
+  function setKind(k) {
+    kind = k; editing = null;
+    document.getElementById('in-recipient').value = '';
+    document.getElementById('in-body').value = '';
+    tabs.gratitude.className = `btn sm ${k === 'gratitude' ? '' : 'quiet'}`;
+    tabs.farewell.className = `btn sm ${k === 'farewell' ? '' : 'quiet'}`;
+    tabs.gratitude.style.flex = '1'; tabs.farewell.style.flex = '1';
+    document.getElementById('kind-guide').textContent = GUIDE[k];
+    loadList();
+  }
+  tabs.gratitude.onclick = () => setKind('gratitude');
+  tabs.farewell.onclick = () => setKind('farewell');
+
+  document.getElementById('starter-btn').onclick = () => {
+    const list = STARTERS[kind];
+    const body = document.getElementById('in-body');
+    body.value = list[starterIdx % list.length];
+    starterIdx++;
+    body.focus();
+    body.setSelectionRange(body.value.length, body.value.length);
+  };
+
+  document.getElementById('save-btn').onclick = async () => {
+    const recipient = document.getElementById('in-recipient').value.trim();
+    const body = document.getElementById('in-body').value.trim();
+    if (!body) return alert('한 문장이라도 남겨보세요.');
+
+    if (editing) {
+      await supabase.from('mutda_letters')
+        .update({ recipient, body, updated_at: new Date().toISOString() }).eq('id', editing);
+    } else {
+      await supabase.from('mutda_letters')
+        .insert({ user_id: user.id, kind, recipient, body });
+    }
+    logEvent('letter_saved', { kind });
+    toast('편지를 저장했어요');
+    editing = null;
+    document.getElementById('in-recipient').value = '';
+    document.getElementById('in-body').value = '';
+    loadList();
+  };
+
+  async function loadList() {
+    const { data } = await supabase.from('mutda_letters')
+      .select('*').eq('user_id', user.id).eq('kind', kind)
+      .order('updated_at', { ascending: false });
+    const box = document.getElementById('letter-list');
+    if (!data?.length) {
+      box.innerHTML = '<p class="muted small" style="padding:12px 0;">아직 없어요. 위에서 첫 편지를 시작해 보세요.</p>';
+      return;
+    }
+    box.innerHTML = data.map(l => `
+      <div class="item-row">
+        <span class="grow">
+          <span class="title">${esc(l.recipient || '(받는 사람 미정)')}</span><br/>
+          <span class="meta">${esc(l.body.slice(0, 60))}${l.body.length > 60 ? '…' : ''} · ${fmtDate(l.updated_at)}</span>
+        </span>
+        <button class="btn quiet sm" data-edit="${l.id}">열기</button>
+        <button class="btn quiet sm" data-del="${l.id}">삭제</button>
+      </div>`).join('');
+
+    box.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => {
+      const l = data.find(x => x.id === b.dataset.edit);
+      editing = l.id;
+      document.getElementById('in-recipient').value = l.recipient || '';
+      document.getElementById('in-body').value = l.body;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+    box.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
+      if (!confirm('이 편지를 삭제할까요? 되돌릴 수 없어요.')) return;
+      await supabase.from('mutda_letters').delete().eq('id', b.dataset.del);
+      toast('삭제했어요');
+      loadList();
+    });
+  }
+
+  setKind(kind);
+</script>
+</body>
+</html>

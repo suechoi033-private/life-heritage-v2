@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>시작하기 — 묻다.</title>
+  <link rel="stylesheet" href="./css/mutda.css" />
+</head>
+<body>
+<main>
+  <div style="max-width:480px; margin:0 auto; padding-top:14px;">
+    <div class="progress-track"><div class="progress-fill" id="bar" style="width:0%"></div></div>
+    <p class="small muted" id="step-label"></p>
+    <div id="stage"></div>
+  </div>
+</main>
+
+<script type="module">
+  import { supabase, requireAuth, getProfile, esc, url, logEvent } from './js/app.js';
+
+  const user = await requireAuth();
+  const existing = await getProfile(user.id);
+  if (existing) location.replace(url('home.html'));
+  logEvent('onboarding_start');
+
+  const state = {
+    name: sessionStorage.getItem('mutda:signup_name') || user.user_metadata?.name || '',
+    birth_decade: '', motive: '', focus: [], has_pet: null, first_answer: '',
+  };
+
+  // Epic식 온보딩: 짧은 개인화 퀴즈 → 즉시 맞춤 여정 + 첫 3분 quick win
+  const steps = [
+    {
+      label: '나에 대해',
+      q: '어떻게 불러드릴까요?',
+      help: '기록 곳곳에서 이 이름으로 불러드려요.',
+      render: (box) => {
+        box.innerHTML = `
+          <div class="field"><input id="in-name" type="text" value="${esc(state.name)}" placeholder="이름 또는 별명" /></div>
+          <button class="btn" id="next">다음</button>`;
+        box.querySelector('#next').onclick = () => {
+          const v = box.querySelector('#in-name').value.trim();
+          if (!v) return alert('이름을 알려주세요.');
+          state.name = v; go(1);
+        };
+      },
+    },
+    {
+      label: '나에 대해',
+      q: '언제 태어나셨나요?',
+      help: '연령대에 맞는 이야기와 준비 순서를 골라드려요.',
+      choices: ['1940년대', '1950년대', '1960년대', '1970년대', '1980년대', '1990년대 이후'],
+      pick: (v) => { state.birth_decade = v; go(1); },
+    },
+    {
+      label: '지금 마음',
+      q: '어떤 마음으로 오셨나요?',
+      help: '솔직할수록 여정이 정확해집니다.',
+      choices: [
+        ['family', '가족이 곤란하지 않도록 미리 정리해두고 싶어요'],
+        ['loss', '가까운 이별을 겪고, 준비의 필요를 느꼈어요'],
+        ['alone', '혼자 지내는 시간이 많아, 내 안전이 걱정돼요'],
+        ['curious', '아직은 궁금해서 둘러보러 왔어요'],
+      ],
+      pick: (v) => { state.motive = v; go(1); },
+    },
+    {
+      label: '나의 여정',
+      q: '가장 마음이 쓰이는 것을 골라주세요.',
+      help: '고른 순서대로 여정의 앞에 놓아드려요. 여러 개 골라도 됩니다.',
+      multi: true,
+      choices: [
+        ['will', '유언장 — 재산과 뜻을 분명하게'],
+        ['gratitude', '감사의 말 — 고마운 사람에게 미리'],
+        ['farewell', '작별인사 — 언젠가 전해질 인사'],
+        ['belongings', '내 물건 — 누구에게, 어떻게'],
+        ['pet', '반려동물 — 내가 없을 때의 돌봄'],
+        ['checkin', '안부확인 — 혼자일 때의 안전망'],
+      ],
+    },
+    {
+      label: '나의 여정',
+      q: '반려동물과 함께 살고 계신가요?',
+      choices: [['yes', '네, 함께 살아요'], ['no', '아니요']],
+      pick: (v) => { state.has_pet = v === 'yes'; go(1); },
+    },
+    {
+      label: '첫 기록',
+      q: '지금, 가장 고마운 사람은 누구인가요?',
+      help: '한 문장이면 충분해요. 이것이 당신의 첫 기록이 됩니다.',
+      render: (box) => {
+        box.innerHTML = `
+          <div class="field"><textarea id="in-ans" placeholder="예) 매일 아침 전화해 주는 딸. 늘 당연하게 받기만 했다."></textarea></div>
+          <button class="btn" id="next">기록 남기고 여정 시작하기</button>
+          <button class="btn quiet" id="skip" style="margin-top:8px;">지금은 건너뛰기</button>`;
+        box.querySelector('#next').onclick = () => {
+          state.first_answer = box.querySelector('#in-ans').value.trim();
+          if (!state.first_answer) return alert('한 문장만 남겨보세요. 어렵다면 건너뛰어도 괜찮아요.');
+          finish();
+        };
+        box.querySelector('#skip').onclick = finish;
+      },
+    },
+  ];
+
+  const stage = document.getElementById('stage');
+  const bar = document.getElementById('bar');
+  const stepLabel = document.getElementById('step-label');
+  let idx = 0;
+
+  function go(delta) { idx += delta; render(); }
+
+  function render() {
+    const s = steps[idx];
+    bar.style.width = `${Math.round(((idx) / steps.length) * 100)}%`;
+    stepLabel.textContent = `${s.label} · ${idx + 1}/${steps.length}`;
+    stage.innerHTML = `
+      <p class="wizard-q">${s.q}</p>
+      ${s.help ? `<p class="wizard-help">${s.help}</p>` : ''}
+      <div id="box"></div>`;
+    const box = document.getElementById('box');
+
+    if (s.render) { s.render(box); return; }
+
+    const choices = s.choices.map(c => Array.isArray(c) ? c : [c, c]);
+    box.innerHTML = `
+      <div class="choice-list">
+        ${choices.map(([v, label]) => `<button class="choice" data-v="${v}">${label}</button>`).join('')}
+      </div>
+      ${s.multi ? '<button class="btn" id="multi-next" style="margin-top:16px;">다음</button>' : ''}`;
+
+    box.querySelectorAll('.choice').forEach(el => {
+      el.onclick = () => {
+        if (s.multi) {
+          el.classList.toggle('selected');
+          const v = el.dataset.v;
+          state.focus = el.classList.contains('selected')
+            ? [...state.focus, v] : state.focus.filter(x => x !== v);
+        } else {
+          s.pick(el.dataset.v);
+        }
+      };
+    });
+    if (s.multi) box.querySelector('#multi-next').onclick = () => {
+      if (!state.focus.length) return alert('하나만이라도 골라주세요.');
+      go(1);
+    };
+  }
+
+  async function finish() {
+    // 동기가 '혼자의 안전'이면 안부확인을 여정 맨 앞으로
+    let focus = [...state.focus];
+    if (state.motive === 'alone' && !focus.includes('checkin')) focus.unshift('checkin');
+
+    const onboarding = {
+      birth_decade: state.birth_decade,
+      motive: state.motive,
+      first_answer: state.first_answer || null,
+    };
+    const { error } = await supabase.from('mutda_profiles').insert({
+      user_id: user.id,
+      name: state.name,
+      onboarding,
+      journey_focus: focus,
+      has_pet: !!state.has_pet,
+    });
+    if (error) { alert('저장에 실패했어요. 다시 시도해 주세요.'); return; }
+
+    // 첫 기록은 감사 편지의 씨앗으로도 심어둔다
+    if (state.first_answer) {
+      await supabase.from('mutda_letters').insert({
+        user_id: user.id, kind: 'gratitude',
+        recipient: '', body: state.first_answer, status: 'draft',
+      });
+    }
+    logEvent('onboarding_done', { focus, motive: state.motive });
+    location.href = './home.html?first=1';
+  }
+
+  render();
+</script>
+</body>
+</html>

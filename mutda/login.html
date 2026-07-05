@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>로그인 — 묻다.</title>
+  <link rel="stylesheet" href="./css/mutda.css" />
+</head>
+<body>
+<main>
+  <div class="auth-wrap">
+    <div class="brand">묻다<span style="color:var(--primary)">.</span></div>
+    <p class="brand-sub">다시 오신 것을 환영해요</p>
+
+    <form id="login-form" novalidate>
+      <div class="field">
+        <label for="email">이메일</label>
+        <input id="email" type="email" autocomplete="email" required />
+      </div>
+      <div class="field">
+        <label for="password">비밀번호</label>
+        <input id="password" type="password" autocomplete="current-password" required />
+      </div>
+      <p class="form-error" id="err"></p>
+      <button class="btn" type="submit" id="submit-btn">로그인</button>
+    </form>
+
+    <p class="center small muted" style="margin-top:18px;">
+      처음이신가요? <a href="./signup.html"><b>3분 만에 가입하기</b></a>
+    </p>
+  </div>
+</main>
+
+<script type="module">
+  import { signIn, redirectIfAuthed, friendlyError, getProfile, getUser } from './js/app.js';
+
+  const next = new URLSearchParams(location.search).get('next') || 'home.html';
+  redirectIfAuthed(next);
+
+  const form = document.getElementById('login-form');
+  const err = document.getElementById('err');
+  const btn = document.getElementById('submit-btn');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    err.textContent = '';
+    btn.disabled = true; btn.textContent = '로그인 중…';
+
+    const { error } = await signIn(
+      document.getElementById('email').value.trim(),
+      document.getElementById('password').value,
+    );
+    if (error) {
+      err.textContent = friendlyError(error);
+      btn.disabled = false; btn.textContent = '로그인';
+      return;
+    }
+    // 온보딩을 마치지 않았으면 온보딩으로
+    const user = await getUser();
+    const profile = user ? await getProfile(user.id) : null;
+    location.href = profile ? `./${next}` : './onboarding.html';
+  });
+</script>
+</body>
+</html>

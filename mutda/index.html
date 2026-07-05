@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>묻다. — 삶에게 묻고, 마음을 남기다</title>
+  <meta name="description" content="질문에 답하면 유언장 초안이 완성됩니다. 감사의 말, 작별인사, 유품 정리, 반려동물 돌봄, 안부확인까지 — 미리 준비하는 조용한 기록." />
+  <link rel="stylesheet" href="./css/mutda.css" />
+</head>
+<body>
+<main>
+  <section class="hero">
+    <div class="mutda-logo" style="font-size:26px; margin-bottom:18px;">묻다<span class="dot">.</span></div>
+    <h1>잘 물어야,<br/>잘 남길 수 있습니다</h1>
+    <p class="lead">
+      유언장, 감사의 말, 내 물건의 자리, 반려동물의 내일.<br/>
+      묻다가 하나씩 묻고, 당신은 답하기만 하면 됩니다.
+    </p>
+    <a class="btn" href="./signup.html" style="max-width:340px;">3분 만에 시작하기</a>
+    <p class="small muted" style="margin-top:10px;">
+      이미 계정이 있나요? <a href="./login.html"><b>로그인</b></a>
+    </p>
+  </section>
+
+  <section>
+    <h2 class="section-title">묻다가 함께 준비하는 일곱 가지</h2>
+    <div class="feature-grid">
+      <div class="card soft"><span class="ico">📜</span>
+        <h3>유언장, 질문으로 완성</h3>
+        <p class="sub">일곱 개의 질문에 답하면 초안이 만들어집니다. 자필 작성 안내와 공증 연결까지.</p>
+      </div>
+      <div class="card soft"><span class="ico">💐</span>
+        <h3>감사의 말 미리 전하기</h3>
+        <p class="sub">고마운 사람에게, 살아 있을 때 전하는 한 통.</p>
+      </div>
+      <div class="card soft"><span class="ico">🕊️</span>
+        <h3>작별인사 남기기</h3>
+        <p class="sub">언젠가 전해질 인사를, 지금 가장 나다운 말로.</p>
+      </div>
+      <div class="card soft"><span class="ico">🎁</span>
+        <h3>유품 미리 정리</h3>
+        <p class="sub">이 물건은 누구에게, 어떻게. 하루 하나씩 가볍게.</p>
+      </div>
+      <div class="card soft"><span class="ico">🐾</span>
+        <h3>반려동물 돌봄 플랜</h3>
+        <p class="sub">내게 비상상황이 생겨도, 이 아이는 계속 돌봄을 받도록.</p>
+      </div>
+      <div class="card soft"><span class="ico">🔔</span>
+        <h3>안부확인</h3>
+        <p class="sub">18시간 넘게 소식이 없으면, 지정해 둔 가족에게 알림이 갑니다.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="section-title">먼저 준비한 사람들의 이야기</h2>
+    <div id="preview-posts"><p class="muted small">이야기를 불러오는 중…</p></div>
+    <a class="btn ghost" href="./signup.html">나도 이야기 나누기</a>
+  </section>
+
+  <section class="card tint" style="margin-top:26px;">
+    <h3 class="serif">묻다는 조용합니다</h3>
+    <p class="sub" style="margin-top:6px;">
+      좋아요 수도, 순위도, 경쟁도 없습니다.
+      당신의 속도로, 당신의 기록만 쌓입니다.
+    </p>
+  </section>
+
+  <p class="legal-note">
+    묻다의 유언·법률 관련 안내는 참고용 정보이며 법률 자문이 아닙니다.
+    구체적인 사안은 변호사 또는 공증인과 상담하세요.
+  </p>
+  <div class="mutda-footer">묻다. — 라이프헤리티지</div>
+</main>
+
+<script type="module">
+  import { supabase, esc, fmtDate, logEvent } from './js/app.js';
+
+  logEvent('landing_view');
+
+  const box = document.getElementById('preview-posts');
+  const { data: posts } = await supabase.from('mutda_posts')
+    .select('title, body, author_name, created_at')
+    .order('created_at', { ascending: false }).limit(2);
+
+  box.innerHTML = (posts || []).map(p => `
+    <div class="card">
+      <h3 class="serif">${esc(p.title)}</h3>
+      <p class="body-preview" style="color:var(--ink-soft); font-size:14.5px; margin-top:8px;">${esc(p.body.slice(0, 120))}…</p>
+      <p class="post-meta">${esc(p.author_name)} · ${fmtDate(p.created_at)}</p>
+    </div>`).join('') || '<p class="muted small">아직 이야기가 없습니다.</p>';
+</script>
+</body>
+</html>

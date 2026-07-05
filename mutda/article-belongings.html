@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>물건을 정리한다는 것 — 묻다.</title>
+  <link rel="stylesheet" href="./css/mutda.css" />
+</head>
+<body>
+<main class="article">
+  <span class="chip warm">에세이</span>
+  <h1>물건을 정리한다는 것</h1>
+  <p class="article-meta">묻다 편집팀 · 4분 읽기</p>
+
+  <p>
+    유품정리 현장에서 일하는 분들이 공통으로 하는 이야기가 있습니다.
+    남겨진 물건 앞에서 가족들이 가장 오래 머무는 곳은 값비싼 물건이 아니라,
+    뜻을 알 수 없는 물건 앞이라는 것입니다.
+  </p>
+  <p>
+    서랍 깊숙이 있던 낡은 손수건. 버리자니 어머니가 아끼던 것 같고,
+    간직하자니 이유를 모르겠는 물건들. 가족들은 결국 아무것도 버리지 못하거나,
+    전부 버리고 오래 후회합니다. 물건이 많아서 힘든 게 아니라,
+    물건의 <b>이야기</b>를 모르기 때문에 힘든 것입니다.
+  </p>
+
+  <h2>정리는 버리는 일이 아니라 뜻을 붙이는 일</h2>
+  <p>
+    살아서 하는 정리(생전정리)는 대청소가 아닙니다. 물건 하나를 들고
+    세 가지를 정하는 일입니다. 이것은 무엇인가. 누구에게 가면 좋은가.
+    왜 그런가.
+  </p>
+  <p>
+    "이 시계는 큰아이에게. 1988년 결혼 예물이라서." — 이 한 줄이 있으면
+    시계는 유품이 아니라 유산이 됩니다. 한 줄이 없으면 같은 시계가
+    처분 목록에 오릅니다.
+  </p>
+
+  <h2>하루 하나면 충분합니다</h2>
+  <p>
+    한 번에 집안 전체를 정리하려고 하면 반드시 실패합니다. 오늘 눈에 보이는
+    물건 하나의 자리만 정해보세요. 물려주기, 기부하기, 간직하기, 비우기 —
+    넷 중 하나면 됩니다. '아직 고민 중'도 훌륭한 답입니다.
+    고민 중이라는 사실이 기록으로 남는 것만으로 가족의 짐이 절반이 됩니다.
+  </p>
+  <p>
+    잊지 마세요. 디지털도 물건입니다. 사진이 쌓인 클라우드, 매달 결제되는 구독,
+    SNS 계정. 남는 사람들이 가장 손대기 어려워하는 유품이기도 합니다.
+  </p>
+
+  <div class="card tint" style="margin-top:24px;">
+    <h3 class="serif">오늘의 물건 하나</h3>
+    <p class="sub">지금 눈앞에 보이는 물건 하나로 시작해 보세요.</p>
+    <a class="btn" href="./belongings.html" style="margin-top:12px;">내 물건 정리 시작하기</a>
+  </div>
+</main>
+
+<script type="module">
+  import { initAppPage, logEvent } from './js/app.js';
+  import { renderNav } from './js/nav.js';
+  renderNav({ active: 'library', title: '서재' });
+  await initAppPage();
+  logEvent('article_view', { article: 'belongings' });
+</script>
+</body>
+</html>

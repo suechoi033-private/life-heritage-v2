@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>함께 — 묻다.</title>
+  <link rel="stylesheet" href="./css/mutda.css" />
+</head>
+<body>
+<main>
+  <div style="padding-top:8px;">
+    <h2 class="serif" style="font-size:22px;">함께</h2>
+    <p class="muted small">먼저 준비한 사람들의 이야기. 좋아요도, 순위도 없는 조용한 자리입니다.</p>
+  </div>
+
+  <button class="btn" id="write-toggle" style="margin:16px 0 6px;">✍️ 내 이야기 남기기</button>
+
+  <section class="card" id="write-box" style="display:none;">
+    <div class="field"><label>제목</label><input id="w-title" placeholder="예) 아버지의 시계를 아들에게 미리 주었습니다" /></div>
+    <div class="field">
+      <label>이야기</label>
+      <textarea id="w-body" style="min-height:140px;" placeholder="준비하며 느낀 것, 머뭇거리는 것, 나눠주고 싶은 것"></textarea>
+    </div>
+    <div class="field">
+      <label>주제</label>
+      <select id="w-topic">
+        <option value="life">삶과 준비</option>
+        <option value="will">유언장</option>
+        <option value="letter">감사·작별의 말</option>
+        <option value="belongings">물건 정리</option>
+        <option value="pet">반려동물</option>
+      </select>
+    </div>
+    <button class="btn" id="w-submit">이야기 올리기</button>
+  </section>
+
+  <section id="posts" style="margin-top:10px;"><p class="muted small">불러오는 중…</p></section>
+</main>
+
+<script type="module">
+  import { supabase, initAppPage, toast, esc, fmtDate, url, logEvent } from './js/app.js';
+  import { renderNav } from './js/nav.js';
+
+  renderNav({ active: 'community' });
+  const { user, profile } = await initAppPage();
+  logEvent('community_view');
+
+  const TOPIC = { life: '삶과 준비', will: '유언장', letter: '감사·작별의 말', belongings: '물건 정리', pet: '반려동물' };
+
+  document.getElementById('write-toggle').onclick = () => {
+    const box = document.getElementById('write-box');
+    box.style.display = box.style.display === 'none' ? '' : 'none';
+  };
+
+  document.getElementById('w-submit').onclick = async () => {
+    const title = document.getElementById('w-title').value.trim();
+    const body = document.getElementById('w-body').value.trim();
+    if (!title || !body) return alert('제목과 이야기를 모두 적어주세요.');
+    const { error } = await supabase.from('mutda_posts').insert({
+      user_id: user.id,
+      author_name: profile.name || '익명',
+      title, body,
+      topic: document.getElementById('w-topic').value,
+    });
+    if (error) return alert('올리지 못했어요. 잠시 후 다시 시도해 주세요.');
+    logEvent('post_created');
+    toast('이야기를 남겼어요');
+    document.getElementById('w-title').value = '';
+    document.getElementById('w-body').value = '';
+    document.getElementById('write-box').style.display = 'none';
+    load();
+  };
+
+  async function load() {
+    const { data } = await supabase.from('mutda_posts')
+      .select('id, title, body, author_name, topic, created_at')
+      .order('created_at', { ascending: false }).limit(30);
+    const box = document.getElementById('posts');
+    if (!data?.length) {
+      box.innerHTML = '<p class="muted small">아직 이야기가 없어요. 첫 이야기를 남겨보세요.</p>';
+      return;
+    }
+    box.innerHTML = data.map(p => `
+      <a class="card post-card" href="${url('post.html')}?id=${p.id}" style="display:block; color:inherit;">
+        <span class="chip">${TOPIC[p.topic] || '이야기'}</span>
+        <h3 class="serif" style="margin-top:8px;">${esc(p.title || '(제목 없음)')}</h3>
+        <p class="body-preview">${esc(p.body)}</p>
+        <p class="post-meta">${esc(p.author_name)} · ${fmtDate(p.created_at)}</p>
+      </a>`).join('');
+  }
+
+  load();
+</script>
+</body>
+</html>

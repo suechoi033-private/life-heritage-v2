@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>서재 — 묻다.</title>
+  <link rel="stylesheet" href="./css/mutda.css" />
+</head>
+<body>
+<main>
+  <div style="padding-top:8px;">
+    <h2 class="serif" style="font-size:22px;">서재</h2>
+    <p class="muted small">준비에 필요한 지식을, 조용히 읽기 좋은 길이로.</p>
+  </div>
+
+  <section style="margin-top:16px;">
+    <a class="card" href="./article-will-legal.html" style="display:block; color:inherit;">
+      <span class="chip green">유언·법률</span>
+      <h3 class="serif" style="margin-top:10px; font-size:19px;">자필 유언장, 법적으로 유효하려면 — 다섯 가지 요건</h3>
+      <p class="sub" style="margin-top:6px;">정성껏 쓴 유언장이 무효가 되는 가장 흔한 이유들. 5분 읽기.</p>
+      <p class="post-meta">묻다 편집팀 · 전문가 감수 진행 중</p>
+    </a>
+    <a class="card" href="./article-belongings.html" style="display:block; color:inherit;">
+      <span class="chip warm">에세이</span>
+      <h3 class="serif" style="margin-top:10px; font-size:19px;">물건을 정리한다는 것</h3>
+      <p class="sub" style="margin-top:6px;">유품정리 현장에서 배운, 살아서 하는 정리의 의미. 4분 읽기.</p>
+      <p class="post-meta">묻다 편집팀</p>
+    </a>
+  </section>
+
+  <div class="card soft center" style="margin-top:10px;">
+    <p class="sub">서재는 이제 막 문을 열었어요.<br/>유언·상속·장례·돌봄 이야기가 차곡차곡 쌓일 예정입니다.</p>
+  </div>
+</main>
+
+<script type="module">
+  import { initAppPage, logEvent } from './js/app.js';
+  import { renderNav } from './js/nav.js';
+  renderNav({ active: 'library' });
+  await initAppPage();
+  logEvent('library_view');
+</script>
+</body>
+</html>

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>유언장 만들기 — 묻다.</title>
+  <link rel="stylesheet" href="./css/mutda.css" />
+</head>
+<body>
+<main>
+  <div style="padding-top:8px;">
+    <h2 class="serif" style="font-size:22px;">유언장 만들기</h2>
+    <p class="muted small">묻는 대로 답하면, 자필로 옮겨 쓸 초안이 완성됩니다.</p>
+  </div>
+
+  <!-- 단계 1: 질의응답 위저드 -->
+  <section id="wizard" style="display:none;">
+    <div class="progress-track"><div class="progress-fill" id="bar"></div></div>
+    <p class="small muted" id="step-label"></p>
+    <div id="stage"></div>
+  </section>
+
+  <!-- 단계 2: 초안 + 자필/공증 안내 -->
+  <section id="result" style="display:none;">
+    <div class="notice info" id="result-notice">
+      초안이 완성됐습니다. 아래 내용을 <b>처음부터 끝까지 직접 손으로</b> 옮겨 쓰면
+      자필증서 유언이 됩니다.
+    </div>
+
+    <div class="will-paper" id="will-body"></div>
+    <div style="display:flex; gap:10px; margin-top:14px;">
+      <button class="btn ghost sm" id="copy-btn" style="flex:1;">📋 초안 복사</button>
+      <button class="btn ghost sm" id="print-btn" style="flex:1;">🖨️ 인쇄(참고용)</button>
+      <button class="btn quiet sm" id="redo-btn" style="flex:1;">✏️ 다시 답하기</button>
+    </div>
+
+    <h2 class="section-title">이제, 손으로 옮겨 쓰세요</h2>
+    <p class="muted small" style="margin-bottom:12px;">
+      자필 유언장은 아래 다섯 가지를 갖춰야 법적 효력이 생깁니다 (민법 제1066조).
+      하나씩 확인하며 체크해 보세요.
+    </p>
+    <div class="card" id="checklist"></div>
+    <button class="btn" id="handwritten-btn">자필로 다 옮겨 썼어요</button>
+
+    <h2 class="section-title">더 단단하게: 공증 연결</h2>
+    <div class="card soft">
+      <p class="sub" style="line-height:1.8;">
+        자필 유언은 간편하지만, 사후에 법원의 <b>검인 절차</b>가 필요하고 분실·위조 다툼의
+        여지가 있습니다. <b>공정증서 유언</b>(공증인 앞에서 증인 2명과 함께 작성)은
+        검인이 필요 없고 가장 안전합니다.
+      </p>
+      <ul class="sub" style="padding-left:20px; margin-top:10px; line-height:1.9;">
+        <li>준비물: 신분증, 도장, 재산 관련 서류, 증인 2명(상속인 제외)</li>
+        <li>비용: 재산 규모에 따른 공증 수수료 (최대 300만 원 한도)</li>
+        <li>가까운 공증사무소는 <a href="https://www.notary.or.kr" target="_blank" rel="noopener"><b>대한공증인협회</b></a>에서 찾을 수 있어요</li>
+      </ul>
+      <button class="btn ghost" id="notarized-btn" style="margin-top:14px;">공증까지 마쳤어요</button>
+    </div>
+
+    <p class="legal-note">
+      이 초안과 안내는 참고용 정보이며 법률 자문이 아닙니다. 재산 관계가 복잡하거나
+      상속인 간 다툼이 예상되면 변호사·공증인과 상담하세요. (전문가 감수 진행 중인 베타 기능입니다)
+    </p>
+  </section>
+</main>
+
+<script type="module">
+  import { supabase, initAppPage, toast, esc, logEvent } from './js/app.js';
+  import { WILL_QUESTIONS, generateWill, HANDWRITE_CHECKLIST } from './js/will-wizard.js';
+  import { renderNav } from './js/nav.js';
+
+  renderNav({ active: 'home', title: '유언장' });
+  const { user } = await initAppPage();
+  logEvent('will_view');
+
+  const wizardEl = document.getElementById('wizard');
+  const resultEl = document.getElementById('result');
+
+  // 저장된 답 불러오기
+  const { data: savedRows } = await supabase.from('mutda_will_answers')
+    .select('question_key, answer').eq('user_id', user.id);
+  const answers = {};
+  (savedRows || []).forEach(r => { answers[r.question_key] = r.answer; });
+
+  const { data: wills } = await supabase.from('mutda_wills')
+    .select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(1);
+  let will = wills?.[0] || null;
+
+  let idx = 0;
+
+  async function saveAnswer(key, value) {
+    answers[key] = value;
+    await supabase.from('mutda_will_answers').upsert({
+      user_id: user.id, question_key: key, answer: value, updated_at: new Date().toISOString(),
+    });
+  }
+
+  function showWizard() {
+    wizardEl.style.display = ''; resultEl.style.display = 'none';
+    renderStep();
+  }
+
+  function renderStep() {
+    const q = WILL_QUESTIONS[idx];
+    document.getElementById('bar').style.width =
+      `${Math.round((idx / WILL_QUESTIONS.length) * 100)}%`;
+    document.getElementById('step-label').textContent = `${idx + 1} / ${WILL_QUESTIONS.length}`;
+
+    const stage = document.getElementById('stage');
+    stage.innerHTML = `
+      <p class="wizard-q">${q.q}</p>
+      <p class="wizard-help">${q.help || ''}</p>
+      <div id="box"></div>
+      <div class="wizard-nav">
+        ${idx > 0 ? '<button class="btn quiet" id="prev">이전</button>' : ''}
+        <button class="btn" id="next">${idx === WILL_QUESTIONS.length - 1 ? '초안 만들기' : '다음'}</button>
+      </div>`;
+    const box = document.getElementById('box');
+    const saved = answers[q.key];
+
+    if (q.type === 'list') {
+      const rows = (Array.isArray(saved) && saved.length ? saved : [{}]);
+      const rowHtml = (r = {}) => `
+        <div class="card soft asset-row" style="padding:14px;">
+          ${q.fields.map(f => `
+            <div class="field" style="margin-bottom:8px;">
+              <label>${f.label}</label>
+              <input data-name="${f.name}" value="${esc(r[f.name] || '')}" placeholder="${f.placeholder}" />
+            </div>`).join('')}
+        </div>`;
+      box.innerHTML = `<div id="rows">${rows.map(rowHtml).join('')}</div>
+        <button class="btn quiet sm" id="add-row">${q.addLabel}</button>`;
+      box.querySelector('#add-row').onclick = () => {
+        box.querySelector('#rows').insertAdjacentHTML('beforeend', rowHtml());
+      };
+    } else if (q.type === 'textarea') {
+      box.innerHTML = `<div class="field"><textarea id="in">${esc(saved || '')}</textarea></div>`;
+    } else {
+      box.innerHTML = `<div class="field"><input id="in" value="${esc(saved || '')}" placeholder="${q.placeholder || ''}" /></div>`;
+    }
+
+    stage.querySelector('#prev')?.addEventListener('click', () => { idx--; renderStep(); });
+    stage.querySelector('#next').addEventListener('click', async () => {
+      let value;
+      if (q.type === 'list') {
+        value = [...box.querySelectorAll('.asset-row')].map(row => {
+          const o = {};
+          row.querySelectorAll('input').forEach(i => { o[i.dataset.name] = i.value.trim(); });
+          return o;
+        }).filter(o => Object.values(o).some(Boolean));
+        if (q.required && !value.length) return alert('한 가지만이라도 적어주세요.');
+      } else {
+        value = box.querySelector('#in').value.trim();
+        if (q.required && !value) return alert('이 항목은 유언장에 꼭 필요해요.');
+      }
+      await saveAnswer(q.key, value);
+      if (idx === WILL_QUESTIONS.length - 1) await buildWill();
+      else { idx++; renderStep(); }
+    });
+  }
+
+  async function buildWill() {
+    const body = generateWill(answers);
+    if (will) {
+      const { data } = await supabase.from('mutda_wills')
+        .update({ body, version: (will.version || 1) + 1, status: 'draft', updated_at: new Date().toISOString() })
+        .eq('id', will.id).select().single();
+      will = data;
+    } else {
+      const { data } = await supabase.from('mutda_wills')
+        .insert({ user_id: user.id, body }).select().single();
+      will = data;
+    }
+    logEvent('will_draft_created');
+    toast('유언장 초안이 저장됐어요');
+    showResult();
+  }
+
+  function showResult() {
+    wizardEl.style.display = 'none'; resultEl.style.display = '';
+    document.getElementById('will-body').textContent = will.body;
+
+    if (will.status === 'handwritten')
+      document.getElementById('result-notice').innerHTML = '✅ 자필 작성을 마친 유언장입니다. 안전한 곳에 보관하고, 보관 장소를 믿을 만한 한 사람에게 알려두세요.';
+    if (will.status === 'notarized')
+      document.getElementById('result-notice').innerHTML = '✅ 공증까지 마친 유언장입니다. 가장 단단한 준비를 하셨어요.';
+
+    const KEY = 'mutda:will_check';
+    const checked = new Set(JSON.parse(localStorage.getItem(KEY) || '[]'));
+    const cl = document.getElementById('checklist');
+    cl.innerHTML = HANDWRITE_CHECKLIST.map(c => `
+      <label class="item-row" style="cursor:pointer;">
+        <input type="checkbox" data-k="${c.key}" ${checked.has(c.key) ? 'checked' : ''}
+               style="width:20px; height:20px; accent-color:var(--primary);" />
+        <span class="grow"><span class="title">${c.label}</span><br/>
+        <span class="meta">${c.desc}</span></span>
+      </label>`).join('');
+    cl.querySelectorAll('input').forEach(i => i.onchange = () => {
+      i.checked ? checked.add(i.dataset.k) : checked.delete(i.dataset.k);
+      localStorage.setItem(KEY, JSON.stringify([...checked]));
+    });
+  }
+
+  document.getElementById('copy-btn').onclick = async () => {
+    await navigator.clipboard.writeText(will.body);
+    toast('초안을 복사했어요');
+  };
+  document.getElementById('print-btn').onclick = () => window.print();
+  document.getElementById('redo-btn').onclick = () => { idx = 0; showWizard(); };
+
+  document.getElementById('handwritten-btn').onclick = async () => {
+    await supabase.from('mutda_wills')
+      .update({ status: 'handwritten', handwritten_at: new Date().toISOString() }).eq('id', will.id);
+    will.status = 'handwritten';
+    logEvent('will_handwritten');
+    toast('훌륭해요. 유언장은 안전한 곳에 보관하세요.');
+    showResult();
+  };
+  document.getElementById('notarized-btn').onclick = async () => {
+    await supabase.from('mutda_wills')
+      .update({ status: 'notarized', notarized_at: new Date().toISOString() }).eq('id', will.id);
+    will.status = 'notarized';
+    logEvent('will_notarized');
+    toast('가장 단단한 준비를 마치셨어요.');
+    showResult();
+  };
+
+  // 진입: 초안이 있으면 결과부터, 없으면 위저드부터
+  will ? showResult() : showWizard();
+</script>
+</body>
+</html>
