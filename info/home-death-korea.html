@@ -174,10 +174,7 @@
     }
 
     /* ── 비교 표 ──── */
-    .compare {
-      overflow-x: auto;
-      margin: 18px 0;
-    }
+    .compare { margin: 18px 0; }
     table.cmp {
       width: 100%;
       border-collapse: collapse;
@@ -195,6 +192,39 @@
       font-weight: 800;
     }
     table.cmp td { color: var(--ink-soft); line-height: 1.7; }
+
+    /* 모바일(<640px): 표를 행 단위 카드로 세로 스택 — 우측열 잘림 해소 */
+    @media (max-width: 639px) {
+      table.cmp thead { display: none; }
+      table.cmp, table.cmp tbody, table.cmp tr, table.cmp td { display: block; width: 100%; }
+      table.cmp tr {
+        background: var(--bg-alt);
+        border-radius: 14px;
+        padding: 6px 4px 10px;
+        margin-bottom: 14px;
+      }
+      table.cmp td {
+        border-bottom: none;
+        padding: 8px 16px;
+      }
+      /* 첫 셀(축) = 카드 제목 */
+      table.cmp td:first-child {
+        font-size: 15.5px;
+        padding-top: 14px;
+        padding-bottom: 4px;
+      }
+      table.cmp td:first-child strong { color: var(--ink); }
+      /* 나머지 셀 앞에 라벨 노출 */
+      table.cmp td[data-label]::before {
+        content: attr(data-label);
+        display: block;
+        font-size: 11.5px;
+        font-weight: 800;
+        letter-spacing: 0.03em;
+        color: var(--primary);
+        margin-bottom: 3px;
+      }
+    }
 
     /* ── 경고 / 주의 박스 ──── */
     .warn {
@@ -390,23 +420,23 @@
         <tbody>
           <tr>
             <td><strong>주치의 문화</strong></td>
-            <td>&ldquo;가카리츠케이(かかりつけ)&rdquo; — 지역 개원의가 오래 진료</td>
-            <td>공식 제도 없음. 동네 의원 방문은 있으나 등록·관리 없음</td>
+            <td data-label="일본">&ldquo;가카리츠케이(かかりつけ)&rdquo; — 지역 개원의가 오래 진료</td>
+            <td data-label="한국 (현재)">공식 제도 없음. 동네 의원 방문은 있으나 등록·관리 없음</td>
           </tr>
           <tr>
             <td><strong>재택 임종 지원</strong></td>
-            <td>재택 의료 · 방문 진료가 광범위</td>
-            <td>일부 지역 시범 (성남시 등). 전국화 미완</td>
+            <td data-label="일본">재택 의료 · 방문 진료가 광범위</td>
+            <td data-label="한국 (현재)">일부 지역 시범 (성남시 등). 전국화 미완</td>
           </tr>
           <tr>
             <td><strong>사망진단서 발급자</strong></td>
-            <td>진료해온 주치의가 자택 방문해 발급 가능</td>
-            <td>대개 병원 의사가 발급. 자택은 경찰 검안 경로가 표준</td>
+            <td data-label="일본">진료해온 주치의가 자택 방문해 발급 가능</td>
+            <td data-label="한국 (현재)">대개 병원 의사가 발급. 자택은 경찰 검안 경로가 표준</td>
           </tr>
           <tr>
             <td><strong>결과</strong></td>
-            <td>자택 임종이 하나의 선택지로 안착</td>
-            <td>병원 사망이 다수. 자택 사망은 대체로 &ldquo;변사&rdquo; 경로</td>
+            <td data-label="일본">자택 임종이 하나의 선택지로 안착</td>
+            <td data-label="한국 (현재)">병원 사망이 다수. 자택 사망은 대체로 &ldquo;변사&rdquo; 경로</td>
           </tr>
         </tbody>
       </table>
