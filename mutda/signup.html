@@ -36,7 +36,7 @@
 </main>
 
 <script type="module">
-  import { signUp, redirectIfAuthed, friendlyError, logEvent } from './js/app.js';
+  import { signUp, signIn, redirectIfAuthed, friendlyError, logEvent } from './js/app.js';
 
   redirectIfAuthed('home.html');
   logEvent('signup_view');
@@ -64,9 +64,22 @@
     sessionStorage.setItem('mutda:signup_name', name);
     // 보호자 초대를 수락하러 온 경우 → 초대 화면으로 복귀
     const guardianPending = !!localStorage.getItem('mutda:guardian_code');
-    // 이메일 확인이 꺼져 있으면 세션이 바로 생긴다 → 온보딩(또는 보호자 수락)으로.
-    if (data?.session) location.href = guardianPending ? './guardian.html' : './onboarding.html';
-    else location.href = './welcome.html?sent=1';
+    const nextPage = guardianPending ? './guardian.html' : './onboarding.html';
+
+    if (data?.session) { location.href = nextPage; return; }
+
+    // 세션이 없는 경우 = ① 방금 만든 계정(자동 확인 처리됨) ② 이미 가입된 이메일.
+    // 어느 쪽이든 바로 로그인을 시도해 가른다 — 인증 메일을 기다리게 하지 않는다.
+    const { error: loginErr } = await signIn(email, password);
+    if (!loginErr) { location.href = nextPage; return; }
+
+    if ((loginErr.message || '').includes('Invalid login credentials')) {
+      err.innerHTML = '이미 가입된 이메일이에요. (잇다 계정도 그대로 쓸 수 있어요)<br/>'
+        + '<a href="./login.html"><b>이 이메일로 로그인하기</b></a>';
+    } else {
+      err.textContent = friendlyError(loginErr);
+    }
+    btn.disabled = false; btn.textContent = '가입하고 시작하기';
   });
 </script>
 </body>

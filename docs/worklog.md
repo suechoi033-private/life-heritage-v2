@@ -27,6 +27,7 @@
 - **신규 파일**: `mutda/sw.js`(push 수신 SW), `mutda/js/push.js`, `mutda/guardian.html`, 마이그레이션 `20260705_mutda_v2_push.sql`(적용 완료). checkin/home/login/signup/welcome 갱신.
 - **검증**: VAPID GET 200 확인, e2e 11단계 PASS(보호자 초대 화면 포함), JS 오류 0.
 - **배포**: 사장님 지시로 main 머지·푸시 → pages.yml이 gh-pages 자동 동기화. 라이브: `https://suechoi033-private.github.io/life-heritage-v2/mutda/`
+- **가입 막힘 해결 (인증 메일 미도착)**: 원인 두 겹 — ①Supabase 기본 SMTP는 팀원 외 주소로 인증 메일을 사실상 전달 못 함 ②기존 잇다 계정 이메일로 재가입 시 에러 없이 "메일 확인" 흐름으로 빠짐(계정 존재 은닉). 조치: auth.users BEFORE INSERT 트리거 `auto_confirm_email`로 베타 기간 가입 즉시 확인 처리(`20260705_auto_confirm_email.sql`, 잇다에도 적용됨·롤백 방법 주석) + 묻다 signup이 세션 없으면 즉시 로그인 시도→기가입 이메일이면 로그인 안내. 실 GoTrue 경로로 가입 200→auto_confirmed→비밀번호 로그인 토큰 발급까지 검증. 정식 런칭 전 커스텀 SMTP(Resend 등) 연결 후 트리거 제거 권장.
 - **배포 장애 트러블슈팅**: 첫 배포 후 /mutda/ 404 — pages-build-deployment가 "Deployment failed, try again later"로 반복 실패. gh-pages 트리 이분탐색(7회 배포 실험)으로 `scripts/mutda-supabase-stub.mjs`(e2e용 가짜 Supabase 클라이언트) 단일 파일이 GitHub Pages 배포 콘텐츠 검사를 트리거함을 특정. 조치: pages.yml에서 배포 시 dev 테스트 파일(git rm) 제외 후 푸시하도록 수정 — main에는 테스트 파일 유지, 라이브에만 미포함. 교훈: 배포 성공 판정은 sync 워크플로우가 아니라 pages-build-deployment + 라이브 URL 200 기준으로.
 
 ---
