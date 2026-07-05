@@ -23,9 +23,10 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          # 개발용 테스트 파일은 배포 대상에서 제외.
-          # (scripts/mutda-supabase-stub.mjs 는 GitHub Pages 배포 콘텐츠 검사에
-          #  걸려 배포 전체가 실패한다 — 2026-07-05 이분탐색으로 확인)
-          git rm -q --ignore-unmatch scripts/mutda-supabase-stub.mjs scripts/mutda-e2e.mjs
-          git commit -m "deploy: strip dev-only test files" || true
+          # 서버 전용·내부 폴더는 공개 사이트에 올리지 않는다.
+          # 1) 내부 문서·마이그레이션·스크립트가 공개될 이유가 없고
+          # 2) 일부 파일(테스트 스텁, auth 트리거 SQL 등)은 GitHub Pages의
+          #    배포 콘텐츠 검사에 걸려 배포 전체가 실패한다 (2026-07-05 확인)
+          git rm -rq --ignore-unmatch scripts/ supabase/ docs/ .claude/ CLAUDE.md deploy.sh
+          git commit -m "deploy: strip server-only and internal files" || true
           git push origin HEAD:gh-pages --force
