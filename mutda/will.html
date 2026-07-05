@@ -66,7 +66,23 @@
 
 <script type="module">
   import { supabase, initAppPage, toast, esc, logEvent } from './js/app.js';
-  import { WILL_QUESTIONS, generateWill, HANDWRITE_CHECKLIST } from './js/will-wizard.js';
+  import { WILL_QUESTIONS, generateWill, formatAddress, HANDWRITE_CHECKLIST } from './js/will-wizard.js';
+
+  // 카카오(다음) 우편번호 서비스 — 키 없이 무료 사용
+  let postcodeLoader = null;
+  function loadPostcode() {
+    if (window.daum?.Postcode) return Promise.resolve(true);
+    if (!postcodeLoader) {
+      postcodeLoader = new Promise((resolve) => {
+        const s = document.createElement('script');
+        s.src = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
+        s.onload = () => resolve(!!window.daum?.Postcode);
+        s.onerror = () => resolve(false);
+        document.head.appendChild(s);
+      });
+    }
+    return postcodeLoader;
+  }
   import { renderNav } from './js/nav.js';
 
   renderNav({ active: 'home', title: '유언장' });
@@ -133,6 +149,48 @@
       box.querySelector('#add-row').onclick = () => {
         box.querySelector('#rows').insertAdjacentHTML('beforeend', rowHtml());
       };
+    } else if (q.type === 'address') {
+      const base = typeof saved === 'object' ? (saved?.base || '') : (saved || '');
+      const detail = typeof saved === 'object' ? (saved?.detail || '') : '';
+      box.innerHTML = `
+        <div class="field" style="display:flex; gap:8px; align-items:stretch;">
+          <input id="addr-base" value="${esc(base)}" readonly
+                 placeholder="우편번호 검색을 눌러주세요" style="flex:1;" />
+          <button class="btn sm" id="addr-search" type="button" style="flex:0 0 auto;">🔍 우편번호 검색</button>
+        </div>
+        <div id="addr-embed" style="display:none; height:400px; border:1.5px solid var(--line);
+             border-radius:var(--radius-sm); overflow:hidden; margin-bottom:12px;"></div>
+        <div class="field">
+          <input id="addr-detail" value="${esc(detail)}" placeholder="상세 주소 (동·호수 등)" />
+          <p class="hint">예) 101동 202호 — 검색된 주소 뒤에 이어 붙습니다.</p>
+        </div>`;
+
+      const baseInput = box.querySelector('#addr-base');
+      const embed = box.querySelector('#addr-embed');
+      box.querySelector('#addr-search').onclick = async () => {
+        const ok = await loadPostcode();
+        if (!ok) {
+          // 검색 스크립트를 못 불러오는 환경 — 직접 입력으로 전환
+          baseInput.readOnly = false;
+          baseInput.placeholder = '예) 서울특별시 ○○구 ○○로 12';
+          baseInput.focus();
+          toast('주소 검색을 불러올 수 없어 직접 입력으로 전환했어요');
+          return;
+        }
+        embed.style.display = 'block';
+        embed.innerHTML = '';
+        new daum.Postcode({
+          oncomplete: (data) => {
+            let addr = data.roadAddress || data.jibunAddress || '';
+            if (data.buildingName) addr += ` (${data.buildingName})`;
+            baseInput.value = addr;
+            embed.style.display = 'none';
+            box.querySelector('#addr-detail').focus();
+          },
+          width: '100%', height: '100%',
+        }).embed(embed);
+        embed.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      };
     } else if (q.type === 'textarea') {
       box.innerHTML = `<div class="field"><textarea id="in">${esc(saved || '')}</textarea></div>`;
     } else {
@@ -149,6 +207,13 @@
           return o;
         }).filter(o => Object.values(o).some(Boolean));
         if (q.required && !value.length) return alert('한 가지만이라도 적어주세요.');
+      } else if (q.type === 'address') {
+        value = {
+          base: box.querySelector('#addr-base').value.trim(),
+          detail: box.querySelector('#addr-detail').value.trim(),
+        };
+        if (q.required && !value.base)
+          return alert('우편번호 검색으로 주소를 넣어주세요.');
       } else {
         value = box.querySelector('#in').value.trim();
         if (q.required && !value) return alert('이 항목은 유언장에 꼭 필요해요.');

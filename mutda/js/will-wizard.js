@@ -17,10 +17,10 @@ export const WILL_QUESTIONS = [
     placeholder: '예) 1955년 3월 21일', required: true,
   },
   {
-    key: 'address', type: 'text',
+    key: 'address', type: 'address',
     q: '지금 살고 계신 주소를 알려주세요.',
-    help: '자필 유언장에는 주소가 반드시 들어가야 합니다. 동·호수까지 정확하게요.',
-    placeholder: '예) 서울특별시 ○○구 ○○로 12, 101동 202호', required: true,
+    help: '자필 유언장에는 주소가 반드시 들어가야 합니다. 우편번호 검색으로 정확한 주소를 넣고, 동·호수까지 이어 적어주세요.',
+    required: true,
   },
   {
     key: 'assets', type: 'list',
@@ -52,6 +52,13 @@ export const WILL_QUESTIONS = [
   },
 ];
 
+// 주소 답은 {base(검색된 주소), detail(동·호수)} 객체 또는 옛 형식의 문자열
+export function formatAddress(v) {
+  if (!v) return '';
+  if (typeof v === 'string') return v;
+  return `${v.base || ''} ${v.detail || ''}`.trim();
+}
+
 // 답변 → 자필로 옮겨 쓸 유언장 초안 텍스트
 export function generateWill(a) {
   const today = new Date();
@@ -62,7 +69,7 @@ export function generateWill(a) {
   lines.push('유 언 장');
   lines.push('');
   lines.push(`유언자 ${a.name} (${a.birth}생)`);
-  lines.push(`주소: ${a.address}`);
+  lines.push(`주소: ${formatAddress(a.address)}`);
   lines.push('');
   lines.push('나는 맑은 정신으로 다음과 같이 유언한다.');
   lines.push('');

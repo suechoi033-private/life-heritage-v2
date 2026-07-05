@@ -33,6 +33,7 @@ await page.route('**cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm', (route) 
   route.fulfill({ contentType: 'application/javascript', body: STUB }));
 await page.route(/pretendard|fonts\.googleapis|fonts\.gstatic/, (route) =>
   route.fulfill({ contentType: 'text/css', body: '' }));
+await page.route(/t1\.daumcdn\.net/, (route) => route.abort()); // 우편번호 스크립트 — 폴백 경로 검증
 
 const errors = [];
 page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
@@ -93,7 +94,13 @@ try {
     await page.waitForSelector('#box #in');
     await fill('김테스트');
     await fill('1955년 3월 21일');
-    await fill('서울특별시 테스트구 테스트로 12');
+    // 주소 단계: 샌드박스에선 우편번호 스크립트가 차단됨 → 직접 입력 폴백 검증
+    await page.waitForSelector('#addr-search');
+    await page.click('#addr-search');
+    await page.waitForFunction(() => !document.querySelector('#addr-base')?.readOnly, { timeout: 15000 });
+    await page.fill('#addr-base', '서울특별시 테스트구 테스트로 12');
+    await page.fill('#addr-detail', '101동 202호');
+    await page.click('#next');
     // 재산 리스트
     await page.fill('.asset-row input[data-name="what"]', '테스트은행 예금 전부');
     await page.fill('.asset-row input[data-name="who"]', '딸 김하나');
