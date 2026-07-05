@@ -108,7 +108,14 @@ Edge Function: `supabase/functions/mutda-checkin-notify/` (배포 완료, verify
 - 퍼널 이벤트: landing_view → signup_view/done → onboarding_start/done → home_view →
   will_view/draft/handwritten/notarized, letter_saved, belonging_added, pet_plan_saved,
   checkin_on, guardian_added, post_created (`mutda_events`).
-- **창업자 액션 대기**: ① 유언장·법률 콘텐츠 변호사 감수(현재 "감수 진행 중 베타" 라벨)
+- **법률 감수 파트너 (2026-07-05 확정)**: 법무법인 율사서재 김한나 변호사
+  (02-523-1579 · hss1@yulsasj.com). 유언장 위저드·법률 아티클에 감수자 표기,
+  will.html에 상담 연락처 노출. 감수 완료 시 "진행 중" 문구 제거할 것.
+- **공증 관련 사실 확인 (2026-07-05)**: 유언 공증(공정증서)은 대면만 가능 —
+  법무부 전자공증(화상공증)은 사서증서 인증만 지원, 유언은 대상 아님.
+  공증은 임명 공증인 또는 공증인가 법무법인만 가능(일반 변호사 불가).
+  앱에는 대한공증인협회(사무소 찾기) + 전자공증 현황을 정직하게 고지.
+- **창업자 액션 대기**: ① 김한나 변호사 감수 완료 후 라벨 갱신
   ② SMS 알림(v3) 원하면 문자 발송 사업자(알리고·솔라피 등) 계약.
 - 2026-07-05 창업자 결정: 이메일 알림 폐기 → 전화번호 저장 + 지정순위 앱푸시로 전환,
   즉시 배포. (본 문서 v2 반영)
