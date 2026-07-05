@@ -27,6 +27,7 @@
 - **신규 파일**: `mutda/sw.js`(push 수신 SW), `mutda/js/push.js`, `mutda/guardian.html`, 마이그레이션 `20260705_mutda_v2_push.sql`(적용 완료). checkin/home/login/signup/welcome 갱신.
 - **검증**: VAPID GET 200 확인, e2e 11단계 PASS(보호자 초대 화면 포함), JS 오류 0.
 - **배포**: 사장님 지시로 main 머지·푸시 → pages.yml이 gh-pages 자동 동기화. 라이브: `https://suechoi033-private.github.io/life-heritage-v2/mutda/`
+- **배포 장애 트러블슈팅**: 첫 배포 후 /mutda/ 404 — pages-build-deployment가 "Deployment failed, try again later"로 반복 실패. gh-pages 트리 이분탐색(7회 배포 실험)으로 `scripts/mutda-supabase-stub.mjs`(e2e용 가짜 Supabase 클라이언트) 단일 파일이 GitHub Pages 배포 콘텐츠 검사를 트리거함을 특정. 조치: pages.yml에서 배포 시 dev 테스트 파일(git rm) 제외 후 푸시하도록 수정 — main에는 테스트 파일 유지, 라이브에만 미포함. 교훈: 배포 성공 판정은 sync 워크플로우가 아니라 pages-build-deployment + 라이브 URL 200 기준으로.
 
 ---
 

@@ -23,4 +23,9 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          # 개발용 테스트 파일은 배포 대상에서 제외.
+          # (scripts/mutda-supabase-stub.mjs 는 GitHub Pages 배포 콘텐츠 검사에
+          #  걸려 배포 전체가 실패한다 — 2026-07-05 이분탐색으로 확인)
+          git rm -q --ignore-unmatch scripts/mutda-supabase-stub.mjs scripts/mutda-e2e.mjs
+          git commit -m "deploy: strip dev-only test files" || true
           git push origin HEAD:gh-pages --force
