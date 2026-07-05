@@ -9,11 +9,28 @@
 <body>
 <main>
   <div style="padding-top:8px;">
-    <h2 class="serif" style="font-size:22px;">마음을 남기는 편지</h2>
-    <p class="muted small">보내지 않아도 됩니다. 쓰는 것만으로 시작입니다.</p>
+    <h2 class="serif" style="font-size:22px;">마음을 전하는 편지</h2>
+    <p class="muted small">써두는 것으로 시작, 살아 있을 때 전하는 것으로 완성.</p>
   </div>
 
-  <div style="display:flex; gap:8px; margin:16px 0;">
+  <!-- 오늘의 마음 질문 — 매일 바뀌는, 다시 올 이유 -->
+  <section class="card tint" style="margin-top:14px;">
+    <span class="chip green">오늘의 마음 질문</span>
+    <p class="serif" id="daily-prompt" style="font-size:18px; line-height:1.6; margin-top:10px;"></p>
+    <button class="btn sm" id="prompt-write" style="margin-top:12px;">이 마음, 한 줄로 남기기</button>
+  </section>
+
+  <!-- 마음의 잔디 -->
+  <section class="card">
+    <div style="display:flex; justify-content:space-between; align-items:baseline;">
+      <h3>마음을 전한 날들</h3>
+      <span class="small muted" id="grass-legend">🌱 쓴 날 · 🌿 전한 날</span>
+    </div>
+    <div class="grass-grid" id="grass" style="margin-top:12px;"></div>
+    <p class="small muted" style="margin-top:10px;" id="my-stats"></p>
+  </section>
+
+  <div style="display:flex; gap:8px; margin:16px 0 6px;">
     <button class="btn quiet sm" id="tab-gratitude" style="flex:1;">💐 감사의 말</button>
     <button class="btn quiet sm" id="tab-farewell" style="flex:1;">🕊️ 작별인사</button>
   </div>
@@ -38,8 +55,14 @@
 
   <section>
     <h2 class="section-title">내가 남긴 편지</h2>
-    <div id="letter-list" class="card" style="padding:6px 20px;"><p class="muted small" style="padding:12px 0;">아직 없어요.</p></div>
+    <p class="small muted" style="margin-bottom:10px;">
+      저장은 시작이에요. <b>📨 전하기</b>로 카톡·문자로 바로 보내면 "전한 마음"으로 기록되고,
+      <b>🕯️ 나누기</b>를 켜면 익명으로 함께 화면에 실려 다른 이의 용기가 됩니다.
+    </p>
+    <div id="letter-list" class="card" style="padding:6px 20px;"></div>
   </section>
+
+  <p class="small muted center" id="global-stats" style="margin-top:16px;"></p>
 </main>
 
 <script type="module">
@@ -47,14 +70,13 @@
   import { renderNav } from './js/nav.js';
 
   renderNav({ active: 'home', title: '편지' });
-  const { user } = await initAppPage();
+  const { user, profile } = await initAppPage();
   logEvent('letters_view');
 
   const GUIDE = {
-    gratitude: '살아 있을 때 전하는 감사가 가장 힘이 셉니다. 다 쓰고 나면, 용기가 나는 날 직접 읽어주세요.',
+    gratitude: '살아 있을 때 전하는 감사가 가장 힘이 셉니다. 오늘 한 통이면 충분해요.',
     farewell: '작별인사는 남는 사람에게 주는 마지막 선물입니다. 서두르지 말고, 여러 번 고쳐 써도 됩니다.',
   };
-  // 빈 화면 공포를 없애는 시작 문장들 — 이어서 쓰기만 하면 된다
   const STARTERS = {
     gratitude: [
       '돌아보니, 너에게 가장 많이 빚진 것은 ',
@@ -67,10 +89,34 @@
       '너에게 마지막으로 부탁하고 싶은 것은 딱 하나, ',
     ],
   };
+  // 오늘의 마음 질문 — 날짜에 따라 돌아가며, 매일 다시 올 이유가 된다
+  const PROMPTS = [
+    '오늘 문득 안부가 궁금했던 사람이 있나요? 그 마음을 한 줄로 전해보세요.',
+    '최근에 "고맙다"는 말을 삼킨 적이 있나요? 지금 쓰면 됩니다.',
+    '당연하게 받기만 한 것이 하나 있다면, 누구에게서였나요?',
+    '10년 전의 나를 도와준 사람에게, 늦은 인사를 보내보세요.',
+    '이름을 떠올리는 것만으로 마음이 따뜻해지는 사람은 누구인가요?',
+    '오늘 스친 사소한 친절 하나 — 누구였나요?',
+    '미안함과 고마움이 반반인 사람이 있다면, 오늘은 고마움부터.',
+    '언젠가 마지막 인사를 하게 될 사람 중, 가장 먼저 떠오르는 얼굴은?',
+    '함께 늙어가고 싶은 친구에게 한 줄 남겨보세요.',
+    '내 인생의 가장 평범했던 행복 — 누구와 함께였나요?',
+    '번호는 아는데 오래 누르지 못한 이름이 있나요?',
+    '나를 웃게 만드는 사람에게, 그 사실을 알려주세요.',
+    '오늘의 밥, 오늘의 잠자리는 누구 덕분인가요?',
+    '"그때 미안했다"보다 "그때 고마웠다"를 먼저 — 누구에게?',
+  ];
+  const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
+  document.getElementById('daily-prompt').textContent = PROMPTS[dayOfYear % PROMPTS.length];
+  document.getElementById('prompt-write').onclick = () => {
+    document.getElementById('in-body').focus();
+    document.getElementById('editor').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
 
   let kind = new URLSearchParams(location.search).get('kind') === 'farewell' ? 'farewell' : 'gratitude';
-  let editing = null; // 수정 중인 편지 id
+  let editing = null;
   let starterIdx = 0;
+  let allLetters = [];
 
   const tabs = {
     gratitude: document.getElementById('tab-gratitude'),
@@ -83,7 +129,6 @@
     document.getElementById('in-body').value = '';
     tabs.gratitude.className = `btn sm ${k === 'gratitude' ? '' : 'quiet'}`;
     tabs.farewell.className = `btn sm ${k === 'farewell' ? '' : 'quiet'}`;
-    tabs.gratitude.style.flex = '1'; tabs.farewell.style.flex = '1';
     document.getElementById('kind-guide').textContent = GUIDE[k];
     loadList();
   }
@@ -112,46 +157,149 @@
         .insert({ user_id: user.id, kind, recipient, body });
     }
     logEvent('letter_saved', { kind });
-    toast('편지를 저장했어요');
+    toast('저장했어요. 용기가 나면 📨 전하기를 눌러보세요.');
     editing = null;
     document.getElementById('in-recipient').value = '';
     document.getElementById('in-body').value = '';
     loadList();
   };
 
-  async function loadList() {
-    const { data } = await supabase.from('mutda_letters')
-      .select('*').eq('user_id', user.id).eq('kind', kind)
-      .order('updated_at', { ascending: false });
-    const box = document.getElementById('letter-list');
-    if (!data?.length) {
-      box.innerHTML = '<p class="muted small" style="padding:12px 0;">아직 없어요. 위에서 첫 편지를 시작해 보세요.</p>';
+  // ---------- 전하기: 카톡/문자로 보내고 '전한 마음'으로 기록 ----------
+  async function sendLetter(l) {
+    const text = `${l.recipient ? l.recipient + '\n\n' : ''}${l.body}\n\n— ${profile.name} 드림 (묻다에서 미리 전하는 마음)`;
+    let delivered = false;
+    if (navigator.share) {
+      try { await navigator.share({ text }); delivered = true; } catch { /* 사용자가 취소 */ }
+    } else {
+      try { await navigator.clipboard.writeText(text); delivered = true;
+        toast('복사했어요. 카톡·문자에 붙여넣어 보내세요.'); } catch { /* 무시 */ }
+    }
+    if (!delivered) return;
+
+    await supabase.from('mutda_letters')
+      .update({ sent_at: new Date().toISOString(), status: 'done' }).eq('id', l.id);
+    logEvent('letter_sent', { kind: l.kind });
+
+    const sentCount = allLetters.filter(x => x.sent_at).length + 1;
+    toast(`🌿 미리 전한 마음, ${sentCount}번째예요. 오늘의 안부가 유산이 됩니다.`);
+    loadList();
+  }
+
+  // ---------- 나누기: 익명으로 커뮤니티(함께)에 싣기 ----------
+  async function shareLetter(l) {
+    if (l.shared_post_id) {
+      if (!confirm('함께 화면에서 내리시겠어요?')) return;
+      await supabase.from('mutda_posts').delete().eq('id', l.shared_post_id);
+      await supabase.from('mutda_letters').update({ shared_post_id: null }).eq('id', l.id);
+      toast('나눔을 내렸어요');
+      loadList();
       return;
     }
-    box.innerHTML = data.map(l => `
-      <div class="item-row">
-        <span class="grow">
-          <span class="title">${esc(l.recipient || '(받는 사람 미정)')}</span><br/>
+    if (!confirm('이 편지를 익명으로 함께 화면에 나눌까요?\n이름은 공개되지 않아요. 언제든 내릴 수 있어요.')) return;
+    const title = l.kind === 'gratitude'
+      ? `${esc(l.recipient || '소중한 사람')}에게 미리 전한 감사`
+      : `${esc(l.recipient || '소중한 사람')}에게 남기는 작별인사`;
+    const { data: post, error } = await supabase.from('mutda_posts').insert({
+      user_id: user.id, author_name: '익명', title,
+      body: l.body, topic: 'letter',
+    }).select().single();
+    if (error) return alert('나누지 못했어요. 잠시 후 다시 시도해 주세요.');
+    await supabase.from('mutda_letters').update({ shared_post_id: post.id }).eq('id', l.id);
+    logEvent('letter_shared', { kind: l.kind });
+    toast('🕯️ 익명으로 나눴어요. 누군가에게 용기가 될 거예요.');
+    loadList();
+  }
+
+  // ---------- 마음의 잔디: 최근 12주 ----------
+  function renderGrass(letters) {
+    const byDay = {};
+    letters.forEach(l => {
+      const w = (l.created_at || '').slice(0, 10);
+      if (w) byDay[w] = Math.max(byDay[w] || 0, 1);
+      const s = (l.sent_at || '').slice(0, 10);
+      if (s) byDay[s] = 2;
+    });
+    const cells = [];
+    const today = new Date();
+    // 12주 그리드가 오늘로 끝나도록 시작일 정렬 (일요일 시작)
+    const start = new Date(today);
+    start.setDate(today.getDate() - 83 - today.getDay());
+    for (let i = 0; i < 84 + today.getDay() + 1; i++) {
+      const d = new Date(start);
+      d.setDate(start.getDate() + i);
+      if (d > today) break;
+      const key = d.toISOString().slice(0, 10);
+      const lv = byDay[key] || 0;
+      cells.push(`<div class="grass-cell g${lv}" title="${key}"></div>`);
+    }
+    document.getElementById('grass').innerHTML = cells.join('');
+
+    const written = letters.length;
+    const sent = letters.filter(l => l.sent_at).length;
+    document.getElementById('my-stats').textContent = written
+      ? `지금까지 ${written}통을 쓰고, 그중 ${sent}통을 미리 전했어요.`
+      : '오늘, 첫 칸을 채워보세요.';
+  }
+
+  async function loadList() {
+    const { data } = await supabase.from('mutda_letters')
+      .select('*').eq('user_id', user.id)
+      .order('updated_at', { ascending: false });
+    allLetters = data || [];
+    renderGrass(allLetters);
+
+    const list = allLetters.filter(l => l.kind === kind);
+    const box = document.getElementById('letter-list');
+    if (!list.length) {
+      box.innerHTML = '<p class="muted small" style="padding:12px 0;">아직 없어요. 위의 오늘의 질문으로 시작해 보세요.</p>';
+      return;
+    }
+    box.innerHTML = list.map(l => `
+      <div class="item-row" style="flex-wrap:wrap;">
+        <span class="grow" style="min-width:60%;">
+          <span class="title">${esc(l.recipient || '(받는 사람 미정)')}</span>
+          ${l.sent_at ? `<span class="chip green" style="margin-left:6px;">🌿 전함 · ${fmtDate(l.sent_at)}</span>` : ''}
+          ${l.shared_post_id ? '<span class="chip warm" style="margin-left:6px;">🕯️ 나눔 중</span>' : ''}<br/>
           <span class="meta">${esc(l.body.slice(0, 60))}${l.body.length > 60 ? '…' : ''} · ${fmtDate(l.updated_at)}</span>
         </span>
-        <button class="btn quiet sm" data-edit="${l.id}">열기</button>
-        <button class="btn quiet sm" data-del="${l.id}">삭제</button>
+        <span style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button class="btn sm" data-send="${l.id}">📨 전하기</button>
+          <button class="btn quiet sm" data-share="${l.id}">${l.shared_post_id ? '나눔 내리기' : '🕯️ 나누기'}</button>
+          <button class="btn quiet sm" data-edit="${l.id}">열기</button>
+          <button class="btn quiet sm" data-del="${l.id}">삭제</button>
+        </span>
       </div>`).join('');
 
+    box.querySelectorAll('[data-send]').forEach(b => b.onclick = () =>
+      sendLetter(list.find(x => x.id === b.dataset.send)));
+    box.querySelectorAll('[data-share]').forEach(b => b.onclick = () =>
+      shareLetter(list.find(x => x.id === b.dataset.share)));
     box.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => {
-      const l = data.find(x => x.id === b.dataset.edit);
+      const l = list.find(x => x.id === b.dataset.edit);
       editing = l.id;
       document.getElementById('in-recipient').value = l.recipient || '';
       document.getElementById('in-body').value = l.body;
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      document.getElementById('editor').scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
     box.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
       if (!confirm('이 편지를 삭제할까요? 되돌릴 수 없어요.')) return;
-      await supabase.from('mutda_letters').delete().eq('id', b.dataset.del);
+      const l = list.find(x => x.id === b.dataset.del);
+      if (l.shared_post_id) await supabase.from('mutda_posts').delete().eq('id', l.shared_post_id);
+      await supabase.from('mutda_letters').delete().eq('id', l.id);
       toast('삭제했어요');
       loadList();
     });
   }
+
+  // 전체 집계 — 집단의 아름다움 (숫자만, 경쟁 없음)
+  (async () => {
+    const { data } = await supabase.rpc('mutda_letters_stats');
+    const s = Array.isArray(data) ? data[0] : data;
+    if (s?.sent > 0) {
+      document.getElementById('global-stats').textContent =
+        `오늘까지 묻다에서, ${s.senders}명이 ${s.sent}번의 마음을 미리 전했습니다.`;
+    }
+  })();
 
   setKind(kind);
 </script>

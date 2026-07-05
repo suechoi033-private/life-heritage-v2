@@ -12,7 +12,7 @@ const SCHEMA = {
   mutda_guardians: ["id","user_id","name","relation","phone","email","sort_order","created_at","guardian_user_id","invite_code","linked_at"],
   mutda_push_subscriptions: ["id","user_id","endpoint","p256dh_key","auth_key","user_agent","created_at"],
   mutda_notifications: ["id","user_id","kind","title","body","url","read","created_at"],
-  mutda_letters: ["id","user_id","kind","recipient","body","status","created_at","updated_at"],
+  mutda_letters: ["id","user_id","kind","recipient","body","status","created_at","updated_at","sent_at","shared_post_id"],
   mutda_pet_plans: ["id","user_id","pet_name","species","age_note","feeding","medical","vet","caretaker_name","caretaker_contact","caretaker_agreed","handover_note","created_at","updated_at"],
   mutda_post_comments: ["id","post_id","user_id","author_name","body","created_at"],
   mutda_posts: ["id","user_id","author_name","title","body","topic","is_seed","created_at"],
@@ -22,7 +22,7 @@ const SCHEMA = {
   mutda_wills: ["id","user_id","body","version","status","handwritten_at","notarized_at","created_at","updated_at"],
 };
 
-const RPCS = ['mutda_heartbeat', 'mutda_guardian_preview', 'mutda_link_guardian'];
+const RPCS = ['mutda_heartbeat', 'mutda_guardian_preview', 'mutda_link_guardian', 'mutda_letters_stats'];
 const LS_KEY = 'mutda-stub-state';
 
 function seedState() {
@@ -188,6 +188,11 @@ export function createClient() {
     from: (t) => new Query(t),
     async rpc(name, args = {}) {
       if (!RPCS.includes(name)) throw new Error(`[stub] 존재하지 않는 RPC: ${name}`);
+      if (name === 'mutda_letters_stats') {
+        const ls = rows('mutda_letters');
+        return { data: [{ total: ls.length, sent: ls.filter(l => l.sent_at).length,
+          senders: new Set(ls.map(l => l.user_id)).size }], error: null };
+      }
       if (name === 'mutda_guardian_preview') {
         const g = rows('mutda_guardians').find(r => r.invite_code === args.p_code);
         if (!g) return { data: [], error: null };

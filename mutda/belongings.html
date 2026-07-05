@@ -15,10 +15,6 @@
 
   <section class="card" style="margin-top:16px;">
     <div class="field">
-      <label>물건</label>
-      <input id="in-name" placeholder="예) 아버지께 물려받은 손목시계" />
-    </div>
-    <div class="field">
       <label>분류</label>
       <select id="in-category">
         <option value="귀중품">귀중품 (귀금속·통장·증서)</option>
@@ -27,6 +23,10 @@
         <option value="디지털">디지털 (계정·사진·구독)</option>
         <option value="기타">기타</option>
       </select>
+    </div>
+    <div class="field">
+      <label>품목</label>
+      <input id="in-name" placeholder="예) 아버지께 물려받은 손목시계" />
     </div>
     <div class="field">
       <label>이 물건의 자리</label>
@@ -80,7 +80,7 @@
 
   document.getElementById('add-btn').onclick = async () => {
     const name = document.getElementById('in-name').value.trim();
-    if (!name) return alert('물건 이름을 적어주세요.');
+    if (!name) return alert('품목을 적어주세요.');
     await supabase.from('mutda_belongings').insert({
       user_id: user.id,
       name,

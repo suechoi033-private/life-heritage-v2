@@ -58,12 +58,13 @@
     <a class="btn ghost" href="./signup.html">나도 이야기 나누기</a>
   </section>
 
-  <section class="card tint" style="margin-top:26px;">
+  <section class="card tint" style="margin-top:20px;">
     <h3 class="serif">묻다는 조용합니다</h3>
     <p class="sub" style="margin-top:6px;">
       좋아요 수도, 순위도, 경쟁도 없습니다.
       당신의 속도로, 당신의 기록만 쌓입니다.
     </p>
+    <p class="serif" id="global-sent" style="display:none; margin-top:12px; font-size:16px; color:var(--primary-hover);"></p>
   </section>
 
   <p class="legal-note">
@@ -89,6 +90,15 @@
       <p class="body-preview" style="color:var(--ink-soft); font-size:14.5px; margin-top:8px;">${esc(p.body.slice(0, 120))}…</p>
       <p class="post-meta">${esc(p.author_name)} · ${fmtDate(p.created_at)}</p>
     </div>`).join('') || '<p class="muted small">아직 이야기가 없습니다.</p>';
+
+  // 집단의 아름다움 — 미리 전해진 마음의 수 (익명 집계)
+  const { data: stats } = await supabase.rpc('mutda_letters_stats');
+  const s = Array.isArray(stats) ? stats[0] : stats;
+  if (s?.sent > 0) {
+    const el = document.getElementById('global-sent');
+    el.textContent = `오늘까지, ${s.sent}번의 감사와 작별이 미리 전해졌습니다.`;
+    el.style.display = '';
+  }
 </script>
 </body>
 </html>

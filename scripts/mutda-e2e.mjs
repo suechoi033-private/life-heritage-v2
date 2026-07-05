@@ -27,6 +27,8 @@ const browser = await chromium.launch({
   args: ['--ignore-certificate-errors'],
 });
 const page = await browser.newPage({ viewport: { width: 420, height: 900 } });
+await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+page.on('dialog', (d) => d.accept()); // confirm(나누기 등) 자동 수락
 
 // 외부 의존성 라우팅: supabase-js CDN → 스텁, 폰트 CSS → 빈 응답
 await page.route('**cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm', (route) =>
@@ -162,16 +164,27 @@ try {
   await page.click('#handwritten-btn');
   await page.waitForTimeout(800);
 
-  // 6. 편지 (감사)
+  // 6. 편지 (감사) — 오늘의 질문 → 저장 → 전하기 → 나누기 → 잔디
   step('감사의 말');
   await page.goto(`${BASE}/letters.html?kind=gratitude`);
   await page.waitForSelector('#in-body', { timeout: 15000 });
+  const prompt = await page.locator('#daily-prompt').innerText();
+  if (prompt.length < 10) throw new Error('오늘의 마음 질문 렌더 실패');
   await page.click('#starter-btn');
   await page.fill('#in-recipient', '딸 하나에게');
   const cur = await page.inputValue('#in-body');
   await page.fill('#in-body', cur + ' 네 웃음이었다.');
   await page.click('#save-btn');
   await page.waitForSelector('#letter-list .item-row', { timeout: 15000 });
+  // 전하기 (headless: 클립보드 폴백 경로) → 전함 칩
+  await page.click('#letter-list [data-send]');
+  await page.waitForSelector('#letter-list .chip.green', { timeout: 15000 });
+  // 나누기 → 나눔 중 칩 (confirm 자동 수락)
+  await page.click('#letter-list [data-share]');
+  await page.waitForSelector('#letter-list .chip.warm', { timeout: 15000 });
+  // 잔디에 오늘 칸이 칠해졌는지
+  const grass = await page.locator('#grass .grass-cell.g2').count();
+  if (!grass) throw new Error('마음의 잔디에 전한 날이 칠해지지 않음');
   await shot('05-letters');
 
   // 7. 유품 정리
