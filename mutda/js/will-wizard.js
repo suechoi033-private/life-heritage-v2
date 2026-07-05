@@ -41,10 +41,10 @@ export const WILL_QUESTIONS = [
     placeholder: '예) 화장 후 ○○ 수목장에, 장례는 가족끼리 조용히', required: false,
   },
   {
-    key: 'message', type: 'textarea',
-    q: '마지막으로, 가족에게 남기고 싶은 말이 있나요?',
-    help: '유언장에서 가장 오래 기억되는 건 재산 목록이 아니라 이 문단입니다. 편하게 쓰세요.',
-    placeholder: '예) 서로 아끼며 살아라. 나는 충분히 행복했다.', required: false,
+    key: 'message', type: 'messages',
+    q: '마지막으로, 남기고 싶은 말이 있나요?',
+    help: '유언장에서 가장 오래 기억되는 건 재산 목록이 아니라 이 문단입니다. 누구에게 남길지 눌러 골라주세요 — 여러 명도, 건너뛰어도 괜찮아요.',
+    required: false,
   },
 ];
 
@@ -61,6 +61,18 @@ export const ASSET_CATEGORIES = [
   { key: 'valuables', ico: '💍', label: '귀중품', placeholder: '예) 결혼 예물 시계' },
   { key: 'digital', ico: '📱', label: '디지털', placeholder: '예) 사진 클라우드, ○○ 계정' },
   { key: 'etc', ico: '➕', label: '그 밖의 것', placeholder: '예) 서재의 책 전부' },
+];
+
+// 남기는 말 — 받는 사람 칩. 누를 때마다 그 사람 몫의 칸이 하나씩 생긴다
+// (자녀는 여러 번 눌러 자녀별로 따로 남길 수 있다).
+export const MESSAGE_RECIPIENTS = [
+  { key: 'family', ico: '👨‍👩‍👧', label: '가족 모두', to: '사랑하는 가족에게', placeholder: '예) 서로 아끼며 살아라. 나는 충분히 행복했다.' },
+  { key: 'spouse', ico: '💑', label: '배우자', to: '배우자에게', placeholder: '예) 당신과 보낸 평범한 저녁들이 제일 좋았습니다.' },
+  { key: 'mother', ico: '👩', label: '엄마', to: '어머니께', placeholder: '예) 엄마, 나를 낳아 길러줘서 고마웠어요.' },
+  { key: 'father', ico: '👨', label: '아빠', to: '아버지께', placeholder: '예) 아버지의 등을 보며 사는 법을 배웠습니다.' },
+  { key: 'child', ico: '👶', label: '자녀', to: '자녀에게', placeholder: '예) 네가 태어난 날을 평생 잊지 못한다.' },
+  { key: 'sibling', ico: '🧑‍🤝‍🧑', label: '형제자매', to: '형제자매에게', placeholder: '예) 이제 서로에게 남은 사람이 되어주자.' },
+  { key: 'other', ico: '🤝', label: '그 밖의 소중한 사람', to: '', placeholder: '예) 자네가 있어 내 인생이 덜 외로웠네.' },
 ];
 
 // 상속인 이름 입력 칸 정의 — 마법사 결과에서 실명을 받아 문구를 완성한다
@@ -201,10 +213,16 @@ export function generateWill(a) {
     lines.push('');
     clause++;
   }
-  if (a.message) {
+  const messages = Array.isArray(a.message)
+    ? a.message.filter(m => m && m.body)
+    : (a.message ? [{ to: '', body: a.message }] : []);
+  if (messages.length) {
     lines.push('남기는 말');
-    lines.push(`  ${a.message}`);
-    lines.push('');
+    messages.forEach(m => {
+      if (m.to) lines.push(`  ${m.to}`);
+      lines.push(`  ${m.body}`);
+      lines.push('');
+    });
   }
 
   lines.push(`작성일: ${dateStr}`);

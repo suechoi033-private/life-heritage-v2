@@ -127,13 +127,18 @@ try {
     await page.click('#next');
     await fill('아들 김두리');
     await fill('화장 후 수목장');
-    await page.fill('#box #in', '서로 아끼며 살아라.');
+    // 남기는 말 — 받는 사람 칩으로
+    await page.click('button[data-msg-chip="family"]');
+    await page.fill('.msg-block textarea[data-name="body"]', '서로 아끼며 살아라.');
+    await page.click('button[data-msg-chip="mother"]');
+    await page.fill('.msg-block:nth-of-type(2) textarea[data-name="body"]', '엄마, 고마웠어요.');
     await page.click('#next'); // 초안 만들기
   }
   await page.waitForSelector('.will-paper', { timeout: 15000 });
   const paper = await page.locator('.will-paper').innerText();
   if (!paper.includes('유 언 장') || !paper.includes('김하나')) throw new Error('유언장 초안 내용 이상: ' + paper.slice(0, 80));
   if (!paper.includes('나머지 재산은 모두 남편 이몽룡에게')) throw new Error('잔여 조항 누락: ' + paper);
+  if (!paper.includes('어머니께') || !paper.includes('사랑하는 가족에게')) throw new Error('받는 사람별 남기는 말 누락: ' + paper);
   console.log('  → 초안 생성 확인 (', paper.split('\n')[0], ')');
   await shot('04-will-draft');
   await page.click('#handwritten-btn');

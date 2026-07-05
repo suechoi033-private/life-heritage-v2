@@ -67,7 +67,8 @@
 <script type="module">
   import { supabase, initAppPage, toast, esc, logEvent } from './js/app.js';
   import { WILL_QUESTIONS, generateWill, formatAddress, HANDWRITE_CHECKLIST,
-           ASSET_CATEGORIES, inheritanceGuide, heirSuggest, HEIR_NAME_FIELDS } from './js/will-wizard.js';
+           ASSET_CATEGORIES, inheritanceGuide, heirSuggest, HEIR_NAME_FIELDS,
+           MESSAGE_RECIPIENTS } from './js/will-wizard.js';
 
   // 카카오(다음) 우편번호 서비스 — 키 없이 무료 사용
   let postcodeLoader = null;
@@ -137,6 +138,8 @@
 
     if (q.type === 'assets') {
       renderAssets(box, Array.isArray(saved) ? saved : []);
+    } else if (q.type === 'messages') {
+      renderMessages(box, saved);
     } else if (q.type === 'address') {
       const base = typeof saved === 'object' ? (saved?.base || '') : (saved || '');
       const detail = typeof saved === 'object' ? (saved?.detail || '') : '';
@@ -206,6 +209,11 @@
         };
         if (q.required && !value.base)
           return alert('우편번호 검색으로 주소를 넣어주세요.');
+      } else if (q.type === 'messages') {
+        value = [...box.querySelectorAll('.msg-block')].map(bl => ({
+          to: bl.querySelector('[data-name="to"]').value.trim(),
+          body: bl.querySelector('[data-name="body"]').value.trim(),
+        })).filter(m => m.body);
       } else {
         value = box.querySelector('#in').value.trim();
         if (q.required && !value) return alert('이 항목은 유언장에 꼭 필요해요.');
@@ -403,6 +411,51 @@
       heirStep();
       panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
     };
+  }
+
+  // 남기는 말 단계 — 받는 사람 칩을 누르면 그 사람 몫의 칸이 생긴다
+  function renderMessages(box, saved) {
+    box.innerHTML = `
+      <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;">
+        ${MESSAGE_RECIPIENTS.map(r => `
+          <button type="button" class="btn quiet sm" data-msg-chip="${r.key}">${r.ico} ${r.label}</button>`).join('')}
+      </div>
+      <div id="msg-blocks"></div>`;
+
+    const blocksEl = box.querySelector('#msg-blocks');
+
+    function addBlock(m = {}, placeholder = '') {
+      const div = document.createElement('div');
+      div.className = 'card soft msg-block';
+      div.style.padding = '14px';
+      div.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <span class="chip green">💌 남기는 말</span>
+          <button type="button" class="btn quiet sm" data-remove>지우기</button>
+        </div>
+        <div class="field" style="margin-bottom:8px;">
+          <label>받는 사람</label>
+          <input data-name="to" value="${esc(m.to || '')}" placeholder="예) 딸 하나에게" />
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label>남기는 말</label>
+          <textarea data-name="body" placeholder="${esc(placeholder)}">${esc(m.body || '')}</textarea>
+        </div>`;
+      div.querySelector('[data-remove]').onclick = () => div.remove();
+      blocksEl.appendChild(div);
+      return div;
+    }
+
+    // 저장된 답 복원 — 옛 형식(문자열)도 블록 하나로
+    if (Array.isArray(saved)) saved.forEach(m => addBlock(m));
+    else if (typeof saved === 'string' && saved) addBlock({ to: '사랑하는 가족에게', body: saved });
+
+    box.querySelectorAll('[data-msg-chip]').forEach(b => b.onclick = () => {
+      const r = MESSAGE_RECIPIENTS.find(x => x.key === b.dataset.msgChip);
+      const block = addBlock({ to: r.to }, r.placeholder);
+      block.querySelector(r.to ? '[data-name="body"]' : '[data-name="to"]').focus();
+      block.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
   }
 
   async function buildWill() {
