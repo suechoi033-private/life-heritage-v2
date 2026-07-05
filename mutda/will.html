@@ -67,7 +67,7 @@
 <script type="module">
   import { supabase, initAppPage, toast, esc, logEvent } from './js/app.js';
   import { WILL_QUESTIONS, generateWill, formatAddress, HANDWRITE_CHECKLIST,
-           ASSET_CATEGORIES, inheritanceGuide } from './js/will-wizard.js';
+           ASSET_CATEGORIES, inheritanceGuide, heirSuggest, HEIR_NAME_FIELDS } from './js/will-wizard.js';
 
   // 카카오(다음) 우편번호 서비스 — 키 없이 무료 사용
   let postcodeLoader = null;
@@ -247,7 +247,11 @@
         </div>
         <div class="field" style="margin-bottom:8px;">
           <label>무엇을</label>
-          <input data-name="what" value="${esc(r.what || '')}" placeholder="${cat?.placeholder || '예) ○○은행 예금 전부'}" />
+          <div style="display:flex; gap:8px;">
+            <input data-name="what" value="${esc(r.what || '')}" placeholder="${cat?.placeholder || '예) ○○은행 예금 전부'}" style="flex:1;" />
+            ${cat?.key === 'realestate' ? '<button type="button" class="btn sm" data-addr-search style="flex:0 0 auto;">🔍 주소 검색</button>' : ''}
+          </div>
+          ${cat?.key === 'realestate' ? '<div data-addr-embed style="display:none; height:400px; border:1.5px solid var(--line); border-radius:var(--radius-sm); overflow:hidden; margin-top:8px;"></div>' : ''}
         </div>
         <div class="field" style="margin-bottom:0;">
           <label>누구에게</label>
@@ -256,13 +260,64 @@
       div.querySelector('[data-remove]').onclick = () => div.remove();
       const who = div.querySelector('[data-name="who"]');
       who.addEventListener('focus', () => { lastWho = who; });
+
+      // 부동산 항목은 주소 검색으로 넣을 수 있다
+      const searchBtn = div.querySelector('[data-addr-search]');
+      if (searchBtn) searchBtn.onclick = async () => {
+        const whatInput = div.querySelector('[data-name="what"]');
+        const embed = div.querySelector('[data-addr-embed]');
+        const ok = await loadPostcode();
+        if (!ok) {
+          toast('주소 검색을 불러올 수 없어요. 직접 입력해 주세요.');
+          whatInput.focus();
+          return;
+        }
+        embed.style.display = 'block';
+        embed.innerHTML = '';
+        new daum.Postcode({
+          oncomplete: (data) => {
+            let addr = data.roadAddress || data.jibunAddress || '';
+            if (data.buildingName) addr += ` (${data.buildingName})`;
+            whatInput.value = addr;
+            embed.style.display = 'none';
+            whatInput.focus();
+            whatInput.setSelectionRange(whatInput.value.length, whatInput.value.length);
+            toast('동·호수까지 이어 적어주세요');
+          },
+          width: '100%', height: '100%',
+        }).embed(embed);
+        embed.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      };
+
       rowsEl.appendChild(div);
       return div;
     }
 
     (saved || []).forEach(addRow);
     box.querySelectorAll('[data-chip]').forEach(b => b.onclick = () => {
-      const row = addRow({ category: b.dataset.chip });
+      const key = b.dataset.chip;
+      if (key === 'all') {
+        // '모든 재산'은 하나면 충분하다
+        const existing = rowsEl.querySelector('.asset-row[data-category="all"]');
+        if (existing) {
+          existing.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          existing.querySelector('[data-name="who"]').focus();
+          toast('모든 재산 항목은 이미 담겨 있어요. 받을 사람만 정하면 됩니다.');
+          return;
+        }
+        const hasOthers = rowsEl.querySelectorAll('.asset-row').length > 0;
+        const row = addRow({
+          category: 'all',
+          what: hasOthers ? '그 밖에 적지 않은 나머지 재산 전부' : '나의 모든 재산',
+        });
+        row.querySelector('[data-name="who"]').focus();
+        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        toast(hasOthers
+          ? '빠뜨린 재산까지 챙기는 마무리 조항이에요. 받을 사람만 정해주세요.'
+          : '간단하게 가장 좋은 방법이에요. 받을 사람만 정해주세요.');
+        return;
+      }
+      const row = addRow({ category: key });
       row.querySelector('[data-name="what"]').focus();
       row.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
@@ -298,11 +353,30 @@
           ${g.heirs}<br/>
           <span class="small">${g.detail}</span><br/>
           <span class="small" style="opacity:.85;">${g.common}</span>
-          <div style="display:flex; gap:8px; margin-top:12px;">
-            <button type="button" class="btn sm" id="heir-insert" style="flex:2;">"${g.suggest}" 넣기</button>
+          <div style="margin-top:12px;">
+            ${(g.groups || []).map(k => `
+              <div class="field" style="margin-bottom:8px;">
+                <label>${HEIR_NAME_FIELDS[k].label}</label>
+                <input data-heir-name="${k}" placeholder="${HEIR_NAME_FIELDS[k].ph}" />
+              </div>`).join('')}
+          </div>
+          <p class="small" style="font-weight:700; margin:8px 0 0;">넣을 문구: <span id="heir-preview"></span></p>
+          <div style="display:flex; gap:8px; margin-top:10px;">
+            <button type="button" class="btn sm" id="heir-insert" style="flex:2;">'누구에게'에 넣기</button>
             <button type="button" class="btn quiet sm" id="heir-redo" style="flex:1;">다시 답하기</button>
           </div>
         </div>`;
+
+      const readNames = () => {
+        const names = {};
+        panel.querySelectorAll('[data-heir-name]').forEach(i => { names[i.dataset.heirName] = i.value; });
+        return names;
+      };
+      const preview = panel.querySelector('#heir-preview');
+      const updatePreview = () => { preview.textContent = `"${heirSuggest(h, readNames())}"`; };
+      panel.querySelectorAll('[data-heir-name]').forEach(i => i.addEventListener('input', updatePreview));
+      updatePreview();
+
       panel.querySelector('#heir-redo').onclick = () => {
         h.spouse = h.children = h.parents = null;
         heirStep();
@@ -315,9 +389,12 @@
           if (!rowsEl.children.length) { toast('먼저 위의 종류 버튼으로 재산을 하나 담아주세요.'); return; }
           target = rowsEl.lastElementChild.querySelector('[data-name="who"]');
         }
-        target.value = g.suggest;
+        const names = readNames();
+        target.value = heirSuggest(h, names);
         target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        toast('넣었어요. 이름을 함께 적으면 더 분명해져요 (예: 배우자 김○○)');
+        toast(Object.values(names).some(v => v.trim())
+          ? '넣었어요'
+          : '넣었어요. 위에 이름을 적으면 실명으로 들어가요');
       };
     }
 

@@ -48,8 +48,12 @@ export const WILL_QUESTIONS = [
   },
 ];
 
-// 재산 종류 칩 — 누르면 그 종류의 항목이 맞춤 예시와 함께 추가된다
+// 재산 종류 칩 — 누르면 그 종류의 항목이 맞춤 예시와 함께 추가된다.
+// 'all'(모든 재산)은 특별한 칩: 하나만 담을 수 있고, 초안에서
+// 단독이면 "나의 모든 재산은 ○○에게", 다른 재산과 함께면
+// "그 밖에 적지 않은 나머지 재산은 ○○에게"(잔여 조항)로 생성된다.
 export const ASSET_CATEGORIES = [
+  { key: 'all', ico: '✨', label: '모든 재산', placeholder: '나의 모든 재산' },
   { key: 'realestate', ico: '🏠', label: '부동산', placeholder: '예) 서울 ○○구 ○○아파트 101동 202호' },
   { key: 'money', ico: '💰', label: '예금·현금', placeholder: '예) ○○은행 예금 전부' },
   { key: 'insurance', ico: '📄', label: '보험·연금', placeholder: '예) ○○생명 종신보험' },
@@ -58,6 +62,36 @@ export const ASSET_CATEGORIES = [
   { key: 'digital', ico: '📱', label: '디지털', placeholder: '예) 사진 클라우드, ○○ 계정' },
   { key: 'etc', ico: '➕', label: '그 밖의 것', placeholder: '예) 서재의 책 전부' },
 ];
+
+// 상속인 이름 입력 칸 정의 — 마법사 결과에서 실명을 받아 문구를 완성한다
+export const HEIR_NAME_FIELDS = {
+  spouse: { label: '배우자 이름 (선택)', ph: '예) 이몽룡' },
+  children: { label: '자녀 이름 — 여러 명이면 쉼표 (선택)', ph: '예) 김하나, 김두리' },
+  parents: { label: '부모님 성함 (선택)', ph: '예) 김철수, 박영희' },
+  siblings: { label: '형제자매 이름 (선택)', ph: '예) 김둘째, 김셋째' },
+};
+
+// 받침 유무에 따라 와/과를 고른다
+function withWa(w) {
+  const ch = w.charCodeAt(w.length - 1);
+  const batchim = ch >= 0xAC00 && ch <= 0xD7A3 ? (ch - 0xAC00) % 28 !== 0 : true;
+  return w + (batchim ? '과' : '와');
+}
+const heirPart = (role, name) => (name ? `${role} ${name}` : role);
+
+// 가족 구성(flags) + 입력된 이름 → '누구에게' 문구
+export function heirSuggest(h, names = {}) {
+  const s = (names.spouse || '').trim();
+  const c = (names.children || '').trim();
+  const p = (names.parents || '').trim();
+  const b = (names.siblings || '').trim();
+  if (h.spouse && h.children) return `${withWa(heirPart('배우자', s))} ${heirPart('자녀', c)}에게 법정상속분대로`;
+  if (h.spouse && !h.children && h.parents) return `${withWa(heirPart('배우자', s))} ${heirPart('부모님', p)}에게 법정상속분대로`;
+  if (h.spouse) return `${heirPart('배우자', s)}에게`;
+  if (h.children) return `${heirPart('자녀', c)}에게 똑같이 나누어`;
+  if (h.parents) return `${heirPart('부모님', p)}에게`;
+  return `${heirPart('형제자매', b)}에게 똑같이 나누어`;
+}
 
 // 상속 순위 마법사 — 민법 제1000조(상속의 순위)·제1003조(배우자의 상속)
 // 세 번의 답(배우자→자녀→부모)으로 법정 1순위 상속인을 알려준다.
@@ -72,6 +106,7 @@ export function inheritanceGuide({ spouse, children, parents }) {
     heirs: '법정 1순위: 배우자와 자녀 (공동상속)',
     detail: '민법 제1000조·제1003조에 따라 배우자와 자녀가 함께 상속하며, 법정 비율은 배우자 1.5 : 자녀 각 1입니다.',
     suggest: '배우자와 자녀들에게 법정상속분대로',
+    groups: ['spouse', 'children'],
     common,
   };
   if (spouse && !children && parents) return {
@@ -79,6 +114,7 @@ export function inheritanceGuide({ spouse, children, parents }) {
     heirs: '법정 1순위: 배우자와 부모님 (공동상속)',
     detail: '자녀가 없으면 민법 제1003조에 따라 배우자가 부모님(직계존속)과 함께 상속합니다. 비율은 배우자 1.5 : 부모 각 1입니다.',
     suggest: '배우자와 부모님에게 법정상속분대로',
+    groups: ['spouse', 'parents'],
     common,
   };
   if (spouse && !children && !parents) return {
@@ -86,6 +122,7 @@ export function inheritanceGuide({ spouse, children, parents }) {
     heirs: '법정 상속: 배우자 단독',
     detail: '민법 제1003조에 따라 배우자가 단독으로 상속합니다.',
     suggest: '배우자에게',
+    groups: ['spouse'],
     common,
   };
   if (!spouse && children) return {
@@ -93,6 +130,7 @@ export function inheritanceGuide({ spouse, children, parents }) {
     heirs: '법정 1순위: 자녀',
     detail: '민법 제1000조에 따라 자녀(직계비속)가 1순위이며, 여러 명이면 똑같이 나눕니다.',
     suggest: '자녀들에게 똑같이 나누어',
+    groups: ['children'],
     common,
   };
   if (!spouse && !children && parents) return {
@@ -100,6 +138,7 @@ export function inheritanceGuide({ spouse, children, parents }) {
     heirs: '가장 먼저 상속받는 사람: 부모님',
     detail: '민법 제1000조에 따라 직계비속(자녀)이 없으면 직계존속(부모님)이 상속합니다.',
     suggest: '부모님에게',
+    groups: ['parents'],
     common,
   };
   return {
@@ -107,6 +146,7 @@ export function inheritanceGuide({ spouse, children, parents }) {
     heirs: '가장 먼저 상속받는 사람: 형제자매',
     detail: '민법 제1000조에 따라 직계비속·직계존속이 없으면 형제자매가 상속하며, 여러 명이면 똑같이 나눕니다.',
     suggest: '형제자매에게 똑같이 나누어',
+    groups: ['siblings'],
     common,
   };
 }
@@ -122,7 +162,9 @@ export function formatAddress(v) {
 export function generateWill(a) {
   const today = new Date();
   const dateStr = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일`;
-  const assets = (a.assets || []).filter(x => x.what && x.who);
+  const allAssets = (a.assets || []).filter(x => x.who && (x.what || x.category === 'all'));
+  const assets = allAssets.filter(x => x.category !== 'all');
+  const residual = allAssets.find(x => x.category === 'all') || null;
 
   const lines = [];
   lines.push('유 언 장');
@@ -133,11 +175,16 @@ export function generateWill(a) {
   lines.push('나는 맑은 정신으로 다음과 같이 유언한다.');
   lines.push('');
 
-  if (assets.length) {
+  if (assets.length || residual) {
     lines.push('제1조 (재산의 유증)');
     assets.forEach((x, i) => {
       lines.push(`  ${i + 1}. ${x.what}은(는) ${x.who}에게 남긴다.`);
     });
+    if (residual) {
+      lines.push(assets.length
+        ? `  ${assets.length + 1}. 그 밖에 이 유언장에 적지 않은 나머지 재산은 모두 ${residual.who}에게 남긴다.`
+        : `  1. 나의 모든 재산은 ${residual.who}에게 남긴다.`);
+    }
     lines.push('');
   }
 

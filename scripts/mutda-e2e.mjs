@@ -111,10 +111,19 @@ try {
     await page.click('button[data-h="parents-yes"]');
     const guide = await page.locator('#heir-result').innerText();
     if (!guide.includes('배우자와 부모')) throw new Error('상속 마법사 결과 이상: ' + guide);
+    // 이름을 넣으면 실명이 들어간 문구가 만들어진다
+    await page.fill('input[data-heir-name="spouse"]', '이몽룡');
+    const preview = await page.locator('#heir-preview').innerText();
+    if (!preview.includes('배우자 이몽룡과 부모님에게')) throw new Error('이름 미리보기 이상: ' + preview);
     await page.click('#heir-insert');
     const whoVal = await page.inputValue('.asset-row input[data-name="who"]');
-    if (!whoVal.includes('배우자와 부모님')) throw new Error('마법사 제안이 누구에게에 안 들어감: ' + whoVal);
+    if (!whoVal.includes('배우자 이몽룡과 부모님에게')) throw new Error('마법사 제안이 누구에게에 안 들어감: ' + whoVal);
     await page.fill('.asset-row input[data-name="who"]', '딸 김하나');
+    // '모든 재산' 칩 — 다른 재산이 있으면 잔여(나머지) 조항이 된다
+    await page.click('button[data-chip="all"]');
+    const allWhat = await page.inputValue('.asset-row[data-category="all"] input[data-name="what"]');
+    if (!allWhat.includes('나머지')) throw new Error('모든 재산 칩 문구 이상: ' + allWhat);
+    await page.fill('.asset-row[data-category="all"] input[data-name="who"]', '남편 이몽룡');
     await page.click('#next');
     await fill('아들 김두리');
     await fill('화장 후 수목장');
@@ -124,6 +133,7 @@ try {
   await page.waitForSelector('.will-paper', { timeout: 15000 });
   const paper = await page.locator('.will-paper').innerText();
   if (!paper.includes('유 언 장') || !paper.includes('김하나')) throw new Error('유언장 초안 내용 이상: ' + paper.slice(0, 80));
+  if (!paper.includes('나머지 재산은 모두 남편 이몽룡에게')) throw new Error('잔여 조항 누락: ' + paper);
   console.log('  → 초안 생성 확인 (', paper.split('\n')[0], ')');
   await shot('04-will-draft');
   await page.click('#handwritten-btn');
