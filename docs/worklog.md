@@ -20,6 +20,14 @@
 - **검증**: ①백엔드 — DB 내 시나리오 테스트로 스캔→알림 생성(20h 무활동)→함수 호출(200 응답)→하트비트 복귀 시 resolved 전환 확인. cron 잡 2개 active 확인. ②프론트 — Playwright e2e(`scripts/mutda-e2e.mjs` + 실스키마 내장 스텁 `mutda-supabase-stub.mjs`, 샌드박스 이그레스 차단 대응) 10단계 전체 PASS, JS 오류 0.
 - **창업자 액션 대기**: ①Resend API 키 발급 후 `supabase secrets set RESEND_API_KEY=... MUTDA_FROM_EMAIL=...` (키 등록 즉시 이메일 발송 자동 개시) ②유언장·법률 콘텐츠 변호사 감수(현재 "감수 진행 중 베타" 라벨) ③main→gh-pages 배포 승인(잇다 파일 무변경이라 sw.js 캐시 버전 범프 불필요).
 
+**묻다 v2 — 안부확인 알림 앱푸시 전환 + 배포** (사장님 결정: 이메일 알림 폐기, 전화번호+지정순위 앱푸시)
+- **보호자 모델 재설계**: 이름·관계·**전화번호(필수)**·**알림 순위(1~3)** + 행별 초대 링크(`guardian.html?code=…`). 문자/카톡 공유(`navigator.share`) → 보호자가 링크로 가입/로그인(온보딩 생략 경량 프로필) → `mutda_link_guardian` RPC 연결 → 웹푸시 구독. 상태 칩 "수락 대기"/"✓ 연결됨".
+- **발송 파이프라인 v2**: Edge Function 재작성 — 연결된 모든 보호자 인앱 알림(`mutda_notifications`, 홈 배너) + **지정순위 캐스케이드 웹푸시**(1순위 실패 시 다음 순위). 연결된 보호자 없으면 pending 유지→연결 즉시 다음 주기 발송. 이메일 코드 제거.
+- **VAPID 키 관리**: 키쌍 신규 생성 → **Supabase Vault** 저장(개인키가 코드·저장소에 안 남음). service_role 전용 `mutda_get_vapid()` RPC + 클라이언트용 공개키 GET 엔드포인트. (참고: 잇다 push-notify는 VAPID 시크릿 미설정 상태로 발송 불가였음 — 별도 정비 필요)
+- **신규 파일**: `mutda/sw.js`(push 수신 SW), `mutda/js/push.js`, `mutda/guardian.html`, 마이그레이션 `20260705_mutda_v2_push.sql`(적용 완료). checkin/home/login/signup/welcome 갱신.
+- **검증**: VAPID GET 200 확인, e2e 11단계 PASS(보호자 초대 화면 포함), JS 오류 0.
+- **배포**: 사장님 지시로 main 머지·푸시 → pages.yml이 gh-pages 자동 동기화. 라이브: `https://suechoi033-private.github.io/life-heritage-v2/mutda/`
+
 ---
 
 ## 2026-06-13

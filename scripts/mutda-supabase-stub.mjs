@@ -9,7 +9,9 @@ const SCHEMA = {
   mutda_belongings: ["id","user_id","name","category","decision","recipient","note","done","created_at"],
   mutda_checkin_alerts: ["id","user_id","triggered_at","hours_inactive","status","notified_at","resolved_at"],
   mutda_events: ["id","user_id","event","meta","created_at"],
-  mutda_guardians: ["id","user_id","name","relation","phone","email","sort_order","created_at"],
+  mutda_guardians: ["id","user_id","name","relation","phone","email","sort_order","created_at","guardian_user_id","invite_code","linked_at"],
+  mutda_push_subscriptions: ["id","user_id","endpoint","p256dh_key","auth_key","user_agent","created_at"],
+  mutda_notifications: ["id","user_id","kind","title","body","url","read","created_at"],
   mutda_letters: ["id","user_id","kind","recipient","body","status","created_at","updated_at"],
   mutda_pet_plans: ["id","user_id","pet_name","species","age_note","feeding","medical","vet","caretaker_name","caretaker_contact","caretaker_agreed","handover_note","created_at","updated_at"],
   mutda_post_comments: ["id","post_id","user_id","author_name","body","created_at"],
@@ -19,7 +21,7 @@ const SCHEMA = {
   mutda_wills: ["id","user_id","body","version","status","handwritten_at","notarized_at","created_at","updated_at"],
 };
 
-const RPCS = ['mutda_heartbeat'];
+const RPCS = ['mutda_heartbeat', 'mutda_guardian_preview', 'mutda_link_guardian'];
 const LS_KEY = 'mutda-stub-state';
 
 function seedState() {
@@ -67,7 +69,11 @@ function withDefaults(t, row) {
   if (t === 'mutda_letters' && r.status == null) r.status = 'draft';
   if (t === 'mutda_wills') { r.status ??= 'draft'; r.version ??= 1; }
   if (t === 'mutda_belongings') { r.decision ??= 'undecided'; r.done ??= false; }
-  if (t === 'mutda_guardians') r.sort_order ??= 0;
+  if (t === 'mutda_guardians') {
+    r.sort_order ??= 0;
+    r.invite_code ??= Math.random().toString(16).slice(2, 14);
+  }
+  if (t === 'mutda_notifications') r.read ??= false;
   if (t === 'mutda_profiles') {
     r.checkin_enabled ??= false; r.checkin_threshold_hours ??= 18;
     r.share_location ??= false; r.streak_days ??= 1;
@@ -181,6 +187,21 @@ export function createClient() {
     from: (t) => new Query(t),
     async rpc(name, args = {}) {
       if (!RPCS.includes(name)) throw new Error(`[stub] 존재하지 않는 RPC: ${name}`);
+      if (name === 'mutda_guardian_preview') {
+        const g = rows('mutda_guardians').find(r => r.invite_code === args.p_code);
+        if (!g) return { data: [], error: null };
+        const p = rows('mutda_profiles').find(r => r.user_id === g.user_id);
+        return { data: [{ user_name: p?.name || '묻다 사용자', guardian_name: g.name, already_linked: !!g.guardian_user_id }], error: null };
+      }
+      if (name === 'mutda_link_guardian') {
+        if (!state.user) return { data: null, error: { message: '로그인이 필요합니다' } };
+        const g = rows('mutda_guardians').find(r => r.invite_code === args.p_code);
+        if (!g) return { data: null, error: { message: '유효하지 않은 초대예요' } };
+        if (g.user_id === state.user.id) return { data: null, error: { message: '자기 자신을 보호자로 연결할 수 없어요' } };
+        g.guardian_user_id = state.user.id; g.linked_at = new Date().toISOString(); save();
+        const p = rows('mutda_profiles').find(r => r.user_id === g.user_id);
+        return { data: [{ user_name: p?.name || '묻다 사용자', guardian_name: g.name }], error: null };
+      }
       if (name === 'mutda_heartbeat' && state.user) {
         const p = rows('mutda_profiles').find(r => r.user_id === state.user.id);
         if (p) {

@@ -55,6 +55,11 @@
       btn.disabled = false; btn.textContent = '로그인';
       return;
     }
+    // 보호자 초대를 수락하러 온 경우 → 초대 화면으로 복귀
+    if (localStorage.getItem('mutda:guardian_code')) {
+      location.href = './guardian.html';
+      return;
+    }
     // 온보딩을 마치지 않았으면 온보딩으로
     const user = await getUser();
     const profile = user ? await getProfile(user.id) : null;

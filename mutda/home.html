@@ -8,6 +8,7 @@
 </head>
 <body>
 <main>
+  <div id="guardian-alerts"></div>
   <section id="greet" style="padding-top:8px;">
     <h2 class="serif" id="greet-title" style="font-size:23px; line-height:1.5;">안녕하세요</h2>
     <div style="margin-top:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
@@ -37,13 +38,32 @@
 </main>
 
 <script type="module">
-  import { initAppPage, logEvent } from './js/app.js';
+  import { supabase, initAppPage, logEvent, esc } from './js/app.js';
   import { getJourneyState } from './js/journey.js';
   import { renderNav } from './js/nav.js';
 
   renderNav({ active: 'home' });
   const { user, profile } = await initAppPage();
   logEvent('home_view');
+
+  // 내가 보호자인 사람의 안부확인 알림 (푸시를 놓쳐도 앱을 열면 보이도록)
+  {
+    const { data: alerts } = await supabase.from('mutda_notifications')
+      .select('*').eq('user_id', user.id).eq('read', false)
+      .order('created_at', { ascending: false }).limit(3);
+    if (alerts?.length) {
+      const box = document.getElementById('guardian-alerts');
+      box.innerHTML = alerts.map(n => `
+        <div class="notice ${n.kind === 'checkin_alert' ? 'danger' : 'info'}" style="margin-top:8px;">
+          <b>${esc(n.title)}</b><br/>${esc(n.body || '')}
+          <button class="btn quiet sm" data-read="${n.id}" style="margin-top:10px;">확인했어요</button>
+        </div>`).join('');
+      box.querySelectorAll('[data-read]').forEach(b => b.onclick = async () => {
+        await supabase.from('mutda_notifications').update({ read: true }).eq('id', b.dataset.read);
+        b.closest('.notice').remove();
+      });
+    }
+  }
 
   // 인사
   const hour = new Date().getHours();

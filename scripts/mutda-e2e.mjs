@@ -134,18 +134,34 @@ try {
   await page.waitForSelector('#list .item-row', { timeout: 15000 });
   await shot('06-belongings');
 
-  // 8. 안부확인 — 보호 연락처 등록 후 켜기
+  // 8. 안부확인 — 보호자(전화번호+순위) 등록 후 켜기
   step('안부확인');
   await page.goto(`${BASE}/checkin.html`);
   await page.waitForSelector('#g-name', { timeout: 15000 });
   await page.fill('#g-name', '김하나');
   await page.fill('#g-relation', '딸');
-  await page.fill('#g-email', 'hana-test@example.com');
+  await page.fill('#g-phone', '010-1234-5678');
+  await page.selectOption('#g-priority', '1');
   await page.click('#g-add');
   await page.waitForSelector('#guardian-list .item-row', { timeout: 15000 });
+  const guardianRow = await page.locator('#guardian-list .item-row').innerText();
+  if (!guardianRow.includes('수락 대기')) throw new Error('보호자 초대 대기 상태 미표시: ' + guardianRow);
   await page.click('#toggle-btn');
   await page.waitForSelector('#status-line .chip.green', { timeout: 15000 });
   await shot('07-checkin-on');
+
+  // 8-b. 보호자 초대 링크 미리보기 (guardian.html — 초대 코드로 접근)
+  step('보호자 초대 화면');
+  const inviteCode = await page.evaluate(() => {
+    const st = JSON.parse(localStorage.getItem('mutda-stub-state'));
+    return st.tables.mutda_guardians[0].invite_code;
+  });
+  await page.goto(`${BASE}/guardian.html?code=${inviteCode}`);
+  await page.waitForSelector('#actions .btn', { timeout: 15000 });
+  const pvText = await page.locator('#pv-title').innerText();
+  if (!pvText.includes('보호자로 모셨어요')) throw new Error('보호자 초대 미리보기 이상: ' + pvText);
+  await page.evaluate(() => localStorage.removeItem('mutda:guardian_code'));
+  await shot('07b-guardian-invite');
 
   // 9. 커뮤니티 글 + 상세
   step('커뮤니티');

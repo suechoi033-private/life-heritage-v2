@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>보호자 되어주기 — 묻다.</title>
+  <link rel="stylesheet" href="./css/mutda.css" />
+</head>
+<body>
+<main>
+  <div class="auth-wrap">
+    <div class="brand">묻다<span style="color:var(--primary)">.</span></div>
+    <p class="brand-sub">소중한 사람의 안부를 함께 지켜주세요</p>
+
+    <div class="card tint" id="preview-card">
+      <h3 class="serif" id="pv-title">초대를 확인하는 중…</h3>
+      <p class="sub" id="pv-body"></p>
+    </div>
+
+    <div class="card soft">
+      <h3>보호자가 하는 일</h3>
+      <ol class="sub" style="padding-left:20px; margin-top:8px; line-height:1.9;">
+        <li>평소에는 아무것도 하지 않으셔도 됩니다.</li>
+        <li>이분이 묻다에 <b>오랫동안 접속하지 않으면</b>(기본 18시간), 이 기기로 앱 알림이 옵니다.</li>
+        <li>알림을 받으면 전화나 방문으로 안부를 확인해 주세요.</li>
+      </ol>
+    </div>
+
+    <div id="actions"></div>
+    <p class="form-error" id="err"></p>
+  </div>
+</main>
+
+<script type="module">
+  import { supabase, getUser, esc, url, toast, logEvent } from './js/app.js';
+  import { subscribePush, pushSupported } from './js/push.js';
+
+  const params = new URLSearchParams(location.search);
+  const code = params.get('code') || localStorage.getItem('mutda:guardian_code') || '';
+  if (params.get('code')) localStorage.setItem('mutda:guardian_code', params.get('code'));
+
+  const pvTitle = document.getElementById('pv-title');
+  const pvBody = document.getElementById('pv-body');
+  const actions = document.getElementById('actions');
+  const err = document.getElementById('err');
+
+  if (!code) {
+    pvTitle.textContent = '초대 링크가 필요해요';
+    pvBody.textContent = '가족이 보내준 보호자 초대 링크로 다시 열어주세요.';
+    throw new Error('no code');
+  }
+
+  // 1) 초대 미리보기 (로그인 전에도 보임)
+  const { data: preview, error: pvErr } = await supabase.rpc('mutda_guardian_preview', { p_code: code });
+  const pv = Array.isArray(preview) ? preview[0] : preview;
+  if (pvErr || !pv) {
+    pvTitle.textContent = '초대를 찾을 수 없어요';
+    pvBody.textContent = '링크가 만료됐거나 잘못됐을 수 있어요. 가족에게 새 링크를 요청해 주세요.';
+    throw new Error('invalid code');
+  }
+  pvTitle.textContent = `${pv.user_name}님이 ${pv.guardian_name}님을 보호자로 모셨어요`;
+  pvBody.textContent = `${pv.user_name}님의 안부확인 알림을 받는 역할이에요.`;
+  logEvent('guardian_invite_view');
+
+  const user = await getUser();
+
+  // 2) 미로그인 → 가입/로그인 유도 (코드는 localStorage에 보관됨)
+  if (!user) {
+    actions.innerHTML = `
+      <a class="btn" href="${url('signup.html')}">가입하고 보호자 되어주기</a>
+      <a class="btn ghost" href="${url('login.html')}" style="margin-top:8px;">이미 계정이 있어요 — 로그인</a>
+      <p class="small muted center" style="margin-top:10px;">가입은 1분이면 충분해요.</p>`;
+  } else {
+    renderAccept();
+  }
+
+  function renderAccept() {
+    actions.innerHTML = `<button class="btn" id="accept-btn">보호자 수락하고 알림 켜기</button>`;
+    document.getElementById('accept-btn').onclick = accept;
+  }
+
+  async function accept() {
+    err.textContent = '';
+    const btn = document.getElementById('accept-btn');
+    btn.disabled = true; btn.textContent = '연결 중…';
+
+    // 보호자는 온보딩 없이 가벼운 프로필만 만든다
+    const u = await getUser();
+    const { data: profile } = await supabase.from('mutda_profiles')
+      .select('user_id').eq('user_id', u.id).maybeSingle();
+    if (!profile) {
+      await supabase.from('mutda_profiles').insert({
+        user_id: u.id,
+        name: u.user_metadata?.name || pv.guardian_name || '보호자',
+        onboarding: { entry: 'guardian' },
+      });
+    }
+
+    const { error: linkErr } = await supabase.rpc('mutda_link_guardian', { p_code: code });
+    if (linkErr) {
+      err.textContent = linkErr.message || '연결에 실패했어요. 다시 시도해 주세요.';
+      btn.disabled = false; btn.textContent = '보호자 수락하고 알림 켜기';
+      return;
+    }
+    localStorage.removeItem('mutda:guardian_code');
+    logEvent('guardian_linked');
+
+    // 3) 푸시 구독 — 알림의 핵심
+    if (pushSupported()) {
+      const res = await subscribePush();
+      if (res.ok) {
+        toast('알림이 켜졌어요');
+        actions.innerHTML = `
+          <div class="notice info">✅ 연결 완료! 이 기기로 ${esc(pv.user_name)}님의 안부확인 알림을 받아요.</div>
+          <a class="btn" href="${url('home.html')}">묻다 둘러보기</a>`;
+      } else {
+        actions.innerHTML = `
+          <div class="notice warn">연결은 됐지만 알림 권한이 꺼져 있어요.
+          브라우저 설정에서 <b>알림 허용</b>을 켜주셔야 안부확인 알림을 받을 수 있어요.
+          (알림을 못 받아도, 앱을 열면 알림 내역은 보여요.)</div>
+          <button class="btn ghost" id="retry-push">알림 다시 켜보기</button>
+          <a class="btn quiet" href="${url('home.html')}" style="margin-top:8px;">나중에 하기</a>`;
+        document.getElementById('retry-push').onclick = async () => {
+          const r = await subscribePush();
+          if (r.ok) { toast('알림이 켜졌어요'); location.href = url('home.html'); }
+        };
+      }
+    } else {
+      actions.innerHTML = `
+        <div class="notice warn">이 브라우저는 앱 알림을 지원하지 않아요.
+        휴대폰의 Chrome/Safari로 이 링크를 다시 열고, <b>홈 화면에 추가</b>하면 알림을 받을 수 있어요.
+        (앱을 열면 알림 내역은 언제든 보여요.)</div>
+        <a class="btn" href="${url('home.html')}">묻다 둘러보기</a>`;
+    }
+  }
+</script>
+</body>
+</html>

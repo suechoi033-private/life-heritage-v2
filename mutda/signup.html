@@ -62,8 +62,10 @@
     }
     logEvent('signup_done');
     sessionStorage.setItem('mutda:signup_name', name);
-    // 이메일 확인이 꺼져 있으면 세션이 바로 생긴다 → 온보딩으로.
-    if (data?.session) location.href = './onboarding.html';
+    // 보호자 초대를 수락하러 온 경우 → 초대 화면으로 복귀
+    const guardianPending = !!localStorage.getItem('mutda:guardian_code');
+    // 이메일 확인이 꺼져 있으면 세션이 바로 생긴다 → 온보딩(또는 보호자 수락)으로.
+    if (data?.session) location.href = guardianPending ? './guardian.html' : './onboarding.html';
     else location.href = './welcome.html?sent=1';
   });
 </script>

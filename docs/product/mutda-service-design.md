@@ -57,18 +57,33 @@ ideausher Epic 분석)
 ### 3-4. 반려동물 돌봄 플랜 (`pet.html`)
 - 비상시 인계서: 식사·건강·주치의·비상 돌봄인(사전 동의 체크)·인계 메모. 인쇄 지원.
 
-### 3-5. 안부확인 — 고독사 방지 (`checkin.html`)
+### 3-5. 안부확인 — 고독사 방지 (`checkin.html` + `guardian.html`) — v2 앱푸시
 - **하트비트**: 앱을 열면 `mutda_heartbeat()` RPC가 `last_active_at` 갱신(5분 스로틀) +
   미해결 알림 자동 resolve. 위치 공유 동의 시 접속 순간의 GPS도 기록.
+- **보호자(비상연락망)**: 이름·관계·**전화번호(필수)**·**알림 순위(1~3)**로 등록 →
+  행마다 **초대 링크** 생성(`guardian.html?code=…`) → 문자/카톡으로 전송
+  (`navigator.share`/클립보드). 보호자가 링크를 열어 가입/로그인(온보딩 생략, 경량
+  프로필) → `mutda_link_guardian` RPC로 연결 → **웹푸시 구독**(권한 팝업).
+  상태 칩: "수락 대기" → "✓ 연결됨 · 알림 받는 중".
 - **스캔**: pg_cron `mutda-checkin-scan` (30분 주기) — `checkin_enabled` 사용자 중
-  임계시간(기본 18h, 12/18/24/48 선택) 초과 + 보호 연락처 존재 + 24h 내 중복 없음 →
+  임계시간(기본 18h, 12/18/24/48 선택) 초과 + 보호자 존재 + 24h 내 중복 없음 →
   `mutda_checkin_alerts` pending 생성.
-- **발송**: pg_cron `mutda-checkin-notify` (30분 주기) → Edge Function
-  `mutda-checkin-notify` 호출 → Resend로 보호 연락처 이메일 발송 → notified 마킹.
-  `RESEND_API_KEY` 미설정 시 pending 유지(키 등록 즉시 자동 발송 재개). **← 창업자 액션 필요**
+- **발송(앱푸시)**: pg_cron → Edge Function `mutda-checkin-notify` —
+  ① 연결된 모든 보호자에게 인앱 알림(`mutda_notifications`, 홈 상단 배너)
+  ② **지정순위 캐스케이드 웹푸시**: 1순위 전달 성공 시 종료, 실패(구독 없음/만료) 시
+  다음 순위로 ③ notified 마킹. 연결된 보호자가 없으면 pending 유지 —
+  연결되는 즉시 다음 주기에 발송. 이메일 발송은 제거(창업자 결정).
+- **VAPID 키**: Supabase Vault(`mutda_vapid_public/private`)에 저장.
+  service_role 전용 RPC `mutda_get_vapid()`로 함수가 읽고, 클라이언트는
+  함수 GET(`/functions/v1/mutda-checkin-notify`)으로 공개키만 받는다.
+  개인키는 코드·저장소·시크릿 어디에도 평문으로 남지 않는다.
+- **푸시 수신**: `mutda/sw.js`(push/notificationclick, scope `./`) +
+  `mutda/js/push.js`(구독→`mutda_push_subscriptions` 저장). iOS Safari는
+  홈 화면 추가(PWA) 후 푸시 가능 — guardian.html에 안내 문구.
 - 정직한 한계 고지: 웹앱은 폰 전체 사용시간·백그라운드 GPS를 측정할 수 없다.
   "묻다 접속" 기준임을 화면에 명시. (네이티브 앱 전환 시 Screen Time/Significant
-  Location Change API로 업그레이드 경로 있음.)
+  Location Change API로 업그레이드 경로 있음.) 문자(SMS) 발송은 유료 사업자 계약
+  필요 — 전화번호는 저장해 두었으므로 v3에서 추가 가능.
 
 ## 4. 데이터 (모두 RLS, 소유자 전용 — 커뮤니티 읽기만 공개)
 
@@ -93,5 +108,7 @@ Edge Function: `supabase/functions/mutda-checkin-notify/` (배포 완료, verify
 - 퍼널 이벤트: landing_view → signup_view/done → onboarding_start/done → home_view →
   will_view/draft/handwritten/notarized, letter_saved, belonging_added, pet_plan_saved,
   checkin_on, guardian_added, post_created (`mutda_events`).
-- **창업자 승인/액션 대기**: ① Resend API 키 발급·등록(이메일 발송 활성화)
-  ② 유언장·법률 콘텐츠 변호사 감수 ③ main→gh-pages 배포 승인.
+- **창업자 액션 대기**: ① 유언장·법률 콘텐츠 변호사 감수(현재 "감수 진행 중 베타" 라벨)
+  ② SMS 알림(v3) 원하면 문자 발송 사업자(알리고·솔라피 등) 계약.
+- 2026-07-05 창업자 결정: 이메일 알림 폐기 → 전화번호 저장 + 지정순위 앱푸시로 전환,
+  즉시 배포. (본 문서 v2 반영)

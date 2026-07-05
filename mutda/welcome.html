@@ -27,7 +27,9 @@
   const go = document.getElementById('go-btn');
 
   const user = await getUser();
-  if (user) {
+  if (user && localStorage.getItem('mutda:guardian_code')) {
+    location.replace('./guardian.html');
+  } else if (user) {
     title.textContent = '이메일 확인 완료!';
     body.textContent = '이제 묻다가 몇 가지를 여쭤볼게요. 3분이면 당신만의 준비 여정이 만들어집니다.';
     go.style.display = '';
