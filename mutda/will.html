@@ -66,7 +66,8 @@
 
 <script type="module">
   import { supabase, initAppPage, toast, esc, logEvent } from './js/app.js';
-  import { WILL_QUESTIONS, generateWill, formatAddress, HANDWRITE_CHECKLIST } from './js/will-wizard.js';
+  import { WILL_QUESTIONS, generateWill, formatAddress, HANDWRITE_CHECKLIST,
+           ASSET_CATEGORIES, inheritanceGuide } from './js/will-wizard.js';
 
   // 카카오(다음) 우편번호 서비스 — 키 없이 무료 사용
   let postcodeLoader = null;
@@ -134,21 +135,8 @@
     const box = document.getElementById('box');
     const saved = answers[q.key];
 
-    if (q.type === 'list') {
-      const rows = (Array.isArray(saved) && saved.length ? saved : [{}]);
-      const rowHtml = (r = {}) => `
-        <div class="card soft asset-row" style="padding:14px;">
-          ${q.fields.map(f => `
-            <div class="field" style="margin-bottom:8px;">
-              <label>${f.label}</label>
-              <input data-name="${f.name}" value="${esc(r[f.name] || '')}" placeholder="${f.placeholder}" />
-            </div>`).join('')}
-        </div>`;
-      box.innerHTML = `<div id="rows">${rows.map(rowHtml).join('')}</div>
-        <button class="btn quiet sm" id="add-row">${q.addLabel}</button>`;
-      box.querySelector('#add-row').onclick = () => {
-        box.querySelector('#rows').insertAdjacentHTML('beforeend', rowHtml());
-      };
+    if (q.type === 'assets') {
+      renderAssets(box, Array.isArray(saved) ? saved : []);
     } else if (q.type === 'address') {
       const base = typeof saved === 'object' ? (saved?.base || '') : (saved || '');
       const detail = typeof saved === 'object' ? (saved?.detail || '') : '';
@@ -200,13 +188,17 @@
     stage.querySelector('#prev')?.addEventListener('click', () => { idx--; renderStep(); });
     stage.querySelector('#next').addEventListener('click', async () => {
       let value;
-      if (q.type === 'list') {
-        value = [...box.querySelectorAll('.asset-row')].map(row => {
-          const o = {};
-          row.querySelectorAll('input').forEach(i => { o[i.dataset.name] = i.value.trim(); });
-          return o;
-        }).filter(o => Object.values(o).some(Boolean));
-        if (q.required && !value.length) return alert('한 가지만이라도 적어주세요.');
+      if (q.type === 'assets') {
+        value = [...box.querySelectorAll('.asset-row')].map(row => ({
+          category: row.dataset.category || '',
+          what: row.querySelector('[data-name="what"]').value.trim(),
+          who: row.querySelector('[data-name="who"]').value.trim(),
+        })).filter(o => o.what || o.who);
+        if (q.required && !value.length)
+          return alert('위의 종류 버튼을 눌러, 한 가지만이라도 담아보세요.');
+        const incomplete = value.find(o => o.what && !o.who);
+        if (incomplete)
+          return alert(`'${incomplete.what}'을(를) 누구에게 남길지 적어주세요. 막막하면 상속 순위 마법사를 눌러보세요.`);
       } else if (q.type === 'address') {
         value = {
           base: box.querySelector('#addr-base').value.trim(),
@@ -222,6 +214,118 @@
       if (idx === WILL_QUESTIONS.length - 1) await buildWill();
       else { idx++; renderStep(); }
     });
+  }
+
+  // 재산 단계 — 종류 칩으로 항목을 담고, '누구에게'는 상속 순위 마법사가 돕는다
+  function renderAssets(box, saved) {
+    box.innerHTML = `
+      <div id="asset-chips" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;">
+        ${ASSET_CATEGORIES.map(c => `
+          <button type="button" class="btn quiet sm" data-chip="${c.key}">${c.ico} ${c.label}</button>`).join('')}
+      </div>
+      <div id="rows"></div>
+      <div class="card soft" style="padding:14px; margin-top:4px;">
+        <p class="small" style="color:var(--ink-soft);">‘누구에게’가 막막하신가요?
+        세 번만 답하면 법에 정해진 상속 순위를 알려드려요.</p>
+        <button type="button" class="btn ghost sm" id="heir-open" style="margin-top:8px;">🧭 상속 순위 마법사</button>
+        <div id="heir-panel" style="margin-top:10px;"></div>
+      </div>`;
+
+    const rowsEl = box.querySelector('#rows');
+    let lastWho = null; // 마법사 결과를 넣을 대상 추적
+
+    function addRow(r = {}) {
+      const cat = ASSET_CATEGORIES.find(c => c.key === r.category);
+      const div = document.createElement('div');
+      div.className = 'card soft asset-row';
+      div.style.padding = '14px';
+      div.dataset.category = r.category || '';
+      div.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <span class="chip green">${cat ? `${cat.ico} ${cat.label}` : '📦 재산'}</span>
+          <button type="button" class="btn quiet sm" data-remove>지우기</button>
+        </div>
+        <div class="field" style="margin-bottom:8px;">
+          <label>무엇을</label>
+          <input data-name="what" value="${esc(r.what || '')}" placeholder="${cat?.placeholder || '예) ○○은행 예금 전부'}" />
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label>누구에게</label>
+          <input data-name="who" value="${esc(r.who || '')}" placeholder="예) 딸 김하나 / 배우자에게" />
+        </div>`;
+      div.querySelector('[data-remove]').onclick = () => div.remove();
+      const who = div.querySelector('[data-name="who"]');
+      who.addEventListener('focus', () => { lastWho = who; });
+      rowsEl.appendChild(div);
+      return div;
+    }
+
+    (saved || []).forEach(addRow);
+    box.querySelectorAll('[data-chip]').forEach(b => b.onclick = () => {
+      const row = addRow({ category: b.dataset.chip });
+      row.querySelector('[data-name="what"]').focus();
+      row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+
+    // ---- 상속 순위 마법사 ----
+    const panel = box.querySelector('#heir-panel');
+    const h = { spouse: null, children: null, parents: null };
+
+    const ask = (key, question, yes, no) => `
+      <p class="small" style="font-weight:700; margin:6px 0;">${question}</p>
+      <div style="display:flex; gap:8px;">
+        <button type="button" class="btn quiet sm" style="flex:1;" data-h="${key}-yes">${yes}</button>
+        <button type="button" class="btn quiet sm" style="flex:1;" data-h="${key}-no">${no}</button>
+      </div>`;
+
+    function heirStep() {
+      if (h.spouse === null) panel.innerHTML = ask('spouse', '1. 배우자가 계신가요?', '네, 있어요', '아니요');
+      else if (h.children === null) panel.innerHTML = ask('children', '2. 자녀가 있나요?', '네, 있어요', '아니요');
+      else if (!h.children && h.parents === null) panel.innerHTML = ask('parents', '3. 부모님이 생존해 계신가요?', '네, 계세요', '아니요');
+      else return heirResult();
+      panel.querySelectorAll('[data-h]').forEach(b => b.onclick = () => {
+        const [key, ans] = b.dataset.h.split('-');
+        h[key] = ans === 'yes';
+        heirStep();
+      });
+    }
+
+    function heirResult() {
+      const g = inheritanceGuide(h);
+      panel.innerHTML = `
+        <div class="notice info" id="heir-result" style="margin-bottom:0;">
+          <b>${g.situation}</b><br/>
+          ${g.heirs}<br/>
+          <span class="small">${g.detail}</span><br/>
+          <span class="small" style="opacity:.85;">${g.common}</span>
+          <div style="display:flex; gap:8px; margin-top:12px;">
+            <button type="button" class="btn sm" id="heir-insert" style="flex:2;">"${g.suggest}" 넣기</button>
+            <button type="button" class="btn quiet sm" id="heir-redo" style="flex:1;">다시 답하기</button>
+          </div>
+        </div>`;
+      panel.querySelector('#heir-redo').onclick = () => {
+        h.spouse = h.children = h.parents = null;
+        heirStep();
+      };
+      panel.querySelector('#heir-insert').onclick = () => {
+        // 마지막으로 만졌던 '누구에게' → 없으면 첫 빈칸 → 그것도 없으면 새 항목
+        let target = lastWho && document.body.contains(lastWho) ? lastWho : null;
+        if (!target) target = [...rowsEl.querySelectorAll('[data-name="who"]')].find(i => !i.value.trim()) || null;
+        if (!target) {
+          if (!rowsEl.children.length) { toast('먼저 위의 종류 버튼으로 재산을 하나 담아주세요.'); return; }
+          target = rowsEl.lastElementChild.querySelector('[data-name="who"]');
+        }
+        target.value = g.suggest;
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        toast('넣었어요. 이름을 함께 적으면 더 분명해져요 (예: 배우자 김○○)');
+      };
+    }
+
+    box.querySelector('#heir-open').onclick = () => {
+      h.spouse = h.children = h.parents = null;
+      heirStep();
+      panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
   }
 
   async function buildWill() {

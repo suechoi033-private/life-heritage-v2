@@ -23,14 +23,10 @@ export const WILL_QUESTIONS = [
     required: true,
   },
   {
-    key: 'assets', type: 'list',
-    q: '남기고 싶은 재산과, 그 재산을 받을 사람을 하나씩 알려주세요.',
-    help: '집, 예금, 보험, 자동차, 디지털 자산(사진·계정), 아끼는 물건까지. 떠오르는 것부터 하나씩 적으면 됩니다.',
-    fields: [
-      { name: 'what', label: '무엇을', placeholder: '예) ○○은행 예금 전부' },
-      { name: 'who', label: '누구에게', placeholder: '예) 딸 김하나' },
-    ],
-    addLabel: '+ 재산 하나 더 적기', required: true,
+    key: 'assets', type: 'assets',
+    q: '남기고 싶은 것과, 받을 사람을 알려주세요.',
+    help: '아래에서 종류를 누르면 하나씩 담깁니다. \'누구에게\'가 막막하면 상속 순위 마법사가 도와드려요.',
+    required: true,
   },
   {
     key: 'executor', type: 'text',
@@ -51,6 +47,69 @@ export const WILL_QUESTIONS = [
     placeholder: '예) 서로 아끼며 살아라. 나는 충분히 행복했다.', required: false,
   },
 ];
+
+// 재산 종류 칩 — 누르면 그 종류의 항목이 맞춤 예시와 함께 추가된다
+export const ASSET_CATEGORIES = [
+  { key: 'realestate', ico: '🏠', label: '부동산', placeholder: '예) 서울 ○○구 ○○아파트 101동 202호' },
+  { key: 'money', ico: '💰', label: '예금·현금', placeholder: '예) ○○은행 예금 전부' },
+  { key: 'insurance', ico: '📄', label: '보험·연금', placeholder: '예) ○○생명 종신보험' },
+  { key: 'vehicle', ico: '🚗', label: '자동차', placeholder: '예) ○○ 승용차 (12가3456)' },
+  { key: 'valuables', ico: '💍', label: '귀중품', placeholder: '예) 결혼 예물 시계' },
+  { key: 'digital', ico: '📱', label: '디지털', placeholder: '예) 사진 클라우드, ○○ 계정' },
+  { key: 'etc', ico: '➕', label: '그 밖의 것', placeholder: '예) 서재의 책 전부' },
+];
+
+// 상속 순위 마법사 — 민법 제1000조(상속의 순위)·제1003조(배우자의 상속)
+// 세 번의 답(배우자→자녀→부모)으로 법정 1순위 상속인을 알려준다.
+// 성년/미성년은 상속 순위에 영향이 없어 묻지 않는다.
+export function inheritanceGuide({ spouse, children, parents }) {
+  const common = '유언장은 이 순위와 다르게 자유롭게 지정할 수 있어요. '
+    + '다만 배우자·자녀·부모에게는 법이 보장하는 최소 몫(유류분)이 있어, '
+    + '전부 다른 사람에게 남기면 일부는 청구될 수 있습니다.';
+
+  if (spouse && children) return {
+    situation: '배우자와 자녀가 있으시네요.',
+    heirs: '법정 1순위: 배우자와 자녀 (공동상속)',
+    detail: '민법 제1000조·제1003조에 따라 배우자와 자녀가 함께 상속하며, 법정 비율은 배우자 1.5 : 자녀 각 1입니다.',
+    suggest: '배우자와 자녀들에게 법정상속분대로',
+    common,
+  };
+  if (spouse && !children && parents) return {
+    situation: '기혼이지만 자녀가 없으시네요.',
+    heirs: '법정 1순위: 배우자와 부모님 (공동상속)',
+    detail: '자녀가 없으면 민법 제1003조에 따라 배우자가 부모님(직계존속)과 함께 상속합니다. 비율은 배우자 1.5 : 부모 각 1입니다.',
+    suggest: '배우자와 부모님에게 법정상속분대로',
+    common,
+  };
+  if (spouse && !children && !parents) return {
+    situation: '배우자가 계시고, 자녀와 부모님은 안 계시네요.',
+    heirs: '법정 상속: 배우자 단독',
+    detail: '민법 제1003조에 따라 배우자가 단독으로 상속합니다.',
+    suggest: '배우자에게',
+    common,
+  };
+  if (!spouse && children) return {
+    situation: '자녀가 있으시네요.',
+    heirs: '법정 1순위: 자녀',
+    detail: '민법 제1000조에 따라 자녀(직계비속)가 1순위이며, 여러 명이면 똑같이 나눕니다.',
+    suggest: '자녀들에게 똑같이 나누어',
+    common,
+  };
+  if (!spouse && !children && parents) return {
+    situation: '배우자와 자녀 없이, 부모님이 계시네요.',
+    heirs: '가장 먼저 상속받는 사람: 부모님',
+    detail: '민법 제1000조에 따라 직계비속(자녀)이 없으면 직계존속(부모님)이 상속합니다.',
+    suggest: '부모님에게',
+    common,
+  };
+  return {
+    situation: '배우자·자녀·부모님이 안 계시네요.',
+    heirs: '가장 먼저 상속받는 사람: 형제자매',
+    detail: '민법 제1000조에 따라 직계비속·직계존속이 없으면 형제자매가 상속하며, 여러 명이면 똑같이 나눕니다.',
+    suggest: '형제자매에게 똑같이 나누어',
+    common,
+  };
+}
 
 // 주소 답은 {base(검색된 주소), detail(동·호수)} 객체 또는 옛 형식의 문자열
 export function formatAddress(v) {

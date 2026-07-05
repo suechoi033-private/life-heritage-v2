@@ -101,8 +101,19 @@ try {
     await page.fill('#addr-base', '서울특별시 테스트구 테스트로 12');
     await page.fill('#addr-detail', '101동 202호');
     await page.click('#next');
-    // 재산 리스트
+    // 재산 단계 — 종류 칩으로 담기
+    await page.click('button[data-chip="money"]');
     await page.fill('.asset-row input[data-name="what"]', '테스트은행 예금 전부');
+    // 상속 순위 마법사: 배우자 있음·자녀 없음·부모 생존 → "배우자와 부모님" 안내 기대
+    await page.click('#heir-open');
+    await page.click('button[data-h="spouse-yes"]');
+    await page.click('button[data-h="children-no"]');
+    await page.click('button[data-h="parents-yes"]');
+    const guide = await page.locator('#heir-result').innerText();
+    if (!guide.includes('배우자와 부모')) throw new Error('상속 마법사 결과 이상: ' + guide);
+    await page.click('#heir-insert');
+    const whoVal = await page.inputValue('.asset-row input[data-name="who"]');
+    if (!whoVal.includes('배우자와 부모님')) throw new Error('마법사 제안이 누구에게에 안 들어감: ' + whoVal);
     await page.fill('.asset-row input[data-name="who"]', '딸 김하나');
     await page.click('#next');
     await fill('아들 김두리');
