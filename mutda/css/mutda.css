@@ -293,14 +293,20 @@ main {
   margin-top: 18px;
 }
 
-/* ---------- 리스트 아이템 (유품/편지 등) ---------- */
+/* ---------- 리스트 아이템 (유품/편지 등) ----------
+   글자 크기를 키운 기기(접근성 확대)에서 버튼이 본문을 짓눌러
+   글자가 한 글자씩 줄바꿈되는 문제 방지: 항상 wrap하고, 본문은
+   최소 폭을 보장해 넘치는 요소(버튼)가 다음 줄로 내려가게 한다. */
 .item-row {
-  display: flex; align-items: center; gap: 10px;
+  display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px;
   padding: 10px 0;
   border-bottom: 1px solid var(--line);
 }
 .item-row:last-child { border-bottom: none; }
-.item-row .grow { flex: 1; min-width: 0; }
+.item-row .grow { flex: 1 1 180px; min-width: 180px; }
+.item-row > button, .item-row > .row-actions {
+  flex: 0 0 auto; margin-left: auto;
+}
 .item-row .title { font-weight: 700; font-size: 15.5px; }
 .item-row .meta { font-size: 13px; color: var(--ink-muted); }
 

@@ -188,9 +188,11 @@
           <span class="meta" data-note-view="${b.id}">${esc(b.category || '')}${note ? ' · ' + noteShort : ''}</span>
           ${note.length > 40 ? `<button class="btn quiet sm" data-more="${b.id}" style="padding:2px 10px; font-size:12px; margin-top:4px;">더보기</button>` : ''}
         </span>
-        ${b.decision === 'entrust' && b.custodian ? `<button class="btn sm" data-ask="${b.id}">📨 부탁 전하기</button>` : ''}
-        <button class="btn quiet sm" data-toggle-share="${b.id}">${b.shared_post_id ? '나눔 내리기' : '🕯️ 나누기'}</button>
-        <button class="btn quiet sm" data-del="${b.id}">삭제</button>
+        <span class="row-actions" style="display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;">
+          ${b.decision === 'entrust' && b.custodian ? `<button class="btn sm" data-ask="${b.id}">📨 부탁 전하기</button>` : ''}
+          <button class="btn quiet sm" data-toggle-share="${b.id}">${b.shared_post_id ? '나눔 내리기' : '🕯️ 나누기'}</button>
+          <button class="btn quiet sm" data-del="${b.id}">삭제</button>
+        </span>
       </div>`;
     }).join('');
 

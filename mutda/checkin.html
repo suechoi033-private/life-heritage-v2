@@ -191,8 +191,10 @@
             : '<span class="chip warm" style="margin-left:6px;">수락 대기 — 링크를 보내주세요</span>'}<br/>
           <span class="meta">${esc(g.phone || '')}</span>
         </span>
-        ${g.guardian_user_id ? '' : `<button class="btn sm" data-share="${g.id}">📨 초대 보내기</button>`}
-        <button class="btn quiet sm" data-del="${g.id}">삭제</button>
+        <span class="row-actions" style="display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;">
+          ${g.guardian_user_id ? '' : `<button class="btn sm" data-share="${g.id}">📨 초대 보내기</button>`}
+          <button class="btn quiet sm" data-del="${g.id}">삭제</button>
+        </span>
       </div>`).join('');
 
     box.querySelectorAll('[data-share]').forEach(b => b.onclick = () => {
