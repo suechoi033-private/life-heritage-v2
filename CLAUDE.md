@@ -2,6 +2,8 @@
 
 모든 세션은 이 파일을 시작 시 읽는다. 최상위 기준은 `docs/company/CHARTER.md`(헌장),
 전략은 `docs/strategy.md`, 디자인은 `docs/company/design-system.md`.
+**앱 기획·개발 시 필독: `docs/company/app-principles.md`** (창업자 지정 4원칙 —
+공통 배포 스크립트 재사용 · 디자인 시스템 먼저 · 개인정보방침 공통 템플릿 · 중복 코드 금지).
 
 ## 작업 로그 — 매 세션 필수
 
