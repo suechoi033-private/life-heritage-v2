@@ -195,6 +195,11 @@ try {
   // 판매하기 → 공개 동의 안내가 보이는지
   await page.selectOption('#in-decision', 'sell');
   await page.waitForSelector('#sale-consent-row', { state: 'visible', timeout: 15000 });
+  // 맡겨두기 → 임시 보관인 + '나중에 받을 사람' 라벨
+  await page.selectOption('#in-decision', 'entrust');
+  await page.waitForSelector('#custodian-field', { state: 'visible', timeout: 15000 });
+  const rl = await page.locator('#recipient-label').innerText();
+  if (!rl.includes('나중에 받을 사람')) throw new Error('맡겨두기 라벨 이상: ' + rl);
   await page.selectOption('#in-decision', 'give');
   await page.fill('#in-recipient', '큰아들');
   await page.fill('#in-note', '1988년 결혼 예물로 산 시계인데 시계방 김씨가 고쳐준 적이 있고 아직도 잘 간다. 오래 간직해 주면 좋겠다.');

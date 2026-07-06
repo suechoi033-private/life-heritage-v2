@@ -33,6 +33,7 @@
       <select id="in-decision">
         <option value="undecided">아직 고민 중</option>
         <option value="give">물려주기</option>
+        <option value="entrust">맡겨두기 (돌봄 부탁)</option>
         <option value="donate">기부하기</option>
         <option value="sell">판매하기</option>
         <option value="keep">간직하기 (내가 끝까지)</option>
@@ -47,8 +48,13 @@
         돕는 서비스로 보답하겠습니다.</span>
       </span>
     </label>
+    <div class="field" id="custodian-field" style="display:none;">
+      <label>임시 보관인 (누구에게 맡길까요)</label>
+      <input id="in-custodian" placeholder="예) 동생 김두리" />
+      <p class="hint">예: 아들에게 물려줄 귀중품인데 아직 미성년이라, 믿을 만한 사람에게 잠시 부탁해요.</p>
+    </div>
     <div class="field" id="recipient-field" style="display:none;">
-      <label>누구에게</label>
+      <label id="recipient-label">누구에게</label>
       <input id="in-recipient" placeholder="예) 큰아들 / ○○복지관" />
     </div>
     <div class="field">
@@ -77,12 +83,13 @@
   import { renderNav } from './js/nav.js';
 
   renderNav({ active: 'home', title: '유품 정리' });
-  const { user } = await initAppPage();
+  const { user, profile } = await initAppPage();
   logEvent('belongings_view');
 
   const DECISION_LABEL = {
     undecided: ['고민 중', 'chip'],
     give: ['물려주기', 'chip green'],
+    entrust: ['맡기기', 'chip green'],
     donate: ['기부', 'chip green'],
     sell: ['판매', 'chip warm'],
     keep: ['간직', 'chip warm'],
@@ -91,16 +98,21 @@
 
   const decisionSel = document.getElementById('in-decision');
   const recipientField = document.getElementById('recipient-field');
+  const custodianField = document.getElementById('custodian-field');
   const saleConsentRow = document.getElementById('sale-consent-row');
   decisionSel.onchange = () => {
-    recipientField.style.display =
-      ['give', 'donate'].includes(decisionSel.value) ? '' : 'none';
-    saleConsentRow.style.display = decisionSel.value === 'sell' ? '' : 'none';
+    const d = decisionSel.value;
+    recipientField.style.display = ['give', 'donate', 'entrust'].includes(d) ? '' : 'none';
+    custodianField.style.display = d === 'entrust' ? '' : 'none';
+    document.getElementById('recipient-label').textContent =
+      d === 'entrust' ? '나중에 받을 사람' : '누구에게';
+    saleConsentRow.style.display = d === 'sell' ? '' : 'none';
   };
 
   // 나눔 글 제목 — 물건의 자리를 정한 마음이 제목이 된다
   const DECISION_PHRASE = {
-    give: '물려주기로 정했습니다', donate: '기부하기로 정했습니다',
+    give: '물려주기로 정했습니다', entrust: '잠시 맡겨두기로 정했습니다',
+    donate: '기부하기로 정했습니다',
     sell: '판매하기로 정했습니다', keep: '간직하기로 정했습니다',
     discard: '비우기로 정했습니다', undecided: '아직 자리를 고민 중입니다',
   };
@@ -126,6 +138,8 @@
       category: document.getElementById('in-category').value,
       decision: decisionSel.value,
       recipient: document.getElementById('in-recipient').value.trim() || null,
+      custodian: decisionSel.value === 'entrust'
+        ? (document.getElementById('in-custodian').value.trim() || null) : null,
       note: document.getElementById('in-note').value.trim() || null,
       public_sale: decisionSel.value === 'sell' && document.getElementById('in-public-sale').checked,
     }).select().single();
@@ -138,7 +152,7 @@
     } else {
       toast('목록에 담았어요');
     }
-    ['in-name', 'in-recipient', 'in-note'].forEach(id => document.getElementById(id).value = '');
+    ['in-name', 'in-recipient', 'in-custodian', 'in-note'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('in-share').checked = false;
     load();
   };
@@ -164,12 +178,17 @@
                title="정리 완료" style="width:20px;height:20px;accent-color:var(--primary);" />
         <span class="grow">
           <span class="title">${esc(b.name)}</span>
-          <span class="${cls}" style="margin-left:6px;">${label}${b.recipient ? ' → ' + esc(b.recipient) : ''}</span>
+          <span class="${cls}" style="margin-left:6px;">${label}${
+            b.decision === 'entrust'
+              ? `${b.custodian ? ' → ' + esc(b.custodian) : ''}${b.recipient ? ' (이후 ' + esc(b.recipient) + '에게)' : ''}`
+              : (b.recipient ? ' → ' + esc(b.recipient) : '')
+          }</span>
           ${b.public_sale ? '<span class="chip" style="margin-left:4px;">공개 동의</span>' : ''}
           ${b.shared_post_id ? '<span class="chip warm" style="margin-left:4px;">🕯️ 나눔 중</span>' : ''}<br/>
           <span class="meta" data-note-view="${b.id}">${esc(b.category || '')}${note ? ' · ' + noteShort : ''}</span>
           ${note.length > 40 ? `<button class="btn quiet sm" data-more="${b.id}" style="padding:2px 10px; font-size:12px; margin-top:4px;">더보기</button>` : ''}
         </span>
+        ${b.decision === 'entrust' && b.custodian ? `<button class="btn sm" data-ask="${b.id}">📨 부탁 전하기</button>` : ''}
         <button class="btn quiet sm" data-toggle-share="${b.id}">${b.shared_post_id ? '나눔 내리기' : '🕯️ 나누기'}</button>
         <button class="btn quiet sm" data-del="${b.id}">삭제</button>
       </div>`;
@@ -189,6 +208,23 @@
       if (c.checked) toast('실제로 정리하셨군요. 하나가 가벼워졌어요.');
       load();
     });
+    // 맡겨두기 — 임시 보관인에게 부탁을 직접 전한다 (카톡/문자)
+    list.querySelectorAll('[data-ask]').forEach(btn => btn.onclick = async () => {
+      const b = data.find(x => x.id === btn.dataset.ask);
+      const text = `${b.custodian}님께 부탁드려요.\n\n`
+        + `'${b.name}'을(를) 당분간 맡아주실 수 있을까요?`
+        + `${b.recipient ? `\n때가 되면 ${b.recipient}에게 전해질 물건이에요.` : ''}`
+        + `${b.note ? `\n\n이 물건의 이야기: ${b.note}` : ''}`
+        + `\n\n— ${profile.name} 드림 (묻다에서 남긴 부탁)`;
+      if (navigator.share) {
+        try { await navigator.share({ text }); toast('부탁을 전했어요'); } catch { /* 취소 */ }
+      } else {
+        try { await navigator.clipboard.writeText(text);
+          toast('복사했어요. 카톡·문자에 붙여넣어 보내세요.'); } catch { /* 무시 */ }
+      }
+      logEvent('belonging_entrust_asked');
+    });
+
     list.querySelectorAll('[data-toggle-share]').forEach(btn => btn.onclick = async () => {
       const b = data.find(x => x.id === btn.dataset.toggleShare);
       if (b.shared_post_id) {
