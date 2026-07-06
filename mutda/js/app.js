@@ -115,13 +115,53 @@ export async function initAppPage() {
   return { user, profile };
 }
 
+// ---------- 인입경로(출처) 캡처 ----------
+// 세션 첫 진입의 referrer·UTM을 한 번만 잡아 sessionStorage에 보관.
+// 이후 모든 이벤트 meta에 붙여 "어디서 들어왔는가"를 집계 가능하게 한다. PII 없음.
+function captureSource() {
+  try {
+    const cached = sessionStorage.getItem('mutda_src');
+    if (cached) return JSON.parse(cached);
+    const p = new URLSearchParams(location.search);
+    const ref = document.referrer || '';
+    let src = p.get('utm_source') || '';
+    if (!src && ref) {
+      try {
+        const host = new URL(ref).hostname.replace(/^www\./, '');
+        if (host.includes(location.hostname)) src = 'internal';
+        else if (/brunch\.co\.kr/.test(host)) src = 'brunch';
+        else if (/tistory\.com/.test(host)) src = 'tistory';
+        else if (/(instagram|threads)\.com/.test(host)) src = 'instagram';
+        else if (/(facebook|fb)\.com/.test(host)) src = 'facebook';
+        else if (/(google|naver|daum|bing)\./.test(host)) src = 'search';
+        else src = host;
+      } catch { src = 'ref'; }
+    }
+    const source = {
+      src: src || 'direct',
+      ref: ref.slice(0, 200) || null,
+      utm: {
+        source: p.get('utm_source') || null,
+        medium: p.get('utm_medium') || null,
+        campaign: p.get('utm_campaign') || null,
+        content: p.get('utm_content') || null,
+      },
+    };
+    sessionStorage.setItem('mutda_src', JSON.stringify(source));
+    return source;
+  } catch {
+    return { src: 'unknown' };
+  }
+}
+
 // ---------- 이벤트 로그 ----------
 export async function logEvent(event, meta = {}) {
   try {
     const user = await getUser();
+    const source = captureSource();
     await supabase.from('mutda_events').insert({
       user_id: user?.id ?? null, event,
-      meta: { ...meta, page: location.pathname.split('/').pop() },
+      meta: { ...meta, page: location.pathname.split('/').pop(), src: source.src, source },
     });
   } catch { /* 로그 실패는 무시 */ }
 }
