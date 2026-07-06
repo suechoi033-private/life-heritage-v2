@@ -198,10 +198,12 @@ try {
   await page.selectOption('#in-decision', 'give');
   await page.fill('#in-recipient', '큰아들');
   await page.fill('#in-note', '1988년 결혼 예물로 산 시계인데 시계방 김씨가 고쳐준 적이 있고 아직도 잘 간다. 오래 간직해 주면 좋겠다.');
+  await page.check('#in-share'); // 작성 단계에서 함께 나누기
   await page.click('#add-btn');
   await page.waitForSelector('#list .item-row', { timeout: 15000 });
-  // 긴 메모는 접혀 있어야 한다
+  // 긴 메모는 접혀 있고, 나눔 중 칩이 붙는다
   await page.waitForSelector('#list [data-more]', { timeout: 15000 });
+  await page.waitForSelector('#list .chip.warm', { timeout: 15000 });
   await shot('06-belongings');
 
   // 8. 안부확인 — 보호자(전화번호+순위) 등록 후 켜기

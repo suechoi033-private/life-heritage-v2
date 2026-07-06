@@ -55,6 +55,14 @@
       <label>메모 (이 물건의 이야기)</label>
       <input id="in-note" placeholder="예) 1988년 결혼 예물. 시계방 김씨가 고쳐준 적 있음" />
     </div>
+    <label class="item-row" style="cursor:pointer; border:none; padding-top:0;">
+      <input type="checkbox" id="in-share" style="width:20px;height:20px;accent-color:var(--primary);" />
+      <span class="grow">
+        <span class="title">🕯️ 이 이야기 함께 나누기 (익명)</span><br/>
+        <span class="meta">물건의 자리를 정한 마음이 '함께' 화면에 익명으로 실려,
+        다른 이의 정리에 용기가 됩니다. 언제든 내릴 수 있어요.</span>
+      </span>
+    </label>
     <button class="btn" id="add-btn">목록에 담기</button>
   </section>
 
@@ -90,10 +98,29 @@
     saleConsentRow.style.display = decisionSel.value === 'sell' ? '' : 'none';
   };
 
+  // 나눔 글 제목 — 물건의 자리를 정한 마음이 제목이 된다
+  const DECISION_PHRASE = {
+    give: '물려주기로 정했습니다', donate: '기부하기로 정했습니다',
+    sell: '판매하기로 정했습니다', keep: '간직하기로 정했습니다',
+    discard: '비우기로 정했습니다', undecided: '아직 자리를 고민 중입니다',
+  };
+
+  async function sharePost(b) {
+    const title = `'${b.name}' — ${DECISION_PHRASE[b.decision] || DECISION_PHRASE.undecided}`;
+    const body = b.note || `${b.category || '물건'} '${b.name}'의 자리를 정했습니다.`;
+    const { data: post, error } = await supabase.from('mutda_posts').insert({
+      user_id: user.id, author_name: '익명', title, body, topic: 'belongings',
+    }).select().single();
+    if (error) return null;
+    await supabase.from('mutda_belongings').update({ shared_post_id: post.id }).eq('id', b.id);
+    logEvent('belonging_shared');
+    return post.id;
+  }
+
   document.getElementById('add-btn').onclick = async () => {
     const name = document.getElementById('in-name').value.trim();
     if (!name) return alert('품목을 적어주세요.');
-    await supabase.from('mutda_belongings').insert({
+    const { data: item, error } = await supabase.from('mutda_belongings').insert({
       user_id: user.id,
       name,
       category: document.getElementById('in-category').value,
@@ -101,10 +128,18 @@
       recipient: document.getElementById('in-recipient').value.trim() || null,
       note: document.getElementById('in-note').value.trim() || null,
       public_sale: decisionSel.value === 'sell' && document.getElementById('in-public-sale').checked,
-    });
+    }).select().single();
+    if (error) return alert('담지 못했어요. 다시 시도해 주세요.');
     logEvent('belonging_added');
-    toast('목록에 담았어요');
+
+    if (document.getElementById('in-share').checked) {
+      await sharePost(item);
+      toast('담았어요. 🕯️ 이야기는 익명으로 함께에 실렸어요.');
+    } else {
+      toast('목록에 담았어요');
+    }
     ['in-name', 'in-recipient', 'in-note'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('in-share').checked = false;
     load();
   };
 
@@ -130,10 +165,12 @@
         <span class="grow">
           <span class="title">${esc(b.name)}</span>
           <span class="${cls}" style="margin-left:6px;">${label}${b.recipient ? ' → ' + esc(b.recipient) : ''}</span>
-          ${b.public_sale ? '<span class="chip" style="margin-left:4px;">공개 동의</span>' : ''}<br/>
+          ${b.public_sale ? '<span class="chip" style="margin-left:4px;">공개 동의</span>' : ''}
+          ${b.shared_post_id ? '<span class="chip warm" style="margin-left:4px;">🕯️ 나눔 중</span>' : ''}<br/>
           <span class="meta" data-note-view="${b.id}">${esc(b.category || '')}${note ? ' · ' + noteShort : ''}</span>
           ${note.length > 40 ? `<button class="btn quiet sm" data-more="${b.id}" style="padding:2px 10px; font-size:12px; margin-top:4px;">더보기</button>` : ''}
         </span>
+        <button class="btn quiet sm" data-toggle-share="${b.id}">${b.shared_post_id ? '나눔 내리기' : '🕯️ 나누기'}</button>
         <button class="btn quiet sm" data-del="${b.id}">삭제</button>
       </div>`;
     }).join('');
@@ -152,9 +189,25 @@
       if (c.checked) toast('실제로 정리하셨군요. 하나가 가벼워졌어요.');
       load();
     });
-    list.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
+    list.querySelectorAll('[data-toggle-share]').forEach(btn => btn.onclick = async () => {
+      const b = data.find(x => x.id === btn.dataset.toggleShare);
+      if (b.shared_post_id) {
+        if (!confirm('함께 화면에서 내리시겠어요?')) return;
+        await supabase.from('mutda_posts').delete().eq('id', b.shared_post_id);
+        await supabase.from('mutda_belongings').update({ shared_post_id: null }).eq('id', b.id);
+        toast('나눔을 내렸어요');
+      } else {
+        if (!confirm('이 물건 이야기를 익명으로 함께 화면에 나눌까요?')) return;
+        await sharePost(b);
+        toast('🕯️ 익명으로 나눴어요');
+      }
+      load();
+    });
+    list.querySelectorAll('[data-del]').forEach(btn => btn.onclick = async () => {
       if (!confirm('목록에서 삭제할까요?')) return;
-      await supabase.from('mutda_belongings').delete().eq('id', b.dataset.del);
+      const b = data.find(x => x.id === btn.dataset.del);
+      if (b.shared_post_id) await supabase.from('mutda_posts').delete().eq('id', b.shared_post_id);
+      await supabase.from('mutda_belongings').delete().eq('id', b.id);
       load();
     });
   }

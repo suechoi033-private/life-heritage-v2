@@ -1,5 +1,5 @@
 // 묻다 서비스워커 — 웹푸시 수신 + 알림 클릭 (안부확인 알림용)
-const CACHE_VERSION = 'mutda-v9-2026-07-06-belongings-sale';
+const CACHE_VERSION = 'mutda-v10-2026-07-06-belongings-share';
 
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (e) => {
