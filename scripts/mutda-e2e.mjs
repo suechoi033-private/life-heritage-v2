@@ -192,10 +192,16 @@ try {
   await page.goto(`${BASE}/belongings.html`);
   await page.waitForSelector('#in-name', { timeout: 15000 });
   await page.fill('#in-name', '아버지의 손목시계');
+  // 판매하기 → 공개 동의 안내가 보이는지
+  await page.selectOption('#in-decision', 'sell');
+  await page.waitForSelector('#sale-consent-row', { state: 'visible', timeout: 15000 });
   await page.selectOption('#in-decision', 'give');
   await page.fill('#in-recipient', '큰아들');
+  await page.fill('#in-note', '1988년 결혼 예물로 산 시계인데 시계방 김씨가 고쳐준 적이 있고 아직도 잘 간다. 오래 간직해 주면 좋겠다.');
   await page.click('#add-btn');
   await page.waitForSelector('#list .item-row', { timeout: 15000 });
+  // 긴 메모는 접혀 있어야 한다
+  await page.waitForSelector('#list [data-more]', { timeout: 15000 });
   await shot('06-belongings');
 
   // 8. 안부확인 — 보호자(전화번호+순위) 등록 후 켜기

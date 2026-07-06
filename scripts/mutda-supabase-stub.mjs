@@ -6,7 +6,7 @@
 // 상태는 localStorage에 저장해 페이지 이동 간 유지.
 
 const SCHEMA = {
-  mutda_belongings: ["id","user_id","name","category","decision","recipient","note","done","created_at"],
+  mutda_belongings: ["id","user_id","name","category","decision","recipient","note","done","created_at","public_sale"],
   mutda_checkin_alerts: ["id","user_id","triggered_at","hours_inactive","status","notified_at","resolved_at"],
   mutda_events: ["id","user_id","event","meta","created_at"],
   mutda_guardians: ["id","user_id","name","relation","phone","email","sort_order","created_at","guardian_user_id","invite_code","linked_at"],

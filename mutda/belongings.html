@@ -34,10 +34,19 @@
         <option value="undecided">아직 고민 중</option>
         <option value="give">물려주기</option>
         <option value="donate">기부하기</option>
+        <option value="sell">판매하기</option>
         <option value="keep">간직하기 (내가 끝까지)</option>
         <option value="discard">비우기 (처분)</option>
       </select>
     </div>
+    <label class="item-row" id="sale-consent-row" style="display:none; cursor:pointer; border:none; padding-top:0;">
+      <input type="checkbox" id="in-public-sale" style="width:20px;height:20px;accent-color:var(--primary);" />
+      <span class="grow">
+        <span class="title">판매 품목 공개에 동의합니다</span><br/>
+        <span class="meta">'판매하기'로 남긴 품목을 공개해 주시면, 차후 사전·사후 유품정리를
+        돕는 서비스로 보답하겠습니다.</span>
+      </span>
+    </label>
     <div class="field" id="recipient-field" style="display:none;">
       <label>누구에게</label>
       <input id="in-recipient" placeholder="예) 큰아들 / ○○복지관" />
@@ -67,15 +76,18 @@
     undecided: ['고민 중', 'chip'],
     give: ['물려주기', 'chip green'],
     donate: ['기부', 'chip green'],
+    sell: ['판매', 'chip warm'],
     keep: ['간직', 'chip warm'],
     discard: ['비우기', 'chip'],
   };
 
   const decisionSel = document.getElementById('in-decision');
   const recipientField = document.getElementById('recipient-field');
+  const saleConsentRow = document.getElementById('sale-consent-row');
   decisionSel.onchange = () => {
     recipientField.style.display =
       ['give', 'donate'].includes(decisionSel.value) ? '' : 'none';
+    saleConsentRow.style.display = decisionSel.value === 'sell' ? '' : 'none';
   };
 
   document.getElementById('add-btn').onclick = async () => {
@@ -88,6 +100,7 @@
       decision: decisionSel.value,
       recipient: document.getElementById('in-recipient').value.trim() || null,
       note: document.getElementById('in-note').value.trim() || null,
+      public_sale: decisionSel.value === 'sell' && document.getElementById('in-public-sale').checked,
     });
     logEvent('belonging_added');
     toast('목록에 담았어요');
@@ -107,18 +120,32 @@
     }
     list.innerHTML = data.map(b => {
       const [label, cls] = DECISION_LABEL[b.decision] || DECISION_LABEL.undecided;
+      // 긴 메모는 접어서 — 목록은 한눈에, 이야기는 '더보기'로
+      const note = b.note || '';
+      const noteShort = note.length > 40 ? esc(note.slice(0, 40)) + '…' : esc(note);
       return `
       <div class="item-row" style="${b.done ? 'opacity:.55;' : ''}">
         <input type="checkbox" ${b.done ? 'checked' : ''} data-done="${b.id}"
                title="정리 완료" style="width:20px;height:20px;accent-color:var(--primary);" />
         <span class="grow">
           <span class="title">${esc(b.name)}</span>
-          <span class="${cls}" style="margin-left:6px;">${label}${b.recipient ? ' → ' + esc(b.recipient) : ''}</span><br/>
-          <span class="meta">${esc(b.category || '')}${b.note ? ' · ' + esc(b.note) : ''}</span>
+          <span class="${cls}" style="margin-left:6px;">${label}${b.recipient ? ' → ' + esc(b.recipient) : ''}</span>
+          ${b.public_sale ? '<span class="chip" style="margin-left:4px;">공개 동의</span>' : ''}<br/>
+          <span class="meta" data-note-view="${b.id}">${esc(b.category || '')}${note ? ' · ' + noteShort : ''}</span>
+          ${note.length > 40 ? `<button class="btn quiet sm" data-more="${b.id}" style="padding:2px 10px; font-size:12px; margin-top:4px;">더보기</button>` : ''}
         </span>
         <button class="btn quiet sm" data-del="${b.id}">삭제</button>
       </div>`;
     }).join('');
+
+    list.querySelectorAll('[data-more]').forEach(btn => btn.onclick = () => {
+      const b = data.find(x => x.id === btn.dataset.more);
+      const view = list.querySelector(`[data-note-view="${b.id}"]`);
+      const expanded = btn.dataset.open === '1';
+      view.textContent = `${b.category || ''}${b.note ? ' · ' + (expanded ? (b.note.length > 40 ? b.note.slice(0, 40) + '…' : b.note) : b.note) : ''}`;
+      btn.dataset.open = expanded ? '' : '1';
+      btn.textContent = expanded ? '더보기' : '접기';
+    });
 
     list.querySelectorAll('[data-done]').forEach(c => c.onchange = async () => {
       await supabase.from('mutda_belongings').update({ done: c.checked }).eq('id', c.dataset.done);
