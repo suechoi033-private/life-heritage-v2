@@ -11,7 +11,8 @@
   <div id="guardian-alerts"></div>
   <section id="greet" style="padding-top:8px;">
     <h2 class="serif" id="greet-title" style="font-size:23px; line-height:1.5;">안녕하세요</h2>
-    <div style="margin-top:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+    <p class="small muted" id="greet-account" style="margin-top:2px;"></p>
+    <div style="margin-top:8px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
       <span class="streak-chip" id="streak">🌱 이어온 지 1일째</span>
       <span class="chip green" id="checkin-chip" style="display:none;">🔔 안부확인 켜짐</span>
     </div>
@@ -71,6 +72,8 @@
     : hour < 18 ? '평안한 오후예요' : '편안한 저녁이에요';
   document.getElementById('greet-title').textContent =
     `${profile.name}님, ${timeGreet}.`;
+  // 어떤 계정으로 들어와 있는지 항상 보이게 — 기기·앱 간 계정 혼동 방지
+  document.getElementById('greet-account').textContent = user.email;
 
   document.getElementById('streak').textContent =
     `🌱 이어온 지 ${profile.streak_days || 1}일째`;
