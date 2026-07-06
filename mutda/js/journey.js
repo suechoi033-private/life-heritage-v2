@@ -69,7 +69,8 @@ export async function getJourneyState(user, profile) {
     farewell: kinds.has('farewell'),
   };
 
-  const steps = STEPS.filter(s => !s.petOnly || profile?.has_pet)
+  // 반려동물 매듭: 온보딩에서 '함께 산다'고 답했거나 이미 플랜을 만든 경우 노출
+  const steps = STEPS.filter(s => !s.petOnly || profile?.has_pet || (pets.data || []).length)
     .map(s => ({ ...s, done: !!done[s.key] }));
 
   // 개인화: 온보딩에서 고른 '가장 마음 쓰이는 것'이 앞으로 온다 (완료 여부 우선 정렬은 유지)

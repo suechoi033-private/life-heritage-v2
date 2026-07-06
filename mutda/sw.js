@@ -1,5 +1,5 @@
 // 묻다 서비스워커 — 웹푸시 수신 + 알림 클릭 (안부확인 알림용)
-const CACHE_VERSION = 'mutda-v11-2026-07-06-belongings-entrust';
+const CACHE_VERSION = 'mutda-v12-2026-07-06-qa-pet-toggle-landing-redirect';
 
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (e) => {

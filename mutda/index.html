@@ -75,8 +75,9 @@
 </main>
 
 <script type="module">
-  import { supabase, esc, fmtDate, logEvent } from './js/app.js';
+  import { supabase, esc, fmtDate, logEvent, redirectIfAuthed } from './js/app.js';
 
+  redirectIfAuthed('home.html'); // 이미 로그인한 사용자는 랜딩 대신 홈으로
   logEvent('landing_view');
 
   const box = document.getElementById('preview-posts');

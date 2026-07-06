@@ -29,6 +29,11 @@
         <span class="meta" id="checkin-status"></span></span>
         <span class="go" style="color:var(--ink-faint);">›</span>
       </a>
+      <label class="item-row" style="cursor:pointer;">
+        <input type="checkbox" id="pet-toggle" style="width:20px;height:20px;accent-color:var(--primary);" />
+        <span class="grow"><span class="title">🐾 반려동물과 함께 살아요</span><br/>
+        <span class="meta">켜면 홈 여정에 반려동물 돌봄 플랜이 나타나요.</span></span>
+      </label>
       <div class="item-row">
         <span class="grow"><span class="title">계정</span><br/>
         <span class="meta" id="my-email"></span></span>
@@ -98,6 +103,14 @@
     </a>`).join('');
 
   document.getElementById('logout-btn').onclick = signOut;
+
+  // 반려동물 여부 — 온보딩 답을 언제든 바꿀 수 있게
+  const petToggle = document.getElementById('pet-toggle');
+  petToggle.checked = !!profile.has_pet;
+  petToggle.onchange = async () => {
+    await supabase.from('mutda_profiles')
+      .update({ has_pet: petToggle.checked }).eq('user_id', user.id);
+  };
 </script>
 </body>
 </html>
