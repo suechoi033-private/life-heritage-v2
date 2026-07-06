@@ -60,6 +60,77 @@
       max-width: 640px;
     }
 
+    /* ── 4대 기둥 ─── */
+    .pillar-grid {
+      display: grid;
+      gap: 14px;
+      margin-bottom: 10px;
+    }
+    @media (min-width: 720px) {
+      .pillar-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    .pillar-card {
+      background: var(--bg-alt);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 20px 22px;
+      display: flex;
+      flex-direction: column;
+    }
+    .pillar-icon { font-size: 24px; margin-bottom: 8px; }
+    .pillar-name {
+      font-size: 16.5px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      margin-bottom: 6px;
+      color: var(--ink);
+    }
+    .pillar-desc {
+      font-size: 13.5px;
+      color: var(--ink-muted);
+      line-height: 1.65;
+      margin-bottom: 14px;
+      flex: 1;
+    }
+    .pillar-cta {
+      display: inline-block;
+      align-self: flex-start;
+      padding: 10px 18px;
+      background: var(--primary);
+      color: #FFF;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 13.5px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s ease;
+    }
+    .pillar-cta:hover { background: var(--ink); }
+    .pillar-cta.soon { background: var(--bg); color: var(--ink-soft); border: 1.5px solid var(--line); }
+    .pillar-cta.soon:hover { border-color: var(--primary); color: var(--primary); }
+    .pillar-links {
+      list-style: none;
+      padding: 12px 0 0;
+      margin: 14px 0 0;
+      border-top: 1px solid var(--line);
+    }
+    .pillar-links a {
+      display: block;
+      padding: 5px 0;
+      font-size: 13.5px;
+      color: var(--ink-soft);
+      text-decoration: none;
+    }
+    .pillar-links a:hover { color: var(--primary); }
+    .pillar-note {
+      font-size: 12px;
+      color: var(--ink-muted);
+      line-height: 1.6;
+      margin: 6px 2px 28px;
+    }
+
     /* ── 시점 토글 ─── */
     .stage-tabs {
       display: flex;
@@ -261,6 +332,16 @@
     <button type="button" onclick="window.location.href='./forest.html?seg=community'">커뮤니티</button>
   </div>
 
+  <!-- 4대 기둥 — 요양·호스피스·방문진료·케어링 가이드 -->
+  <section aria-label="주요 안내">
+    <div class="pillar-grid" id="pillar-grid"></div>
+    <p class="pillar-note">
+      의료·요양 관련 정보는 공공기관 공개 자료를 정리한 것으로, 의료 전문가 감수 전 참고용입니다.
+      진단·치료에 관한 결정은 반드시 담당 의료진과 상의하세요.
+    </p>
+  </section>
+
+  <p style="font-size:12px;font-weight:700;color:var(--ink-muted);letter-spacing:0.06em;margin-bottom:8px;text-transform:uppercase;" id="stage-guides">시점별 가이드</p>
   <div class="tab-segment" style="margin-bottom:20px;" role="tablist">
     <button type="button" class="stage-tab active" data-stage="pre">미리</button>
     <button type="button" class="stage-tab" data-stage="in">곁에</button>
@@ -309,6 +390,77 @@
   const { renderTopBar } = await import('./nav.js');
   await renderTopBar({ active: 'info' });
 
+  // ── 4대 기둥 정의 — 요양·호스피스·방문진료·케어링 가이드 ────
+  // href가 있으면 바로 이동, waitlist가 있으면 "준비 중 — 베타 알림" 처리
+  const PILLARS = [
+    {
+      key: 'facility-search',
+      icon: '🏥',
+      name: '요양병원·요양시설 찾기',
+      desc: '국민건강보험공단 평가등급 기반 검색. 지역·유형·치매전담실·정원 여유로 골라보세요.',
+      href: './info/nursing-home.html',
+      cta: '시설 검색하기 →',
+      links: [
+        { name: '장기요양보험 등급·신청 안내', href: './info/long-term-care.html' },
+        { name: '실버타운 가이드', href: './info/silver-town-guide.html' },
+      ],
+    },
+    {
+      key: 'hospice',
+      icon: '🕊️',
+      name: '호스피스·완화의료',
+      desc: '말기 진단 이후의 선택. 입원형·가정형·자문형 구분과 이용 절차, 건강보험 적용까지.',
+      href: './info/hospice-palliative.html',
+      cta: '안내 읽기 →',
+      links: [
+        { name: '사전연명의료의향서', href: './info/advance-directive.html' },
+        { name: '자택 임종·사망 절차 (한국)', href: './info/home-death-korea.html' },
+      ],
+    },
+    {
+      key: 'home-visit',
+      icon: '🚪',
+      name: '방문진료 (재택의료)',
+      desc: '거동이 어려운 분의 집으로 의사·간호사가 찾아가는 진료. 지금 정리하고 있어요.',
+      waitlist: '방문진료(재택의료)',
+      cta: '준비 중 — 베타 알림 받기',
+    },
+    {
+      key: 'care-guide',
+      icon: '🪺',
+      name: '케어링 가이드',
+      desc: '곁을 지키는 가족을 위한 가이드. 미리 준비부터 떠난 뒤 절차까지, 아래 시점별 주제에서 골라보세요.',
+      href: '#stage-guides',
+      cta: '시점별 주제 보기 ↓',
+      links: [
+        { name: '웰다잉 — 좋은 죽음 준비', href: './info/well-dying-guide.html' },
+        { name: '상조 가입 가이드', href: './info/funeral-prepay.html' },
+        { name: '납골당(봉안당) 고르는 법', href: './info/choosing-charnel-house.html' },
+      ],
+    },
+  ];
+
+  function renderPillars() {
+    const grid = document.getElementById('pillar-grid');
+    grid.innerHTML = PILLARS.map(p => `
+      <div class="pillar-card">
+        <div class="pillar-icon">${p.icon}</div>
+        <div class="pillar-name">${p.name}</div>
+        <div class="pillar-desc">${p.desc}</div>
+        ${p.waitlist
+          ? `<button type="button" class="pillar-cta soon" data-waitlist="${p.waitlist}">${p.cta}</button>`
+          : `<a class="pillar-cta" href="${p.href}">${p.cta}</a>`}
+        ${p.links?.length ? `
+          <ul class="pillar-links">
+            ${p.links.map(l => `<li><a href="${l.href}">${l.name} →</a></li>`).join('')}
+          </ul>` : ''}
+      </div>
+    `).join('');
+    grid.querySelectorAll('[data-waitlist]').forEach(btn => {
+      btn.addEventListener('click', () => handleWaitlist(btn.dataset.waitlist));
+    });
+  }
+
   // ── 카테고리 정의 (시점별) ────────────────────
   const STAGES = {
     pre: {
@@ -329,6 +481,8 @@
       label: '곁에',
       categories: [
         { key: 'long-term-care', name: '장기요양보험', summary: '등급·서비스·신청 안내' },
+        { key: 'hospice-palliative', name: '호스피스·완화의료', summary: '입원형·가정형·자문형 구분과 이용 절차' },
+        { key: 'home-visit-care', name: '방문진료(재택의료)', summary: '집으로 찾아오는 진료 — 준비 중' },
         { key: 'disease', name: '질병 가이드', summary: '치매·암·뇌졸중·파킨슨 단계별' },
         { key: 'nursing-home', name: '요양원·요양병원', summary: '서울/경기 큐레이션 + 후기' },
         { key: 'medical-cost', name: '의료비·보험', summary: '청구·환급·실비 활용' },
@@ -352,7 +506,7 @@
   let state = { stage: 'pre', category: null };
 
   // 콘텐츠가 준비된 카테고리 (확장 시 추가)
-  const ENABLED_KEYS = new Set(['advance-directive', 'funeral-prepay', 'long-term-care', 'nursing-home', 'well-dying', 'charnel-house', 'silver-town', 'home-death-korea']);
+  const ENABLED_KEYS = new Set(['advance-directive', 'funeral-prepay', 'long-term-care', 'nursing-home', 'well-dying', 'charnel-house', 'silver-town', 'home-death-korea', 'hospice-palliative']);
 
   function render() {
     // 카테고리 사이드바
@@ -393,6 +547,7 @@
       'charnel-house':     './info/choosing-charnel-house.html',
       'silver-town':       './info/silver-town-guide.html',
       'home-death-korea':  './info/home-death-korea.html',
+      'hospice-palliative': './info/hospice-palliative.html',
     };
     if (ENABLED[cat.key]) {
       window.location.href = ENABLED[cat.key];
@@ -437,6 +592,7 @@
     // TODO V2: insert into info_waitlist table
   }
 
+  renderPillars();
   render();
 </script>
 
