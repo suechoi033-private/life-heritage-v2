@@ -146,6 +146,17 @@ export async function logPageView(extra = {}) {
 // 모듈 로드(=페이지 진입) 시 자동 1회 기록.
 if (typeof window !== 'undefined') {
   logPageView();
+  // 공용 웹 트래커(js/track.js) 주입 — 익명 방문·유입경로(referrer/UTM)를 web_events에 기록.
+  // auth.js를 로드하는 모든 잇다 페이지에 자동 적용된다. (묻다·개인홈은 태그로 직접 임베드)
+  try {
+    if (!window.__itdaTracked && !document.querySelector('script[data-site]')) {
+      const s = document.createElement('script');
+      s.src = new URL('js/track.js', import.meta.url).href;
+      s.dataset.site = 'itda';
+      s.defer = true;
+      document.head.appendChild(s);
+    }
+  } catch (_) { /* 계측 실패는 무시 */ }
 }
 
 // =========================================================
