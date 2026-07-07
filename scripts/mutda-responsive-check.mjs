@@ -29,7 +29,8 @@ console.log('폼 에러 텍스트:', await page.locator('#err').innerText().catc
 await page.waitForFunction(() => /onboarding|home/.test(location.href), { timeout: 15000 });
 if (page.url().includes('onboarding')) {
   await page.fill('#in-name', '테스트'); await page.click('#next');
-  await page.click('button.choice:has-text("1950년대")');
+  await page.click('button.choice:has-text("50대")');
+  await page.click('button.choice:has-text("밝히고 싶지 않아요")');
   await page.click('button.choice:has-text("혼자 지내는")');
   await page.click('button.choice:has-text("유언장")');
   await page.click('button.choice:has-text("안부확인")');

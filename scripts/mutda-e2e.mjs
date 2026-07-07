@@ -67,7 +67,8 @@ try {
     await page.waitForSelector('#in-name');
     await page.fill('#in-name', '테스트');
     await page.click('#next');
-    await page.click('button.choice:has-text("1950년대")');
+    await page.click('button.choice:has-text("50대")');
+    await page.click('button.choice:has-text("밝히고 싶지 않아요")');
     await page.click('button.choice:has-text("혼자 지내는")');
     await page.click('button.choice:has-text("유언장")');
     await page.click('button.choice:has-text("안부확인")');
