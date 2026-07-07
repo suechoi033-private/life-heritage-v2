@@ -1,5 +1,5 @@
 // 묻다 서비스워커 — 웹푸시 수신 + 알림 클릭 (안부확인 알림용)
-const CACHE_VERSION = 'mutda-v15-2026-07-07-onboarding-age-gender';
+const CACHE_VERSION = 'mutda-v16-2026-07-07-a4-print-sheet';
 
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (e) => {

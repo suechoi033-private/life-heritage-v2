@@ -48,16 +48,19 @@
       ✅ 돌봄 플랜이 저장돼 있어요. 내용이 바뀌면 언제든 고쳐주세요.
       <b>인쇄해서 사료통 근처에 붙여두면</b> 비상시 누구든 바로 볼 수 있습니다.
     </div>
-    <button class="btn ghost" onclick="window.print()">🖨️ 인계서 인쇄하기</button>
+    <button class="btn ghost" id="print-btn">🖨️ 인계서 인쇄하기 (A4 한 장)</button>
   </section>
 </main>
 
+<!-- 인쇄 전용 인계서 — 화면에는 안 보이고, 인쇄 시 이것만 A4 문서로 출력된다 -->
+<section class="print-sheet" id="print-sheet" aria-hidden="true"></section>
+
 <script type="module">
-  import { supabase, initAppPage, toast, logEvent } from './js/app.js';
+  import { supabase, initAppPage, toast, esc, logEvent } from './js/app.js';
   import { renderNav } from './js/nav.js';
 
   renderNav({ active: 'home', title: '반려동물' });
-  const { user } = await initAppPage();
+  const { user, profile } = await initAppPage();
   logEvent('pet_view');
 
   const FIELDS = ['pet_name','species','age_note','feeding','medical','vet',
@@ -90,6 +93,56 @@
     toast(`${row.pet_name}의 내일을 준비해 두셨어요`);
     document.getElementById('saved-note').style.display = '';
   };
+
+  // ---------- 인쇄: 화면이 아니라 A4 한 장짜리 인계서를 출력 ----------
+  const v = (id) => esc(document.getElementById(id).value.trim() || '—');
+
+  function buildPrintSheet() {
+    const today = new Date();
+    const dateStr = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일`;
+    const agreed = document.getElementById('caretaker_agreed').checked;
+    document.getElementById('print-sheet').innerHTML = `
+      <div class="sheet-title">반려동물 돌봄 인계서</div>
+      <p class="sheet-meta">작성: ${esc(profile.name)} · ${dateStr} · 묻다(mutda)에서 작성한 비상 대비 문서</p>
+
+      <div class="sheet-section">아이 정보</div>
+      <table>
+        <tr><th>이름</th><td>${v('pet_name')}</td></tr>
+        <tr><th>종류</th><td>${v('species')}</td></tr>
+        <tr><th>나이·특징</th><td>${v('age_note')}</td></tr>
+      </table>
+
+      <div class="sheet-section">돌봄 방법</div>
+      <table>
+        <tr><th>식사</th><td class="sheet-body">${v('feeding')}</td></tr>
+        <tr><th>건강·약</th><td class="sheet-body">${v('medical')}</td></tr>
+        <tr><th>다니는 동물병원</th><td>${v('vet')}</td></tr>
+      </table>
+
+      <div class="sheet-section">비상시 돌봄인</div>
+      <table>
+        <tr><th>이름 (관계)</th><td>${v('caretaker_name')}</td></tr>
+        <tr><th>연락처</th><td>${v('caretaker_contact')}</td></tr>
+        <tr><th>사전 동의</th><td>${agreed ? '동의함 — 미리 부탁드렸습니다' : '아직 동의 전'}</td></tr>
+      </table>
+
+      <div class="sheet-section">인계 메모 — 이 아이의 하루</div>
+      <table>
+        <tr><td class="sheet-body">${v('handover_note')}</td></tr>
+      </table>
+
+      <p class="sheet-foot">
+        보호자 ${esc(profile.name)}에게 비상상황이 생겼을 때를 위해 미리 작성한 문서입니다.
+        이 아이를 발견하신 분은 위의 비상시 돌봄인에게 연락해 주세요.
+      </p>`;
+  }
+
+  document.getElementById('print-btn').onclick = () => {
+    buildPrintSheet();
+    document.body.classList.add('printing-sheet');
+    window.print();
+  };
+  window.addEventListener('afterprint', () => document.body.classList.remove('printing-sheet'));
 </script>
 </body>
 </html>

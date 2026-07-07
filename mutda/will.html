@@ -627,7 +627,30 @@
     await navigator.clipboard.writeText(will.body);
     toast('초안을 복사했어요');
   };
-  document.getElementById('print-btn').onclick = () => window.print();
+  // 인쇄: 화면이 아니라 A4 문서로 — 초안 본문 + 자필 안내만 출력
+  document.getElementById('print-btn').onclick = () => {
+    let sheet = document.getElementById('print-sheet');
+    if (!sheet) {
+      sheet = document.createElement('section');
+      sheet.className = 'print-sheet';
+      sheet.id = 'print-sheet';
+      document.body.appendChild(sheet);
+    }
+    const today = new Date();
+    sheet.innerHTML = `
+      <div class="sheet-title">유언장 초안 (참고용)</div>
+      <p class="sheet-meta">최종본 v${will.version || 1} ·
+        ${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일 인쇄 · 묻다(mutda)</p>
+      <div class="sheet-body" style="font-family:var(--font-serif); font-size:11.5pt; line-height:1.9;">${esc(will.body)}</div>
+      <p class="sheet-foot">
+        이 문서는 자필로 옮겨 쓰기 위한 초안입니다. 법적 효력을 가지려면 전문을 처음부터
+        끝까지 직접 손으로 쓰고, 연월일·주소·성명을 적고 날인해야 합니다 (민법 제1066조).
+        이 인쇄본 자체는 유언장이 아닙니다.
+      </p>`;
+    document.body.classList.add('printing-sheet');
+    window.print();
+  };
+  window.addEventListener('afterprint', () => document.body.classList.remove('printing-sheet'));
   document.getElementById('redo-btn').onclick = () => { idx = 0; showWizard(); };
   document.getElementById('msg-btn').onclick = () => { idx = MESSAGE_STEP; showWizard(); };
 
