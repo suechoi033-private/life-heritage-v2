@@ -39,7 +39,7 @@
 </main>
 
 <script type="module">
-  import { supabase, initAppPage, logEvent, esc } from './js/app.js';
+  import { supabase, initAppPage, logEvent, esc, signOut } from './js/app.js';
   import { getJourneyState } from './js/journey.js';
   import { renderNav } from './js/nav.js';
 
@@ -73,7 +73,12 @@
   document.getElementById('greet-title').textContent =
     `${profile.name}님, ${timeGreet}.`;
   // 어떤 계정으로 들어와 있는지 항상 보이게 — 기기·앱 간 계정 혼동 방지
-  document.getElementById('greet-account').textContent = user.email;
+  document.getElementById('greet-account').innerHTML =
+    `${esc(user.email)} · <a href="#" id="greet-logout" style="text-decoration:underline;">로그아웃</a>`;
+  document.getElementById('greet-logout').onclick = (e) => {
+    e.preventDefault();
+    if (confirm(`${user.email} 계정에서 로그아웃할까요?`)) signOut();
+  };
 
   document.getElementById('streak').textContent =
     `🌱 이어온 지 ${profile.streak_days || 1}일째`;
