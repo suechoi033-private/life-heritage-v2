@@ -78,7 +78,8 @@
   import { supabase, esc, fmtDate, logEvent, redirectIfAuthed } from './js/app.js';
 
   redirectIfAuthed('home.html'); // 이미 로그인한 사용자는 랜딩 대신 홈으로
-  logEvent('landing_view');
+  const from = new URLSearchParams(location.search).get('from');
+  logEvent('landing_view', from ? { from } : {}); // 편지 링크 등 유입 경로 추적
 
   const box = document.getElementById('preview-posts');
   const { data: posts } = await supabase.from('mutda_posts')

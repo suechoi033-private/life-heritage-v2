@@ -73,7 +73,7 @@
 </main>
 
 <script type="module">
-  import { supabase, initAppPage, toast, esc, fmtDate, logEvent } from './js/app.js';
+  import { supabase, initAppPage, toast, esc, fmtDate, logEvent, url } from './js/app.js';
   import { renderNav } from './js/nav.js';
 
   renderNav({ active: 'home', title: '편지' });
@@ -193,7 +193,11 @@
 
   // ---------- 전하기: 카톡/문자로 보내고 '전한 마음'으로 기록 ----------
   async function sendLetter(l) {
-    const text = `${l.recipient ? l.recipient + '\n\n' : ''}${l.body}\n\n— ${profile.name} 드림 (묻다에서 미리 전하는 마음)`;
+    // 받는 사람도 묻다로 들어와 자기 마음을 전할 수 있도록, 링크와 함께 제안한다
+    const invite = l.kind === 'gratitude'
+      ? '당신도 고마운 사람에게, 늦기 전에 마음을 전해보세요.'
+      : '당신도 소중한 사람에게, 남기고 싶은 말을 미리 적어보세요.';
+    const text = `${l.recipient ? l.recipient + '\n\n' : ''}${l.body}\n\n— ${profile.name} 드림 (묻다에서 미리 전하는 마음)\n\n${invite}\n${url('index.html')}?from=letter`;
     let delivered = false;
     if (navigator.share) {
       try { await navigator.share({ text }); delivered = true; } catch { /* 사용자가 취소 */ }

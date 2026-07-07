@@ -1,5 +1,5 @@
 // 묻다 서비스워커 — 웹푸시 수신 + 알림 클릭 (안부확인 알림용)
-const CACHE_VERSION = 'mutda-v17-2026-07-07-home-logout';
+const CACHE_VERSION = 'mutda-v18-2026-07-07-letter-invite-link';
 
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (e) => {
