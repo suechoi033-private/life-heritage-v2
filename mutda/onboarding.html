@@ -25,7 +25,7 @@
 
   const state = {
     name: sessionStorage.getItem('mutda:signup_name') || user.user_metadata?.name || '',
-    birth_decade: '', motive: '', focus: [], has_pet: null, first_answer: '',
+    age_band: '', gender: '', motive: '', focus: [], has_pet: null, first_answer: '',
   };
 
   // Epic식 온보딩: 짧은 개인화 퀴즈 → 즉시 맞춤 여정 + 첫 3분 quick win
@@ -47,10 +47,22 @@
     },
     {
       label: '나에 대해',
-      q: '언제 태어나셨나요?',
+      q: '연령대를 알려주세요.',
       help: '연령대에 맞는 이야기와 준비 순서를 골라드려요.',
-      choices: ['1940년대', '1950년대', '1960년대', '1970년대', '1980년대', '1990년대 이후'],
-      pick: (v) => { state.birth_decade = v; go(1); },
+      choices: ['20대', '30대', '40대', '50대', '60대', '70대 이상'],
+      pick: (v) => { state.age_band = v; go(1); },
+    },
+    {
+      label: '나에 대해',
+      q: '성별을 알려주세요.',
+      help: '어떤 답이든 존중합니다. 밝히고 싶지 않아도 괜찮아요.',
+      choices: [
+        ['female', '여성'],
+        ['male', '남성'],
+        ['nonbinary', '논바이너리 등 다른 정체성'],
+        ['private', '밝히고 싶지 않아요'],
+      ],
+      pick: (v) => { state.gender = v; go(1); },
     },
     {
       label: '지금 마음',
@@ -153,7 +165,8 @@
     if (state.motive === 'alone' && !focus.includes('checkin')) focus.unshift('checkin');
 
     const onboarding = {
-      birth_decade: state.birth_decade,
+      age_band: state.age_band,
+      gender: state.gender,
       motive: state.motive,
       first_answer: state.first_answer || null,
     };
