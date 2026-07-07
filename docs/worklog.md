@@ -10,6 +10,22 @@
 
 ---
 
+## 2026-07-07
+
+**라이브 대시보드 — 잇다·묻다·개인홈 통합 (`dash.html`)** (창업자 요청, PE/운영)
+- **`web_events` 신설** (`20260706_web_events_dashboard.sql`, 적용 완료): 3개 프로퍼티 공용
+  익명 포함 방문 로그 — path·referrer 호스트·UTM·방문자/세션 랜덤 id. anon insert-only RLS, PII 없음.
+- **`js/track.js`**: SDK 없는 경량 트래커(REST insert). 잇다는 auth.js가 전 페이지 자동 주입,
+  개인홈·묻다는 `data-site` 스니펫 한 줄로 임베드.
+- **`dash.html`**: 운영자 전용 라이브 대시보드(60초 자동 갱신, admin 탭줄에서 진입) —
+  ① KPI 타일 ② **묻다 Q3 목표 8지표**(goal-2026q3.md) 실측 vs 9/30 목표 + 7/31·8/31 마일스톤
+  ③ 사이트별 일별 방문자 라인차트(크로스헤어 툴팁·표 보기) ④ **페이지별 도달**(고유 방문자·PV)
+  ⑤ **유입 경로**(인스타그램·브런치·네이버 등 분류) ⑥ 주간 가입 코호트 **D1+/D7+ 리텐션율**(잇다·묻다).
+- 집계 RPC 5종(`dash_overview/pages/sources/retention/goals`) — SECURITY DEFINER + 운영자 이메일 가드.
+  잇다/묻다 회원 방문(app_events/mutda_events)과 익명(web_events)을 중복 없이 합산.
+- 시리즈 팔레트 검증(dataviz): 잇다 #178457 · 묻다 #C05320 · 개인홈 #3E63D0 (CVD ΔE 22.6, 대비 3:1+).
+- `sw.js` → `2026-07-06-live-dashboard-v1`. measurement-plan.md §5 갱신.
+
 ## 2026-06-13
 
 **프로덕트 디자인 원칙 문서 신설 — `docs/company/product-design-principles.md`** (오케스트레이터 세션, 사장님 의제)

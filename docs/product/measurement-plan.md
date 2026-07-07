@@ -67,6 +67,33 @@ order by 열람 desc;
 - ⏳ **백로그 `cer_signup_done`**: signup 완료를 퍼널 session_id와 잇는 처리(가입 `next`에 session_id 전달) 필요해 보류.
 - ⚠️ lead 서버 전송(`ceremony_leads`)·plan 저장(`ceremony_plans`)은 **별개**이고 유료 매칭 검증 후 — 본 작업 범위 아님(ceremony-funnel §9 D5).
 
-## 5. 다음에 볼 것 (미구현 백로그)
+## 5. 라이브 대시보드 (`dash.html`) — 2026-07-06 신설
+
+잇다·묻다·개인홈(suechoi) 3개 프로퍼티를 **같은 값으로** 보는 운영자 전용 대시보드.
+admin.html 탭줄의 "📈 라이브 대시보드"로 진입. 60초 자동 갱신.
+
+- **KPI 타일**: 오늘 방문자(사이트별) · 잇다/묻다 가입 누적 · 묻다 DAU/WAU/D7.
+- **묻다 Q3 목표**: `docs/company/goal-2026q3.md` 8지표(가입·DAU·WAU·D7·편지·안부확인·보호자·유언장)
+  실측 vs 9/30 목표 진척 바 + 7/31·8/31 마일스톤 눈금.
+- **일별 방문자**: 사이트별 고유 방문자 라인차트(크로스헤어 툴팁 + 표 보기).
+- **페이지별 도달**: 사이트 탭 → 페이지별 고유 방문자·PV.
+- **유입 경로**: referrer 호스트 + UTM → 인스타그램/브런치/네이버/구글 등 분류.
+- **주간 가입 코호트 리텐션율**: 잇다·묻다 각각 D1+/D7+ 비율.
+
+### 데이터 소스
+- **`web_events`** (2026-07-06 신설, `20260706_web_events_dashboard.sql`): 3사이트 공용 익명 포함
+  방문 로그 — site/path/vid/sid/ref_host/utm. anon insert-only RLS, PII 없음.
+  - 잇다: `js/track.js`를 auth.js가 전 페이지 자동 주입.
+  - 개인홈·묻다: 스니펫 임베드
+    `<script src="https://suechoi033-private.github.io/life-heritage-v2/js/track.js" data-site="suechoi" defer></script>`
+    (묻다는 `data-site="mutda"` — eol 브랜치에 추가 필요).
+- 이중 집계 방지: 잇다/묻다 **회원** 방문은 app_events/mutda_events로 세고,
+  web_events에서는 **익명만** 합산.
+- 집계 RPC 5종(`dash_overview/pages/sources/retention/goals`) — SECURITY DEFINER +
+  운영자 이메일 가드(`dash_guard`).
+
+## 6. 다음에 볼 것 (미구현 백로그)
 - 콘텐츠 정독 → 가입 전환(정독한 사람이 가입·재방문 더 하나) 코호트 교차.
 - A/B(ceremony 게이트 위치·문항수·결과구성) — 트래픽 유입 선행 필요(ceremony-funnel §6).
+- `cer_signup_done`(가입 완료를 퍼널 session_id와 연결) — signup `next`에 sid 전달 필요.
+- 묻다 익명 트래킹(track.js 임베드) — eol 브랜치 merge 시.

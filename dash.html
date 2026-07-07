@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>라이브 대시보드 · 잇다</title>
+  <link rel="stylesheet" href="./auth-styles.css">
+  <meta name="theme-color" content="#2F6B4F">
+  <style>
+    /* ── 대시보드 전용 (데이터 시각화 토큰) ─────────────────
+       시리즈 색은 사이트(엔티티)를 따른다 — 검증 완료 팔레트(ΔE 22.6, 3:1+):
+       잇다 #178457 · 묻다 #C05320 · 개인홈 #3E63D0 */
+    :root {
+      --s-itda: #178457;
+      --s-mutda: #C05320;
+      --s-sue: #3E63D0;
+      --grid: #E5EAE6;
+    }
+    body { background: var(--bg-alt); }
+    .dash-wrap { max-width: 1080px; margin: 0 auto; padding: 18px 16px 60px; }
+
+    .dash-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+    .dash-title { font-size: 19px; font-weight: 800; color: var(--ink); margin-right: auto; }
+    .dash-live { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 800; color: var(--ink-soft); }
+    .dash-live .dot { width: 8px; height: 8px; border-radius: 99px; background: var(--success); animation: pulse 2s ease infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: 0.35 } }
+    .dash-updated { font-size: 11.5px; color: var(--ink-muted); }
+    .dash-range { display: flex; gap: 4px; background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 3px; }
+    .dash-range button { border: 0; background: transparent; font-family: inherit; font-size: 12px; font-weight: 700; color: var(--ink-muted); padding: 5px 12px; border-radius: 999px; cursor: pointer; }
+    .dash-range button.on { background: var(--primary); color: #fff; }
+    .dash-admin-link { font-size: 12px; font-weight: 700; color: var(--primary); text-decoration: none; }
+
+    .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
+    .tile { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 13px 15px; }
+    .tile .k { font-size: 11.5px; font-weight: 700; color: var(--ink-muted); display: flex; align-items: center; gap: 6px; }
+    .tile .k .sw { width: 8px; height: 8px; border-radius: 3px; flex: none; }
+    .tile .v { font-size: 24px; font-weight: 800; color: var(--ink); margin-top: 4px; letter-spacing: -0.01em; }
+    .tile .s { font-size: 11px; color: var(--ink-muted); margin-top: 2px; }
+
+    .card { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+    .card-h { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+    .card-t { font-size: 14.5px; font-weight: 800; color: var(--ink); }
+    .card-s { font-size: 11.5px; color: var(--ink-muted); }
+    .card-h .spacer { margin-left: auto; }
+    .ghost-btn { border: 1px solid var(--line); background: #fff; border-radius: 8px; font-family: inherit; font-size: 11.5px; font-weight: 700; color: var(--ink-soft); padding: 4px 10px; cursor: pointer; }
+
+    /* 범례 */
+    .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--ink-soft); font-weight: 700; }
+    .legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .legend i { width: 10px; height: 10px; border-radius: 3px; }
+
+    /* 라인 차트 */
+    .chart-box { position: relative; }
+    .chart-tip {
+      position: absolute; pointer-events: none; background: #fff; border: 1px solid var(--line);
+      border-radius: 10px; padding: 8px 11px; font-size: 12px; box-shadow: 0 4px 14px rgba(33,38,30,0.10);
+      display: none; z-index: 5; min-width: 130px;
+    }
+    .chart-tip .d { font-size: 11px; color: var(--ink-muted); margin-bottom: 4px; }
+    .chart-tip .r { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+    .chart-tip .r i { width: 8px; height: 8px; border-radius: 3px; flex: none; }
+    .chart-tip .r b { color: var(--ink); font-variant-numeric: tabular-nums; }
+    .chart-tip .r span { color: var(--ink-soft); }
+
+    /* 목표 진척 */
+    .goal-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 10px 22px; }
+    .goal { padding: 6px 0; }
+    .goal .top { display: flex; align-items: baseline; gap: 8px; font-size: 12.5px; }
+    .goal .name { font-weight: 800; color: var(--ink); }
+    .goal .now { margin-left: auto; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; }
+    .goal .tgt { font-size: 11px; color: var(--ink-muted); }
+    .goal .bar { position: relative; height: 10px; background: var(--bg-alt); border-radius: 99px; margin-top: 6px; overflow: visible; }
+    .goal .fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--s-mutda); border-radius: 99px 4px 4px 99px; min-width: 2px; }
+    .goal .tick { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink-faint); border-radius: 2px; }
+    .goal .marks { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--ink-muted); margin-top: 4px; }
+
+    /* 탭 */
+    .site-tabs { display: flex; gap: 6px; }
+    .site-tabs button { border: 1px solid var(--line); background: #fff; border-radius: 999px; font-family: inherit; font-size: 12px; font-weight: 700; color: var(--ink-muted); padding: 5px 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+    .site-tabs button i { width: 8px; height: 8px; border-radius: 3px; }
+    .site-tabs button.on { border-color: var(--ink-soft); color: var(--ink); background: var(--bg-alt); }
+
+    /* 표 */
+    table.d { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+    table.d th { text-align: left; font-size: 11px; color: var(--ink-muted); font-weight: 700; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+    table.d th.num, table.d td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    table.d td { padding: 7px 8px; border-bottom: 1px solid var(--grid); color: var(--ink); vertical-align: middle; }
+    table.d tr:last-child td { border-bottom: 0; }
+    .inbar { position: relative; height: 14px; background: transparent; }
+    .inbar i { position: absolute; left: 0; top: 2px; bottom: 2px; border-radius: 0 4px 4px 0; }
+    .pct-cell { border-radius: 6px; padding: 2px 6px; font-weight: 700; font-variant-numeric: tabular-nums; display: inline-block; min-width: 44px; text-align: right; }
+    .muted { color: var(--ink-muted); }
+    .empty-line { font-size: 12.5px; color: var(--ink-muted); padding: 14px 4px; }
+    .foot-note { font-size: 11px; color: var(--ink-muted); line-height: 1.7; margin-top: 4px; }
+    .two-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<div class="dash-wrap">
+  <div class="dash-head">
+    <div class="dash-title">📈 라이브 대시보드 <span style="font-weight:600;font-size:12px;color:var(--ink-muted);">잇다 · 묻다 · 개인홈</span></div>
+    <span class="dash-live"><span class="dot"></span>LIVE</span>
+    <span class="dash-updated" id="updated">불러오는 중…</span>
+    <div class="dash-range" id="range">
+      <button data-d="7">7일</button>
+      <button data-d="14" class="on">14일</button>
+      <button data-d="30">30일</button>
+    </div>
+    <a class="dash-admin-link" href="./admin.html">운영 콘솔 →</a>
+  </div>
+
+  <!-- KPI 타일 -->
+  <div class="tiles" id="tiles"></div>
+
+  <!-- 묻다 Q3 목표 -->
+  <div class="card">
+    <div class="card-h">
+      <span class="card-t">🎯 묻다 2026 Q3 목표</span>
+      <span class="card-s">9/30 목표 대비 · 눈금 = 7/31 · 8/31 마일스톤 (docs/company/goal-2026q3.md)</span>
+    </div>
+    <div class="goal-grid" id="goals"></div>
+  </div>
+
+  <!-- 일별 방문자 -->
+  <div class="card">
+    <div class="card-h">
+      <span class="card-t">일별 방문자</span>
+      <span class="card-s">사이트별 고유 방문자 (KST 일 기준)</span>
+      <span class="spacer"></span>
+      <div class="legend" id="traffic-legend"></div>
+      <button class="ghost-btn" id="traffic-table-btn">표로 보기</button>
+    </div>
+    <div class="chart-box">
+      <svg id="traffic-svg" width="100%" viewBox="0 0 760 250" role="img" aria-label="사이트별 일별 방문자 추이"></svg>
+      <div class="chart-tip" id="traffic-tip"></div>
+    </div>
+    <div id="traffic-table" class="hidden" style="margin-top:10px;overflow-x:auto;"></div>
+  </div>
+
+  <div class="two-col">
+    <!-- 페이지별 도달 -->
+    <div class="card">
+      <div class="card-h">
+        <span class="card-t">페이지별 도달</span>
+        <span class="spacer"></span>
+        <div class="site-tabs" id="page-tabs"></div>
+      </div>
+      <div id="pages" style="overflow-x:auto;"></div>
+    </div>
+
+    <!-- 유입 경로 -->
+    <div class="card">
+      <div class="card-h">
+        <span class="card-t">유입 경로</span>
+        <span class="card-s">referrer + UTM 기준 고유 방문자</span>
+      </div>
+      <div id="sources" style="overflow-x:auto;"></div>
+    </div>
+  </div>
+
+  <!-- 리텐션 -->
+  <div class="card">
+    <div class="card-h">
+      <span class="card-t">주간 가입 코호트 리텐션율</span>
+      <span class="card-s">D1+ = 가입 다음 날 이후 재방문 · D7+ = 가입 7일 이후 활동</span>
+    </div>
+    <div class="two-col" id="retention"></div>
+  </div>
+
+  <p class="foot-note">
+    측정 범위 — 잇다 회원 페이지뷰 2026-06-05~, 익명 방문·유입경로(web_events)는 2026-07-06 배포 이후부터.
+    묻다는 mutda_events(회원), 개인홈은 web_events(익명)만. 잇다 회원 방문과 익명 방문은 중복 없이 합산.
+    운영자(단청)·내부 계정은 잇다 집계에서 제외.
+  </p>
+</div>
+
+<script type="module">
+  import { requireAuth, supabase } from './auth.js';
+  import { ADMIN_EMAIL } from './js/admin.js';
+
+  const session = await requireAuth('./login.html');
+  if (!session) throw new Error('no session');
+  if (session.user.email !== ADMIN_EMAIL) {
+    document.body.innerHTML = '<div style="padding:60px 20px;text-align:center;font-size:14px;color:#6B756E;">운영자 전용 페이지입니다.</div>';
+    throw new Error('not admin');
+  }
+
+  // ── 상수 ─────────────────────────────────────────
+  const SITES = [
+    { id: 'itda',    name: '잇다',   color: 'var(--s-itda)',  hex: '#178457' },
+    { id: 'mutda',   name: '묻다',   color: 'var(--s-mutda)', hex: '#C05320' },
+    { id: 'suechoi', name: '개인홈', color: 'var(--s-sue)',   hex: '#3E63D0' },
+  ];
+  const SITE_BY_ID = Object.fromEntries(SITES.map(s => [s.id, s]));
+
+  // 묻다 Q3 목표 (docs/company/goal-2026q3.md — 7/31 · 8/31 · 9/30)
+  const GOALS = [
+    { key: 'signups',  name: '누적 가입',        m: [100, 400, 1000], fmt: n => fmtN(n) },
+    { key: 'dau',      name: 'DAU',              m: [15, 50, 100],    fmt: n => fmtN(n) },
+    { key: 'wau',      name: 'WAU',              m: [40, 150, 300],   fmt: n => fmtN(n) },
+    { key: 'd7',       name: 'D7 리텐션',        m: [null, 25, 25],   pct: true },
+    { key: 'letters',  name: '미리 전한 마음(편지)', m: [30, 150, 500], fmt: n => fmtN(n) },
+    { key: 'checkin',  name: '안부확인 켠 비율',  m: [20, 25, 30],     pct: true },
+    { key: 'guardian', name: '보호자 연결',       m: [10, 12, 15],     pct: true },
+    { key: 'will',     name: '유언장 초안 완성',  m: [15, 18, 20],     pct: true },
+  ];
+
+  // 유입 경로 분류 (utm_source 우선, 없으면 referrer 호스트)
+  const SOURCE_MAP = [
+    [/instagram/i, '인스타그램'], [/brunch/i, '브런치'], [/naver/i, '네이버'],
+    [/kakao/i, '카카오'], [/youtube|youtu\.be/i, '유튜브'], [/google/i, '구글'],
+    [/facebook|fb\./i, '페이스북'], [/threads/i, '스레드'], [/twitter|t\.co|x\.com/i, 'X(트위터)'],
+    [/daum/i, '다음'], [/github\.io|github\.com/i, '내부 이동'],
+  ];
+  const classify = (utm, host) => {
+    const key = utm || host;
+    if (!key) return '직접 유입';
+    for (const [re, label] of SOURCE_MAP) if (re.test(key)) return label;
+    return key;
+  };
+
+  const fmtN = n => Number(n || 0).toLocaleString('ko-KR');
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+  const kstDay = d => d; // RPC가 KST date 문자열로 반환
+
+  // ── 상태 ─────────────────────────────────────────
+  let rangeDays = 14;
+  let pageSite = 'itda';
+  let cache = { overview: [], pages: [], sources: [], retention: [], goals: null };
+
+  // ── 로드 ─────────────────────────────────────────
+  async function loadAll() {
+    const [ov, pg, src, ret, gl] = await Promise.all([
+      supabase.rpc('dash_overview', { days: rangeDays }),
+      supabase.rpc('dash_pages', { days: rangeDays }),
+      supabase.rpc('dash_sources', { days: rangeDays }),
+      supabase.rpc('dash_retention'),
+      supabase.rpc('dash_goals'),
+    ]);
+    const bad = [ov, pg, src, ret, gl].find(r => r.error);
+    if (bad) {
+      document.getElementById('updated').textContent = '불러오기 실패: ' + bad.error.message;
+      return;
+    }
+    cache = {
+      overview: ov.data || [], pages: pg.data || [], sources: src.data || [],
+      retention: ret.data || [], goals: (gl.data && gl.data[0]) || null,
+    };
+    renderAll();
+    document.getElementById('updated').textContent =
+      '갱신 ' + new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  }
+
+  function renderAll() {
+    renderTiles(); renderGoals(); renderTraffic(); renderPages(); renderSources(); renderRetention();
+  }
+
+  // ── KPI 타일 ─────────────────────────────────────
+  function renderTiles() {
+    const g = cache.goals || {};
+    const today = todayKST();
+    const todayRows = cache.overview.filter(r => r.day === today);
+    const sum = rows => rows.reduce((a, r) => a + Number(r.visitors), 0);
+    const bySite = id => sum(todayRows.filter(r => r.site === id));
+    const d7pct = g.d7_eligible > 0 ? Math.round(100 * g.d7_retained / g.d7_eligible) : null;
+
+    const tiles = [
+      { k: '오늘 방문자 (전체)', v: fmtN(sum(todayRows)), s: SITES.map(s => `${s.name} ${bySite(s.id)}`).join(' · ') },
+      { k: '잇다 가입 누적', sw: '#178457', v: fmtN(g.itda_signups), s: '운영자 제외' },
+      { k: '묻다 가입 누적', sw: '#C05320', v: fmtN(g.mutda_signups), s: '목표 9/30 · 1,000' },
+      { k: '묻다 DAU', sw: '#C05320', v: fmtN(g.dau_today), s: '목표 9/30 · 100+' },
+      { k: '묻다 WAU', sw: '#C05320', v: fmtN(g.wau), s: '목표 9/30 · 300' },
+      { k: '묻다 D7 리텐션', sw: '#C05320', v: d7pct === null ? '—' : d7pct + '%', s: d7pct === null ? '가입 7일 경과자 없음' : `대상 ${g.d7_eligible}명 중 ${g.d7_retained}명` },
+    ];
+    document.getElementById('tiles').innerHTML = tiles.map(t => `
+      <div class="tile">
+        <div class="k">${t.sw ? `<span class="sw" style="background:${t.sw}"></span>` : ''}${esc(t.k)}</div>
+        <div class="v">${t.v}</div>
+        <div class="s">${esc(t.s)}</div>
+      </div>`).join('');
+  }
+
+  // ── Q3 목표 ──────────────────────────────────────
+  function renderGoals() {
+    const g = cache.goals || {};
+    const d7pct = g.d7_eligible > 0 ? Math.round(100 * g.d7_retained / g.d7_eligible) : 0;
+    const total = Math.max(1, Number(g.mutda_signups) || 0);
+    const pctOf = n => Math.round(100 * n / total);
+    const val = {
+      signups: Number(g.mutda_signups) || 0, dau: Number(g.dau_today) || 0, wau: Number(g.wau) || 0,
+      d7: d7pct, letters: Number(g.letters_sent) || 0,
+      checkin: pctOf(Number(g.checkin_on) || 0), guardian: pctOf(Number(g.guardian_linked) || 0),
+      will: pctOf(Number(g.will_users) || 0),
+    };
+    document.getElementById('goals').innerHTML = GOALS.map(goal => {
+      const now = val[goal.key];
+      const target = goal.m[2];
+      const p = Math.min(100, 100 * now / target);
+      const ticks = goal.m.slice(0, 2).filter(v => v !== null)
+        .map(v => `<span class="tick" style="left:${Math.min(100, 100 * v / target)}%"></span>`).join('');
+      const show = goal.pct ? (n => n + '%') : goal.fmt;
+      return `
+        <div class="goal">
+          <div class="top">
+            <span class="name">${esc(goal.name)}</span>
+            <span class="tgt">7/31 ${goal.m[0] === null ? '—' : show(goal.m[0])} · 8/31 ${show(goal.m[1])}</span>
+            <span class="now">${show(now)} <span class="muted" style="font-weight:600">/ ${show(target)}</span></span>
+          </div>
+          <div class="bar"><span class="fill" style="width:${p}%"></span>${ticks}</div>
+        </div>`;
+    }).join('');
+  }
+
+  // ── 일별 방문자 라인차트 ─────────────────────────
+  function todayKST() {
+    return new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
+  }
+  function dayList(n) {
+    const out = [], end = new Date(todayKST() + 'T00:00:00Z');
+    for (let i = n - 1; i >= 0; i--) out.push(new Date(end - i * 86400e3).toISOString().slice(0, 10));
+    return out;
+  }
+
+  function renderTraffic() {
+    const days = dayList(rangeDays);
+    const series = SITES.map(s => ({
+      ...s,
+      vals: days.map(d => {
+        const row = cache.overview.find(r => r.site === s.id && kstDay(r.day) === d);
+        return row ? Number(row.visitors) : 0;
+      }),
+    }));
+    const maxV = Math.max(2, ...series.flatMap(s => s.vals));
+    const yMax = Math.ceil(maxV / 2) * 2;
+
+    const W = 760, H = 250, L = 34, R = 92, T = 14, B = 28;
+    const iw = W - L - R, ih = H - T - B;
+    const x = i => L + (days.length === 1 ? iw / 2 : i * iw / (days.length - 1));
+    const y = v => T + ih - (v / yMax) * ih;
+
+    let svg = '';
+    // 그리드 (은은한 hairline) + y 눈금
+    for (let g = 0; g <= 2; g++) {
+      const v = Math.round(yMax * g / 2), yy = y(v);
+      svg += `<line x1="${L}" y1="${yy}" x2="${W - R}" y2="${yy}" stroke="var(--grid)" stroke-width="1"/>`;
+      svg += `<text x="${L - 6}" y="${yy + 3.5}" text-anchor="end" font-size="10" fill="var(--ink-muted)" font-variant-numeric="tabular-nums">${v}</text>`;
+    }
+    // x 라벨 (5개 내외)
+    const step = Math.max(1, Math.round(days.length / 5));
+    days.forEach((d, i) => {
+      if (i % step === 0 || i === days.length - 1) {
+        svg += `<text x="${x(i)}" y="${H - 8}" text-anchor="middle" font-size="10" fill="var(--ink-muted)">${d.slice(5).replace('-', '/')}</text>`;
+      }
+    });
+    // 라인 (2px round) + 끝점(r4, 흰 링 2px) + 직접 라벨
+    series.forEach(s => {
+      const pts = s.vals.map((v, i) => `${x(i)},${y(v)}`).join(' ');
+      svg += `<polyline points="${pts}" fill="none" stroke="${s.hex}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+      const li = s.vals.length - 1;
+      svg += `<circle cx="${x(li)}" cy="${y(s.vals[li])}" r="4" fill="${s.hex}" stroke="#fff" stroke-width="2"/>`;
+      svg += `<text x="${x(li) + 9}" y="${y(s.vals[li]) + 3.5}" font-size="11" font-weight="700" fill="var(--ink-soft)">${s.name} ${s.vals[li]}</text>`;
+    });
+    // 크로스헤어 레이어
+    svg += `<line id="xhair" x1="0" y1="${T}" x2="0" y2="${T + ih}" stroke="var(--ink-faint)" stroke-width="1" visibility="hidden"/>`;
+    svg += `<rect id="hover-zone" x="${L}" y="${T}" width="${iw}" height="${ih}" fill="transparent"/>`;
+
+    const svgEl = document.getElementById('traffic-svg');
+    svgEl.innerHTML = svg;
+
+    document.getElementById('traffic-legend').innerHTML =
+      SITES.map(s => `<span><i style="background:${s.hex}"></i>${s.name}</span>`).join('');
+
+    // 툴팁: 크로스헤어가 X를 찾고, 그 X의 전 시리즈 값을 보여준다
+    const tip = document.getElementById('traffic-tip');
+    const zone = svgEl.querySelector('#hover-zone');
+    const xh = svgEl.querySelector('#xhair');
+    zone.addEventListener('pointermove', (e) => {
+      const box = svgEl.getBoundingClientRect();
+      const px = (e.clientX - box.left) * (W / box.width);
+      const i = Math.max(0, Math.min(days.length - 1,
+        Math.round((px - L) / (iw / Math.max(1, days.length - 1)))));
+      xh.setAttribute('x1', x(i)); xh.setAttribute('x2', x(i));
+      xh.setAttribute('visibility', 'visible');
+      tip.style.display = 'block';
+      tip.innerHTML = `<div class="d">${days[i]}</div>` + series.map(s =>
+        `<div class="r"><i style="background:${s.hex}"></i><b>${s.vals[i]}</b><span>${s.name}</span></div>`).join('');
+      const tw = tip.offsetWidth;
+      const lx = (x(i) / W) * box.width;
+      tip.style.left = Math.min(box.width - tw - 4, Math.max(0, lx + 12)) + 'px';
+      tip.style.top = '10px';
+    });
+    zone.addEventListener('pointerleave', () => {
+      tip.style.display = 'none'; xh.setAttribute('visibility', 'hidden');
+    });
+
+    // 표 보기 (접근성/정확값)
+    const tbl = document.getElementById('traffic-table');
+    tbl.innerHTML = `<table class="d"><thead><tr><th>날짜</th>${SITES.map(s => `<th class="num">${s.name}</th>`).join('')}</tr></thead><tbody>` +
+      days.map((d, i) => `<tr><td class="muted">${d}</td>${series.map(s => `<td class="num">${s.vals[i]}</td>`).join('')}</tr>`).reverse().join('') +
+      '</tbody></table>';
+  }
+
+  document.getElementById('traffic-table-btn').addEventListener('click', (e) => {
+    const t = document.getElementById('traffic-table');
+    t.classList.toggle('hidden');
+    e.target.textContent = t.classList.contains('hidden') ? '표로 보기' : '표 닫기';
+  });
+
+  // ── 페이지별 도달 ────────────────────────────────
+  function renderPages() {
+    document.getElementById('page-tabs').innerHTML = SITES.map(s =>
+      `<button data-site="${s.id}" class="${pageSite === s.id ? 'on' : ''}"><i style="background:${s.hex}"></i>${s.name}</button>`).join('');
+    document.querySelectorAll('#page-tabs button').forEach(b =>
+      b.addEventListener('click', () => { pageSite = b.dataset.site; renderPages(); }));
+
+    const rows = cache.pages.filter(r => r.site === pageSite).slice(0, 15);
+    const el = document.getElementById('pages');
+    if (!rows.length) {
+      el.innerHTML = `<div class="empty-line">아직 데이터가 없어요. ${pageSite === 'suechoi' ? '개인 홈페이지에 트래커 스니펫을 심으면 잡히기 시작합니다.' : ''}</div>`;
+      return;
+    }
+    const max = Math.max(...rows.map(r => Number(r.visitors)));
+    const color = SITE_BY_ID[pageSite].hex;
+    el.innerHTML = `<table class="d"><thead><tr><th>페이지</th><th style="width:26%"></th><th class="num">방문자</th><th class="num">PV</th></tr></thead><tbody>` +
+      rows.map(r => `
+        <tr>
+          <td>${esc(r.path)}</td>
+          <td><div class="inbar"><i style="width:${Math.max(3, 100 * r.visitors / max)}%;background:${color}"></i></div></td>
+          <td class="num"><b>${fmtN(r.visitors)}</b></td>
+          <td class="num muted">${fmtN(r.pv)}</td>
+        </tr>`).join('') + '</tbody></table>';
+  }
+
+  // ── 유입 경로 ────────────────────────────────────
+  function renderSources() {
+    const agg = new Map();
+    for (const r of cache.sources) {
+      const label = classify(r.utm_source, r.ref_host);
+      if (label === '내부 이동') continue;
+      const cur = agg.get(label) || { visitors: 0, hits: 0 };
+      cur.visitors += Number(r.visitors); cur.hits += Number(r.hits);
+      agg.set(label, cur);
+    }
+    const rows = [...agg.entries()].sort((a, b) => b[1].visitors - a[1].visitors).slice(0, 12);
+    const el = document.getElementById('sources');
+    if (!rows.length) {
+      el.innerHTML = '<div class="empty-line">아직 유입 데이터가 없어요. 트래커 배포 후 인스타·브런치 등 외부 유입부터 잡히기 시작합니다.</div>';
+      return;
+    }
+    const max = Math.max(...rows.map(([, v]) => v.visitors));
+    el.innerHTML = `<table class="d"><thead><tr><th>경로</th><th style="width:30%"></th><th class="num">방문자</th><th class="num">조회</th></tr></thead><tbody>` +
+      rows.map(([label, v]) => `
+        <tr>
+          <td>${esc(label)}</td>
+          <td><div class="inbar"><i style="width:${Math.max(3, 100 * v.visitors / max)}%;background:var(--primary)"></i></div></td>
+          <td class="num"><b>${fmtN(v.visitors)}</b></td>
+          <td class="num muted">${fmtN(v.hits)}</td>
+        </tr>`).join('') + '</tbody></table>';
+  }
+
+  // ── 리텐션 코호트 ────────────────────────────────
+  function renderRetention() {
+    const el = document.getElementById('retention');
+    const brands = [
+      { id: 'itda', name: '잇다', hex: '#178457' },
+      { id: 'mutda', name: '묻다', hex: '#C05320' },
+    ];
+    el.innerHTML = brands.map(b => {
+      const rows = cache.retention.filter(r => r.brand === b.id).slice(0, 8);
+      if (!rows.length) return `<div><div class="card-t" style="font-size:13px;margin-bottom:8px;"><span style="display:inline-block;width:9px;height:9px;border-radius:3px;background:${b.hex};margin-right:6px;"></span>${b.name}</div><div class="empty-line">가입 데이터 없음</div></div>`;
+      const cell = (num, den) => {
+        if (!den) return '<span class="muted">—</span>';
+        const p = Math.round(100 * num / den);
+        const a = Math.min(0.55, 0.08 + p / 130);
+        return `<span class="pct-cell" style="background:rgba(23,132,87,${a.toFixed(2)});color:${p >= 45 ? '#fff' : 'var(--ink)'}">${p}%</span>`;
+      };
+      return `
+        <div>
+          <div class="card-t" style="font-size:13px;margin-bottom:8px;">
+            <span style="display:inline-block;width:9px;height:9px;border-radius:3px;background:${b.hex};margin-right:6px;"></span>${b.name}
+          </div>
+          <table class="d">
+            <thead><tr><th>가입 주(월요일)</th><th class="num">가입</th><th class="num">D1+</th><th class="num">D7+</th></tr></thead>
+            <tbody>${rows.map(r => `
+              <tr>
+                <td class="muted">${r.cohort_week}</td>
+                <td class="num"><b>${r.cohort_size}</b></td>
+                <td class="num">${cell(Number(r.ret_d1), Number(r.cohort_size))}</td>
+                <td class="num">${cell(Number(r.ret_d7), Number(r.cohort_size))}</td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>`;
+    }).join('');
+  }
+
+  // ── 기간 선택 + 라이브 갱신 ──────────────────────
+  document.querySelectorAll('#range button').forEach(b =>
+    b.addEventListener('click', () => {
+      rangeDays = Number(b.dataset.d);
+      document.querySelectorAll('#range button').forEach(x => x.classList.toggle('on', x === b));
+      loadAll();
+    }));
+
+  await loadAll();
+  setInterval(() => { if (document.visibilityState === 'visible') loadAll(); }, 60000);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') loadAll();
+  });
+</script>
+
+</body>
+</html>
