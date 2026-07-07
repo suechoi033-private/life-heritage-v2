@@ -1,5 +1,5 @@
 // 묻다 서비스워커 — 웹푸시 수신 + 알림 클릭 (안부확인 알림용)
-const CACHE_VERSION = 'mutda-v13-2026-07-06-item-row-responsive-wrap';
+const CACHE_VERSION = 'mutda-v14-2026-07-07-design-scale-overhaul';
 
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (e) => {

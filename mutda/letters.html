@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>감사의 말 · 작별인사 — 묻다.</title>
+  <title>감사의 말 · 작별인사 — 묻다</title>
   <link rel="stylesheet" href="./css/mutda.css" />
 </head>
 <body>
 <main>
   <div style="padding-top:8px;">
-    <h2 class="serif" style="font-size:22px;">마음을 전하는 편지</h2>
+    <h2 class="serif" style="font-size:19px;">마음을 전하는 편지</h2>
     <p class="muted small">써두는 것으로 시작, 살아 있을 때 전하는 것으로 완성.</p>
   </div>
 
@@ -30,26 +30,33 @@
     <p class="small muted" style="margin-top:10px;" id="my-stats"></p>
   </section>
 
-  <div style="display:flex; gap:8px; margin:16px 0 6px;">
+  <div style="display:flex; gap:8px; margin:16px 0 6px; align-items:center;">
     <button class="btn quiet sm" id="tab-gratitude" style="flex:1;">💐 감사의 말</button>
     <button class="btn quiet sm" id="tab-farewell" style="flex:1;">🕊️ 작별인사</button>
+    <button class="btn ghost sm" id="new-letter-btn" style="flex:0 0 auto;">＋ 새로 쓰기</button>
   </div>
 
   <div class="notice info" id="kind-guide"></div>
 
-  <section id="editor" class="card">
+  <!-- 작성창 — 기본은 접혀 있고, 오늘의 질문·새로 쓰기·수정에서 열린다 -->
+  <section id="editor" class="card" style="display:none;">
+    <p class="small" id="editor-context"
+       style="display:none; font-family:var(--font-serif); color:var(--primary-hover);
+              background:var(--primary-soft); border-radius:var(--radius-sm);
+              padding:9px 12px; margin-bottom:10px;"></p>
     <div class="field">
       <label>받는 사람</label>
       <input id="in-recipient" placeholder="예) 딸 하나에게" />
     </div>
     <div class="field">
       <label>편지</label>
-      <textarea id="in-body" style="min-height:180px;"></textarea>
-      <p class="hint" id="starter-hint"></p>
+      <textarea id="in-body" style="min-height:150px;"></textarea>
+      <p class="hint">시작이 어렵다면 ✨ 첫 문장 받기 — 이어서 쓰기만 하면 돼요.</p>
     </div>
     <div style="display:flex; gap:8px;">
       <button class="btn quiet sm" id="starter-btn" style="flex:1;">✨ 첫 문장 받기</button>
       <button class="btn sm" id="save-btn" style="flex:2;">저장하기</button>
+      <button class="btn quiet sm" id="cancel-btn" style="flex:0 0 auto;">닫기</button>
     </div>
   </section>
 
@@ -107,11 +114,34 @@
     '"그때 미안했다"보다 "그때 고마웠다"를 먼저 — 누구에게?',
   ];
   const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
-  document.getElementById('daily-prompt').textContent = PROMPTS[dayOfYear % PROMPTS.length];
-  document.getElementById('prompt-write').onclick = () => {
-    document.getElementById('in-body').focus();
-    document.getElementById('editor').scrollIntoView({ behavior: 'smooth', block: 'center' });
-  };
+  const todayPrompt = PROMPTS[dayOfYear % PROMPTS.length];
+  document.getElementById('daily-prompt').textContent = todayPrompt;
+
+  // ---------- 작성창 열기/닫기 — 기본은 접혀 있다 ----------
+  const editorEl = document.getElementById('editor');
+  const contextEl = document.getElementById('editor-context');
+
+  function openEditor({ letter = null, context = '' } = {}) {
+    editing = letter?.id || null;
+    document.getElementById('in-recipient').value = letter?.recipient || '';
+    document.getElementById('in-body').value = letter?.body || '';
+    contextEl.textContent = context;
+    contextEl.style.display = context ? '' : 'none';
+    editorEl.style.display = '';
+    document.getElementById('save-btn').textContent = letter ? '수정 저장' : '저장하기';
+    editorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    document.getElementById(letter || context ? 'in-body' : 'in-recipient').focus();
+  }
+  function closeEditor() {
+    editing = null;
+    editorEl.style.display = 'none';
+    document.getElementById('in-recipient').value = '';
+    document.getElementById('in-body').value = '';
+  }
+
+  document.getElementById('prompt-write').onclick = () => openEditor({ context: `💭 ${todayPrompt}` });
+  document.getElementById('new-letter-btn').onclick = () => openEditor();
+  document.getElementById('cancel-btn').onclick = closeEditor;
 
   let kind = new URLSearchParams(location.search).get('kind') === 'farewell' ? 'farewell' : 'gratitude';
   let editing = null;
@@ -124,9 +154,8 @@
   };
 
   function setKind(k) {
-    kind = k; editing = null;
-    document.getElementById('in-recipient').value = '';
-    document.getElementById('in-body').value = '';
+    kind = k;
+    closeEditor();
     tabs.gratitude.className = `btn sm ${k === 'gratitude' ? '' : 'quiet'}`;
     tabs.farewell.className = `btn sm ${k === 'farewell' ? '' : 'quiet'}`;
     document.getElementById('kind-guide').textContent = GUIDE[k];
@@ -157,10 +186,8 @@
         .insert({ user_id: user.id, kind, recipient, body });
     }
     logEvent('letter_saved', { kind });
-    toast('저장했어요. 용기가 나면 📨 전하기를 눌러보세요.');
-    editing = null;
-    document.getElementById('in-recipient').value = '';
-    document.getElementById('in-body').value = '';
+    toast(editing ? '고쳐 썼어요.' : '저장했어요. 용기가 나면 📨 전하기를 눌러보세요.');
+    closeEditor();
     loadList();
   };
 
@@ -265,7 +292,7 @@
         <span style="display:flex; gap:6px; flex-wrap:wrap;">
           <button class="btn sm" data-send="${l.id}">📨 전하기</button>
           <button class="btn quiet sm" data-share="${l.id}">${l.shared_post_id ? '나눔 내리기' : '🕯️ 나누기'}</button>
-          <button class="btn quiet sm" data-edit="${l.id}">열기</button>
+          <button class="btn quiet sm" data-edit="${l.id}">✏️ 수정</button>
           <button class="btn quiet sm" data-del="${l.id}">삭제</button>
         </span>
       </div>`).join('');
@@ -274,13 +301,8 @@
       sendLetter(list.find(x => x.id === b.dataset.send)));
     box.querySelectorAll('[data-share]').forEach(b => b.onclick = () =>
       shareLetter(list.find(x => x.id === b.dataset.share)));
-    box.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => {
-      const l = list.find(x => x.id === b.dataset.edit);
-      editing = l.id;
-      document.getElementById('in-recipient').value = l.recipient || '';
-      document.getElementById('in-body').value = l.body;
-      document.getElementById('editor').scrollIntoView({ behavior: 'smooth', block: 'center' });
-    });
+    box.querySelectorAll('[data-edit]').forEach(b => b.onclick = () =>
+      openEditor({ letter: list.find(x => x.id === b.dataset.edit) }));
     box.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
       if (!confirm('이 편지를 삭제할까요? 되돌릴 수 없어요.')) return;
       const l = list.find(x => x.id === b.dataset.del);

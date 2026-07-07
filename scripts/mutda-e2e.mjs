@@ -167,15 +167,29 @@ try {
   // 6. 편지 (감사) — 오늘의 질문 → 저장 → 전하기 → 나누기 → 잔디
   step('감사의 말');
   await page.goto(`${BASE}/letters.html?kind=gratitude`);
-  await page.waitForSelector('#in-body', { timeout: 15000 });
+  await page.waitForSelector('#daily-prompt', { timeout: 15000 });
+  await page.waitForFunction(() => document.getElementById('daily-prompt')?.textContent.length > 5, { timeout: 15000 });
   const prompt = await page.locator('#daily-prompt').innerText();
   if (prompt.length < 10) throw new Error('오늘의 마음 질문 렌더 실패');
+  // 작성창은 기본 접힘 — 오늘의 질문에서 열리고, 질문이 인용으로 보인다
+  if (await page.locator('#editor').isVisible()) throw new Error('작성창이 기본으로 열려 있음');
+  await page.click('#prompt-write');
+  await page.waitForSelector('#editor', { state: 'visible', timeout: 15000 });
+  const ctx = await page.locator('#editor-context').innerText();
+  if (!ctx.includes(prompt.slice(0, 10))) throw new Error('작성창에 오늘의 질문 인용 없음: ' + ctx);
   await page.click('#starter-btn');
   await page.fill('#in-recipient', '딸 하나에게');
   const cur = await page.inputValue('#in-body');
   await page.fill('#in-body', cur + ' 네 웃음이었다.');
   await page.click('#save-btn');
   await page.waitForSelector('#letter-list .item-row', { timeout: 15000 });
+  // 수정: 목록에서 열어 고쳐 쓰기
+  await page.click('#letter-list [data-edit]');
+  await page.waitForSelector('#editor', { state: 'visible', timeout: 15000 });
+  await page.fill('#in-body', '고쳐 쓴 감사의 말입니다.');
+  await page.click('#save-btn');
+  await page.waitForFunction(() =>
+    document.querySelector('#letter-list')?.innerText.includes('고쳐 쓴 감사의'), { timeout: 15000 });
   // 전하기 (headless: 클립보드 폴백 경로) → 전함 칩
   await page.click('#letter-list [data-send]');
   await page.waitForSelector('#letter-list .chip.green', { timeout: 15000 });
