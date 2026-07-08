@@ -45,6 +45,8 @@ jobs:
         run: |
           supabase functions deploy analyze-rx --project-ref "$PROJECT_REF"
           supabase functions deploy ocr-memo --project-ref "$PROJECT_REF"
+          # ltc-search: 공개 프록시(인증 불필요) — verify_jwt=false 유지 필수
+          supabase functions deploy ltc-search --project-ref "$PROJECT_REF" --no-verify-jwt
           # spotify-search: Premium 의존 정책 발견 후 paste-link 방식으로 전환 — 자동 배포 보류.
           # 추후 Premium 가입 또는 Quota Extension 승인 시 주석 해제하여 복귀 가능.
           # supabase functions deploy spotify-search --project-ref "$PROJECT_REF"
