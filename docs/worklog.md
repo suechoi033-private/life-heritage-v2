@@ -12,6 +12,13 @@
 
 ## 2026-07-07
 
+**묻다 유입 채널 트래킹(referral) 이식 — 인스타 자동 DM 캠페인 대응** (PE 세션, 사장님 지시)
+- 배경: 인스타(`life.itda`) 댓글→자동 DM(ManyChat)로 **묻다** 링크(`/mutda/?ref=beta_ig`) 배포 시작. 잇다에만 있던 referral 트래킹을 묻다에도 이식.
+- 구조: 묻다는 잇다와 **같은 오리진·같은 Supabase `profiles`** → localStorage 키(`itda:referral_source`) 공용, first-touch 보존, `profiles.referral_source` 단일 컬럼 정착.
+- 신규 `mutda/js/referral.js`(잇다와 동일 로직) · 캡처: `mutda/index.html`·`signup.html`·`login.html` · 이관: `mutda/welcome.html`(guardian 분기 전).
+- 한계: `?ref` 값은 채널만 구분(묻다/잇다 서비스 구분 X) — 필요 시 캠페인 링크에서 `mutda_ig`/`itda_ig`로 값만 분리. 마이그레이션 `20260622_profiles_referral_source.sql`은 양쪽 공용 — SQL Editor 1회 실행이면 끝.
+- 인스타 캠페인 셋업 완료: ManyChat "댓글 묻다→팔로우 요청→링크 DM" 라이브, 카드뉴스 2종(유품정리·안녕피터팬 연계, 에디토리얼 라이트) + 캡션 2종 제작·전달.
+
 **라이브 대시보드 — 잇다·묻다·개인홈 통합 (`dash.html`)** (창업자 요청, PE/운영)
 - **`web_events` 신설** (`20260706_web_events_dashboard.sql`, 적용 완료): 3개 프로퍼티 공용
   익명 포함 방문 로그 — path·referrer 호스트·UTM·방문자/세션 랜덤 id. anon insert-only RLS, PII 없음.

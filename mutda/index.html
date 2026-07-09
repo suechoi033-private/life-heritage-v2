@@ -76,6 +76,10 @@
 
 <script type="module">
   import { supabase, esc, fmtDate, logEvent, redirectIfAuthed } from './js/app.js';
+  import { captureReferral } from './js/referral.js';
+
+  // ?ref=beta_ig 등 유입 태그를 first-touch로 localStorage에 캡처 → welcome.html에서 profiles로 이관
+  captureReferral();
 
   redirectIfAuthed('home.html'); // 이미 로그인한 사용자는 랜딩 대신 홈으로
   const from = new URLSearchParams(location.search).get('from');
