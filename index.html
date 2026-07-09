@@ -389,6 +389,11 @@ import { renderNav } from './nav.js';
 import { registerPWA } from './js/pwa.js';
 import { getFeaturedStory, listHomeFeed, getEngagementMap, listContentComments, addContentComment, updateContentComment, deleteContentComment } from './js/content.js';
 import { toggleReaction } from './js/community.js';
+import { captureReferral } from './js/referral.js';
+
+// ?ref=beta_form / ?ref=beta_ig 파라미터를 first-touch 로 localStorage에 캡처.
+// welcome.html에서 첫 로그인 시 profiles.referral_source로 이관.
+captureReferral();
 
 await renderNav({ active: 'home', infoIcon: true });
 registerPWA();

@@ -89,6 +89,20 @@
 - **배포**: 사장님 지시로 main 머지·푸시 → pages.yml이 gh-pages 자동 동기화. 라이브: `https://suechoi033-private.github.io/life-heritage-v2/mutda/`
 - **가입 막힘 해결 (인증 메일 미도착)**: 원인 두 겹 — ①Supabase 기본 SMTP는 팀원 외 주소로 인증 메일을 사실상 전달 못 함 ②기존 잇다 계정 이메일로 재가입 시 에러 없이 "메일 확인" 흐름으로 빠짐(계정 존재 은닉). 조치: auth.users BEFORE INSERT 트리거 `auto_confirm_email`로 베타 기간 가입 즉시 확인 처리(`20260705_auto_confirm_email.sql`, 잇다에도 적용됨·롤백 방법 주석) + 묻다 signup이 세션 없으면 즉시 로그인 시도→기가입 이메일이면 로그인 안내. 실 GoTrue 경로로 가입 200→auto_confirmed→비밀번호 로그인 토큰 발급까지 검증. 정식 런칭 전 커스텀 SMTP(Resend 등) 연결 후 트리거 제거 권장.
 - **배포 장애 트러블슈팅**: 첫 배포 후 /mutda/ 404 — pages-build-deployment가 "Deployment failed, try again later"로 반복 실패. gh-pages 트리 이분탐색(7회 배포 실험)으로 `scripts/mutda-supabase-stub.mjs`(e2e용 가짜 Supabase 클라이언트) 단일 파일이 GitHub Pages 배포 콘텐츠 검사를 트리거함을 특정. 조치: pages.yml에서 배포 시 dev 테스트 파일(git rm) 제외 후 푸시하도록 수정 — main에는 테스트 파일 유지, 라이브에만 미포함. 교훈: 배포 성공 판정은 sync 워크플로우가 아니라 pages-build-deployment + 라이브 URL 200 기준으로.
+---
+
+## 2026-06-22
+
+**베타 인바이트 자동화 — UTM/유입 채널 트래킹 (PE 세션, 사장님 결정)**
+- 사장님 결정: "링크 전달은 게이트가 아니라 자동 응답. 사장님 손 빼고 사용자에겐 '초대받았다' 톤 살림." 앱은 공개, 신청자는 링크 받으면 즉시 가입 가능. Google Form(인입 1)·Instagram "잇다." 댓글(인입 2) 두 채널. 실행 순서: (1) 환영 카피 (2) UTM 트래킹 (3) Form Apps Script (4) IG 자동답장. 이번 세션은 (1)·(2).
+- **(1) 환영 카피 A/B 각 채널 초안 완성** — 카피라이터 세션 (`life-heritage-copywriter`). 세계관: "초대·승인" 아니라 **"자리·문 열어둠"**. YMYL 방어를 훈계조 대신 "함께 확인해 주세요" 결. 이메일(300~450자, `{{이름}}` 개인화, HTML 가능) · IG DM(180자 이하 텍스트) 각 2안 산출. **권장: 두 채널 모두 A안(정중·차분)** — 시니어 페르소나 커버 + 잇다 세계관 또렷. B안(따뜻·친근)은 IG SNS 유입이 30·40대 위주로 확정될 때 대안. `[BETA_LINK]` 는 도메인 확정(`https://itda.day/`) 후 일괄 치환.
+- **(2) UTM 트래킹 코드 심음** — `?ref=beta_form` / `?ref=beta_ig` 파라미터를 first-touch 로 localStorage에 캡처 → 첫 로그인 시 `profiles.referral_source` 로 이관.
+  - 마이그레이션 신규: `supabase/migrations/20260622_profiles_referral_source.sql` — `profiles.referral_source text` 컬럼 + 부분 인덱스(non-null만). CHECK 없이 유연. 멱등.
+  - 신규 모듈: `js/referral.js` — `captureReferral()` / `hoistReferral(supabase, userId)` 두 함수. `entry_path` 패턴 재사용. 값은 `[a-zA-Z0-9_\-]` 40자 제한(안전 필터).
+  - 진입 페이지에 캡처 심음: `index.html` · `signup.html` · `login.html`(ES 모듈 import) + `beta.html`(기존 비-모듈 스크립트라 inline). `welcome.html` 에서 `hoistReferral` 호출 — `entry_path` 이관 직후.
+  - 채널·페르소나 코호트 분석 자산 확보(Form vs IG 리텐션·전환 분리). W26 measurement dashboard(M3) 이후 관측치 정착 예정.
+  - `sw.js → itda-v3-2026-06-22-referral-source-tracking` + APP_SHELL 에 `js/referral.js` 추가.
+- 사장님 액션 대기: 카피 A/B 선택 · 마이그레이션 적용(SQL Editor) · 도메인 확정 후 링크 치환.
 
 ---
 
