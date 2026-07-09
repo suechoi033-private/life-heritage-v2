@@ -402,6 +402,7 @@
 
 <script type="module">
   import { supabase } from './auth.js';
+  import { hoistReferral } from './js/referral.js';
 
   const { data: { session } } = await supabase.auth.getSession();
   const currentUser = session?.user || null;
@@ -426,6 +427,9 @@
         localStorage.removeItem('itda:entry_path');
       }
     } catch (_) {}
+
+    // ?ref= 유입 태그(beta_form / beta_ig 등)를 profiles.referral_source 로 정착 (한 번만).
+    try { await hoistReferral(supabase, currentUser.id); } catch (_) {}
 
     // will-start.html 에서 비회원이 적은 한 줄을 daily_answers 정착 (not_waking_tomorrow step 1)
     try {

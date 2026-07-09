@@ -1,62 +1,59 @@
 # Supabase 배포 가이드
 
-프런트(정적 사이트)는 GitHub Pages로 자동 배포되지만, **Supabase 마이그레이션·Edge
-Function은 별도 배포**가 필요하다. 이 환경(Claude on the web)은 Supabase 호스트가
-네트워크 allowlist에 막혀 직접 배포가 불가하므로, **GitHub Actions로 배포**한다.
-(GitHub 러너는 네트워크가 열려 있다.)
+**2026-07-08부터: 창업자는 PR에서 Merge 버튼만 누르면 된다.**
+main에 머지되는 순간 GitHub Actions(`deploy-supabase.yml`)가:
 
-## 1. 일회성 설정 — GitHub 저장소 Secrets 등록
+- `supabase/functions/**` 에서 **바뀐 함수만** 자동 배포하고
+- `supabase/migrations/**` 에 **새로 추가된 SQL 파일만** psql로 자동 적용한다.
 
-저장소 → Settings → Secrets and variables → Actions → New repository secret:
+프런트(정적 사이트)는 기존대로 `pages.yml`이 main 푸시마다 자동 배포한다.
+즉, PR 하나 머지 = 프런트 + 함수 + DB 전부 반영.
 
-| Secret | 값 | 발급 위치 |
-|---|---|---|
-| `SUPABASE_ACCESS_TOKEN` | 개인 액세스 토큰 | supabase.com/dashboard/account/tokens |
-| `SUPABASE_PROJECT_REF` | `zugwccngzprjjnwtajyr` | 프로젝트 설정(이미 공개값) |
-| `SUPABASE_DB_PASSWORD` | DB 비밀번호 | Project Settings → Database |
-| `ANTHROPIC_API_KEY` | `sk-ant-...` (선택, analyze-rx OCR) | console.anthropic.com |
-| `DATA_GO_KR_KEY` | 식약처 e약은요 인증키 (선택) | data.go.kr |
+## 1. 일회성 설정 — GitHub 저장소 Secrets
 
-## 2. 배포 실행
+저장소 → Settings → Secrets and variables → Actions:
 
-GitHub → **Actions** 탭 → **Deploy Supabase** → **Run workflow** → 대상 선택:
+| Secret | 값 | 발급 위치 | 용도 |
+|---|---|---|---|
+| `SUPABASE_ACCESS_TOKEN` | 개인 액세스 토큰 | supabase.com/dashboard/account/tokens | 함수 배포 |
+| `SUPABASE_PROJECT_REF` | `zugwccngzprjjnwtajyr` | (공개값) | 함수 배포 |
+| `SUPABASE_DB_URL` | **Session pooler URI** | 대시보드 → Connect → Session pooler | **마이그레이션 자동 적용** |
+| `ANTHROPIC_API_KEY` | `sk-ant-...` (선택) | console.anthropic.com | 함수 시크릿 수동 설정용 |
+| `DATA_GO_KR_KEY` | 공공데이터 인증키 (선택) | data.go.kr | 〃 |
 
-- `all` — 마이그레이션 + 함수 + 함수 시크릿
-- `migrations` — 마이그레이션만 (DDL, **one-way door** — 신중히)
-- `functions` — Edge Function(analyze-rx, ocr-memo)만
-- `function-secrets` — 함수 시크릿만
+`SUPABASE_DB_URL`이 없으면: 새 마이그레이션이 포함된 머지에서 잡이 **일부러 실패**해
+알려준다(조용히 건너뛰지 않음). 그 경우 SQL Editor로 해당 파일을 수동 적용한 뒤
+잡을 re-run 하거나, 시크릿을 넣어두면 다음부터 전자동.
 
-## 3. ⚠️ 마이그레이션 히스토리 주의
+## 2. 자동 배포 동작 규칙
 
-`supabase db push`는 **원격에 기록되지 않은 마이그레이션**만 적용한다.
-과거 마이그레이션을 SQL Editor에서 수동 적용했다면 원격 히스토리가 비어 있어,
-push가 **이미 적용된 것까지 다시 적용하려다 `create policy ... already exists`
-등으로 실패**할 수 있다.
+- **함수**: 머지 diff에 등장한 함수 디렉토리만 배포. 안전장치:
+  - `delete-account` 는 실데이터 삭제 로직이라 **자동 배포 제외** (수동 전용)
+  - 비회원(anon)이 직접 호출하는 함수는 `--no-verify-jwt`로 배포:
+    현재 `ltc-search` · `mutda-checkin-notify` · `push-notify` · `kakao-signin`.
+    **새 anon 함수를 만들면 workflow의 `NO_JWT` 목록에 추가할 것.**
+- **마이그레이션**: 이번 머지에서 *추가된* 파일만 파일명 순으로 `psql -f` 실행.
+  과거에 SQL Editor로 수동 적용한 히스토리와 충돌하지 않는다
+  (`supabase db push`를 쓰지 않는 이유). 마이그레이션은 계속 **멱등하게** 작성할 것
+  (`if not exists`, `drop policy if exists` 후 create 등 — 기존 컨벤션 유지).
 
-- 대부분의 신규 마이그레이션(`add column if not exists`, 가드된 `do $$`)은 멱등이라 안전.
-- 충돌 시: 이미 적용된 버전을 히스토리에 기록 →
-  `supabase migration repair --status applied <version>`
-- 또는 신규 파일만 SQL Editor에 직접 붙여넣어 적용(아래 4번).
+## 3. 비상용 수동 실행 (Actions 탭)
 
-## 4. 수동 적용 대안 (CLI/CI 없이)
+Actions → Deploy Supabase → Run workflow:
 
-Supabase 대시보드 → SQL Editor에 아래 파일 내용을 **순서대로** 붙여넣어 실행:
+- `functions` — **모든** 함수 재배포 (delete-account 제외)
+- `migrations-new` — 직전 커밋에서 추가된 마이그레이션만 적용
+- `function-secrets` — 함수 시크릿 재설정
 
-1. `supabase/migrations/20260524_care_prescriptions.sql`
-2. `supabase/migrations/20260524_care_guides.sql`
-3. `supabase/migrations/20260525_story_format.sql`
-4. `supabase/migrations/20260525_inline_comments_realtime.sql`
+## 4. 완전 수동 폴백 (CI 불능 시)
 
-Edge Function은 CLI 필요(로컬에서):
-```bash
-supabase functions deploy analyze-rx --project-ref zugwccngzprjjnwtajyr
-supabase functions deploy ocr-memo --project-ref zugwccngzprjjnwtajyr
-supabase secrets set ANTHROPIC_API_KEY="..." DATA_GO_KR_KEY="..." --project-ref zugwccngzprjjnwtajyr
-```
+- SQL: Supabase 대시보드 → SQL Editor에 마이그레이션 파일 내용 붙여넣기
+- 함수(로컬 CLI): `supabase functions deploy <이름> --project-ref zugwccngzprjjnwtajyr`
+  (anon 함수는 `--no-verify-jwt` 추가)
 
 ## 5. 배포 후 확인 (실기기)
 
-- 케어링: 처방전 촬영→분석 카드, 케어 가이드 노출
-- 케어링 기록 쓰기: "메모 사진으로 자동 입력"(ocr-memo) — 손글씨 메모 촬영 시 칸 자동 채움
-- 홈: 이야기 hero, NEW/내 글 뱃지, 하트 토글, 인라인 댓글, 새 글 pill(실시간)
-- 커뮤니티: 형식 선택 시트(일반 글/이야기), 이야기 뱃지
+- 요양원 검색(info/nursing-home.html): 시도+시군구 선택 → 해당 지역만 나오는지
+- 묻다 홈: "오늘, 묻다" 질문 카드 → 답 저장 → 질문 보내기 → 링크로 응답 왕복
+- 케어링: 처방전 분석, 메모 OCR
+- 홈/커뮤니티: 피드·인라인 댓글·실시간 pill

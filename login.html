@@ -64,6 +64,10 @@
 <script type="module">
   import { signIn, redirectIfAuthed, friendlyError, rememberAccount, supabase } from './auth.js';
   import { renderSocialAuthButtons } from './js/social-auth.js';
+  import { captureReferral } from './js/referral.js';
+
+  // ?ref= 유입 태그 캡처 (첫 진입이 login 인 경우 대비)
+  captureReferral();
 
   // 사용자 입력을 innerHTML에 넣기 전 escape
   function esc(s) {

@@ -310,6 +310,15 @@
 
     // 1) UTM 캡처 — 진입한 URL의 utm_*을 읽어 localStorage에 보존
     var params = new URLSearchParams(location.search);
+
+    // 1-b) ?ref= 유입 태그 캡처 (form/ig) — profiles.referral_source 로 이관 예정.
+    //      first-touch 보존, welcome.html 에서 hoistReferral() 로 정착.
+    var ref = params.get('ref');
+    if (ref) {
+      var cleanRef = ref.replace(/[^a-zA-Z0-9_\-]/g, '').slice(0, 40);
+      if (cleanRef && !safeGet('itda:referral_source')) safeSet('itda:referral_source', cleanRef);
+    }
+
     var utmIn = {};
     UTM_KEYS.forEach(function (k) {
       var v = params.get(k);

@@ -75,6 +75,10 @@
 <script type="module">
   import { signUp, redirectIfAuthed, friendlyError, supabase } from './auth.js';
   import { renderSocialAuthButtons } from './js/social-auth.js';
+  import { captureReferral } from './js/referral.js';
+
+  // ?ref= 유입 태그 캡처 (첫 진입이 signup 인 경우 대비)
+  captureReferral();
 
   // ── 초대 코드 캡처 (케어링 + 친구) ────────────────────────
   const params = new URLSearchParams(location.search);

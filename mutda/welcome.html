@@ -19,7 +19,8 @@
 </main>
 
 <script type="module">
-  import { getUser } from './js/app.js';
+  import { getUser, supabase } from './js/app.js';
+  import { hoistReferral } from './js/referral.js';
 
   const sent = new URLSearchParams(location.search).get('sent');
   const title = document.getElementById('msg-title');
@@ -27,6 +28,8 @@
   const go = document.getElementById('go-btn');
 
   const user = await getUser();
+  // ?ref= 유입 태그(beta_ig 등)를 profiles.referral_source 로 정착(첫 로그인 시 한 번). guardian 분기 전에 처리.
+  if (user) { try { await hoistReferral(supabase, user.id); } catch (_) {} }
   if (user && localStorage.getItem('mutda:guardian_code')) {
     location.replace('./guardian.html');
   } else if (user) {

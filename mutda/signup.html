@@ -37,6 +37,9 @@
 
 <script type="module">
   import { signUp, signIn, redirectIfAuthed, friendlyError, logEvent } from './js/app.js';
+  import { captureReferral } from './js/referral.js';
+
+  captureReferral(); // ?ref= 유입 태그 캡처(첫 진입이 signup인 경우 대비)
 
   redirectIfAuthed('home.html');
   logEvent('signup_view');

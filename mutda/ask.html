@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>당신의 답을 들려주세요 — 묻다</title>
+  <link rel="stylesheet" href="./css/mutda.css" />
+  <style>
+    .vis-opt { display:flex; gap:10px; align-items:flex-start; padding:12px; border:1.5px solid var(--line); border-radius:12px; cursor:pointer; }
+    .vis-opt input { margin-top:3px; }
+    .vis-opt.active { border-color: var(--primary); background: var(--primary-soft); }
+    .vis-opt b { font-size:14px; }
+    .vis-opt p { font-size:12.5px; color:var(--ink-muted); margin-top:2px; }
+  </style>
+</head>
+<body>
+<main>
+  <div class="auth-wrap" id="wrap">
+    <div class="brand" style="margin-top:16px;">묻다</div>
+    <p class="brand-sub" id="from-line">질문이 도착했어요</p>
+
+    <div class="card tint" style="margin-top:18px;">
+      <h3 class="serif" id="q-text" style="font-size:17.5px; line-height:1.55;">불러오는 중…</h3>
+    </div>
+
+    <div id="answer-area" style="display:none;">
+      <div class="field" style="margin-top:16px;">
+        <label>나의 답</label>
+        <textarea id="in-answer" style="min-height:130px;" placeholder="떠오르는 대로 편하게 적어주세요."></textarea>
+      </div>
+      <div class="field">
+        <label>이름 (선택)</label>
+        <input id="in-name" type="text" placeholder="어떻게 불러드릴까요?" />
+      </div>
+
+      <div class="field">
+        <label>보낸 분에게 내 답을 보여줄까요?</label>
+        <label class="vis-opt active" id="opt-shared">
+          <input type="radio" name="vis" value="shared" checked />
+          <span><b>보여주기</b><p>보낸 분이 내 답을 볼 수 있어요.</p></span>
+        </label>
+        <label class="vis-opt" id="opt-private" style="margin-top:8px;">
+          <input type="radio" name="vis" value="private" />
+          <span><b>비공개로 남기기</b><p>답을 남겼다는 사실만 전해지고, 내용은 누구에게도 보이지 않아요.</p></span>
+        </label>
+      </div>
+
+      <button class="btn" id="btn-submit" style="margin-top:6px;">답 보내기</button>
+      <p class="small muted center" style="margin-top:10px;">계정 없이 남길 수 있어요.</p>
+    </div>
+
+    <div id="done-area" style="display:none;">
+      <div class="card soft" style="margin-top:16px; text-align:center;">
+        <p style="font-size:28px;">🌿</p>
+        <h3 class="serif" id="done-title" style="margin-top:6px;">답이 전해졌어요</h3>
+        <p class="sub" id="done-desc" style="margin-top:6px;">소중한 이야기를 나눠주셔서 고맙습니다.</p>
+      </div>
+      <div class="card tint" style="margin-top:14px;">
+        <h3 class="serif" style="font-size:15px;">당신도, 묻고 싶은 사람이 있나요?</h3>
+        <p class="sub" style="margin-top:4px;">묻다는 삶에게 묻고 마음을 남기는 조용한 기록 공간이에요.</p>
+        <a class="btn sm ghost" href="./index.html?from=ask" style="margin-top:10px; padding:9px 18px;">묻다 둘러보기</a>
+      </div>
+    </div>
+
+    <p class="legal-note" style="margin-top:22px;">
+      남겨주신 답은 이 질문을 보낸 분과의 나눔을 위해서만 사용됩니다.
+      비공개 선택 시 내용은 보낸 분에게도 표시되지 않습니다.
+    </p>
+  </div>
+</main>
+
+<script type="module">
+  import { supabase, esc } from './js/app.js';
+
+  const code = (new URLSearchParams(location.search).get('code') || '').trim();
+  const qText = document.getElementById('q-text');
+  const fromLine = document.getElementById('from-line');
+
+  if (!code) {
+    qText.textContent = '유효하지 않은 링크예요.';
+    throw new Error('no code');
+  }
+
+  const { data: prev, error } = await supabase.rpc('mutda_question_invite_preview', { p_code: code });
+  const p = Array.isArray(prev) ? prev[0] : prev;
+  if (error || !p) {
+    qText.textContent = '질문을 찾을 수 없어요. 링크를 다시 확인해 주세요.';
+    throw new Error('preview fail');
+  }
+
+  qText.textContent = p.question_text;
+  fromLine.textContent = p.inviter_name
+    ? `${p.inviter_name}님이 이 질문의 답을 듣고 싶어 해요`
+    : '질문이 도착했어요';
+  if (p.target_name) {
+    const nameInput = document.getElementById('in-name');
+    nameInput.value = p.target_name;
+  }
+
+  if (p.answered) {
+    document.getElementById('done-title').textContent = '이미 답이 전해진 링크예요';
+    document.getElementById('done-desc').textContent = '한 링크에는 한 번만 답할 수 있어요.';
+    document.getElementById('done-area').style.display = '';
+  } else {
+    document.getElementById('answer-area').style.display = '';
+  }
+
+  // 공개/비공개 라디오 하이라이트
+  const optShared = document.getElementById('opt-shared');
+  const optPrivate = document.getElementById('opt-private');
+  [optShared, optPrivate].forEach(opt => {
+    opt.addEventListener('change', () => {
+      optShared.classList.toggle('active', opt === optShared);
+      optPrivate.classList.toggle('active', opt === optPrivate);
+    });
+  });
+
+  document.getElementById('btn-submit').addEventListener('click', async () => {
+    const content = document.getElementById('in-answer').value.trim();
+    if (!content) { alert('답을 적어주세요.'); return; }
+    const visibility = document.querySelector('input[name="vis"]:checked').value;
+    const name = document.getElementById('in-name').value.trim();
+
+    const btn = document.getElementById('btn-submit');
+    btn.disabled = true; btn.textContent = '보내는 중…';
+    const { error: subErr } = await supabase.rpc('mutda_question_invite_submit', {
+      p_code: code, p_content: content, p_visibility: visibility, p_respondent_name: name || null,
+    });
+    if (subErr) {
+      btn.disabled = false; btn.textContent = '답 보내기';
+      alert('전송에 실패했어요. 잠시 후 다시 시도해 주세요.');
+      return;
+    }
+    document.getElementById('answer-area').style.display = 'none';
+    document.getElementById('done-area').style.display = '';
+    if (visibility === 'private') {
+      document.getElementById('done-desc').textContent =
+        '비공개로 남겨졌어요. 답을 남겼다는 사실만 전해집니다.';
+    }
+  });
+</script>
+</body>
+</html>

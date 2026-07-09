@@ -10,7 +10,49 @@
 
 ---
 
+## 2026-07-08
+
+**배포 자동화 — "머지 버튼 = 배포 완료"** (사장님 요청: 코드 푸시 없이 GitHub 머지만으로 배포)
+- `deploy-supabase.yml` 개편: main 푸시 트리거 추가 — ① `supabase/functions/**` 변경분은 **바뀐 함수만** 자동 배포 ② `supabase/migrations/**`는 **이번 머지에 추가된 SQL만** psql로 자동 적용(파일명 순). `supabase db push`를 안 쓰는 이유 = 과거 SQL Editor 수동 적용 히스토리와 충돌(2026-05 실제 사고). 마이그레이션 멱등 작성 컨벤션은 유지.
+- 안전장치: `delete-account`(실데이터 삭제)는 자동 배포 제외 · anon 호출 함수(`ltc-search`·`mutda-checkin-notify`·`push-notify`·`kakao-signin`)는 `--no-verify-jwt` 플래그 자동 부여(NO_JWT 목록 — 새 anon 함수 생기면 추가) · `SUPABASE_DB_URL` 시크릿 없이 새 마이그레이션이 오면 잡이 **명시적으로 실패**해 알림(조용한 스킵 금지).
+- 기존 Pages 자동 배포(`pages.yml`)와 합쳐져 **PR 머지 1클릭 = 프런트+함수+DB 전부 반영**. 수동 dispatch는 비상용으로 유지(functions 전체 / migrations-new / function-secrets).
+- `supabase/DEPLOY.md` 전면 갱신. 사장님 일회성 액션: 시크릿 `SUPABASE_DB_URL`(대시보드 Connect → Session pooler URI) 등록.
+
+**묻다 — 오늘의 질문 + 지인에게 물어보기 (관계형 질문 루프 v1)** (사장님 기획, PE)
+- 기획: ① 내가 오늘의 질문에 답 → ② "그 사람은 뭐라고 답할까?" 짐작을 적음 → ③ 같은 질문을 지인에게 링크로 보냄(비회원 응답 가능) → ④ 지인이 공개 선택 시 실제 답이 내게 도착, **비공개면 답이 왔다는 사실만** → ⑤ 질문 상세에서 내 답·내 짐작·실제 답을 나란히. (질문별 답변 유형 집계는 후속)
+- 시드 질문 2개: "시간을 되돌린다면, 언제로 돌아가고 싶나요?" / "죽기 전에 꼭 만나고 싶은 사람은 누구인가요?" — 날짜 순환(letters 패턴).
+- **DB** `20260708_mutda_daily_question.sql`: `mutda_daily_questions`(공개 읽기) · `mutda_question_answers`(self/guess, owner RLS, self는 질문당 1개 부분유니크) · `mutda_question_invites`(**직접 SELECT 정책 없음 — RPC 전용**). RPC 4종: invite_create(코드 발급) / invite_preview(비회원, 질문·보낸이만) / invite_submit(비회원, 1회, 공개·비공개 선택) / my_invites(**private 답은 내용 null 반환** — DB 레벨 보장).
+- **화면**: `mutda/question.html`(내 답·짐작·보내기·모인 답들·다른 질문) · `mutda/ask.html`(비회원 응답 — 공개/비공개 라디오, 제출 후 묻다 소개 CTA `?from=ask`) · `mutda/home.html` 오늘의 질문 카드.
+- **홈 배치 결정**: "오늘의 한 걸음"(여정 태스크) 바로 아래·체크리스트 위 — 한 걸음은 끝이 있는 여정 진행, 오늘의 질문은 끝없는 데일리 훅으로 동기가 달라 별도 카드. 답했으면 CTA가 "물어보러 가기"로 바뀜. 테이블 미적용 환경에선 카드 자동 숨김(graceful).
+- `mutda/sw.js → mutda-v20-2026-07-08-daily-question`.
+- 사장님 액션: `20260708_mutda_daily_question.sql` SQL Editor 1회 실행(Supabase MCP 다운으로 자동 적용 불가했음) → 홈 카드가 자동 등장.
+
+**잇다 정리 — 유언장 계열을 묻다로 이관 완료** (사장님 결정: 홈에서 제거 + 정보 링크는 묻다 리다이렉트)
+- 전수조사 결과(핵심): 서버 실데이터는 봉투(`vault_recipients`) 하나뿐. 유언장 위저드의 서버 저장(`will_entries`)은 테이블 미존재로 애초에 조용히 실패 중(로컬만). ceremony(장례희망)는 묻다에 안 옮겨간 잇다 전용 → **유지**(사장님 컨펌).
+- `index.html` 비회원 홈: "내일 다시 못 깨어난다면"(will) 진입 카드 **제거** — 케어링 단일 진입으로. 회원 홈 자기성찰(reflection) 카드는 리텐션 엔진이라 유지.
+- 유언장 페이지 3종(`will-start.html`·`note/will.html`·`note/will-builder.html`)을 **묻다 유언장(`mutda/will.html`) 리다이렉트 스텁**으로 교체 — 북마크·검색 유입 데드엔드 방지.
+- 인라인 링크 교체: `info/home-death-korea.html` "유언 작성 시작" · `note/digital.html` "가족에게 남기는 메시지" → 묻다. `self.html` 허브의 유언 카드 → "유언장·남기는 말 — 묻다에서" 안내 카드로.
+- `sw.js` APP_SHELL에서 will-start 제거. 봉투·디지털노트·의향서 체크리스트는 잇다 유지.
+- 잔여 정리 대상(비파괴): `vault-will` Edge Function은 이제 고아 — 다음 함수 정리 라운드에서 제거 검토. `welcome.html`의 will_pending 정착 로직은 공유 데이터모델(reflection)과 얽혀 무해하게 유지.
+
+**요양원/요양병원 검색 — 지역 필터 미작동 근본 수정** (사장님 제보, PE)
+- 🐞 증상: 지역을 선택해도 전국 동일 결과. **실측으로 3중 원인 확정** (pg_net로 라이브 함수 A/B 호출):
+  ① 업스트림이 `sido`(한글명) 파라미터를 조용히 무시 — 올바른 파라미터는 `siDoCd`/`siGunGuCd`(법정동 코드, 신코드: 강원 51·전북 52) ② 물려 있던 오퍼레이션(`getBillGreentInsttSearchList02`)은 전국 80건짜리 특수 목록 — 진짜 전체 레지스트리는 **`getLtcInsttSeachList02`** (공식 API 오타 "Seach" 그대로. 서울 6,064 · 부산 2,521 실측) ③ "요양병원" 칩은 type이 요청에 실리지도 않는 장식이었고, 애초에 이 API(장기요양기관)에 요양병원 없음(심평원 소관).
+- **Edge Function 재작성**: 올바른 오퍼레이션 + `_type=json` + 법정동 코드 파라미터(숫자 검증) + **기관 단위 병합**(같은 기관이 급여유형별 중복 행) + 유형 필터(재가 C계열 실측 확정 → 요양원 = 비C계열 보유, 코드표 미확보에도 견고) + 상세조회(주소·전화·정원) 보강 코드 — 활용신청 전 403이면 자동 스킵, 신청 즉시 활성.
+- **프론트 재작성**(`info/nursing-home.html`): 시도/시군구 select를 법정동 코드 기반으로(다구 시는 구 단위 분리, 17개 시도 전체 코드맵 내장), 유형 칩 요양원/재가/요양병원(준비중). **가짜 필터 정리(정직)**: 평가등급·치매전담·정원여유 필터와 등급/여유 정렬은 데이터가 실제로 없어 제거, 배너에 연동 준비중 명시. **비교담기 제거** — 대상 페이지(`nursing-home-compare.html`)가 존재하지 않는 404 데드엔드였음.
+- 사장님 액션(각 2분, data.go.kr 자동승인): ① **장기요양기관 시설별 상세조회 서비스(15058856) 활용신청** → 카드에 주소·전화·정원 자동 표시 ② **심평원 병원정보서비스 활용신청** → 요양병원 탭 연동 가능(후속 PE 작업 필요).
+- `sw.js → itda-v4-2026-07-08-ltc-search-region-fix`.
+
+---
+
 ## 2026-07-07
+
+**묻다 유입 채널 트래킹(referral) 이식 — 인스타 자동 DM 캠페인 대응** (PE 세션, 사장님 지시)
+- 배경: 인스타(`life.itda`) 댓글→자동 DM(ManyChat)로 **묻다** 링크(`/mutda/?ref=beta_ig`) 배포 시작. 잇다에만 있던 referral 트래킹을 묻다에도 이식.
+- 구조: 묻다는 잇다와 **같은 오리진·같은 Supabase `profiles`** → localStorage 키(`itda:referral_source`) 공용, first-touch 보존, `profiles.referral_source` 단일 컬럼 정착.
+- 신규 `mutda/js/referral.js`(잇다와 동일 로직) · 캡처: `mutda/index.html`·`signup.html`·`login.html` · 이관: `mutda/welcome.html`(guardian 분기 전).
+- 한계: `?ref` 값은 채널만 구분(묻다/잇다 서비스 구분 X) — 필요 시 캠페인 링크에서 `mutda_ig`/`itda_ig`로 값만 분리. 마이그레이션 `20260622_profiles_referral_source.sql`은 양쪽 공용 — SQL Editor 1회 실행이면 끝.
+- 인스타 캠페인 셋업 완료: ManyChat "댓글 묻다→팔로우 요청→링크 DM" 라이브, 카드뉴스 2종(유품정리·안녕피터팬 연계, 에디토리얼 라이트) + 캡션 2종 제작·전달.
 
 **라이브 대시보드 — 잇다·묻다·개인홈 통합 (`dash.html`)** (창업자 요청, PE/운영)
 - **`web_events` 신설** (`20260706_web_events_dashboard.sql`, 적용 완료): 3개 프로퍼티 공용
@@ -89,6 +131,20 @@
 - **배포**: 사장님 지시로 main 머지·푸시 → pages.yml이 gh-pages 자동 동기화. 라이브: `https://suechoi033-private.github.io/life-heritage-v2/mutda/`
 - **가입 막힘 해결 (인증 메일 미도착)**: 원인 두 겹 — ①Supabase 기본 SMTP는 팀원 외 주소로 인증 메일을 사실상 전달 못 함 ②기존 잇다 계정 이메일로 재가입 시 에러 없이 "메일 확인" 흐름으로 빠짐(계정 존재 은닉). 조치: auth.users BEFORE INSERT 트리거 `auto_confirm_email`로 베타 기간 가입 즉시 확인 처리(`20260705_auto_confirm_email.sql`, 잇다에도 적용됨·롤백 방법 주석) + 묻다 signup이 세션 없으면 즉시 로그인 시도→기가입 이메일이면 로그인 안내. 실 GoTrue 경로로 가입 200→auto_confirmed→비밀번호 로그인 토큰 발급까지 검증. 정식 런칭 전 커스텀 SMTP(Resend 등) 연결 후 트리거 제거 권장.
 - **배포 장애 트러블슈팅**: 첫 배포 후 /mutda/ 404 — pages-build-deployment가 "Deployment failed, try again later"로 반복 실패. gh-pages 트리 이분탐색(7회 배포 실험)으로 `scripts/mutda-supabase-stub.mjs`(e2e용 가짜 Supabase 클라이언트) 단일 파일이 GitHub Pages 배포 콘텐츠 검사를 트리거함을 특정. 조치: pages.yml에서 배포 시 dev 테스트 파일(git rm) 제외 후 푸시하도록 수정 — main에는 테스트 파일 유지, 라이브에만 미포함. 교훈: 배포 성공 판정은 sync 워크플로우가 아니라 pages-build-deployment + 라이브 URL 200 기준으로.
+---
+
+## 2026-06-22
+
+**베타 인바이트 자동화 — UTM/유입 채널 트래킹 (PE 세션, 사장님 결정)**
+- 사장님 결정: "링크 전달은 게이트가 아니라 자동 응답. 사장님 손 빼고 사용자에겐 '초대받았다' 톤 살림." 앱은 공개, 신청자는 링크 받으면 즉시 가입 가능. Google Form(인입 1)·Instagram "잇다." 댓글(인입 2) 두 채널. 실행 순서: (1) 환영 카피 (2) UTM 트래킹 (3) Form Apps Script (4) IG 자동답장. 이번 세션은 (1)·(2).
+- **(1) 환영 카피 A/B 각 채널 초안 완성** — 카피라이터 세션 (`life-heritage-copywriter`). 세계관: "초대·승인" 아니라 **"자리·문 열어둠"**. YMYL 방어를 훈계조 대신 "함께 확인해 주세요" 결. 이메일(300~450자, `{{이름}}` 개인화, HTML 가능) · IG DM(180자 이하 텍스트) 각 2안 산출. **권장: 두 채널 모두 A안(정중·차분)** — 시니어 페르소나 커버 + 잇다 세계관 또렷. B안(따뜻·친근)은 IG SNS 유입이 30·40대 위주로 확정될 때 대안. `[BETA_LINK]` 는 도메인 확정(`https://itda.day/`) 후 일괄 치환.
+- **(2) UTM 트래킹 코드 심음** — `?ref=beta_form` / `?ref=beta_ig` 파라미터를 first-touch 로 localStorage에 캡처 → 첫 로그인 시 `profiles.referral_source` 로 이관.
+  - 마이그레이션 신규: `supabase/migrations/20260622_profiles_referral_source.sql` — `profiles.referral_source text` 컬럼 + 부분 인덱스(non-null만). CHECK 없이 유연. 멱등.
+  - 신규 모듈: `js/referral.js` — `captureReferral()` / `hoistReferral(supabase, userId)` 두 함수. `entry_path` 패턴 재사용. 값은 `[a-zA-Z0-9_\-]` 40자 제한(안전 필터).
+  - 진입 페이지에 캡처 심음: `index.html` · `signup.html` · `login.html`(ES 모듈 import) + `beta.html`(기존 비-모듈 스크립트라 inline). `welcome.html` 에서 `hoistReferral` 호출 — `entry_path` 이관 직후.
+  - 채널·페르소나 코호트 분석 자산 확보(Form vs IG 리텐션·전환 분리). W26 measurement dashboard(M3) 이후 관측치 정착 예정.
+  - `sw.js → itda-v3-2026-06-22-referral-source-tracking` + APP_SHELL 에 `js/referral.js` 추가.
+- 사장님 액션 대기: 카피 A/B 선택 · 마이그레이션 적용(SQL Editor) · 도메인 확정 후 링크 치환.
 
 ---
 

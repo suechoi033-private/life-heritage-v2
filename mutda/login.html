@@ -33,6 +33,9 @@
 
 <script type="module">
   import { signIn, redirectIfAuthed, friendlyError, getProfile, getUser } from './js/app.js';
+  import { captureReferral } from './js/referral.js';
+
+  captureReferral(); // ?ref= 유입 태그 캡처(첫 진입이 login인 경우 대비)
 
   const next = new URLSearchParams(location.search).get('next') || 'home.html';
   redirectIfAuthed(next);

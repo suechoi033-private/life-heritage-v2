@@ -24,6 +24,14 @@
     <a class="btn sm" id="today-btn" style="margin-top:12px; padding:9px 20px;">시작하기</a>
   </section>
 
+  <!-- 오늘의 질문 — 매일 다시 올 이유. 여정(한 걸음)과 별개의 데일리 훅 -->
+  <section class="card" id="daily-q-card" style="margin-top:14px; display:none;">
+    <span class="chip green">오늘, 묻다</span>
+    <h3 class="serif" id="daily-q-text" style="margin-top:10px; font-size:16.5px; line-height:1.55;"></h3>
+    <p class="sub" id="daily-q-sub" style="margin-top:6px;">나의 답을 남기고, 소중한 사람에게도 물어보세요.</p>
+    <a class="btn sm ghost" id="daily-q-btn" href="./question.html" style="margin-top:12px; padding:9px 20px;">답해보기</a>
+  </section>
+
   <section>
     <h2 class="section-title">나의 준비 여정</h2>
     <div class="card" style="padding:8px 20px;">
@@ -84,6 +92,25 @@
     `🌱 이어온 지 ${profile.streak_days || 1}일째`;
   if (profile.checkin_enabled)
     document.getElementById('checkin-chip').style.display = '';
+
+  // 오늘의 질문 — 날짜 순환, 이미 답했으면 CTA를 "물어보러 가기"로
+  try {
+    const { data: dq } = await supabase.from('mutda_daily_questions')
+      .select('id, text').eq('is_active', true).order('display_order');
+    if (dq?.length) {
+      const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
+      const q = dq[dayOfYear % dq.length];
+      document.getElementById('daily-q-text').textContent = q.text;
+      document.getElementById('daily-q-btn').href = `./question.html?q=${q.id}`;
+      const { data: answered } = await supabase.from('mutda_question_answers')
+        .select('id').eq('question_id', q.id).eq('kind', 'self').maybeSingle();
+      if (answered) {
+        document.getElementById('daily-q-sub').textContent = '나의 답은 남겼어요 — 소중한 사람에게도 물어보세요.';
+        document.getElementById('daily-q-btn').textContent = '물어보러 가기';
+      }
+      document.getElementById('daily-q-card').style.display = '';
+    }
+  } catch (_) { /* 질문 테이블 미적용 환경 — 카드 숨김 유지 */ }
 
   // 여정
   const { steps, doneCount, total, next } = await getJourneyState(user, profile);
