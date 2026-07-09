@@ -108,24 +108,43 @@
   logEvent('question_view', { q: todayQ.id });
 
   // ── 내 답 로드/저장 ──
+  // self 답은 부분 유니크 인덱스(where kind='self')라 PostgREST upsert(onConflict)가
+  // 매칭을 못 해 첫 저장이 실패한다 → select 후 있으면 update, 없으면 insert로 직접 처리.
   const myBox = document.getElementById('my-answer');
   const savedTag = document.getElementById('my-answer-saved');
-  const { data: mine } = await supabase.from('mutda_question_answers')
-    .select('id, content, updated_at').eq('question_id', todayQ.id).eq('kind', 'self').maybeSingle();
+  let mine = null;
+  {
+    const { data } = await supabase.from('mutda_question_answers')
+      .select('id, content, updated_at').eq('question_id', todayQ.id).eq('kind', 'self').maybeSingle();
+    mine = data;
+  }
   if (mine) { myBox.value = mine.content; savedTag.textContent = `저장됨 · ${fmtDate(mine.updated_at)}`; }
 
   document.getElementById('btn-save-answer').addEventListener('click', async () => {
     const content = myBox.value.trim();
     if (!content) { toast('답을 적어주세요'); return; }
-    const { error } = await supabase.from('mutda_question_answers').upsert({
-      question_id: todayQ.id, user_id: user.id, kind: 'self', content, updated_at: new Date().toISOString(),
-    }, { onConflict: 'user_id,question_id', ignoreDuplicates: false });
-    if (error) {
-      // 부분 유니크 인덱스라 onConflict 매칭이 안 되는 환경 폴백: 기존 행 update
-      if (mine?.id) await supabase.from('mutda_question_answers')
-        .update({ content, updated_at: new Date().toISOString() }).eq('id', mine.id);
-      else { toast('저장에 실패했어요'); return; }
+    let error;
+    if (mine?.id) {
+      ({ error } = await supabase.from('mutda_question_answers')
+        .update({ content, updated_at: new Date().toISOString() }).eq('id', mine.id));
+    } else {
+      const res = await supabase.from('mutda_question_answers')
+        .insert({ question_id: todayQ.id, user_id: user.id, kind: 'self', content })
+        .select('id, updated_at').single();
+      error = res.error;
+      if (res.data) mine = res.data; // 이후 재저장은 update 경로로
+      // 동시성 등으로 이미 self 행이 있어 유니크 위반(23505)이면 기존 행 찾아 update
+      if (error?.code === '23505') {
+        const { data: ex } = await supabase.from('mutda_question_answers')
+          .select('id').eq('question_id', todayQ.id).eq('kind', 'self').maybeSingle();
+        if (ex?.id) {
+          ({ error } = await supabase.from('mutda_question_answers')
+            .update({ content, updated_at: new Date().toISOString() }).eq('id', ex.id));
+          mine = ex;
+        }
+      }
     }
+    if (error) { toast('저장에 실패했어요'); console.warn('[question] save', error); return; }
     savedTag.textContent = '저장됨 · 방금';
     toast('🌿 나의 답을 남겼어요');
     logEvent('question_self_saved', { q: todayQ.id });
