@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>오늘의 질문 — 묻다</title>
+  <link rel="stylesheet" href="./css/mutda.css" />
+  <style>
+    .qq-answer-row { border-top: 1px solid var(--line); padding: 12px 0; }
+    .qq-answer-row:first-child { border-top: none; }
+    .qq-tag { font-size: 12px; color: var(--ink-muted); }
+    .qq-content { margin-top: 4px; font-size: 15px; line-height: 1.65; white-space: pre-wrap; word-break: break-word; }
+    .qq-pending { color: var(--ink-muted); font-size: 13.5px; }
+    .qq-guess { background: var(--bg-alt); border-radius: 10px; padding: 10px 12px; margin-top: 8px; font-size: 13.5px; color: var(--ink-soft); }
+  </style>
+</head>
+<body>
+<main>
+  <div style="padding-top:8px;">
+    <h2 class="serif" style="font-size:19px;">오늘의 질문</h2>
+    <p class="muted small">내가 답하고, 소중한 사람의 답도 들어보세요.</p>
+  </div>
+
+  <!-- 질문 -->
+  <section class="card tint" style="margin-top:16px;">
+    <span class="chip green">오늘, 묻다</span>
+    <h3 class="serif" id="q-text" style="margin-top:10px; font-size:18px; line-height:1.55;">…</h3>
+  </section>
+
+  <!-- 1. 내 답 -->
+  <section class="card" style="margin-top:14px;">
+    <h3 class="serif" style="font-size:15.5px;">나의 답</h3>
+    <div class="field" style="margin-top:10px;">
+      <textarea id="my-answer" style="min-height:110px;" placeholder="떠오르는 대로, 짧아도 괜찮아요."></textarea>
+    </div>
+    <button class="btn sm" id="btn-save-answer" style="padding:9px 20px;">저장</button>
+    <span class="small muted" id="my-answer-saved" style="margin-left:8px;"></span>
+  </section>
+
+  <!-- 2. 추측 + 보내기 -->
+  <section class="card" style="margin-top:14px;">
+    <h3 class="serif" style="font-size:15.5px;">이 질문, 그 사람은 뭐라고 답할까요?</h3>
+    <p class="sub" style="margin-top:4px;">먼저 짐작해 적어두고, 같은 질문을 직접 보내보세요. 실제 답과 비교해 볼 수 있어요.</p>
+    <div class="field" style="margin-top:10px;">
+      <label>누구에게 묻나요?</label>
+      <div style="display:flex; gap:8px;">
+        <select id="g-relation" style="flex:0 0 110px;">
+          <option value="엄마">엄마</option>
+          <option value="아빠">아빠</option>
+          <option value="배우자">배우자</option>
+          <option value="자녀">자녀</option>
+          <option value="형제자매">형제자매</option>
+          <option value="친구">친구</option>
+          <option value="기타">기타</option>
+        </select>
+        <input id="g-name" type="text" placeholder="이름 또는 부르는 말 (선택)" style="flex:1;" />
+      </div>
+    </div>
+    <div class="field">
+      <label>나의 짐작</label>
+      <textarea id="g-guess" style="min-height:80px;" placeholder="그 사람이라면 이렇게 답하지 않을까요?"></textarea>
+    </div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <button class="btn sm" id="btn-send" style="padding:9px 20px;">📨 질문 보내기</button>
+      <span class="small muted" style="align-self:center;">짐작은 저장되고, 링크가 만들어져요</span>
+    </div>
+  </section>
+
+  <!-- 3. 모인 답들 -->
+  <section style="margin-top:20px;">
+    <h2 class="section-title">모인 답들</h2>
+    <div class="card" style="padding:8px 20px;">
+      <div id="answers-box"><p class="muted small" style="padding:12px 0;">아직 없어요. 위에서 나의 답부터 남겨보세요.</p></div>
+    </div>
+    <p class="small muted" style="margin-top:8px;">
+      상대가 <b>비공개</b>를 선택하면 답이 왔다는 사실만 보이고 내용은 누구에게도 보이지 않아요.
+    </p>
+  </section>
+
+  <!-- 다른 질문 -->
+  <section style="margin-top:20px;">
+    <h2 class="section-title">다른 질문들</h2>
+    <div id="other-questions"></div>
+  </section>
+</main>
+
+<script type="module">
+  import { supabase, initAppPage, toast, esc, fmtDate, logEvent, url } from './js/app.js';
+  import { renderNav } from './js/nav.js';
+
+  renderNav({ active: 'home', title: '오늘의 질문' });
+  const { user } = await initAppPage();
+
+  // ── 질문 로드: ?q= 지정 우선, 없으면 날짜 순환 ──
+  const { data: questions } = await supabase
+    .from('mutda_daily_questions')
+    .select('id, text, display_order')
+    .eq('is_active', true)
+    .order('display_order');
+  if (!questions?.length) {
+    document.getElementById('q-text').textContent = '질문을 불러오지 못했어요.';
+    throw new Error('no questions');
+  }
+  const qParam = parseInt(new URLSearchParams(location.search).get('q') || '', 10);
+  const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
+  const todayQ = questions.find(q => q.id === qParam) ?? questions[dayOfYear % questions.length];
+  document.getElementById('q-text').textContent = todayQ.text;
+  logEvent('question_view', { q: todayQ.id });
+
+  // ── 내 답 로드/저장 ──
+  const myBox = document.getElementById('my-answer');
+  const savedTag = document.getElementById('my-answer-saved');
+  const { data: mine } = await supabase.from('mutda_question_answers')
+    .select('id, content, updated_at').eq('question_id', todayQ.id).eq('kind', 'self').maybeSingle();
+  if (mine) { myBox.value = mine.content; savedTag.textContent = `저장됨 · ${fmtDate(mine.updated_at)}`; }
+
+  document.getElementById('btn-save-answer').addEventListener('click', async () => {
+    const content = myBox.value.trim();
+    if (!content) { toast('답을 적어주세요'); return; }
+    const { error } = await supabase.from('mutda_question_answers').upsert({
+      question_id: todayQ.id, user_id: user.id, kind: 'self', content, updated_at: new Date().toISOString(),
+    }, { onConflict: 'user_id,question_id', ignoreDuplicates: false });
+    if (error) {
+      // 부분 유니크 인덱스라 onConflict 매칭이 안 되는 환경 폴백: 기존 행 update
+      if (mine?.id) await supabase.from('mutda_question_answers')
+        .update({ content, updated_at: new Date().toISOString() }).eq('id', mine.id);
+      else { toast('저장에 실패했어요'); return; }
+    }
+    savedTag.textContent = '저장됨 · 방금';
+    toast('🌿 나의 답을 남겼어요');
+    logEvent('question_self_saved', { q: todayQ.id });
+    renderAnswers();
+  });
+
+  // ── 추측 저장 + 초대 링크 보내기 ──
+  document.getElementById('btn-send').addEventListener('click', async () => {
+    const relation = document.getElementById('g-relation').value;
+    const name = document.getElementById('g-name').value.trim();
+    const guess = document.getElementById('g-guess').value.trim();
+    const who = name || relation;
+
+    if (guess) {
+      await supabase.from('mutda_question_answers').insert({
+        question_id: todayQ.id, user_id: user.id, kind: 'guess',
+        target_name: who, target_relation: relation, content: guess,
+      });
+    }
+    const { data: code, error } = await supabase.rpc('mutda_question_invite_create', {
+      p_question_id: todayQ.id, p_target_name: who, p_target_relation: relation,
+    });
+    if (error || !code) { toast('링크 생성에 실패했어요'); return; }
+
+    const link = `${url('ask.html')}?code=${code}`;
+    const msg = `${todayQ.text}\n\n— 이 질문에 당신의 답을 들려주세요.\n${link}`;
+    logEvent('question_invite_created', { q: todayQ.id });
+    if (navigator.share) {
+      try { await navigator.share({ text: msg }); } catch (_) { /* 취소 */ }
+    } else {
+      await navigator.clipboard.writeText(msg);
+      toast('링크를 복사했어요 — 카톡·문자에 붙여넣어 보내세요');
+    }
+    document.getElementById('g-guess').value = '';
+    document.getElementById('g-name').value = '';
+    renderAnswers();
+  });
+
+  // ── 모인 답들 렌더 ──
+  async function renderAnswers() {
+    const [{ data: myAnswers }, { data: invites }] = await Promise.all([
+      supabase.from('mutda_question_answers')
+        .select('kind, target_name, target_relation, content, created_at')
+        .eq('question_id', todayQ.id).order('created_at'),
+      supabase.rpc('mutda_question_my_invites', { p_question_id: todayQ.id }),
+    ]);
+    const rows = [];
+
+    const self = (myAnswers || []).find(a => a.kind === 'self');
+    if (self) rows.push(`
+      <div class="qq-answer-row">
+        <span class="qq-tag">🙋 나의 답</span>
+        <div class="qq-content">${esc(self.content)}</div>
+      </div>`);
+
+    const guesses = (myAnswers || []).filter(a => a.kind === 'guess');
+    for (const inv of (invites || [])) {
+      const who = esc(inv.respondent_name || inv.target_name || inv.target_relation || '지인');
+      const myGuess = guesses.find(g => g.target_name === (inv.target_name || inv.target_relation));
+      if (inv.answered_at && inv.visibility === 'shared') {
+        rows.push(`
+          <div class="qq-answer-row">
+            <span class="qq-tag">💬 ${who}의 답 · ${fmtDate(inv.answered_at)}</span>
+            <div class="qq-content">${esc(inv.content)}</div>
+            ${myGuess ? `<div class="qq-guess">나의 짐작 — ${esc(myGuess.content)}</div>` : ''}
+          </div>`);
+      } else if (inv.answered_at) {
+        rows.push(`
+          <div class="qq-answer-row">
+            <span class="qq-tag">💬 ${who}</span>
+            <div class="qq-pending">답을 남겼지만 비공개를 선택했어요. 마음만 받아요.</div>
+          </div>`);
+      } else {
+        rows.push(`
+          <div class="qq-answer-row">
+            <span class="qq-tag">📨 ${who}</span>
+            <div class="qq-pending">답을 기다리는 중이에요 · ${fmtDate(inv.created_at)} 보냄</div>
+          </div>`);
+      }
+    }
+    document.getElementById('answers-box').innerHTML =
+      rows.join('') || '<p class="muted small" style="padding:12px 0;">아직 없어요. 위에서 나의 답부터 남겨보세요.</p>';
+  }
+  renderAnswers();
+
+  // ── 다른 질문들 ──
+  document.getElementById('other-questions').innerHTML = questions
+    .filter(q => q.id !== todayQ.id)
+    .map(q => `
+      <a class="card soft" href="./question.html?q=${q.id}" style="display:block; color:inherit; margin-bottom:8px;">
+        <p style="font-size:14.5px;">${esc(q.text)}</p>
+      </a>`).join('')
+    || '<p class="muted small">다른 질문이 아직 없어요.</p>';
+</script>
+</body>
+</html>
