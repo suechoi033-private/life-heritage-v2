@@ -12,6 +12,12 @@
 
 ## 2026-07-08
 
+**배포 자동화 — "머지 버튼 = 배포 완료"** (사장님 요청: 코드 푸시 없이 GitHub 머지만으로 배포)
+- `deploy-supabase.yml` 개편: main 푸시 트리거 추가 — ① `supabase/functions/**` 변경분은 **바뀐 함수만** 자동 배포 ② `supabase/migrations/**`는 **이번 머지에 추가된 SQL만** psql로 자동 적용(파일명 순). `supabase db push`를 안 쓰는 이유 = 과거 SQL Editor 수동 적용 히스토리와 충돌(2026-05 실제 사고). 마이그레이션 멱등 작성 컨벤션은 유지.
+- 안전장치: `delete-account`(실데이터 삭제)는 자동 배포 제외 · anon 호출 함수(`ltc-search`·`mutda-checkin-notify`·`push-notify`·`kakao-signin`)는 `--no-verify-jwt` 플래그 자동 부여(NO_JWT 목록 — 새 anon 함수 생기면 추가) · `SUPABASE_DB_URL` 시크릿 없이 새 마이그레이션이 오면 잡이 **명시적으로 실패**해 알림(조용한 스킵 금지).
+- 기존 Pages 자동 배포(`pages.yml`)와 합쳐져 **PR 머지 1클릭 = 프런트+함수+DB 전부 반영**. 수동 dispatch는 비상용으로 유지(functions 전체 / migrations-new / function-secrets).
+- `supabase/DEPLOY.md` 전면 갱신. 사장님 일회성 액션: 시크릿 `SUPABASE_DB_URL`(대시보드 Connect → Session pooler URI) 등록.
+
 **묻다 — 오늘의 질문 + 지인에게 물어보기 (관계형 질문 루프 v1)** (사장님 기획, PE)
 - 기획: ① 내가 오늘의 질문에 답 → ② "그 사람은 뭐라고 답할까?" 짐작을 적음 → ③ 같은 질문을 지인에게 링크로 보냄(비회원 응답 가능) → ④ 지인이 공개 선택 시 실제 답이 내게 도착, **비공개면 답이 왔다는 사실만** → ⑤ 질문 상세에서 내 답·내 짐작·실제 답을 나란히. (질문별 답변 유형 집계는 후속)
 - 시드 질문 2개: "시간을 되돌린다면, 언제로 돌아가고 싶나요?" / "죽기 전에 꼭 만나고 싶은 사람은 누구인가요?" — 날짜 순환(letters 패턴).
