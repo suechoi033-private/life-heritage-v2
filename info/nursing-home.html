@@ -631,6 +631,11 @@
       if (f.since) metaParts.push(`개설 ${f.since}`);
       if (f.capacity) metaParts.push(`정원 ${f.capacity}명`);
 
+      // 홈페이지·전화·지도·후기는 공단 API에 없어, 기관명+지역 네이버 검색으로 연결.
+      // (전화번호가 상세조회로 들어오면 위 metaParts에서 tel: 링크로도 표시됨)
+      const naverQ = encodeURIComponent(`${f.name || ''} ${location}`.trim());
+      const naverUrl = `https://search.naver.com/search.naver?query=${naverQ}`;
+
       return `
         <div class="facility-card">
           <div class="facility-card-top">
@@ -642,6 +647,10 @@
           <div class="facility-name">${f.name || '(이름 없음)'}</div>
           ${metaParts.length ? `<div class="facility-meta">${metaParts.map(p => `<span>${p}</span>`).join('')}</div>` : ''}
           ${f.addr ? `<div style="font-size:12.5px;color:var(--ink-muted);margin-bottom:8px;">${f.addr}</div>` : ''}
+          <div class="facility-actions">
+            ${f.tel ? `<a href="tel:${f.tel}" class="btn-compare" aria-label="전화 걸기">📞 전화</a>` : ''}
+            <a href="${naverUrl}" target="_blank" rel="noopener noreferrer" class="btn-compare" aria-label="네이버에서 이 기관 찾기">🔎 홈페이지·지도 찾기</a>
+          </div>
         </div>
       `;
     }).join('');
