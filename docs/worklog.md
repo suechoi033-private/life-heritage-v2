@@ -12,6 +12,12 @@
 
 ## 2026-07-09
 
+**묻다 오늘의 질문 — 첫 답 저장 실패 수정** (사장님 제보 "데이터 저장이 안돼")
+- 🐞 증상: 질문 카드는 뜨는데 "나의 답" 저장 시 "저장에 실패했어요".
+- 원인: self 답 유니크가 **부분 인덱스**(`where kind='self'`)라 PostgREST `upsert({onConflict:'user_id,question_id'})`가 그 인덱스를 매칭 못 함 → 첫 저장(기존 행 없음) upsert 실패 + 폴백 update도 `mine` 없어 실패 → 토스트.
+- 수정(`mutda/question.html`): upsert 제거 → **select 후 있으면 update, 없으면 insert** 직접 처리. 동시성 유니크위반(23505)이면 기존 행 찾아 update 폴백. `mine`을 `let`으로 바꿔 insert 후 재저장이 update 경로 타게. DB 스키마 무변경.
+- `mutda/sw.js → mutda-v21-2026-07-09-question-save-fix`.
+
 **요양원 검색 — 카드에 전화·네이버 검색 연결** (사장님 요청)
 - 배경: PR #56 머지·배포 자동화 첫 가동 성공(psql 마이그레이션 2건 + ltc-search 배포 전 스텝 초록불) → 요양원 정보 라이브 노출 확인. 사장님: "전화번호·기관 홈페이지 연결".
 - 사실 정리: 공단 목록 API(`getLtcInsttSeachList02`)엔 전화·홈페이지 없음. 전화는 "시설별 상세조회 서비스"(15058856 활용신청) 승인 시 상세조회 코드가 자동 채움(이미 구현·403이면 스킵). 홈페이지 URL은 공단 API에 아예 없음.
