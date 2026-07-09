@@ -336,15 +336,13 @@ const CARDS = [
     progress: null,
   },
   {
+    // 유언장·남기는 말은 묻다 서비스로 분리 (2026-07-08) — 허브에선 묻다로 안내
     key: 'message',
     icon: '💌',
-    title: '가족에게 남기는 메시지',
-    href: './note/will.html',
-    getStatus: (data) => {
-      const cnt = data?.message_count || 0;
-      return cnt > 0 ? `초안 ${cnt}편 보관 중` : '아직 작성 전이에요';
-    },
-    isDone: (data) => (data?.message_count || 0) > 0,
+    title: '유언장·남기는 말 — 묻다에서',
+    href: './mutda/will.html',
+    getStatus: () => '자매 서비스 묻다에서 질문으로 완성해요',
+    isDone: () => false,
     progress: null,
   },
   {
