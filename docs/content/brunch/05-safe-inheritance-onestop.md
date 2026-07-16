@@ -6,7 +6,7 @@ source: docs/content/seed-20 재구성
 status: draft (게시는 사장님 직접 · YMYL — 자격·기한은 정부24 기준)
 length: 약 1,300자 (3분)
 search_keywords: [안심상속 원스톱, 상속재산 조회, 사망자 재산조회, 고인 통장 찾기]
-cta_link: https://suechoi033-private.github.io/life-heritage-v2/info.html?utm_source=brunch&utm_medium=article&utm_campaign=onestop
+cta_link: https://suechoi033-private.github.io/life-heritage-v2/mutda/?ref=brunch_onestop
 ---
 
 # 고인의 재산과 빚, 한 번에 조회하는 법 — 안심상속 원스톱 서비스
@@ -48,7 +48,7 @@ cta_link: https://suechoi033-private.github.io/life-heritage-v2/info.html?utm_so
 
 ---
 
-그 준비를 담는 곳으로 [잇다](https://suechoi033-private.github.io/life-heritage-v2/info.html?utm_source=brunch&utm_medium=article&utm_campaign=onestop)를 만들고 있습니다. 사별 직후 해야 할 일의 순서도 정리되어 있습니다.
+그 준비를 담는 곳으로 [묻다](https://suechoi033-private.github.io/life-heritage-v2/mutda/?ref=brunch_onestop)를 만들고 있습니다. 사별 직후 해야 할 일의 순서도 정리되어 있습니다.
 
 **다음 글** — 정작 꺼내기 어려운 그 대화. 부모님과 돈 이야기를 시작하는 법을 씁니다.
 

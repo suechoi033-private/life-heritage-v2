@@ -5,7 +5,7 @@ magazine: ② 미리 알아두는 정리 노트 (실용 가이드)
 status: draft (게시는 사장님 직접 · YMYL 높음 — 수치 단정 없음, 홈택스·세무사 안내)
 length: 약 1,300자 (3분)
 search_keywords: [증여 상속 차이, 사전증여, 증여세, 상속세 절세, 미리 증여]
-cta_link: https://suechoi033-private.github.io/life-heritage-v2/info.html?utm_source=brunch&utm_medium=article&utm_campaign=gift
+cta_link: https://suechoi033-private.github.io/life-heritage-v2/mutda/?ref=brunch_gift
 sources_verified: 2026-07-05
 ---
 
@@ -44,7 +44,7 @@ sources_verified: 2026-07-05
 
 ---
 
-기록과 마음을 담아두는 곳으로 [잇다](https://suechoi033-private.github.io/life-heritage-v2/info.html?utm_source=brunch&utm_medium=article&utm_campaign=gift)를 만들고 있습니다.
+기록과 마음을 담아두는 곳으로 [묻다](https://suechoi033-private.github.io/life-heritage-v2/mutda/?ref=brunch_gift)를 만들고 있습니다.
 
 **다음 글** — 장례식의 순서를 바꿔본 사람들. '살아서 하는 장례식' 이야기입니다.
 

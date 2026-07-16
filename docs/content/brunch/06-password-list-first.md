@@ -6,7 +6,7 @@ source: docs/content/seed-18 재구성 (+seed-05 링크)
 status: draft (게시는 사장님 직접)
 length: 약 1,300자 (3분)
 search_keywords: [디지털 유산, 비밀번호 정리, 유서 쓰는 법, 죽음 준비]
-cta_link: https://suechoi033-private.github.io/life-heritage-v2/?utm_source=brunch&utm_medium=article&utm_campaign=password
+cta_link: https://suechoi033-private.github.io/life-heritage-v2/mutda/?ref=brunch_password
 ---
 
 # 유서가 아니라, 비밀번호 목록을 먼저 썼습니다
@@ -30,7 +30,7 @@ cta_link: https://suechoi033-private.github.io/life-heritage-v2/?utm_source=brun
 
 신기한 건, 그 한 시간이 마음을 가볍게 했다는 겁니다. '내 아이가 두 달을 헤매진 않겠구나' 하는 안도. 죽음을 준비한다는 게 이렇게 담담한 일일 줄은 몰랐습니다.
 
-*(구글·애플·페이스북 계정에 미리 걸어둘 수 있는 장치들은 [잇다의 디지털 정리 가이드](https://suechoi033-private.github.io/life-heritage-v2/info.html?utm_source=brunch&utm_medium=article&utm_campaign=password)에 따로 정리해두었습니다.)*
+*(구글·애플·페이스북 계정에 미리 걸어둘 수 있는 장치들은 [묻다의 디지털·금융 정리](https://suechoi033-private.github.io/life-heritage-v2/mutda/digital.html?ref=brunch_password)에 따로 정리해두었습니다.)*
 
 ## 정보를 적다 보니, 마음을 적고 싶어졌습니다
 
@@ -46,7 +46,7 @@ cta_link: https://suechoi033-private.github.io/life-heritage-v2/?utm_source=brun
 
 ---
 
-그 종이 한 장을 안전하게 담아두는 곳으로 [잇다](https://suechoi033-private.github.io/life-heritage-v2/?utm_source=brunch&utm_medium=article&utm_campaign=password)를 만들고 있습니다.
+그 종이 한 장을 안전하게 담아두는 곳으로 [묻다](https://suechoi033-private.github.io/life-heritage-v2/mutda/?ref=brunch_password)를 만들고 있습니다.
 
 **다음 글** — "미리 주는 게 낫다던데요?" 증여와 상속, 흔한 오해를 정리합니다.
 

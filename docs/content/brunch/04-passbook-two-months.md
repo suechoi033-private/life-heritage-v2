@@ -6,7 +6,7 @@ source: docs/content/seed-17 재구성
 status: draft (게시는 사장님 직접)
 length: 약 1,400자 (3분)
 search_keywords: [부모님 사망 후 절차, 고인 통장 찾기, 상속 준비]
-cta_link: https://suechoi033-private.github.io/life-heritage-v2/?utm_source=brunch&utm_medium=article&utm_campaign=passbook
+cta_link: https://suechoi033-private.github.io/life-heritage-v2/mutda/?ref=brunch_passbook
 ---
 
 # 아버지 통장을 못 찾아, 두 달을 헤맸습니다
@@ -39,7 +39,7 @@ cta_link: https://suechoi033-private.github.io/life-heritage-v2/?utm_source=brun
 
 ---
 
-그 몇 줄을 담아두는 곳으로 [잇다](https://suechoi033-private.github.io/life-heritage-v2/?utm_source=brunch&utm_medium=article&utm_campaign=passbook)를 만들고 있습니다.
+그 몇 줄을 담아두는 곳으로 [묻다](https://suechoi033-private.github.io/life-heritage-v2/mutda/?ref=brunch_passbook)를 만들고 있습니다.
 
 **다음 글** — 한 달 늦게 알아 분했던 그 제도, '안심상속 원스톱 서비스'를 정리합니다. 구독해두시면 놓치지 않으실 거예요.
 

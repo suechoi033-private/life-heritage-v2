@@ -5,7 +5,7 @@ magazine: ② 미리 알아두는 정리 노트 (실용 가이드)
 status: draft (게시는 사장님 직접 · YMYL — 수치는 홈택스 재확인)
 length: 약 1,400자 (3분)
 search_keywords: [2026 상속세, 상속세 개정, 상속세 공제, 일괄공제, 배우자공제]
-cta_link: https://suechoi033-private.github.io/life-heritage-v2/info.html?utm_source=brunch&utm_medium=article&utm_campaign=tax2026
+cta_link: https://suechoi033-private.github.io/life-heritage-v2/mutda/?ref=brunch_tax2026
 sources_verified: 2026-07-05
 ---
 
@@ -46,7 +46,7 @@ sources_verified: 2026-07-05
 
 ---
 
-상속을 준비한다는 건 결국 남은 사람이 덜 헤매게 하는 일입니다. 그 준비를 담는 곳으로 [잇다](https://suechoi033-private.github.io/life-heritage-v2/info.html?utm_source=brunch&utm_medium=article&utm_campaign=tax2026)를 만들고 있습니다.
+상속을 준비한다는 건 결국 남은 사람이 덜 헤매게 하는 일입니다. 그 준비를 담는 곳으로 [묻다](https://suechoi033-private.github.io/life-heritage-v2/mutda/?ref=brunch_tax2026)를 만들고 있습니다.
 
 **다음 글** — 비밀번호를 못 남기고 떠나면 생기는 일. 디지털 유산 이야기를 정리합니다.
 

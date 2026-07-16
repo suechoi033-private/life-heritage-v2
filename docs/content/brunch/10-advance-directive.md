@@ -6,7 +6,7 @@ source: docs/content/seed-02 재구성
 status: draft (게시는 사장님 직접 · YMYL — 절차는 lst.go.kr 기준)
 length: 약 1,300자 (3분)
 search_keywords: [사전연명의료의향서, 연명치료 거부, 사전연명의료의향서 등록, 웰다잉 준비]
-cta_link: https://suechoi033-private.github.io/life-heritage-v2/info/advance-directive.html?utm_source=brunch&utm_medium=article&utm_campaign=directive
+cta_link: https://suechoi033-private.github.io/life-heritage-v2/info/advance-directive.html?ref=brunch_directive
 ---
 
 # 이름은 어렵지만 30분이면 끝납니다 — 사전연명의료의향서
@@ -35,7 +35,7 @@ cta_link: https://suechoi033-private.github.io/life-heritage-v2/info/advance-dir
 
 ## 등록하고 나서 — 가족에게 한 줄
 
-등록만큼 중요한 게 하나 더 있습니다. **등록했다는 사실을 가족이 알아야** 합니다. 어느 기관에서 언제 등록했는지 한 줄 남겨두세요. *(그 한 줄을 적어두는 방법은 [잇다의 의향서 가이드](https://suechoi033-private.github.io/life-heritage-v2/info/advance-directive.html?utm_source=brunch&utm_medium=article&utm_campaign=directive)에 정리해두었습니다.)*
+등록만큼 중요한 게 하나 더 있습니다. **등록했다는 사실을 가족이 알아야** 합니다. 어느 기관에서 언제 등록했는지 한 줄 남겨두세요. *(그 한 줄을 적어두는 방법은 [묻다의 의향서 가이드](https://suechoi033-private.github.io/life-heritage-v2/info/advance-directive.html?ref=brunch_directive)에 정리해두었습니다.)*
 
 서류는 나의 뜻을 지키고, 그 한 줄은 가족의 그날을 지킵니다.
 
