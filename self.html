@@ -314,16 +314,14 @@ const CARDS = [
     },
   },
   {
+    // 디지털·금융 정리는 묻다로 이관 (2026-07-10) — 서버 저장으로 승격
     key: 'digital',
     icon: '🔐',
-    title: '디지털 자산 노트',
-    href: './note/digital.html',
-    getStatus: (data) => {
-      const done = data?.digital_count || 0;
-      return done > 0 ? `${done} / 8 카테고리 작성` : '아직 작성 전이에요';
-    },
-    isDone: (data) => (data?.digital_count || 0) >= 8,
-    progress: (data) => Math.round(((data?.digital_count || 0) / 8) * 100),
+    title: '디지털·금융 정리 — 묻다에서',
+    href: './mutda/digital.html',
+    getStatus: () => '통장·계정·구독의 자리를 묻다에 남겨요',
+    isDone: () => false,
+    progress: null,
   },
   {
     key: 'funeral',

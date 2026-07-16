@@ -29,6 +29,12 @@ export const STEPS = [
     href: 'belongings.html',
   },
   {
+    key: 'digital',
+    ico: '🔑', title: '디지털·금융 정리',
+    desc: '통장·보험·계정·구독 — 나만 아는 것들의 자리를 남겨요.',
+    href: 'digital.html',
+  },
+  {
     key: 'pet',
     ico: '🐾', title: '반려동물 돌봄 플랜',
     desc: '내게 무슨 일이 생기면, 이 아이는 누가 돌보나요.',
@@ -51,11 +57,12 @@ export const STEPS = [
 // 사용자의 실제 기록으로 각 단계 완료 여부 계산
 export async function getJourneyState(user, profile) {
   const uid = user.id;
-  const [wills, letters, belongings, pets] = await Promise.all([
+  const [wills, letters, belongings, pets, digital] = await Promise.all([
     supabase.from('mutda_wills').select('id,status').eq('user_id', uid),
     supabase.from('mutda_letters').select('id,kind').eq('user_id', uid),
     supabase.from('mutda_belongings').select('id').eq('user_id', uid).limit(1),
     supabase.from('mutda_pet_plans').select('id').eq('user_id', uid).limit(1),
+    supabase.from('mutda_digital_items').select('id').eq('user_id', uid).limit(1),
   ]);
 
   const kinds = new Set((letters.data || []).map(l => l.kind));
@@ -64,6 +71,7 @@ export async function getJourneyState(user, profile) {
     gratitude: kinds.has('gratitude'),
     will: (wills.data || []).length > 0,
     belongings: (belongings.data || []).length > 0,
+    digital: (digital.data || []).length > 0,
     pet: (pets.data || []).length > 0,
     checkin: !!profile?.checkin_enabled,
     farewell: kinds.has('farewell'),
