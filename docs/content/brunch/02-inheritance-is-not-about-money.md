@@ -5,7 +5,7 @@ magazine: ① 남은 사람의 일 (연재 에세이)
 status: draft (게시는 사장님 직접)
 length: 약 1,200자 (3분)
 search_keywords: [상속 준비, 부모님 재산 정리, 상속 대화, 부모 통장]
-cta_link: https://suechoi033-private.github.io/life-heritage-v2/?utm_source=brunch&utm_medium=article&utm_campaign=talk
+cta_link: https://suechoi033-private.github.io/life-heritage-v2/mutda/?ref=brunch_talk
 ---
 
 # 상속을 준비한다는 건, 돈 이야기가 아니었습니다
@@ -44,7 +44,7 @@ cta_link: https://suechoi033-private.github.io/life-heritage-v2/?utm_source=brun
 
 ---
 
-그 목록과 대화를 담아두는 곳으로 [잇다](https://suechoi033-private.github.io/life-heritage-v2/?utm_source=brunch&utm_medium=article&utm_campaign=talk)를 만들고 있습니다.
+그 목록과 대화를 담아두는 곳으로 [묻다](https://suechoi033-private.github.io/life-heritage-v2/mutda/?ref=brunch_talk)를 만들고 있습니다.
 
 **다음 글** — 2026년 크게 바뀐 상속세. 우리 집에 해당되는지 가늠하는 법을 정리합니다.
 
