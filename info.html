@@ -413,7 +413,6 @@
       href: './info/hospice-palliative.html',
       cta: '안내 읽기 →',
       links: [
-        { name: '사전연명의료의향서', href: './info/advance-directive.html' },
         { name: '자택 임종·사망 절차 (한국)', href: './info/home-death-korea.html' },
       ],
     },
@@ -433,9 +432,8 @@
       href: '#stage-guides',
       cta: '시점별 주제 보기 ↓',
       links: [
-        { name: '웰다잉 — 좋은 죽음 준비', href: './info/well-dying-guide.html' },
-        { name: '상조 가입 가이드', href: './info/funeral-prepay.html' },
         { name: '납골당(봉안당) 고르는 법', href: './info/choosing-charnel-house.html' },
+        { name: '자택 임종·사망 절차 (한국)', href: './info/home-death-korea.html' },
       ],
     },
   ];
@@ -465,16 +463,14 @@
   const STAGES = {
     pre: {
       label: '미리',
+      // 죽음준비(주어=나, 미리) 콘텐츠는 묻다 소속으로 이동 (2026-07-10 이원화 금지):
+      // 웰다잉·사전연명의료의향서·상조 가입 → mutda/library.html / 디지털 정리 → mutda/digital.html
       categories: [
-        { key: 'well-dying', name: '웰다잉 — 좋은 죽음 준비', summary: '죽음을 미리 생각하면 지금이 더 잘 보입니다' },
         { key: 'home-death-korea', name: '자택 임종·사망 절차 (한국)', summary: '경찰 검안·사망진단서·주치의 시범까지, 지금 한국의 실제' },
         { key: 'charnel-house', name: '납골당(봉안당) 고르는 법', summary: '선택 기준, 비용, 준비 시점까지' },
         { key: 'silver-town', name: '실버타운 가이드', summary: '유형별 차이, 입주 조건, 비용까지' },
-        { key: 'advance-directive', name: '사전연명의료의향서', summary: '국립연명의료관리기관 등록 안내' },
-        { key: 'funeral-prepay', name: '상조 가입 가이드', summary: '미리 가입하기 전에 알아둘 것' },
         { key: 'family-talk', name: '가족 회의', summary: '미리 나눠 두면 좋은 대화 가이드' },
         { key: 'insurance-check', name: '보험·연금 점검', summary: '40-60대 가입 점검 체크리스트' },
-        { key: 'digital-cleanup', name: '디지털 정리', summary: '계정·구독 미리 정돈하기' },
       ],
     },
     in: {
@@ -506,7 +502,7 @@
   let state = { stage: 'pre', category: null };
 
   // 콘텐츠가 준비된 카테고리 (확장 시 추가)
-  const ENABLED_KEYS = new Set(['advance-directive', 'funeral-prepay', 'long-term-care', 'nursing-home', 'well-dying', 'charnel-house', 'silver-town', 'home-death-korea', 'hospice-palliative']);
+  const ENABLED_KEYS = new Set(['long-term-care', 'nursing-home', 'charnel-house', 'silver-town', 'home-death-korea', 'hospice-palliative']);
 
   function render() {
     // 카테고리 사이드바

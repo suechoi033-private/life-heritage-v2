@@ -115,6 +115,16 @@ export async function initAppPage() {
   return { user, profile };
 }
 
+// 비회원도 볼 수 있는 페이지용(길잡이·아티클) — 로그인 강제 없이,
+// 로그인 상태면 스트릭·하트비트만 조용히 처리. 브런치·검색 유입 소프트 랜딩.
+export async function initPublicPage() {
+  const user = await getUser();
+  if (!user) return { user: null, profile: null };
+  let profile = await getProfile(user.id);
+  if (profile) { profile = await touchStreak(profile); heartbeat(profile); }
+  return { user, profile };
+}
+
 // ---------- 이벤트 로그 ----------
 export async function logEvent(event, meta = {}) {
   try {

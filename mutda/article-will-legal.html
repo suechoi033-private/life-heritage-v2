@@ -82,10 +82,10 @@
 </main>
 
 <script type="module">
-  import { initAppPage, logEvent } from './js/app.js';
+  import { initPublicPage, logEvent } from './js/app.js';
   import { renderNav } from './js/nav.js';
   renderNav({ active: 'library', title: '서재' });
-  await initAppPage();
+  await initPublicPage();
   logEvent('article_view', { article: 'will-legal' });
 </script>
 </body>
