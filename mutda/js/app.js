@@ -91,12 +91,16 @@ export async function heartbeat(profile) {
 }
 
 // ---------- 이어온 날들 (조용한 스트릭 — 남과 비교하지 않는다) ----------
+// 날짜는 반드시 KST(Asia/Seoul) 기준. UTC(toISOString)로 세면 한국 새벽 접속이
+// 전날로 잡혀, 같은 날 새벽+저녁 두 번 들어온 사용자의 스트릭이 하루 부풀려진다.
+const kstDate = (ms) => new Date(ms).toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' });
+
 export async function touchStreak(profile) {
   if (!profile) return profile;
-  const today = new Date().toISOString().slice(0, 10);
+  const today = kstDate(Date.now());
   if (profile.last_visit_date === today) return profile;
 
-  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  const yesterday = kstDate(Date.now() - 86400000);
   const streak = profile.last_visit_date === yesterday ? (profile.streak_days || 0) + 1 : 1;
 
   const { data } = await supabase.from('mutda_profiles')

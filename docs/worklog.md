@@ -10,6 +10,20 @@
 
 ---
 
+## 2026-07-26
+
+**묻다 — 스트릭 KST 버그 + 오늘의 질문 확장** (사장님 제보 "왜 2일? 질문 계속 교체")
+- 🐞 스트릭 "이어온 지 N일째"가 UTC 날짜(`toISOString`)로 계산돼, 한국 새벽+저녁 접속이 이틀로 잡혀 하루 부풀 수 있었음. `mutda/js/app.js` → `kstDate()`(Asia/Seoul)로 today/yesterday 계산. (기존 저장값은 소급 수정 안 됨 — 다음 방문부터 정확.)
+- 오늘의 질문이 2개만 시드돼(20260708) 이틀마다 반복 → 잇다 질문 뱅크에서 묻다 톤에 맞는 22문항 선별, `20260726_mutda_daily_questions_expand.sql`(멱등)로 확장. home.html은 dayOfYear 순환이라 매일 다른 질문.
+- `mutda/sw.js → mutda-v25-2026-07-26-streak-kst-daily-questions`.
+
+## 2026-07-25
+
+**묻다 길잡이 — 잇다 seam 제거 (콘텐츠 경계 정리)** (사장님 라이브 제보 "콘텐츠 누르면 잇다로 감")
+- 결정 기록: `docs/strategy/mutda-itda-boundary-2026-07.md` — 묻다 콘텐츠는 묻다에서 열림 / 잇다=자매 서비스(요양·호스피스·완화 + 돌봄 기록).
+- 길잡이 카드 3개(사전연명·웰다잉·상조)가 `../info/*.html`(잇다)로 링크→잇다 하단탭 노출되던 것을 묻다 자체 페이지로 이전: `mutda/article-{advance-directive,well-dying,funeral-prepay}.html`(본문·스타일 보존, nav만 묻다). library.html 재연결. `sw.js v24`. 로컬 렌더 검증.
+- 참고: 잇다 `ltc-search`(요양원 검색)는 다른 세션이 07-08 근본 재작성, 자동배포 v15 정상 확인.
+
 ## 2026-07-24
 
 **묻다 QR 명함 제작** (창업자 요청)
