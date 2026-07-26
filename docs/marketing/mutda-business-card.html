@@ -13,7 +13,7 @@
     --sans: 'IBM Plex Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: var(--sans); background: #EDEFED; color: var(--ink); }
+  body { font-family: var(--serif); background: #EDEFED; color: var(--ink); }
 
   /* ===== 화면 안내 (인쇄 시 숨김) ===== */
   .guide { max-width: 640px; margin: 24px auto 8px; padding: 0 16px; font-size: 14px;
@@ -34,9 +34,9 @@
   .front .safe { flex-direction: column; justify-content: space-between; }
   .brand { font-family: var(--serif); font-weight: 800; font-size: 22pt; letter-spacing: .02em; }
   .brand .dot { color: var(--primary); }
-  .tagline { font-family: var(--serif); font-size: 8pt; color: var(--ink-soft); margin-top: 2mm; }
-  .person .name { font-family: var(--sans); font-weight: 600; font-size: 12.5pt; letter-spacing: .18em; }
-  .person .contact { font-size: 7pt; color: var(--ink-soft); margin-top: 1.2mm; line-height: 1.65; }
+  .tagline { font-family: var(--serif); font-weight: 400; font-size: 8pt; color: var(--ink-soft); margin-top: 2mm; }
+  .person .name { font-family: var(--serif); font-weight: 400; font-size: 13pt; letter-spacing: .18em; }
+  .person .contact { font-family: var(--serif); font-weight: 400; font-size: 7pt; color: var(--ink-soft); margin-top: 1.2mm; line-height: 1.65; }
   .company { position: absolute; right: 0; bottom: 0; font-size: 6.5pt; color: var(--ink-muted); }
 
   /* --- 뒷면: 세로 분할 — 좌 묻다 / 우 저서, 동일 크기 QR --- */
@@ -46,8 +46,8 @@
           justify-content: center; text-align: center; gap: 2.2mm; }
   .half + .half { border-left: 0.25mm solid var(--soft); }
   .half svg { width: 13mm; height: 13mm; color: var(--ink); display: block; }
-  .half .label { font-family: var(--sans); font-size: 8pt; font-weight: 400; color: var(--ink); }
-  .half .author { font-family: var(--sans); font-size: 7pt; font-weight: 400; color: var(--ink); margin-top: -1.6mm; }
+  .half .label { font-family: var(--serif); font-size: 8pt; font-weight: 400; color: var(--ink); }
+  .half .author { font-family: var(--serif); font-size: 7pt; font-weight: 400; color: var(--ink); margin-top: -1.6mm; }
   .half .sub { font-size: 6pt; color: var(--ink-muted); margin-top: -1.2mm; }
   .back-foot { position: absolute; left: 0; right: 0; bottom: 2.5mm; text-align: center;
                font-size: 6pt; color: var(--ink-faint, #AFB8B2); letter-spacing: .04em; }
