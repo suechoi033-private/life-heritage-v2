@@ -11,7 +11,6 @@
   <div style="padding-top:8px;">
     <h2 class="serif" id="my-name" style="font-size:22px;">나</h2>
     <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
-      <span class="streak-chip" id="streak"></span>
       <span class="chip" id="since"></span>
     </div>
   </div>
@@ -65,7 +64,6 @@
   const { user, profile } = await initAppPage();
 
   document.getElementById('my-name').textContent = `${profile.name}님의 자리`;
-  document.getElementById('streak').textContent = `🌱 이어온 지 ${profile.streak_days || 1}일째`;
   document.getElementById('since').textContent = `${fmtDate(profile.created_at)} 시작`;
   document.getElementById('my-email').textContent = user.email;
   document.getElementById('checkin-status').textContent = profile.checkin_enabled

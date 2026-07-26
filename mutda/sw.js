@@ -1,5 +1,5 @@
 // 묻다 서비스워커 — 웹푸시 수신 + 알림 클릭 (안부확인 알림용)
-const CACHE_VERSION = 'mutda-v25-2026-07-26-streak-kst-daily-questions';
+const CACHE_VERSION = 'mutda-v26-2026-07-26-remove-streak-chip';
 
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (e) => {

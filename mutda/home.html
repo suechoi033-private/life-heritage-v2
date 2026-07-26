@@ -13,7 +13,6 @@
     <h2 class="serif" id="greet-title" style="font-size:20px; line-height:1.5;">안녕하세요</h2>
     <p class="small muted" id="greet-account" style="margin-top:2px;"></p>
     <div style="margin-top:8px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-      <span class="streak-chip" id="streak">🌱 이어온 지 1일째</span>
       <span class="chip green" id="checkin-chip" style="display:none;">🔔 안부확인 켜짐</span>
     </div>
   </section>
@@ -88,8 +87,6 @@
     if (confirm(`${user.email} 계정에서 로그아웃할까요?`)) signOut();
   };
 
-  document.getElementById('streak').textContent =
-    `🌱 이어온 지 ${profile.streak_days || 1}일째`;
   if (profile.checkin_enabled)
     document.getElementById('checkin-chip').style.display = '';
 
