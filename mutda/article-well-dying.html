@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>웰다잉 — 좋은 죽음을 준비한다는 것 — 묻다</title>
+  <link rel="stylesheet" href="../auth-styles.css" />
+  <link rel="stylesheet" href="./css/mutda.css" />
+  <style>
+    .shell {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 32px 20px 80px;
+      flex: 1;
+      width: 100%;
+    }
+    @media (min-width: 640px) { .shell { padding: 56px 32px 120px; } }
+
+    .top-bar {
+      background: var(--bg);
+      border-bottom: 1px solid var(--line);
+      padding: 14px 20px;
+    }
+    .top-bar-inner {
+      max-width: 1080px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .breadcrumb {
+      font-size: 13px;
+      color: var(--ink-muted);
+      margin-bottom: 12px;
+    }
+    .breadcrumb a { color: var(--ink-muted); text-decoration: none; }
+    .breadcrumb a:hover { color: var(--primary); }
+
+    .header { margin-bottom: 32px; }
+    .kicker {
+      display: inline-block;
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      color: var(--primary);
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      line-height: 1.4;
+      margin-bottom: 14px;
+    }
+    @media (min-width: 640px) { h1 { font-size: 34px; } }
+    .lead {
+      color: var(--ink-soft);
+      font-size: 15.5px;
+      line-height: 1.8;
+    }
+
+    /* ── 섹션 공통 ──── */
+    section.block { margin-bottom: 44px; }
+    h2 {
+      font-family: var(--font-serif);
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--ink);
+    }
+    h3 {
+      font-size: 16px;
+      font-weight: 800;
+      margin: 24px 0 10px;
+      color: var(--ink);
+    }
+
+    p, li {
+      font-size: 15px;
+      color: var(--ink-soft);
+      line-height: 1.8;
+    }
+    p { margin-bottom: 14px; }
+
+    /* ── Callout boxes ──── */
+    .callout {
+      padding: 18px 22px;
+      border-radius: 12px;
+      margin-bottom: 18px;
+      font-size: 14.5px;
+      line-height: 1.7;
+    }
+    .callout.warm {
+      background: var(--primary-soft);
+      color: var(--ink-soft);
+    }
+    .callout.warm strong {
+      color: var(--primary);
+      display: block;
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+
+    /* ── TOC ──── */
+    .toc {
+      padding: 16px 20px;
+      background: var(--bg-alt);
+      border-radius: 12px;
+      margin-bottom: 36px;
+    }
+    .toc-title {
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .toc ol {
+      padding-left: 18px;
+      margin: 0;
+    }
+    .toc li {
+      font-size: 14px;
+      line-height: 1.9;
+    }
+    .toc a {
+      color: var(--ink-soft);
+      text-decoration: none;
+    }
+    .toc a:hover { color: var(--primary); }
+
+    /* ── Action items (섹션 4) ──── */
+    .action-list {
+      list-style: none;
+      padding: 0;
+    }
+    .action-list > li {
+      padding: 20px 22px;
+      background: var(--bg-alt);
+      border-radius: 14px;
+      margin-bottom: 12px;
+    }
+    .action-list > li > .action-num {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: var(--primary);
+      margin-bottom: 6px;
+    }
+    .action-list > li > .action-title {
+      display: block;
+      font-size: 15.5px;
+      font-weight: 800;
+      color: var(--ink);
+      margin-bottom: 8px;
+    }
+    .action-list > li > p {
+      margin-bottom: 8px;
+      font-size: 14.5px;
+    }
+    .action-list > li > .action-link {
+      font-size: 13.5px;
+      color: var(--primary);
+      text-decoration: none;
+    }
+    .action-list > li > .action-link:hover { text-decoration: underline; }
+
+    /* ── CTA cards (섹션 6) ──── */
+    .cta-list {
+      list-style: none;
+      padding: 0;
+      display: grid;
+      gap: 10px;
+    }
+    .cta-list li {
+      padding: 16px 18px;
+      background: var(--bg-alt);
+      border-radius: 14px;
+      border: 1px solid var(--line);
+    }
+    .cta-list li .cta-title {
+      display: block;
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }
+    .cta-list li .cta-desc {
+      font-size: 13.5px;
+      color: var(--ink-muted);
+      line-height: 1.6;
+    }
+    .cta-list li a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+    .cta-list li a:hover { text-decoration: underline; }
+
+    /* ── CTA 하단 문구 ──── */
+    .cta-bottom {
+      text-align: center;
+      margin-top: 20px;
+      padding: 18px 22px;
+      background: var(--primary-soft);
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    /* ── Checklist ──── */
+    .checklist {
+      list-style: none;
+      padding: 0;
+    }
+    .checklist li {
+      position: relative;
+      padding: 12px 0 12px 32px;
+      border-bottom: 1px solid var(--line);
+      font-size: 15px;
+      color: var(--ink-soft);
+      line-height: 1.8;
+    }
+    .checklist li::before {
+      content: "☐";
+      position: absolute;
+      left: 4px;
+      top: 13px;
+      font-size: 17px;
+      color: var(--primary);
+      font-weight: 700;
+    }
+    .checklist li:last-child { border-bottom: none; }
+
+    /* ── 하단 링크 ──── */
+    .bottom-links {
+      display: grid;
+      gap: 10px;
+      margin-top: 36px;
+      padding-top: 28px;
+      border-top: 1px solid var(--line);
+    }
+    .bottom-link {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      background: var(--bg-alt);
+      border-radius: 12px;
+      text-decoration: none;
+      color: var(--ink);
+      font-size: 14.5px;
+      transition: background 0.15s ease;
+    }
+    .bottom-link:hover { background: var(--primary-soft); }
+    .bottom-link span:last-child { color: var(--primary); font-weight: 700; }
+  </style>
+</head>
+<body>
+<main class="shell">
+<header class="header">
+    <span class="kicker">정보 · 미리</span>
+    <h1>웰다잉(Well-Dying)<br>— 좋은 죽음을 미리 준비한다는 것</h1>
+    <p class="lead">
+      '웰다잉'은 죽음을 잘 맞이하는 법이 아닙니다. 지금 남은 시간을 더 잘 살기 위한 준비입니다.
+    </p>
+  </header>
+
+  <nav class="toc">
+    <div class="toc-title">이 페이지 안에서</div>
+    <ol>
+      <li><a href="#reluctance">"벌써부터 그런 얘기는 하고 싶지 않아"</a></li>
+      <li><a href="#not-last-moment">좋은 죽음은 마지막 순간의 문제가 아닙니다</a></li>
+      <li><a href="#fifties">50대부터 시작하면 좋은 이유</a></li>
+      <li><a href="#what-to-do">웰다잉, 실제로 무엇을 하는 건가</a></li>
+      <li><a href="#clarity">정리하고 나면 지금이 더 잘 보입니다</a></li>
+      <li><a href="#itda-start">잇다에서 시작해볼 수 있는 것들</a></li>
+      <li><a href="#checklist">웰다잉 실천 체크리스트</a></li>
+    </ol>
+  </nav>
+
+  <!-- ── 1. 꺼내기 어려운 주제 ──────── -->
+  <section class="block" id="reluctance">
+    <h2>"벌써부터 그런 얘기는 하고 싶지 않아"</h2>
+    <p>
+      한국에서 죽음은 오래도록 입 밖에 내기 어려운 주제였습니다. 말을 꺼내는 것만으로 나쁜 일이 당겨질 것 같은 느낌. 가족을 괜히 걱정시킬 것 같은 마음.
+    </p>
+    <p>
+      그날이 오면, 슬퍼할 시간도 없이 정신없는 며칠이 지나갑니다. 나중에야 남는 것은 한 마디. "왜 한 번도 물어보지 않았을까."
+    </p>
+    <p>
+      '웰다잉(Well-Dying)'은 그 후회를 미리 줄이는 일입니다.
+    </p>
+  </section>
+
+  <!-- ── 2. 마지막 순간만의 문제가 아님 ──────── -->
+  <section class="block" id="not-last-moment">
+    <h2>좋은 죽음은 마지막 순간의 문제가 아닙니다</h2>
+    <p>
+      한국보건사회연구원은 2018~2019년 웰다잉 기반 연구에서 주목한 것: 존엄한 죽음은 마지막 시점 하나가 아니라 <strong>그에 이르는 긴 과정 전체</strong>라는 점.
+    </p>
+    <div class="callout warm">
+      내가 무엇을 소중하게 여기는지, 어떻게 기억되고 싶은지, 가족에게 어떤 말을 남기고 싶은지 — 미리 생각하고 정리해두는 것. 정리한 사람들은 공통적으로 말합니다. "정리하고 나니, 오히려 더 가볍게 살 수 있게 됐다."
+    </div>
+  </section>
+
+  <!-- ── 3. 50대 ──────── -->
+  <section class="block" id="fifties">
+    <h2>50대부터 시작하면 좋은 이유</h2>
+    <p>
+      전문가들은 50대부터 시작하도록 권고합니다. 아직 건강할 때, 내 생각을 직접 정리할 수 있을 때, 가족과 차분하게 이야기 나눌 수 있을 때.
+    </p>
+    <p>
+      아프거나 급박해지면 내가 직접 결정하기 어렵고, 가족도 내 뜻을 모른 채 최선을 다해 엇나간 선택을 합니다.
+    </p>
+    <p>
+      "아직 괜찮은데"라는 마음이 드는 것은 당연합니다. 하지만 시작이 이른 것이 늦는 것보다 항상 낫습니다.
+    </p>
+  </section>
+
+  <!-- ── 4. 실제로 무엇을 ──────── -->
+  <section class="block" id="what-to-do">
+    <h2>웰다잉, 실제로 무엇을 하는 건가</h2>
+    <ol class="action-list">
+      <li>
+        <div class="action-num">01</div>
+        <span class="action-title">가족과 한 번, 죽음 이야기 꺼내보기</span>
+        <p>
+          연명치료에 대한 내 생각, 어떤 장례를 원하는지, 어디서 마지막을 맞고 싶은지. 어색하면 식사 자리에서 가볍게 시작해도 됩니다. "나는 이런 건 원하지 않더라"는 한 마디가, 훗날 가족이 흔들림 없이 결정하는 근거가 됩니다.
+        </p>
+      </li>
+      <li>
+        <div class="action-num">02</div>
+        <span class="action-title">사전연명의료의향서 작성하기</span>
+        <p>
+          내가 회복할 수 없는 상태가 됐을 때, 생명만 연장하는 치료를 받을지 말지를 미리 공식으로 남겨두는 서류. 비용 없음, 가까운 등록기관에서 30분이면 됩니다.
+        </p>
+        <a href="./advance-directive.html" class="action-link">→ 사전연명의료의향서 — 미리 정해두는 마지막 의지</a>
+      </li>
+      <li>
+        <div class="action-num">03</div>
+        <span class="action-title">내가 소중히 여겨온 것들 글로 써보기</span>
+        <p>
+          삶에서 무엇이 중요했는지, 어떤 순간이 행복했는지, 가족에게 어떤 말을 남기고 싶은지. 거창한 유서가 아니어도 됩니다. 메모 한 줄이어도 충분합니다.
+        </p>
+        <span style="font-size: 13.5px; color: var(--ink-muted);">→ 잇다의 '나의 삶 정리' 기능에서 기록해볼 수 있습니다. <em>(준비 중)</em></span>
+      </li>
+      <li>
+        <div class="action-num">04</div>
+        <span class="action-title">유언장과 디지털 계정 정리해두기</span>
+        <p>
+          유언장은 내가 원하는 방향을 남겨두는 것만으로도 충분히 의미가 있습니다.
+          디지털 계정(카카오·네이버·은행 앱·구독 서비스): 어떤 계정이 있는지, 로그인 정보는 어디 있는지, 해지나 인계 방법 정리.
+        </p>
+      </li>
+      <li>
+        <div class="action-num">05</div>
+        <span class="action-title">장례 방식과 안장에 대한 생각 정해두기</span>
+        <p>
+          요양시설, 장례 방식, 납골 또는 산골 여부. 내 생각을 가족이 알고 있는 것과 모르는 것은 큰 차이입니다. 짧게라도 기록으로 남겨두면 더 확실합니다.
+        </p>
+      </li>
+    </ol>
+  </section>
+
+  <!-- ── 5. 정리하고 나면 ──────── -->
+  <section class="block" id="clarity">
+    <h2>정리하고 나면 지금이 더 잘 보입니다</h2>
+    <p>
+      죽음을 미리 생각하는 것은 삶에서 물러나는 일이 아닙니다.
+    </p>
+    <p>
+      막상 시작해본 사람들은 이렇게 말합니다. "가족에게 말해두고 나니 관계가 오히려 가까워진 것 같다." "지금 하루하루가 더 선명하게 느껴진다."
+    </p>
+  </section>
+
+  <!-- ── 6. 잇다에서 시작 ──────── -->
+  <section class="block" id="itda-start">
+    <h2>잇다에서 시작해볼 수 있는 것들</h2>
+    <ul class="cta-list">
+      <li>
+        <span class="cta-title">사전연명의료의향서 작성 안내</span>
+        <div class="cta-desc">
+          <a href="./advance-directive.html">사전연명의료의향서 — 미리 정해두는 마지막 의지</a>에서 자세한 안내를 확인하세요.
+          보건복지부 공식 서식은 <a href="https://www.mohw.go.kr/board.es?mid=a10501010200&bid=0003&act=view&list_no=1487646" target="_blank" rel="noopener">여기서 확인</a>할 수 있습니다.
+          <a href="https://drive.google.com/file/d/12aFIDU0oe6YUYqa-FGbwfmSQ0U-cVsBz/view?usp=drive_link" target="_blank" rel="noopener">의향서 양식 바로 내려받기</a>
+        </div>
+      </li>
+      <li>
+        <span class="cta-title">디지털 자산 정리</span>
+        <div class="cta-desc">내 계정 목록을 정리하고 가족에게 남길 내용을 기록합니다.</div>
+      </li>
+      <li>
+        <span class="cta-title">가족에게 남기는 말</span>
+        <div class="cta-desc">편지처럼, 메모처럼, 원하는 형식으로 남길 수 있는 공간입니다.</div>
+      </li>
+      <li>
+        <span class="cta-title">오늘의 질문</span>
+        <div class="cta-desc">매일 하나씩, 내 삶과 생각을 돌아보는 질문. 이어가다 보면 나만의 회고록이 됩니다.</div>
+      </li>
+    </ul>
+    <div class="cta-bottom">오늘 한 줄이면 충분한 시작입니다.</div>
+  </section>
+
+  <!-- ── 7. 체크리스트 ──────── -->
+  <section class="block" id="checklist">
+    <h2>웰다잉 실천 체크리스트</h2>
+    <ul class="checklist">
+      <li>가족과 연명치료에 대해 이야기해본 적 있다</li>
+      <li>사전연명의료의향서를 작성·등록했다</li>
+      <li>내가 소중히 여기는 것을 글로 써본 적 있다</li>
+      <li>가족에게 남기고 싶은 말을 기록해뒀다</li>
+      <li>유언장이나 재산 관련 의사를 정리해뒀다</li>
+      <li>디지털 계정 목록과 처리 방법을 정리해뒀다</li>
+      <li>장례 방식과 안장 방법에 대한 내 생각을 가족이 알고 있다</li>
+    </ul>
+  </section>
+
+  <!-- ── 출처 및 하단 링크 ──────── -->
+  <p style="margin-top: 8px; font-size: 12px; color: var(--ink-muted); line-height: 1.7;">
+    이 글은 정보 제공을 목적으로 작성됐습니다. 사전연명의료의향서 관련 법적·의료적 결정은 등록기관 전문가와 확인하시기 바랍니다.<br>
+    참고: 한국보건사회연구원 "웰다잉을 위한 제도적 기반 마련 방안" (2018–2019)
+  </p>
+
+  <div class="bottom-links">
+    <a href="../info.html" class="bottom-link">
+      <span>정보 다른 주제</span>
+      <span>바로가기 →</span>
+    </a>
+    <a href="./advance-directive.html" class="bottom-link">
+      <span>사전연명의료의향서 가이드</span>
+      <span>바로가기 →</span>
+    </a>
+  </div>
+</main>
+
+<script type="module">
+  import { renderNav } from './js/nav.js';
+  import { initPublicPage, logEvent } from './js/app.js';
+  renderNav({ active: 'library' });
+  await initPublicPage();
+  logEvent('library_article_view', { article: 'article-well-dying' });
+  document.querySelectorAll('.faq-item').forEach(item => {
+    const q = item.querySelector('.faq-q');
+    if (q) q.addEventListener('click', () => item.classList.toggle('open'));
+  });
+</script>
+</body>
+</html>
