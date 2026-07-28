@@ -77,11 +77,6 @@
     </p>
   </section>
 
-  <!-- 다른 질문 -->
-  <section style="margin-top:20px;">
-    <h2 class="section-title">다른 질문들</h2>
-    <div id="other-questions"></div>
-  </section>
 </main>
 
 <script type="module">
@@ -244,15 +239,6 @@
       rows.join('') || '<p class="muted small" style="padding:12px 0;">아직 없어요. 위에서 나의 답부터 남겨보세요.</p>';
   }
   renderAnswers();
-
-  // ── 다른 질문들 ──
-  document.getElementById('other-questions').innerHTML = questions
-    .filter(q => q.id !== todayQ.id)
-    .map(q => `
-      <a class="card soft" href="./question.html?q=${q.id}" style="display:block; color:inherit; margin-bottom:8px;">
-        <p style="font-size:14.5px;">${esc(q.text)}</p>
-      </a>`).join('')
-    || '<p class="muted small">다른 질문이 아직 없어요.</p>';
 </script>
 </body>
 </html>
