@@ -33,7 +33,7 @@
     <div class="field" style="margin-top:10px;">
       <textarea id="my-answer" style="min-height:110px;" placeholder="떠오르는 대로, 짧아도 괜찮아요."></textarea>
     </div>
-    <button class="btn sm" id="btn-save-answer" style="padding:9px 20px;">저장</button>
+    <button type="button" class="btn sm" id="btn-save-answer" style="padding:9px 20px;">저장</button>
     <span class="small muted" id="my-answer-saved" style="margin-left:8px;"></span>
   </section>
 
@@ -120,9 +120,16 @@
   }
   if (mine) { myBox.value = mine.content; savedTag.textContent = `저장됨 · ${fmtDate(mine.updated_at)}`; }
 
-  document.getElementById('btn-save-answer').addEventListener('click', async () => {
+  const saveBtn = document.getElementById('btn-save-answer');
+  saveBtn.addEventListener('click', async () => {
+    logEvent('question_save_click', { q: todayQ.id }); // 탭 도달 여부 추적 (안눌림 제보 대응)
     const content = myBox.value.trim();
     if (!content) { toast('답을 적어주세요'); return; }
+    // 누른 즉시 반응이 보이게 — 저장 중 잠금
+    saveBtn.disabled = true;
+    const prevLabel = saveBtn.textContent;
+    saveBtn.textContent = '저장 중…';
+    try {
     let error;
     if (mine?.id) {
       ({ error } = await supabase.from('mutda_question_answers')
@@ -149,6 +156,14 @@
     toast('🌿 나의 답을 남겼어요');
     logEvent('question_self_saved', { q: todayQ.id });
     renderAnswers();
+    } catch (e) {
+      // fetch 자체가 던진 경우(오프라인 등)도 조용히 죽지 않게
+      toast('저장에 실패했어요 — 네트워크를 확인해 주세요');
+      console.warn('[question] save threw', e);
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.textContent = prevLabel;
+    }
   });
 
   // ── 추측 저장 + 초대 링크 보내기 ──
