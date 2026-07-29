@@ -115,16 +115,8 @@
   }
   if (mine) { myBox.value = mine.content; savedTag.textContent = `저장됨 · ${fmtDate(mine.updated_at)}`; }
 
-  const saveBtn = document.getElementById('btn-save-answer');
-  saveBtn.addEventListener('click', async () => {
-    logEvent('question_save_click', { q: todayQ.id }); // 탭 도달 여부 추적 (안눌림 제보 대응)
-    const content = myBox.value.trim();
-    if (!content) { toast('답을 적어주세요'); return; }
-    // 누른 즉시 반응이 보이게 — 저장 중 잠금
-    saveBtn.disabled = true;
-    const prevLabel = saveBtn.textContent;
-    saveBtn.textContent = '저장 중…';
-    try {
+  // 저장 1회 시도 — insert/update + 유니크 위반 폴백
+  async function saveOnce(content) {
     let error;
     if (mine?.id) {
       ({ error } = await supabase.from('mutda_question_answers')
@@ -135,7 +127,7 @@
         .select('id, updated_at').single();
       error = res.error;
       if (res.data) mine = res.data; // 이후 재저장은 update 경로로
-      // 동시성 등으로 이미 self 행이 있어 유니크 위반(23505)이면 기존 행 찾아 update
+      // 이미 self 행이 있어 유니크 위반(23505)이면 기존 행 찾아 update (재시도 중복도 이 경로로 흡수)
       if (error?.code === '23505') {
         const { data: ex } = await supabase.from('mutda_question_answers')
           .select('id').eq('question_id', todayQ.id).eq('kind', 'self').maybeSingle();
@@ -146,15 +138,40 @@
         }
       }
     }
-    if (error) { toast('저장에 실패했어요'); console.warn('[question] save', error); return; }
-    savedTag.textContent = '저장됨 · 방금';
-    toast('🌿 나의 답을 남겼어요');
-    logEvent('question_self_saved', { q: todayQ.id });
-    renderAnswers();
+    if (error) throw error;
+  }
+  const withTimeout = (p, ms) => Promise.race([
+    p, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms)),
+  ]);
+
+  const saveBtn = document.getElementById('btn-save-answer');
+  saveBtn.addEventListener('click', async () => {
+    logEvent('question_save_click', { q: todayQ.id }); // 탭 도달 여부 추적 (안눌림 제보 대응)
+    const content = myBox.value.trim();
+    if (!content) { toast('답을 적어주세요'); return; }
+    // 누른 즉시 반응이 보이게 — 저장 중 잠금
+    saveBtn.disabled = true;
+    const prevLabel = saveBtn.textContent;
+    saveBtn.textContent = '저장 중…';
+    try {
+      // 모바일에서 요청이 하염없이 걸리는 사례 → 8초 넘으면 자동 재시도 1회
+      try {
+        await withTimeout(saveOnce(content), 8000);
+      } catch (e1) {
+        if (String(e1?.message) !== 'timeout') throw e1;
+        toast('연결이 느려요 — 다시 시도하는 중…');
+        await withTimeout(saveOnce(content), 15000);
+      }
+      savedTag.textContent = '저장됨 · 방금';
+      toast('🌿 나의 답을 남겼어요');
+      logEvent('question_self_saved', { q: todayQ.id });
+      renderAnswers();
     } catch (e) {
-      // fetch 자체가 던진 경우(오프라인 등)도 조용히 죽지 않게
-      toast('저장에 실패했어요 — 네트워크를 확인해 주세요');
-      console.warn('[question] save threw', e);
+      toast(String(e?.message) === 'timeout'
+        ? '연결이 계속 느려요 — 잠시 후 다시 눌러주세요 (쓴 글은 화면에 남아있어요)'
+        : '저장에 실패했어요 — 네트워크를 확인해 주세요');
+      console.warn('[question] save failed', e);
+      logEvent('question_save_failed', { q: todayQ.id, reason: String(e?.message || e?.code || e) });
     } finally {
       saveBtn.disabled = false;
       saveBtn.textContent = prevLabel;
